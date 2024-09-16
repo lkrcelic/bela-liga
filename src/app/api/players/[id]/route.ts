@@ -1,6 +1,6 @@
 // src/app/api/players/[id]/route.ts
 import { NextResponse } from "next/server";
-import { prisma } from "../../../../lib/prisma";
+import { prisma } from "@/app/lib/prisma";
 
 // Handle GET request to fetch a single player by ID
 export async function GET(

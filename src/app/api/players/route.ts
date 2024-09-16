@@ -1,14 +1,19 @@
 // src/app/api/players/route.ts
-import { NextResponse } from 'next/server';
-import { prisma } from '../../../../lib/prisma';
 
-// Handle GET request to fetch all players
+import { prisma } from "@/app/lib/prisma";
+
 export async function GET() {
-    try {
-        const players = await prisma.player.findMany();
-        return new NextResponse.json(players,   { status: 200 });
-    } catch (error) {
-        return NextResponse.json({ error: 'Failed to fetch players' }, { status: 500 });
-    }
-}
+  try {
+    const players = await prisma.player.findMany();
 
+    return new Response(JSON.stringify(players), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
+  } catch (error) {
+    return new Response(JSON.stringify({ error: "Failed to fetch players" }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+}
