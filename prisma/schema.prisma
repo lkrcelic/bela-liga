@@ -1,0 +1,270 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+// Prisma supports the native int, bigint, float, decimal, boolean, string, DateTime, and Json types.
+// Learn more about each type in the docs: https://pris.ly/d/prisma-schema
+
+// Prisma schema generated based on the provided SQL code
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum RoleEnum {
+  ADMIN
+  PLAYER
+}
+
+enum GameEnum {
+  BELA
+  TRESETA
+}
+
+enum TrumpEnum {
+  PIK
+  HERC
+  KARO
+  TREF
+}
+
+enum BelaAnnouncementEnum {
+  TWENTY
+  FIFTY
+  ONE_HUNDRED
+  ONE_HUNDRED_FIFTY
+  TWO_HUNDRED
+}
+
+enum TresetaAnnouncementEnum {
+  THREE
+  FOUR
+}
+
+enum TrumpCallerPositionEnum {
+  FIRST
+  SECOND
+  THIRD
+  FOURTH
+}
+
+model Player {
+  player_id       Int                        @id @default(autoincrement())
+  username        String                     @unique @db.VarChar(100)
+  password_hash   String
+  email           String                     @unique @db.VarChar(100)
+  player_role     RoleEnum
+  first_name      String?                    @db.VarChar(100)
+  last_name       String?                    @db.VarChar(100)
+  birth_year      Int?
+  city            String?                    @db.VarChar(100)
+  created_at      DateTime                   @default(now())
+  last_updated_at DateTime?                  @updatedAt
+
+  // Relationships
+  founder1Teams               Team[]                        @relation("TeamFounder1")
+  founder2Teams               Team[]                        @relation("TeamFounder2")
+  creatorTeams                Team[]                        @relation("TeamCreator")
+  teamPlayers                 TeamPlayer[]
+  playerPairs1                PlayerPair[]                  @relation("PlayerPair1")
+  playerPairs2                PlayerPair[]                  @relation("PlayerPair2")
+  cardShufflerBelaResults     BelaResult[]                  @relation("CardShuffler")
+  trumpCallerBelaResults      BelaResult[]                  @relation("TrumpCaller")
+  belaPlayerAnnouncements     BelaPlayerAnnouncement[]
+  tresetaPlayerAnnouncements  TresetaPlayerAnnouncement[]
+}
+
+model Tournament {
+  tournament_id    Int                @id @default(autoincrement())
+  tournament_name  String             @db.VarChar(100)
+  game_type        GameEnum
+
+  // Relationships
+  tournamentTeams   TournamentTeam[]
+  tournamentRounds  TournamentRound[]
+}
+
+model League {
+  league_id    Int              @id @default(autoincrement())
+  league_name  String           @db.VarChar(100)
+  game_type    GameEnum
+
+  // Relationships
+  leagueTeams   LeagueTeam[]
+  leagueRounds  LeagueRound[]
+}
+
+model Team {
+  team_id         Int                        @id @default(autoincrement())
+  team_name       String                     @unique @db.VarChar(100)
+  founder_id1     Int?
+  founder_id2     Int?
+  creator_id      Int?
+  created_at      DateTime                   @default(now())
+  last_updated_at DateTime?                  @updatedAt
+
+  // Relationships
+  founder1        Player?                    @relation("TeamFounder1", fields: [founder_id1], references: [player_id], onDelete: SetNull)
+  founder2        Player?                    @relation("TeamFounder2", fields: [founder_id2], references: [player_id], onDelete: SetNull)
+  creator         Player?                    @relation("TeamCreator", fields: [creator_id], references: [player_id], onDelete: SetNull)
+  teamPlayers     TeamPlayer[]
+  tournamentTeams TournamentTeam[]
+  leagueTeams     LeagueTeam[]
+  roundsAsTeam1   Round[]                    @relation("RoundTeam1")
+  roundsAsTeam2   Round[]                    @relation("RoundTeam2")
+}
+
+model TeamPlayer {
+  team_id   Int
+  player_id Int
+
+  team    Team    @relation(fields: [team_id], references: [team_id], onDelete: Cascade)
+  player  Player  @relation(fields: [player_id], references: [player_id], onDelete: Cascade)
+
+  @@id([team_id, player_id])
+}
+
+model TournamentTeam {
+  tournament_id  Int
+  team_id        Int
+
+  tournament  Tournament  @relation(fields: [tournament_id], references: [tournament_id], onDelete: Cascade)
+  team        Team        @relation(fields: [team_id], references: [team_id], onDelete: Cascade)
+
+  @@id([tournament_id, team_id])
+}
+
+model LeagueTeam {
+  league_id  Int
+  team_id    Int
+
+  league  League  @relation(fields: [league_id], references: [league_id], onDelete: Cascade)
+  team    Team    @relation(fields: [team_id], references: [team_id], onDelete: Cascade)
+
+  @@id([league_id, team_id])
+}
+
+model Round {
+  id           Int        @id @default(autoincrement())
+  round_number Int?
+  round_date   DateTime?
+  team1_id     Int?
+  team2_id     Int?
+
+  team1        Team?      @relation("RoundTeam1", fields: [team1_id], references: [team_id], onDelete: SetNull)
+  team2        Team?      @relation("RoundTeam2", fields: [team2_id], references: [team_id], onDelete: SetNull)
+  matches      Match[]
+  tournamentRounds  TournamentRound[]
+  leagueRounds      LeagueRound[]
+}
+
+model TournamentRound {
+  tournament_id  Int
+  round_id       Int
+
+  tournament  Tournament  @relation(fields: [tournament_id], references: [tournament_id], onDelete: Cascade)
+  round       Round       @relation(fields: [round_id], references: [id], onDelete: Cascade)
+
+  @@id([tournament_id, round_id])
+}
+
+model LeagueRound {
+  league_id  Int
+  round_id   Int
+
+  league  League  @relation(fields: [league_id], references: [league_id], onDelete: Cascade)
+  round   Round   @relation(fields: [round_id], references: [id], onDelete: Cascade)
+
+  @@id([league_id, round_id])
+}
+
+model PlayerPair {
+  id          Int        @id @default(autoincrement())
+  player_id1  Int
+  player_id2  Int
+
+  player1     Player     @relation("PlayerPair1", fields: [player_id1], references: [player_id], onDelete: Cascade)
+  player2     Player     @relation("PlayerPair2", fields: [player_id2], references: [player_id], onDelete: Cascade)
+  matchesAsPair1  Match[]    @relation("MatchPair1")
+  matchesAsPair2  Match[]    @relation("MatchPair2")
+
+  @@unique([player_id1, player_id2])
+}
+
+model Match {
+  id                   Int          @id @default(autoincrement())
+  round_id             Int?
+  player_pair1_score   Int?
+  player_pair2_score   Int?
+  player_pair_id1      Int?
+  player_pair_id2      Int?
+  score_threshold      Int?
+  start_time           DateTime?
+  end_time             DateTime?
+  match_date           DateTime?    @default(now())
+
+  round          Round?       @relation(fields: [round_id], references: [id], onDelete: SetNull)
+  playerPair1    PlayerPair?  @relation("MatchPair1", fields: [player_pair_id1], references: [id], onDelete: Cascade)
+  playerPair2    PlayerPair?  @relation("MatchPair2", fields: [player_pair_id2], references: [id], onDelete: Cascade)
+  belaResults    BelaResult[]
+  tresetaResults TresetaResult[]
+}
+
+model BelaResult {
+  result_id                         Int                       @id @default(autoincrement())
+  match_id                          Int
+  player_pair1_game_points          Int                       @default(0)
+  player_pair2_game_points          Int                       @default(0)
+  player_pair1_announcement_points  Int                       @default(0)
+  player_pair2_announcement_points  Int                       @default(0)
+  card_shuffler_id                  Int?
+  trump_caller_id                   Int?
+  trump_caller_position             TrumpCallerPositionEnum
+  trump_type                        TrumpEnum?
+  pass                              Boolean                   @default(false)
+  complete_victory                  Boolean                   @default(false)
+
+  match            Match             @relation(fields: [match_id], references: [id], onDelete: Cascade)
+  cardShuffler     Player?           @relation("CardShuffler", fields: [card_shuffler_id], references: [player_id], onDelete: SetNull)
+  trumpCaller      Player?           @relation("TrumpCaller", fields: [trump_caller_id], references: [player_id], onDelete: SetNull)
+  belaPlayerAnnouncements  BelaPlayerAnnouncement[]
+}
+
+model TresetaResult {
+  result_id                         Int                       @id @default(autoincrement())
+  match_id                          Int
+  player_pair1_game_points          Int                       @default(0)
+  player_pair2_game_points          Int                       @default(0)
+  player_pair1_announcement_points  Int                       @default(0)
+  player_pair2_announcement_points  Int                       @default(0)
+
+  match                  Match                        @relation(fields: [match_id], references: [id], onDelete: Cascade)
+  tresetaPlayerAnnouncements  TresetaPlayerAnnouncement[]
+}
+
+model BelaPlayerAnnouncement {
+  announcement_id    Int                   @id @default(autoincrement())
+  result_id          Int
+  player_id          Int
+  announcement_type  BelaAnnouncementEnum
+
+  result    BelaResult  @relation(fields: [result_id], references: [result_id], onDelete: Cascade)
+  player    Player      @relation(fields: [player_id], references: [player_id], onDelete: Cascade)
+}
+
+model TresetaPlayerAnnouncement {
+  announcement_id    Int                        @id @default(autoincrement())
+  result_id          Int
+  player_id          Int
+  announcement_type  TresetaAnnouncementEnum
+
+  result    TresetaResult  @relation(fields: [result_id], references: [result_id], onDelete: Cascade)
+  player    Player         @relation(fields: [player_id], references: [player_id], onDelete: Cascade)
+}
