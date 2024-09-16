@@ -1,9 +1,11 @@
+// prisma/seed.ts
+
 import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
 async function main() {
-  // Create dummy players
+  // Your seed data logic
   const player1 = await prisma.player.create({
     data: {
       username: "john_doe",
