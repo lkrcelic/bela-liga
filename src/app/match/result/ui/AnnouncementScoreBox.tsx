@@ -17,8 +17,8 @@ export default function AnnouncementScoreBox({
     <Box
       onClick={onClick}
       sx={{
-        width: "80px",
-        height: "80px",
+        width: "100px",
+        height: "100px",
         backgroundColor: backgroundColor,
         color: "white",
         borderRadius: "8px",
