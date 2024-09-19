@@ -2,12 +2,10 @@
 
 import React from "react";
 import { Box } from "@mui/material";
-import PlayersSection from "@/app/match/result/ui/PlayersSection";
-import AnnouncementSection from "@/app/match/result/ui/AnnouncementsSection";
 import ActionsButtons from "@/app/match/result/ui/ActionsButtons";
 import TeamsScoreSection from "@/app/match/result/ui/TeamsScoreSection";
 
-export default function Result() {
+export default function Layout({ children }) {
   return (
     <Box
       sx={{
@@ -21,8 +19,7 @@ export default function Result() {
       }}
     >
       <TeamsScoreSection />
-      <AnnouncementSection />
-      <PlayersSection />
+      {children}
       <ActionsButtons />
     </Box>
   );

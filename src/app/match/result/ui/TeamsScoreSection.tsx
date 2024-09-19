@@ -1,11 +1,11 @@
-import React, { useState } from "react";
+import React from "react";
 import { Grid } from "@mui/system";
 import { TeamScoreBox } from "@/app/match/result/ui/TeamScoreBox";
 import useAnnouncementStore from "@/app/store/announcementStore";
+import useScoreStore from "@/app/store/scoreStore";
 
 export default function TeamsScoreSection() {
-  const [team1Score] = useState(0);
-  const [team2Score] = useState(0);
+  const { team1Score, team2Score, setActiveTeam } = useScoreStore();
   const { playerAnnouncements } = useAnnouncementStore();
 
   return (
@@ -23,6 +23,7 @@ export default function TeamsScoreSection() {
             playerAnnouncements[1].totalAnnouncements +
             playerAnnouncements[3].totalAnnouncements
           }
+          onClick={() => setActiveTeam}
         />
       </Grid>
 
@@ -34,6 +35,7 @@ export default function TeamsScoreSection() {
             playerAnnouncements[2].totalAnnouncements +
             playerAnnouncements[4].totalAnnouncements
           }
+          onClick={() => setActiveTeam}
         />
       </Grid>
     </Grid>

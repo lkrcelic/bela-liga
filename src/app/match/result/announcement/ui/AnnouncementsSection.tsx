@@ -1,7 +1,7 @@
 import React from "react";
 import { Badge, Box, Button } from "@mui/material";
 import { Grid } from "@mui/system";
-import useAnnouncementStore from "../../../store/announcementStore";
+import useAnnouncementStore from "@/app/store/announcementStore";
 
 export default function AnnouncementSection() {
   const {

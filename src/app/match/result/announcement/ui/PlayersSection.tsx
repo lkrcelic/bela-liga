@@ -1,7 +1,7 @@
 import React from "react";
 import { Box } from "@mui/material";
 import AnnouncementScoreBox from "./AnnouncementScoreBox";
-import useAnnouncementStore from "../../../store/announcementStore";
+import useAnnouncementStore from "@/app/store/announcementStore";
 import { Grid } from "@mui/system";
 
 type Player = {
