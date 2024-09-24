@@ -1,23 +1,68 @@
-import { Box, Button, Typography } from "@mui/material";
+"use client";
+
+import { usePathname, useRouter } from "next/navigation"; // Import both from next/navigation
+import { Button } from "@mui/material";
+import { Grid } from "@mui/system";
+import useAnnouncementStore from "@/app/store/announcementStore";
 
 export default function ActionsButtons() {
-  return (
-    <Box
-      sx={{
-        display: "flex",
-        width: "100%",
-        paddingTop: 2,
-        bgcolor: "#fefefe",
-        gap: 4,
-      }}
-    >
-      <Button sx={{ flexGrow: 1 }} variant="contained" color="primary">
-        <Typography variant="button">Nazad</Typography>
-      </Button>
+  const { noAnnouncements } = useAnnouncementStore();
+  const pathname = usePathname();
+  const router = useRouter();
 
-      <Button sx={{ flexGrow: 1 }} variant="contained" color="primary">
-        <Typography variant="button">Spremi</Typography>
-      </Button>
-    </Box>
+  const getNextAction = () => {
+    switch (pathname) {
+      case "/page1":
+        return {
+          label: "Save Page 1 Data",
+          action: () => {
+            router.push("/match/result/announcement");
+          },
+        };
+      case "/match/result/announcement":
+        return {
+          label: noAnnouncements ? "Nema Zvanja" : "Dalje",
+          action: () => {
+            router.push("/match/result/score");
+          },
+        };
+      case "/match/result/score":
+        return {
+          label: "Spremi",
+          action: () => {
+            // Add your custom logic for Page 3
+            console.log("Submitting info for Page 3");
+          },
+        };
+    }
+  };
+
+  const nextAction = getNextAction();
+
+  return (
+    <Grid container spacing={2} sx={{ width: "100%" }}>
+      <Grid item size={{ xs: 6 }}>
+        <Button
+          color="primary"
+          variant="contained"
+          sx={{ width: "100%", fontSize: "16px" }}
+          onClick={() => {
+            window.history.back();
+          }}
+        >
+          Nazad
+        </Button>
+      </Grid>
+      <Grid item size={{ xs: 6 }}>
+        <Button
+          color="primary"
+          variant="contained"
+          sx={{ width: "100%", fontSize: "16px" }}
+          onClick={nextAction.action}
+        >
+          {nextAction.label}
+        </Button>
+      </Grid>
+    </Grid>
   );
 }

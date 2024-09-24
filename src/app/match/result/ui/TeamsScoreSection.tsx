@@ -5,7 +5,7 @@ import useAnnouncementStore from "@/app/store/announcementStore";
 import useScoreStore from "@/app/store/scoreStore";
 
 export default function TeamsScoreSection() {
-  const { team1Score, team2Score, setActiveTeam } = useScoreStore();
+  const { team1Score, team2Score, activeTeam, setActiveTeam } = useScoreStore();
   const { playerAnnouncements } = useAnnouncementStore();
 
   return (
@@ -17,25 +17,25 @@ export default function TeamsScoreSection() {
     >
       <Grid item xs={6}>
         <TeamScoreBox
-          teamColor="#4caf50"
+          teamColor={activeTeam === "team1" ? "#4caf50" : "#9e9e9e"}
           gameScore={team1Score}
           announcementScore={
             playerAnnouncements[1].totalAnnouncements +
             playerAnnouncements[3].totalAnnouncements
           }
-          onClick={() => setActiveTeam}
+          setActiveTeam={() => setActiveTeam("team1")}
         />
       </Grid>
 
       <Grid item xs={6}>
         <TeamScoreBox
-          teamColor="#f44336"
+          teamColor={activeTeam === "team2" ? "#f44336" : "#9e9e9e"}
           gameScore={team2Score}
           announcementScore={
             playerAnnouncements[2].totalAnnouncements +
             playerAnnouncements[4].totalAnnouncements
           }
-          onClick={() => setActiveTeam}
+          setActiveTeam={() => setActiveTeam("team2")}
         />
       </Grid>
     </Grid>

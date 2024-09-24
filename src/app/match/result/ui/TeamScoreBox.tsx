@@ -1,18 +1,21 @@
-import { Box, Typography } from "@mui/material";
+import { Button, Typography } from "@mui/material";
 
 interface ScoreBoxProps {
   teamColor: string;
   gameScore: number;
   announcementScore: number;
+  setActiveTeam: () => void;
 }
 
 export function TeamScoreBox({
   teamColor,
   gameScore,
   announcementScore,
+  setActiveTeam,
 }: ScoreBoxProps) {
   return (
-    <Box
+    <Button
+      onClick={setActiveTeam}
       sx={{
         width: "140px",
         height: "120px",
@@ -29,6 +32,6 @@ export function TeamScoreBox({
       <Typography variant="caption">IGRA: {gameScore}</Typography>
       <Typography variant="caption">ZVANJA: {announcementScore}</Typography>
       <Typography variant="h4">Σ {gameScore + announcementScore}</Typography>
-    </Box>
+    </Button>
   );
 }
