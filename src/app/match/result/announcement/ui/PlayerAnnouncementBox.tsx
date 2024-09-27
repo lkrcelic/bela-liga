@@ -1,6 +1,6 @@
 import { Box, Typography } from "@mui/material";
 
-type AnnouncementScoreBoxProps = {
+type PlayerAnnouncementBoxProps = {
   playerName: string;
   announcementValue: number | string;
   backgroundColor: string;
@@ -12,7 +12,7 @@ export default function PlayerAnnouncementBox({
   announcementValue,
   backgroundColor,
   onClick,
-}: AnnouncementScoreBoxProps) {
+}: PlayerAnnouncementBoxProps) {
   return (
     <Box
       onClick={onClick}

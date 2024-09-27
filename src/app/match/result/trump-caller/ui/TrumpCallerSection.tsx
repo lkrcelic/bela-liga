@@ -20,7 +20,7 @@ export default function TrumpCallerSection() {
 
   return (
     <>
-      <Typography variant="h4" color="black">
+      <Typography variant="h5" color="black">
         {title}
       </Typography>
       <PlayersContainer players={players}>

@@ -30,7 +30,6 @@ export default function ActionsButtons() {
         return {
           label: "Spremi",
           action: () => {
-            // Add your custom logic for Page 3
             console.log("Submitting info for Page 3");
           },
         };

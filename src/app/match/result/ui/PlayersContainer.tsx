@@ -8,7 +8,7 @@ type PlayersContainerProps = {
   children: (player: Player) => React.ReactNode;
 };
 
-export function PlayersContainer({ players, children }: PlayersContainerProps) {
+export default function PlayersContainer({ players, children }: PlayersContainerProps) {
   return (
     <Box sx={{ alignItems: "center", backgroundColor: "#fefefe", paddingX: 1 }}>
       <Grid container rowSpacing={2}>
@@ -29,5 +29,3 @@ export function PlayersContainer({ players, children }: PlayersContainerProps) {
     </Box>
   );
 }
-
-export default PlayersContainer;

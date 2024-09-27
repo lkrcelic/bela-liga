@@ -32,7 +32,6 @@ const DigitGrid = () => {
               {digit}
             </Button>
           )}
-
           {digit === "X" && (
             <Button
               sx={{ width: "100%", fontSize: "24px" }}

@@ -1,6 +1,6 @@
 import { Button, Typography } from "@mui/material";
 
-interface ScoreBoxProps {
+type ScoreBoxProps = {
   teamColor: string;
   gameScore: number;
   announcementScore: number;
