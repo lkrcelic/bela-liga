@@ -1,12 +1,19 @@
 import React from "react";
 import { Grid } from "@mui/system";
 import { TeamScoreBox } from "@/app/match/result/ui/TeamScoreBox";
-import useAnnouncementStore from "@/app/store/announcementStore";
-import useScoreStore from "@/app/store/scoreStore";
+import useResultStore from "@/app/store/resultStore";
 
 export default function TeamsScoreSection() {
-  const { team1Score, team2Score, activeTeam, setActiveTeam } = useScoreStore();
-  const { playerAnnouncements } = useAnnouncementStore();
+  const {
+    team1GamePoints,
+    team2TotalPoints,
+    team1AnnouncementPoints,
+    team2AnnouncementPoints,
+    team1TotalPoints,
+    team2GamePoints,
+    activeTeam,
+    setActiveTeam,
+  } = useResultStore();
 
   return (
     <Grid
@@ -18,11 +25,9 @@ export default function TeamsScoreSection() {
       <Grid item xs={6}>
         <TeamScoreBox
           teamColor={activeTeam === "team1" ? "#4caf50" : "#9e9e9e"}
-          gameScore={team1Score}
-          announcementScore={
-            playerAnnouncements[1].totalAnnouncements +
-            playerAnnouncements[3].totalAnnouncements
-          }
+          gameScore={team1GamePoints}
+          announcementScore={team1AnnouncementPoints}
+          totalScore={team1TotalPoints}
           setActiveTeam={() => setActiveTeam("team1")}
         />
       </Grid>
@@ -30,11 +35,9 @@ export default function TeamsScoreSection() {
       <Grid item xs={6}>
         <TeamScoreBox
           teamColor={activeTeam === "team2" ? "#f44336" : "#9e9e9e"}
-          gameScore={team2Score}
-          announcementScore={
-            playerAnnouncements[2].totalAnnouncements +
-            playerAnnouncements[4].totalAnnouncements
-          }
+          gameScore={team2GamePoints}
+          announcementScore={team2AnnouncementPoints}
+          totalScore={team2TotalPoints}
           setActiveTeam={() => setActiveTeam("team2")}
         />
       </Grid>

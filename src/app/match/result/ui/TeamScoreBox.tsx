@@ -4,6 +4,7 @@ interface ScoreBoxProps {
   teamColor: string;
   gameScore: number;
   announcementScore: number;
+  totalScore: number;
   setActiveTeam: () => void;
 }
 
@@ -12,6 +13,7 @@ export function TeamScoreBox({
   gameScore,
   announcementScore,
   setActiveTeam,
+  totalScore,
 }: ScoreBoxProps) {
   return (
     <Button
@@ -31,7 +33,7 @@ export function TeamScoreBox({
     >
       <Typography variant="caption">IGRA: {gameScore}</Typography>
       <Typography variant="caption">ZVANJA: {announcementScore}</Typography>
-      <Typography variant="h4">Σ {gameScore + announcementScore}</Typography>
+      <Typography variant="h4">Σ {totalScore}</Typography>
     </Button>
   );
 }

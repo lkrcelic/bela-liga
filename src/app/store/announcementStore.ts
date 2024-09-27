@@ -3,7 +3,7 @@ import { create } from "zustand";
 
 type AnnouncementCounts = { [key: number]: number };
 
-type PlayerAnnouncements = {
+export type PlayerAnnouncements = {
   totalAnnouncements: number;
   announcementCounts: AnnouncementCounts;
 };
@@ -15,9 +15,10 @@ type AnnouncementState = {
   setActivePlayerId: (playerId: number) => void;
   setAnnouncement: (playerId: number, points: number) => void;
   resetPlayerAnnouncements: (playerId: number) => void;
+  getTotalAnnouncementsPerTeam: () => { team1: number; team2: number };
 };
 
-const useAnnouncementStore = create<AnnouncementState>((set) => ({
+const useAnnouncementStore = create<AnnouncementState>((set, get) => ({
   playerAnnouncements: {
     1: { totalAnnouncements: 0, announcementCounts: {} },
     2: { totalAnnouncements: 0, announcementCounts: {} },
@@ -37,9 +38,8 @@ const useAnnouncementStore = create<AnnouncementState>((set) => ({
             0) + 1,
       };
 
-      // Now we calculate the total announcements by multiplying each key (points) by its count
       const totalAnnouncements = Object.entries(updatedCounts).reduce(
-        (total, [pointValue, count]) => total + pointValue * count,
+        (total, [pointValue, count]) => total + Number(pointValue) * count,
         0
       );
 
@@ -55,7 +55,7 @@ const useAnnouncementStore = create<AnnouncementState>((set) => ({
       };
     }),
 
-  resetPlayerAnnouncements: (playerId: number) =>
+  resetPlayerAnnouncements: (playerId) =>
     set((state) => {
       const updatedPlayerAnnouncements = {
         ...state.playerAnnouncements,

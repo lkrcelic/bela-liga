@@ -1,13 +1,13 @@
 import React from "react";
 import { Button } from "@mui/material";
-import useScoreStore from "@/app/store/scoreStore";
 import { Grid } from "@mui/system";
+import useResultStore from "@/app/store/resultStore";
 
 const DigitGrid = () => {
-  const updateScore = useScoreStore((state) => state.updateScore);
-  const resetScore = useScoreStore((state) => state.resetScore);
-  const setStiglja = useScoreStore((state) => state.setStiglja);
-  const stigljaActive = useScoreStore((state) => state.stigljaActive);
+  const updateScore = useResultStore((state) => state.updateScore);
+  const resetScore = useResultStore((state) => state.resetScore);
+  const setStiglja = useResultStore((state) => state.setStiglja);
+  const stigljaActive = useResultStore((state) => state.stigljaActive);
 
   const handleClick = (digit: number) => {
     updateScore(digit);

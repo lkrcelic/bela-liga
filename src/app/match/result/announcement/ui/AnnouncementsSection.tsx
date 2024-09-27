@@ -2,6 +2,7 @@ import React from "react";
 import { Badge, Box, Button } from "@mui/material";
 import { Grid } from "@mui/system";
 import useAnnouncementStore from "@/app/store/announcementStore";
+import useResultStore from "@/app/store/resultStore";
 
 export default function AnnouncementSection() {
   const {
@@ -11,13 +12,21 @@ export default function AnnouncementSection() {
     activePlayerId,
   } = useAnnouncementStore();
 
+  const updateAnnouncementPoints = useResultStore(
+    (state) => state.updateAnnouncementPoints
+  );
+
   const handleAddAnnouncement = (points: number) => {
-    setAnnouncement(activePlayerId, points); // Update announcement for the active player
+    setAnnouncement(activePlayerId, points);
   };
 
   const handleResetAnnouncements = () => {
-    resetPlayerAnnouncements(activePlayerId); // Reset all announcements
+    resetPlayerAnnouncements(activePlayerId);
   };
+
+  React.useEffect(() => {
+    updateAnnouncementPoints(playerAnnouncements);
+  }, [playerAnnouncements, updateAnnouncementPoints]);
 
   return (
     <Box

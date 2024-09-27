@@ -7,7 +7,7 @@ type AnnouncementScoreBoxProps = {
   onClick?: () => void;
 };
 
-export default function AnnouncementScoreBox({
+export default function PlayerAnnouncementBox({
   playerName,
   announcementValue,
   backgroundColor,

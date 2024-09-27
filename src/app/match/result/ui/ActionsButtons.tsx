@@ -12,9 +12,9 @@ export default function ActionsButtons() {
 
   const getNextAction = () => {
     switch (pathname) {
-      case "/page1":
+      case "/match/result/trump-caller":
         return {
-          label: "Save Page 1 Data",
+          label: "Dalje",
           action: () => {
             router.push("/match/result/announcement");
           },
