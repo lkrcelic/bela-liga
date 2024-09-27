@@ -1,39 +1,39 @@
-import { Button, Typography } from "@mui/material";
+import {Button, Typography} from "@mui/material";
 
 type ScoreBoxProps = {
-  teamColor: string;
-  gameScore: number;
-  announcementScore: number;
-  totalScore: number;
-  setActiveTeam: () => void;
+    teamColor: string;
+    gameScore: number;
+    announcementScore: number;
+    totalScore: number;
+    setActiveTeam: () => void;
 }
 
 export function TeamScoreBox({
-  teamColor,
-  gameScore,
-  announcementScore,
-  setActiveTeam,
-  totalScore,
-}: ScoreBoxProps) {
-  return (
-    <Button
-      onClick={setActiveTeam}
-      sx={{
-        width: "140px",
-        height: "120px",
-        backgroundColor: teamColor,
-        color: "white",
-        borderRadius: "12px",
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "center",
-        alignItems: "center",
-        textAlign: "center",
-      }}
-    >
-      <Typography variant="caption">IGRA: {gameScore}</Typography>
-      <Typography variant="caption">ZVANJA: {announcementScore}</Typography>
-      <Typography variant="h4">Σ {totalScore}</Typography>
-    </Button>
-  );
+                                 teamColor,
+                                 gameScore,
+                                 announcementScore,
+                                 setActiveTeam,
+                                 totalScore,
+                             }: ScoreBoxProps) {
+    return (
+        <Button
+            onClick={setActiveTeam}
+            sx={{
+                width: "140px",
+                height: "120px",
+                backgroundColor: teamColor,
+                color: "white",
+                borderRadius: "12px",
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "center",
+                alignItems: "center",
+                textAlign: "center",
+            }}
+        >
+            <Typography variant="caption">IGRA: {gameScore}</Typography>
+            <Typography variant="caption">ZVANJA: {announcementScore}</Typography>
+            <Typography variant="h4">Σ {totalScore}</Typography>
+        </Button>
+    );
 }

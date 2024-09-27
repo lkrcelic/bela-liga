@@ -1,6 +1,6 @@
 // src/store/scoreStore.ts
 import {create} from "zustand";
-import {PlayerAnnouncements} from "@/app/store/announcementStore";
+import {PlayerAnnouncements} from "@/app/types/types";
 
 type ResultState = {
     team1GamePoints: number;
@@ -17,10 +17,6 @@ type ResultState = {
     updateScore: (digit: number) => void;
     resetScore: () => void;
     setStiglja: () => void;
-    applyFinalScores: (announcementPoints: {
-        team1: number;
-        team2: number;
-    }) => void;
     updateAnnouncementPoints: (playerAnnouncements: {
         [key: number]: PlayerAnnouncements;
     }) => void;
@@ -137,33 +133,6 @@ const useResultStore = create<ResultState>((set, get) => ({
                         };
                     }
                 }),
-
-        applyFinalScores:
-            (announcementPoints) => {
-                const {team1GamePoints, team2GamePoints, callerPlayerId} = get();
-
-                if (callerPlayerId === null) {
-                    throw new Error("Caller player ID is not set");
-                }
-
-                const isTeam1Caller = callerPlayerId === 1 || callerPlayerId === 3;
-                const team1TotalPoints = team1GamePoints + announcementPoints.team1;
-                const team2TotalPoints = team2GamePoints + announcementPoints.team2;
-                const totalPoints = team1TotalPoints + team2TotalPoints;
-                const callerTeamPoints = isTeam1Caller
-                    ? team1TotalPoints
-                    : team2TotalPoints;
-
-                if (callerTeamPoints > totalPoints / 2) {
-                    return;
-                }
-
-                set(
-                    isTeam1Caller
-                        ? {team1GamePoints: 0, team2GamePoints: totalPoints}
-                        : {team1GamePoints: totalPoints, team2GamePoints: 0}
-                );
-            },
 
         updateAnnouncementPoints:
             (playerAnnouncements: {

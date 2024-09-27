@@ -5,10 +5,10 @@ import PlayersAnnouncementSection from "@/app/match/result/announcement/ui/Playe
 import AnnouncementSection from "@/app/match/result/announcement/ui/AnnouncementsSection";
 
 export default function Result() {
-  return (
-    <>
-      <AnnouncementSection />
-      <PlayersAnnouncementSection />
-    </>
-  );
+    return (
+        <>
+            <AnnouncementSection/>
+            <PlayersAnnouncementSection/>
+        </>
+    );
 }
