@@ -4,9 +4,13 @@ import {usePathname, useRouter} from "next/navigation"; // Import both from next
 import {Button} from "@mui/material";
 import {Grid} from "@mui/system";
 import useAnnouncementStore from "@/app/store/announcementStore";
+import useMatchStore from "@/app/store/matchStore";
+import useResultStore from "@/app/store/resultStore";
 
 export default function ActionsButtons() {
     const {noAnnouncements} = useAnnouncementStore();
+    const { stigljaActive, team1TotalPoints, team2TotalPoints, team1AnnouncementPoints, team2AnnouncementPoints } = useResultStore();
+    const {addResult} = useMatchStore();
     const pathname = usePathname();
     const router = useRouter();
 
@@ -30,7 +34,14 @@ export default function ActionsButtons() {
                 return {
                     label: "Spremi",
                     action: () => {
-                        console.log("Submitting info for Page 3");
+                        addResult({
+                            stigljaActive,
+                            team1TotalPoints,
+                            team2TotalPoints,
+                            team1AnnouncementPoints,
+                            team2AnnouncementPoints,
+                        });
+                        router.push("/match");
                     },
                 };
         }
