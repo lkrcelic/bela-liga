@@ -10,9 +10,10 @@ type AnnouncementState = {
     setAnnouncement: (playerId: number, points: number) => void;
     resetPlayerAnnouncements: (playerId: number) => void;
     getTotalAnnouncementsPerTeam: () => { team1: number; team2: number };
+    resetAnnouncements: () => void;
 };
 
-const useAnnouncementStore = create<AnnouncementState>((set, get) => ({
+const initialState = {
     playerAnnouncements: {
         1: {totalAnnouncements: 0, announcementCounts: {}},
         2: {totalAnnouncements: 0, announcementCounts: {}},
@@ -21,6 +22,13 @@ const useAnnouncementStore = create<AnnouncementState>((set, get) => ({
     },
     activePlayerId: 1,
     noAnnouncements: true,
+}
+
+const useAnnouncementStore = create<AnnouncementState>((set, get) => ({
+    ...initialState,
+
+    resetAnnouncements: () => set(initialState),
+
     setActivePlayerId: (playerId) => set({activePlayerId: playerId}),
 
     setAnnouncement: (playerId, points) =>

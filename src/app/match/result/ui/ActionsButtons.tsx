@@ -14,9 +14,12 @@ export default function ActionsButtons() {
         team1TotalPoints,
         team2TotalPoints,
         team1AnnouncementPoints,
-        team2AnnouncementPoints
+        team2AnnouncementPoints,
+        resetResult,
     } = useResultStore();
     const {addResult} = useMatchStore();
+    const {resetAnnouncements} = useAnnouncementStore();
+
     const pathname = usePathname();
     const router = useRouter();
 
@@ -47,6 +50,8 @@ export default function ActionsButtons() {
                             team1AnnouncementPoints,
                             team2AnnouncementPoints,
                         });
+                        resetResult();
+                        resetAnnouncements();
                         router.push("/match");
                     },
                 };

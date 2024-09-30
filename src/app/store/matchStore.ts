@@ -15,7 +15,7 @@ type MatchState = {
     resetMatch: () => void;
 };
 
-const useMatchStore = create<MatchState>((set, get) => ({
+const useMatchStore = create<MatchState>((set) => ({
     results: [],
     team1Stiglas: 0,
     team2Stiglas: 0,

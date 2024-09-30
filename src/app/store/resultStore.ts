@@ -20,21 +20,29 @@ type ResultState = {
     updateAnnouncementPoints: (playerAnnouncements: {
         [key: number]: PlayerAnnouncements;
     }) => void;
+    resetResult: () => void;
+
 };
 
 const MAX_SCORE = 162;
 const STIGLJA_SCORE = 252;
 
+const initialState = {
+    stigljaActive: false,
+    team1GamePoints: 0,
+    team2GamePoints: 0,
+    team1AnnouncementPoints: 0,
+    team2AnnouncementPoints: 0,
+    team1TotalPoints: 0,
+    team2TotalPoints: 0,
+    trumpCallerId: null,
+    activeTeam: "team1",
+};
+
 const useResultStore = create<ResultState>((set) => ({
-        team1GamePoints: 0,
-        team2GamePoints: 0,
-        team1AnnouncementPoints: 0,
-        team2AnnouncementPoints: 0,
-        team1TotalPoints: 0,
-        team2TotalPoints: 0,
-        trumpCallerId: null,
-        activeTeam: "team1",
-        stigljaActive: false,
+        ...initialState,
+
+        resetResult: () => set(initialState),
 
         setTrumpCallerId: (playerId) => set({trumpCallerId: playerId}),
 
@@ -60,7 +68,7 @@ const useResultStore = create<ResultState>((set) => ({
                 if (activeTeam === "team1") {
                     newScore = team1GamePoints * 10 + digit;
                     if (newScore > MAX_SCORE) {
-                        return;
+                        return state;
                     }
                     team1UpdatedGamePoints = newScore;
                     team2UpdatedGamePoints = MAX_SCORE - newScore;
@@ -69,7 +77,7 @@ const useResultStore = create<ResultState>((set) => ({
                 if (activeTeam === "team2") {
                     newScore = team2GamePoints * 10 + digit;
                     if (newScore > MAX_SCORE) {
-                        return;
+                        return state;
                     }
                     team2UpdatedGamePoints = newScore;
                     team1UpdatedGamePoints = MAX_SCORE - newScore;
