@@ -30,7 +30,7 @@ export default function AnnouncementSection() {
                 container
                 spacing={2}
                 justifyContent="center"
-                sx={{marginBottom: 2, marginTop: 4}}
+                sx={{marginBottom: 6}}
             >
                 {[20, 50, 100, 150, 200].map((points) => (
                     <Grid item key={points}>

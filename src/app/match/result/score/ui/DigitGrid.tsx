@@ -25,7 +25,7 @@ const DigitGrid = () => {
                     {typeof digit === "number" && (
                         <Button
                             variant="contained"
-                            sx={{width: "100%", fontSize: "24px"}}
+                            sx={{width: "100%", height:"70px",fontSize: "24px"}}
                             onClick={() => handleClick(digit as number)}
                             disabled={stigljaActive}
                         >
@@ -34,7 +34,7 @@ const DigitGrid = () => {
                     )}
                     {digit === "X" && (
                         <Button
-                            sx={{width: "100%", fontSize: "24px"}}
+                            sx={{width: "100%", height: "70px", fontSize: "24px"}}
                             onClick={resetScore}
                             variant="outlined"
                         >
@@ -45,7 +45,7 @@ const DigitGrid = () => {
                         <Button
                             variant="outlined"
                             color="primary"
-                            sx={{width: "100%", fontSize: "20px", height: "100%"}}
+                            sx={{width: "100%",height: "70px", fontSize: "20px"}}
                             onClick={setStiglja}
                         >
                             Štiglja

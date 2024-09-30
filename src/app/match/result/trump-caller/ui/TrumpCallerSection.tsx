@@ -14,29 +14,19 @@ export default function TrumpCallerSection() {
         {id: 4, name: "Player 4", color: "#f44336"},
     ];
 
-    const {setTrumpCallerId} = useResultStore();
-
-    const [title, setTitle] = React.useState("Select Trump Caller");
+    const {trumpCallerId, setTrumpCallerId} = useResultStore();
 
     return (
-        <>
-            <Typography variant="h5" color="black">
-                {title}
-            </Typography>
-            <PlayersContainer players={players}>
-                {(player) => (
-                    <PlayerBox
-                        key={player.id}
-                        playerName={player.name}
-                        backgroundColor={player.color}
-                        onClick={() => {
-                            setTrumpCallerId(player.id);
-                            setTitle("Trump Caller: " + player.name);
-                        }}
-                    />
-                )}
-            </PlayersContainer>
-        </>
+        <PlayersContainer players={players}>
+            {(player) => (
+                <PlayerBox
+                    key={player.id}
+                    playerName={player.name}
+                    backgroundColor={player.id === trumpCallerId ? player.color : "#9e9e9e"}
+                    onClick={() => setTrumpCallerId(player.id)}
+                />
+            )}
+        </PlayersContainer>
     );
 }
 

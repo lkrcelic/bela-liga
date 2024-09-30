@@ -9,7 +9,13 @@ import useResultStore from "@/app/store/resultStore";
 
 export default function ActionsButtons() {
     const {noAnnouncements} = useAnnouncementStore();
-    const { stigljaActive, team1TotalPoints, team2TotalPoints, team1AnnouncementPoints, team2AnnouncementPoints } = useResultStore();
+    const {
+        stigljaActive,
+        team1TotalPoints,
+        team2TotalPoints,
+        team1AnnouncementPoints,
+        team2AnnouncementPoints
+    } = useResultStore();
     const {addResult} = useMatchStore();
     const pathname = usePathname();
     const router = useRouter();

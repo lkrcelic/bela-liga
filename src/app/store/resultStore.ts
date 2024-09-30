@@ -25,7 +25,7 @@ type ResultState = {
 const MAX_SCORE = 162;
 const STIGLJA_SCORE = 252;
 
-const useResultStore = create<ResultState>((set, get) => ({
+const useResultStore = create<ResultState>((set) => ({
         team1GamePoints: 0,
         team2GamePoints: 0,
         team1AnnouncementPoints: 0,
