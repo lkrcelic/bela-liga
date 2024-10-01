@@ -18,7 +18,7 @@ CREATE TYPE "TrumpCallerPositionEnum" AS ENUM ('FIRST', 'SECOND', 'THIRD', 'FOUR
 
 -- CreateTable
 CREATE TABLE "Player" (
-    "player_id" SERIAL NOT NULL,
+    "id" SERIAL NOT NULL,
     "username" VARCHAR(100) NOT NULL,
     "password_hash" TEXT NOT NULL,
     "email" VARCHAR(100) NOT NULL,
@@ -30,7 +30,15 @@ CREATE TABLE "Player" (
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "last_updated_at" TIMESTAMP(3),
 
-    CONSTRAINT "Player_pkey" PRIMARY KEY ("player_id")
+    CONSTRAINT "Player_pkey" PRIMARY KEY ("id")
+);
+
+CREATE TABLE "Session" (
+    "id" UUID DEFAULT gen_random_uuid() NOT NULL,
+    "expiresAt" TIMESTAMP,
+    "userId" INTEGER,
+
+    CONSTRAINT "Session_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -197,25 +205,31 @@ CREATE UNIQUE INDEX "Player_username_key" ON "Player"("username");
 CREATE UNIQUE INDEX "Player_email_key" ON "Player"("email");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "Session_id_key" ON "Session"("id");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "Team_team_name_key" ON "Team"("team_name");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "PlayerPair_player_id1_player_id2_key" ON "PlayerPair"("player_id1", "player_id2");
 
--- AddForeignKey
-ALTER TABLE "Team" ADD CONSTRAINT "Team_founder_id1_fkey" FOREIGN KEY ("founder_id1") REFERENCES "Player"("player_id") ON DELETE SET NULL ON UPDATE CASCADE;
+--AddForeingKey
+ALTER TABLE "Session" ADD CONSTRAINT "Session_userId_fkey" FOREIGN KEY ("userId") REFERENCES "Player"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Team" ADD CONSTRAINT "Team_founder_id2_fkey" FOREIGN KEY ("founder_id2") REFERENCES "Player"("player_id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "Team" ADD CONSTRAINT "Team_founder_id1_fkey" FOREIGN KEY ("founder_id1") REFERENCES "Player"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Team" ADD CONSTRAINT "Team_creator_id_fkey" FOREIGN KEY ("creator_id") REFERENCES "Player"("player_id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "Team" ADD CONSTRAINT "Team_founder_id2_fkey" FOREIGN KEY ("founder_id2") REFERENCES "Player"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Team" ADD CONSTRAINT "Team_creator_id_fkey" FOREIGN KEY ("creator_id") REFERENCES "Player"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "TeamPlayer" ADD CONSTRAINT "TeamPlayer_team_id_fkey" FOREIGN KEY ("team_id") REFERENCES "Team"("team_id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "TeamPlayer" ADD CONSTRAINT "TeamPlayer_player_id_fkey" FOREIGN KEY ("player_id") REFERENCES "Player"("player_id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "TeamPlayer" ADD CONSTRAINT "TeamPlayer_player_id_fkey" FOREIGN KEY ("player_id") REFERENCES "Player"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "TournamentTeam" ADD CONSTRAINT "TournamentTeam_tournament_id_fkey" FOREIGN KEY ("tournament_id") REFERENCES "Tournament"("tournament_id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -248,10 +262,10 @@ ALTER TABLE "LeagueRound" ADD CONSTRAINT "LeagueRound_league_id_fkey" FOREIGN KE
 ALTER TABLE "LeagueRound" ADD CONSTRAINT "LeagueRound_round_id_fkey" FOREIGN KEY ("round_id") REFERENCES "Round"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "PlayerPair" ADD CONSTRAINT "PlayerPair_player_id1_fkey" FOREIGN KEY ("player_id1") REFERENCES "Player"("player_id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "PlayerPair" ADD CONSTRAINT "PlayerPair_player_id1_fkey" FOREIGN KEY ("player_id1") REFERENCES "Player"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "PlayerPair" ADD CONSTRAINT "PlayerPair_player_id2_fkey" FOREIGN KEY ("player_id2") REFERENCES "Player"("player_id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "PlayerPair" ADD CONSTRAINT "PlayerPair_player_id2_fkey" FOREIGN KEY ("player_id2") REFERENCES "Player"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Match" ADD CONSTRAINT "Match_round_id_fkey" FOREIGN KEY ("round_id") REFERENCES "Round"("id") ON DELETE SET NULL ON UPDATE CASCADE;
@@ -266,10 +280,10 @@ ALTER TABLE "Match" ADD CONSTRAINT "Match_player_pair_id2_fkey" FOREIGN KEY ("pl
 ALTER TABLE "BelaResult" ADD CONSTRAINT "BelaResult_match_id_fkey" FOREIGN KEY ("match_id") REFERENCES "Match"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "BelaResult" ADD CONSTRAINT "BelaResult_card_shuffler_id_fkey" FOREIGN KEY ("card_shuffler_id") REFERENCES "Player"("player_id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "BelaResult" ADD CONSTRAINT "BelaResult_card_shuffler_id_fkey" FOREIGN KEY ("card_shuffler_id") REFERENCES "Player"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "BelaResult" ADD CONSTRAINT "BelaResult_trump_caller_id_fkey" FOREIGN KEY ("trump_caller_id") REFERENCES "Player"("player_id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "BelaResult" ADD CONSTRAINT "BelaResult_trump_caller_id_fkey" FOREIGN KEY ("trump_caller_id") REFERENCES "Player"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "TresetaResult" ADD CONSTRAINT "TresetaResult_match_id_fkey" FOREIGN KEY ("match_id") REFERENCES "Match"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -278,10 +292,10 @@ ALTER TABLE "TresetaResult" ADD CONSTRAINT "TresetaResult_match_id_fkey" FOREIGN
 ALTER TABLE "BelaPlayerAnnouncement" ADD CONSTRAINT "BelaPlayerAnnouncement_result_id_fkey" FOREIGN KEY ("result_id") REFERENCES "BelaResult"("result_id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "BelaPlayerAnnouncement" ADD CONSTRAINT "BelaPlayerAnnouncement_player_id_fkey" FOREIGN KEY ("player_id") REFERENCES "Player"("player_id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "BelaPlayerAnnouncement" ADD CONSTRAINT "BelaPlayerAnnouncement_player_id_fkey" FOREIGN KEY ("player_id") REFERENCES "Player"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "TresetaPlayerAnnouncement" ADD CONSTRAINT "TresetaPlayerAnnouncement_result_id_fkey" FOREIGN KEY ("result_id") REFERENCES "TresetaResult"("result_id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "TresetaPlayerAnnouncement" ADD CONSTRAINT "TresetaPlayerAnnouncement_player_id_fkey" FOREIGN KEY ("player_id") REFERENCES "Player"("player_id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "TresetaPlayerAnnouncement" ADD CONSTRAINT "TresetaPlayerAnnouncement_player_id_fkey" FOREIGN KEY ("player_id") REFERENCES "Player"("id") ON DELETE CASCADE ON UPDATE CASCADE;
