@@ -46,17 +46,25 @@ export async function POST(request: Request) {
     delete matchData.results;
 
     let match = await prisma.match.create({data: matchData});
-    let results;
     if (resultData !== undefined)
     {
-        resultData.forEach(belaResult => {
+        resultData.forEach(async belaResult => {
             belaResult.match_id = match.id;
+            let announcements = belaResult.announcements;
+            delete belaResult.announcements;
+            let belaRes = await prisma.belaResult.create({data: belaResult});
+            if (belaRes && announcements){
+              announcements.forEach(announcement => {
+                announcement.result_id = belaRes.result_id;
+              });
+              await prisma.belaPlayerAnnouncement.createMany({data: announcements});
+            }
         });
         // TODO: try-catch in case inserting fails, rollback change to match table
-        results = await prisma.belaResult.createManyAndReturn({data: resultData});
+        //results = await prisma.belaResult.createManyAndReturn({data: resultData});
     }
 
-    return NextResponse.json({ "match": match, "results": results }, { status: STATUS.OK });
+    return NextResponse.json({ "match": match }, { status: STATUS.OK });
   } catch (error) {
     if (error instanceof z.ZodError){
       return NextResponse.json({ error: error.issues }, { status: STATUS.BadRequest });

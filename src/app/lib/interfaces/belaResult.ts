@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { belaAnnouncements } from "./belaPlayerAnnouncement";
 
 const BelaResultValidation = z.object({
     match_id: z.number().int().default(0),
@@ -17,7 +18,8 @@ const BelaResultValidation = z.object({
         z.literal("KARO"), z.literal("TREF")
     ]).optional(),
     pass: z.boolean(),
-    complete_victory: z.boolean()
+    complete_victory: z.boolean(),
+    announcements: belaAnnouncements.optional()
 });
 
 export const belaResultValidation = BelaResultValidation;
