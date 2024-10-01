@@ -10,7 +10,7 @@ type PlayersContainerProps = {
 
 export default function PlayersContainer({players, children}: PlayersContainerProps) {
     return (
-        <Box sx={{alignItems: "center", backgroundColor: "#fefefe", paddingX: 1}}>
+        <Box sx={{alignItems: "center"}}>
             <Grid container rowSpacing={2}>
                 {players.map((player) => (
                     <Grid

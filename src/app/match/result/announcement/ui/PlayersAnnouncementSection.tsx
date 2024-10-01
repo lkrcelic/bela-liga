@@ -1,15 +1,15 @@
 import React from "react";
-import {Box, Typography} from "@mui/material";
 import useAnnouncementStore from "@/app/store/announcementStore";
 import {Player} from "@/app/types/types";
 import PlayersContainer from "@/app/match/result/ui/PlayersContainer";
+import {Button, Typography} from "@mui/material";
 
 export default function PlayersAnnouncementSection() {
     const players: Player[] = [
-        {id: 1, name: "Player 1", color: "#4caf50"},
-        {id: 2, name: "Player 2", color: "#f44336"},
-        {id: 3, name: "Player 3", color: "#4caf50"},
-        {id: 4, name: "Player 4", color: "#f44336"},
+        {id: 1, name: "Player 1", color: "team1"},
+        {id: 2, name: "Player 2", color: "team2"},
+        {id: 3, name: "Player 3", color: "team1"},
+        {id: 4, name: "Player 4", color: "team2"},
     ];
 
     const {
@@ -27,9 +27,8 @@ export default function PlayersAnnouncementSection() {
                     announcementValue={
                         playerAnnouncements[player.id]?.totalAnnouncements || 0
                     }
-                    backgroundColor={
-                        activePlayerId === player.id ? player.color : "#9e9e9e"
-                    }
+                    teamColor={player.color}
+                    isActive={activePlayerId === player.id}
                     onClick={() => setActivePlayerId(player.id)}
                 />
             )}
@@ -40,24 +39,26 @@ export default function PlayersAnnouncementSection() {
 type AnnouncementBoxProps = {
     playerName: string;
     announcementValue: number | string;
-    backgroundColor: string;
+    teamColor: string;
+    isActive: boolean;
     onClick?: () => void;
 };
 
 function PlayerAnnouncementBox({
                                    playerName,
                                    announcementValue,
-                                   backgroundColor,
+                                   teamColor,
                                    onClick,
+                                   isActive
                                }: AnnouncementBoxProps) {
     return (
-        <Box
+        <Button
             onClick={onClick}
+            color={teamColor}
+            variant={(isActive ? 'contained' : 'outlined') as 'contained' | 'outlined'}
             sx={{
                 width: "100px",
                 height: "100px",
-                backgroundColor: backgroundColor,
-                color: "white",
                 borderRadius: "8px",
                 display: "flex",
                 flexDirection: "column",
@@ -67,8 +68,8 @@ function PlayerAnnouncementBox({
                 cursor: "pointer",
             }}
         >
-            <Typography variant="caption">{playerName}</Typography>
+            <Typography variant="h7">{playerName}</Typography>
             <Typography variant="h6">{announcementValue}</Typography>
-        </Box>
+        </Button>
     );
 }

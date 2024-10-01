@@ -1,6 +1,6 @@
 "use client";
 
-import {usePathname, useRouter} from "next/navigation"; // Import both from next/navigation
+import {usePathname, useRouter} from "next/navigation";
 import {Button} from "@mui/material";
 import {Grid} from "@mui/system";
 import useAnnouncementStore from "@/app/store/announcementStore";
@@ -10,11 +10,14 @@ import useResultStore from "@/app/store/resultStore";
 export default function ActionsButtons() {
     const {noAnnouncements} = useAnnouncementStore();
     const {
+        trumpCallerId,
         stigljaActive,
         team1TotalPoints,
         team2TotalPoints,
         team1AnnouncementPoints,
         team2AnnouncementPoints,
+        team1GamePoints,
+        team2GamePoints,
         resetResult,
     } = useResultStore();
     const {addResult} = useMatchStore();
@@ -28,6 +31,7 @@ export default function ActionsButtons() {
             case "/match/result/trump-caller":
                 return {
                     label: "Dalje",
+                    disabled: trumpCallerId === null,
                     action: () => {
                         router.push("/match/result/announcement");
                     },
@@ -35,6 +39,7 @@ export default function ActionsButtons() {
             case "/match/result/announcement":
                 return {
                     label: noAnnouncements ? "Nema Zvanja" : "Dalje",
+                    disabled: false,
                     action: () => {
                         router.push("/match/result/score");
                     },
@@ -42,6 +47,7 @@ export default function ActionsButtons() {
             case "/match/result/score":
                 return {
                     label: "Spremi",
+                    disabled: team1GamePoints === 0 && team2GamePoints === 0,
                     action: () => {
                         addResult({
                             stigljaActive,
@@ -65,7 +71,7 @@ export default function ActionsButtons() {
             <Grid item size={{xs: 6}}>
                 <Button
                     color="primary"
-                    variant="contained"
+                    variant="outlined"
                     sx={{width: "100%", fontSize: "16px"}}
                     onClick={() => {
                         window.history.back();
@@ -80,6 +86,7 @@ export default function ActionsButtons() {
                     variant="contained"
                     sx={{width: "100%", fontSize: "16px"}}
                     onClick={nextAction.action}
+                    disabled={nextAction.disabled}
                 >
                     {nextAction.label}
                 </Button>

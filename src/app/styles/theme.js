@@ -1,0 +1,103 @@
+import {createTheme} from '@mui/material/styles';
+
+const theme = createTheme({
+  palette: {
+    primary: {
+      main: '#3C4A67',
+    },
+    secondary: {
+      main: '#EDE0BF',
+    },
+    team1: {
+      main: '#386641',
+      contrastText: '#ffffff',
+    },
+    team2: {
+      main: '#BC4749',
+      contrastText: '#ffffff',
+    },
+    info: {
+      main: '#92AFD7',
+    },
+    text: {
+      primary: '#212121',  // Text color
+      secondary: '#757575',  // Secondary text color
+    },
+  },
+  typography: {
+    fontFamily: 'Roboto, sans-serif',
+    h1: {
+      fontSize: '3rem',
+      fontWeight: 700,
+      color: '#212121',
+    },
+    h2: {
+      fontSize: '2rem',
+      fontWeight: 600,
+      color: '#212121',
+    },
+    h7: {
+      fontSize: '1rem',
+      fontWeight: 500,
+      color: '#212121',
+    },
+    body1: {
+      fontSize: '1rem',
+      color: '#212121',
+    },
+    body2: {
+      fontSize: '0.875rem',
+      color: '#757575',
+    },
+  },
+  components: {
+    MuiButton: {
+      styleOverrides: {
+        root: ({ownerState, theme}) => ({
+          borderRadius: '8px',            // Adds border radius
+          textTransform: 'none',          // Removes uppercase text transformation
+
+          // Contained variant for team1
+          ...(ownerState.color === 'team1' && ownerState.variant === 'contained' && {
+            backgroundColor: theme.palette.team1.main,
+            color: theme.palette.team1.contrastText,
+            '&:hover': {
+              backgroundColor: theme.palette.team1.dark || theme.palette.team1.main,
+            },
+          }),
+
+          // Outlined variant for team1
+          ...(ownerState.color === 'team1' && ownerState.variant === 'outlined' && {
+            border: `1px solid ${theme.palette.team1.main}`,
+            color: theme.palette.team1.main,
+            backgroundColor: 'transparent',
+            '&:hover': {
+              backgroundColor: `${theme.palette.team1.main}0A`, // light transparent background on hover
+            },
+          }),
+
+          // Contained variant for team2
+          ...(ownerState.color === 'team2' && ownerState.variant === 'contained' && {
+            backgroundColor: theme.palette.team2.main,
+            color: theme.palette.team2.contrastText,
+            '&:hover': {
+              backgroundColor: theme.palette.team2.dark || theme.palette.team2.main,
+            },
+          }),
+
+          // Outlined variant for team2
+          ...(ownerState.color === 'team2' && ownerState.variant === 'outlined' && {
+            border: `1px solid ${theme.palette.team2.main}`,
+            color: theme.palette.team2.main,
+            backgroundColor: 'transparent',
+            '&:hover': {
+              backgroundColor: `${theme.palette.team2.main}0A`, // light transparent background on hover
+            },
+          }),
+        }),
+      },
+    },
+  },
+});
+
+export default theme;

@@ -21,7 +21,6 @@ type ResultState = {
         [key: number]: PlayerAnnouncements;
     }) => void;
     resetResult: () => void;
-
 };
 
 const MAX_SCORE = 162;

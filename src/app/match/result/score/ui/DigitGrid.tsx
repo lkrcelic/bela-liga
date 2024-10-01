@@ -24,6 +24,7 @@ const DigitGrid = () => {
                 >
                     {typeof digit === "number" && (
                         <Button
+                            color="secondary"
                             variant="contained"
                             sx={{width: "100%", height:"70px",fontSize: "24px"}}
                             onClick={() => handleClick(digit as number)}
@@ -34,18 +35,19 @@ const DigitGrid = () => {
                     )}
                     {digit === "X" && (
                         <Button
+                            color="error"
+                            variant="outlined"
                             sx={{width: "100%", height: "70px", fontSize: "24px"}}
                             onClick={resetScore}
-                            variant="outlined"
                         >
                             X
                         </Button>
                     )}
                     {digit === "štiglja" && (
                         <Button
-                            variant="outlined"
-                            color="primary"
-                            sx={{width: "100%",height: "70px", fontSize: "20px"}}
+                            color="secondary"
+                            variant="contained"
+                            sx={{width: "100%",height: "70px", fontSize: "20px",fontWeight:"500" , color:"#3C4A67"}}
                             onClick={setStiglja}
                         >
                             Štiglja

@@ -4,7 +4,7 @@ import {Box} from "@mui/material";
 import ActionsButtons from "@/app/match/result/ui/ActionsButtons";
 import TeamsScoreSection from "@/app/match/result/ui/TeamsScoreSection";
 
-export default function Layout({ children }) {
+export default function Layout({children}) {
     return (
         <Box
             sx={{
@@ -15,22 +15,20 @@ export default function Layout({ children }) {
                     "children"
                     "actions"
                 `,
-                height: "89vh",
-                padding: 2,
+                height: "85vh",
+                paddingX: 2,
+                paddingTop: 1,
                 gap: 4,
-                backgroundColor: "#fefefe",
             }}
         >
-            <Box sx={{ gridArea: "actions", alignSelf: "start" }}>
-                <ActionsButtons />
-            </Box>
-
-            <Box sx={{ gridArea: "children", alignSelf: "end"}}>
+            <Box sx={{gridArea: "children", alignSelf: "end"}}>
                 {children}
             </Box>
-
-            <Box sx={{ gridArea: "score", alignSelf: "end" }}>
-                <TeamsScoreSection />
+            <Box sx={{gridArea: "score", alignSelf: "end"}}>
+                <TeamsScoreSection/>
+            </Box>
+            <Box sx={{gridArea: "actions", alignSelf: "start"}}>
+                <ActionsButtons/>
             </Box>
         </Box>
     );

@@ -5,20 +5,21 @@ type ScoreBoxProps = {
     teamColor: string;
     value: string;
     secondValue?: string;
-    variant: "h4" | "h6";
+    textVariant: "h4" | "h5";
     setActiveTeam?: () => void;
+    buttonVariant: "contained" | "outlined";
 }
 
-export function TeamScoreBox({label, teamColor, setActiveTeam, value, secondValue, variant}: ScoreBoxProps) {
+export function TeamScoreBox({label, teamColor, setActiveTeam, value, secondValue, textVariant, buttonVariant}: ScoreBoxProps) {
     return (
         <>
             <Button
                 onClick={setActiveTeam}
+                color={teamColor}
+                variant={buttonVariant}
                 sx={{
                     width: "100%",
                     height: "82px",
-                    backgroundColor: teamColor,
-                    color: "white",
                     borderRadius: "12px",
                     display: "flex",
                     flexDirection: "column",
@@ -28,7 +29,7 @@ export function TeamScoreBox({label, teamColor, setActiveTeam, value, secondValu
                 }}
             >
                 {(label && <Typography variant="caption">{label}</Typography>)}
-                {(value && <Typography variant={variant}>{value}</Typography>)}
+                {(value && <Typography variant={textVariant}>{value}</Typography>)}
             </Button>
             {(secondValue && <Typography variant="caption" color="black" paddingLeft={1}>{"Σ: " + secondValue}</Typography>)}
         </>
