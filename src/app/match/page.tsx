@@ -26,7 +26,7 @@ const MobileScoreBoard = () => {
                 <TotalScoreSection/>
                 <CardDealer/>
             </Box>
-            <Box sx={{gridArea: "results"}}>
+            <Box sx={{gridArea: "results", overflowY: 'auto',}}>
                 <ResultsDisplay/>
             </Box>
             <Box sx={{gridArea: "actions", alignSelf: "start"}}>

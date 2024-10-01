@@ -32,12 +32,17 @@ const theme = createTheme({
       color: '#212121',
     },
     h2: {
-      fontSize: '2rem',
+      fontSize: '2.5rem',
       fontWeight: 600,
       color: '#212121',
     },
-    h7: {
-      fontSize: '1rem',
+    h3: {
+      fontSize: '2.25rem',
+      fontWeight: 500,
+      color: '#212121',
+    },
+    h4: {
+      fontSize: '2rem',
       fontWeight: 500,
       color: '#212121',
     },
