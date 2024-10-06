@@ -1,7 +1,6 @@
 import { z } from "zod";
 
-export const belaPlayerAnnouncement = z.object({
-    result_id: z.number().int().default(0),
+export const BelaPlayerAnnouncement = z.object({
     player_id: z.number().int(),
     announcement_type: z.union([
         z.literal("TWENTY"), z.literal("FIFTY"),
@@ -9,4 +8,4 @@ export const belaPlayerAnnouncement = z.object({
         z.literal("TWO_HUNDRED")])
 });
 
-export const belaAnnouncements = z.array(belaPlayerAnnouncement);
+export const BelaPlayerAnnouncements = z.array(BelaPlayerAnnouncement);

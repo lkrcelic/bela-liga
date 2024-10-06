@@ -1,8 +1,8 @@
 import { z } from "zod";
-import { belaAnnouncements } from "./belaPlayerAnnouncement";
+import { BelaPlayerAnnouncements } from "./belaPlayerAnnouncement";
 
-const BelaResultValidation = z.object({
-    match_id: z.number().int().default(0),
+export const BelaResultValidation = z.object({
+    match_id: z.number().int(),
     player_pair1_game_points: z.number().int(),
     player_pair2_game_points: z.number().int(),
     player_pair1_announcement_points: z.number().int(),
@@ -19,7 +19,7 @@ const BelaResultValidation = z.object({
     ]).optional(),
     pass: z.boolean(),
     complete_victory: z.boolean(),
-    announcements: belaAnnouncements.optional()
+    announcements: BelaPlayerAnnouncements.optional()
 });
 
-export const belaResultValidation = BelaResultValidation;
+export type BelaResultType = z.infer<typeof BelaResultValidation>;
