@@ -6,15 +6,15 @@ type ScoreBoxProps = {
     value: string;
     secondValue?: string;
     textVariant: "h4" | "h5";
-    setActiveTeam?: () => void;
+    onClick?: () => void;
     buttonVariant: "contained" | "outlined";
 }
 
-export function TeamScoreBox({label, teamColor, setActiveTeam, value, secondValue, textVariant, buttonVariant}: ScoreBoxProps) {
+export function TeamScoreBox({label, teamColor, onClick, value, secondValue, textVariant, buttonVariant}: ScoreBoxProps) {
     return (
         <>
             <Button
-                onClick={setActiveTeam}
+                onClick={onClick}
                 color={teamColor}
                 variant={buttonVariant}
                 sx={{
@@ -31,7 +31,7 @@ export function TeamScoreBox({label, teamColor, setActiveTeam, value, secondValu
                 {(label && <Typography variant="caption">{label}</Typography>)}
                 {(value && <Typography variant={textVariant}>{value}</Typography>)}
             </Button>
-            {(secondValue && <Typography variant="caption" color="black" paddingLeft={1}>{"Σ: " + secondValue}</Typography>)}
+            {(secondValue && <Typography variant="h6" color="black" paddingLeft={1}>{"Σ: " + secondValue}</Typography>)}
         </>
     );
 }

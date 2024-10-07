@@ -1,7 +1,7 @@
 import React from "react";
 import {Button} from "@mui/material";
 import {Grid} from "@mui/system";
-import useResultStore from "@/app/store/resultStore";
+import useResultStore from "@/app/store/bela/resultStore";
 
 const DigitGrid = () => {
     const updateScore = useResultStore((state) => state.updateScore);

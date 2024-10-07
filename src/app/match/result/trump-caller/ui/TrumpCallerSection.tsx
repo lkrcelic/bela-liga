@@ -2,13 +2,13 @@
 
 import React from "react";
 import PlayersContainer from "@/app/match/result/ui/PlayersContainer";
-import useResultStore from "@/app/store/resultStore";
+import useResultStore from "@/app/store/bela/resultStore";
 import usePlayerPairStore from "@/app/store/playerPairStore";
 import {Button, Typography} from "@mui/material";
 
 export default function TrumpCallerSection() {
     const {playerPair1, playerPair2} = usePlayerPairStore();
-    const {trumpCallerId, setTrumpCallerId} = useResultStore();
+    const {trump_caller_id, setTrumpCallerId} = useResultStore();
 
     return (
         <PlayersContainer playerPair1={playerPair1} playerPair2={playerPair2}>
@@ -18,7 +18,7 @@ export default function TrumpCallerSection() {
                     playerName={player.username}
                     color={player === playerPair1.player1 || player === playerPair1.player2 ? "team1" : "team2"}
                     onClick={() => setTrumpCallerId(player.id)}
-                    isTrumpCaller={player.id === trumpCallerId}
+                    isTrumpCaller={player.id === trump_caller_id}
                 />
             )}
         </PlayersContainer>

@@ -2,7 +2,7 @@ import React from 'react';
 import {useRouter} from "next/navigation";
 import useMatchStore from "@/app/store/matchStore";
 import useRoundStore from "@/app/store/RoundStore";
-import useResultStore from "@/app/store/resultStore";
+import useResultStore from "@/app/store/bela/resultStore";
 import SingleActionButton from "@/app/ui/singeActionButton";
 
 export default function Action() {
@@ -16,7 +16,7 @@ export default function Action() {
             return {
                 label: "Završi meč",
                 onClick: () => {
-                    addMatch({team1TotalPoints, team2TotalPoints});
+                    addMatch({team1TotalPoints: playerPair1TotalPoints, team2TotalPoints: playerPair2TotalPoints});
                     resetMatch();
                     resetResult();
                 },

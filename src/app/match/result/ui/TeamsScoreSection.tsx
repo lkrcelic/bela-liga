@@ -1,7 +1,7 @@
 import React from "react";
 import {Grid} from "@mui/system";
 import {TeamScoreBox} from "@/app/match/result/ui/TeamScoreBox";
-import useResultStore from "@/app/store/resultStore";
+import useResultStore from "@/app/store/bela/resultStore";
 import {usePathname} from "next/navigation";
 
 type ScoreSectionType = {
@@ -20,10 +20,10 @@ type ScoreSectionType = {
 
 export default function TeamsScoreSection() {
     const {
-        team1GamePoints,
-        team2GamePoints,
-        team1AnnouncementPoints,
-        team2AnnouncementPoints,
+        player_pair1_game_points,
+        player_pair2_game_points,
+        player_pair1_announcement_points,
+        player_pair2_announcement_points,
         activeTeam,
         setActiveTeam,
     } = useResultStore();
@@ -49,8 +49,8 @@ export default function TeamsScoreSection() {
                 return {
                     team1Color: "team1",
                     team2Color: "team2",
-                    team1Value: team1AnnouncementPoints,
-                    team2Value: team2AnnouncementPoints,
+                    team1Value: player_pair1_announcement_points,
+                    team2Value: player_pair2_announcement_points,
                     team1SecondValue: "",
                     team2SecondValue: "",
                     textVariant: "h4",
@@ -63,10 +63,10 @@ export default function TeamsScoreSection() {
                 return {
                     team1Color: "team1",
                     team2Color: "team2",
-                    team1Value: team1GamePoints,
-                    team2Value: team2GamePoints,
-                    team1SecondValue: team1GamePoints + team1AnnouncementPoints,
-                    team2SecondValue: team2GamePoints + team2AnnouncementPoints,
+                    team1Value: player_pair1_game_points,
+                    team2Value: player_pair2_game_points,
+                    team1SecondValue: player_pair1_game_points + player_pair1_announcement_points,
+                    team2SecondValue: player_pair2_game_points + player_pair2_announcement_points,
                     textVariant: "h4",
                     team1ButtonVariant: activeTeam === "team1" ? "contained" : "outlined",
                     team2ButtonVariant: activeTeam === "team2" ? "contained" : "outlined",
@@ -93,7 +93,6 @@ export default function TeamsScoreSection() {
                     setActiveTeam={() => scoreSectionType.onClick?.("team1")}
                     textVariant={scoreSectionType.textVariant}
                     secondValue={String(scoreSectionType?.team1SecondValue)}
-                    isActive={activeTeam === "team1"}
                     buttonVariant={scoreSectionType.team1ButtonVariant}
                 />
             </Grid>
@@ -106,7 +105,6 @@ export default function TeamsScoreSection() {
                     setActiveTeam={() => scoreSectionType.onClick?.("team2")}
                     textVariant={scoreSectionType.textVariant}
                     secondValue={String(scoreSectionType?.team2SecondValue)}
-                    isActive={activeTeam === "team2"}
                     buttonVariant={scoreSectionType.team2ButtonVariant}
                 />
             </Grid>

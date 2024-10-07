@@ -1,9 +1,9 @@
 import {create} from "zustand";
-import {BelaResult} from "@prisma/client";
 import {persist} from "zustand/middleware";
+import {ResultState} from "@/app/store/bela/resultStore";
 
 export type MatchState = {
-    results: BelaResult[];
+    results: ResultState[];
     team1Stiglas: number;
     team2Stiglas: number;
     team1Falls: number;
@@ -54,8 +54,8 @@ const useMatchStore = create<MatchState>(
                     },
                     ...state.results,
                 ],
-                team1TotalPoints: state.team1TotalPoints + team1TotalPoints,
-                team2TotalPoints: state.team2TotalPoints + team2TotalPoints,
+                playerPair1TotalPoints: state.playerPair1TotalPoints + team1TotalPoints,
+                playerPair2TotalPoints: state.playerPair2TotalPoints + team2TotalPoints,
                 team1TotalAnnouncements: state.team1TotalAnnouncements + team1AnnouncementPoints,
                 team2TotalAnnouncements: state.team2TotalAnnouncements + team2AnnouncementPoints,
                 team1Stiglas: stigljaActive && team1Won ? state.team1Stiglas + 1 : state.team1Stiglas,
@@ -71,8 +71,8 @@ const useMatchStore = create<MatchState>(
             team2Stiglas: 0,
             team1Falls: 0,
             team2Falls: 0,
-            team1TotalPoints: 0,
-            team2TotalPoints: 0,
+            playerPair1TotalPoints: 0,
+            playerPair2TotalPoints: 0,
             team1TotalAnnouncements: 0,
             team2TotalAnnouncements: 0,
         }),
@@ -81,15 +81,15 @@ const useMatchStore = create<MatchState>(
     })),
     {
         name: 'match-store',
-        storage: localStorage, // Use sessionStorage instead of localStorage
+        storage: sessionStorage, // Use sessionStorage instead of sessionStorage
         partialize: (state) => ({
             results: state.results,
             team1Stiglas: state.team1Stiglas,
             team2Stiglas: state.team2Stiglas,
             team1Falls: state.team1Falls,
             team2Falls: state.team2Falls,
-            team1TotalPoints: state.team1TotalPoints,
-            team2TotalPoints: state.team2TotalPoints,
+            playerPair1TotalPoints: state.playerPair1TotalPoints,
+            playerPair2TotalPoints: state.playerPair2TotalPoints,
             team1TotalAnnouncements: state.team1TotalAnnouncements,
             team2TotalAnnouncements: state.team2TotalAnnouncements,
         }),

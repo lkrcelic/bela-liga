@@ -3,15 +3,15 @@
 import {usePathname, useRouter} from "next/navigation";
 import {Button} from "@mui/material";
 import {Grid} from "@mui/system";
-import useAnnouncementStore from "@/app/store/announcementStore";
+import useAnnouncementStore from "@/app/store/bela/announcementStore";
 import useMatchStore from "@/app/store/matchStore";
-import useResultStore from "@/app/store/resultStore";
+import useResultStore from "@/app/store/bela/resultStore";
 import DoubleActionButton from "@/app/ui/doubleActionButton";
 
 export default function ActionsButtons() {
     const {noAnnouncements} = useAnnouncementStore();
     const {
-        trumpCallerId,
+        trump_caller_id,
         stigljaActive,
         team1TotalPoints,
         team2TotalPoints,
@@ -32,7 +32,7 @@ export default function ActionsButtons() {
             case "/match/result/trump-caller":
                 return {
                     label: "Dalje",
-                    disabled: trumpCallerId === null,
+                    disabled: trump_caller_id === undefined,
                     onClick: () => {
                         router.push("/match/result/announcement");
                     },

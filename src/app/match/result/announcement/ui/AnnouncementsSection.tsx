@@ -1,8 +1,8 @@
 import React from "react";
 import {Badge, Box, Button} from "@mui/material";
 import {Grid} from "@mui/system";
-import useAnnouncementStore from "@/app/store/announcementStore";
-import useResultStore from "@/app/store/resultStore";
+import useAnnouncementStore from "@/app/store/bela/announcementStore";
+import useResultStore from "@/app/store/bela/resultStore";
 
 export default function AnnouncementSection() {
     const {

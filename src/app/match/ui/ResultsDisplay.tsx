@@ -5,6 +5,7 @@ import useMatchStore from "@/app/store/matchStore";
 
 export default function ResultsDisplay() {
     const {results} = useMatchStore();
+    console.log(results)
 
     return (
             <Grid container spacing={1.5} justifyContent="center">
@@ -13,7 +14,7 @@ export default function ResultsDisplay() {
                           sx={{ backgroundColor: "secondary.main", borderRadius: "20px" , paddingY: 0.5 }}>
                         <Grid item size={{ xs: 4 }}>
                             <Typography variant="h4" textAlign="center" color={"default"} paddingRight={1}>
-                                {result.team1Points}
+                                {result.team1TotalPoints}
                             </Typography>
                         </Grid>
 
@@ -25,7 +26,7 @@ export default function ResultsDisplay() {
 
                         <Grid item size={{ xs: 4 }}>
                             <Typography variant="h4" textAlign="center" color={"default"} paddingLeft={1}>
-                                {result.team2Points}
+                                {result.team2TotalPoints}
                             </Typography>
                         </Grid>
                     </Grid>

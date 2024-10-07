@@ -29,7 +29,7 @@ const useRoundStore = create<RoundState>((set) => ({
     }
 }), {
     name: 'round-store',
-    storage: localStorage, // Use sessionStorage instead of localStorage
+    storage: sessionStorage, // Use sessionStorage instead of sessionStorage
     partialize: (state) => ({
         team1wins: state.team1wins,
         team2wins: state.team2wins,
