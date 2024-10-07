@@ -32,7 +32,7 @@ export default function PlayersSeating() {
                 <PlayersAroundTable/>
             </Box>
             <Box sx={{gridArea: "actions", alignSelf: "end"}}>
-                <DoubleActionButton secondOnClick={() => router.push("/match")} secondLabel="Započni rundu"/>
+                <DoubleActionButton secondButtonOnClick={() => router.push("/match")} secondButtonLabel="Započni rundu"/>
             </Box>
         </Box>);
 }

@@ -3,12 +3,16 @@ import {Button} from "@mui/material";
 import React from "react";
 
 type DoubleActionButtonProps = {
-    secondLabel: string;
-    secondOnClick: () => void;
-    secondDisabled?: boolean;
+    secondButtonLabel: string;
+    secondButtonOnClick: () => void;
+    secondButtonDisabled?: boolean;
 }
 
-export default function DoubleActionButton({secondLabel, secondOnClick, secondDisabled}: DoubleActionButtonProps) {
+export default function DoubleActionButton({
+                                               secondButtonLabel,
+                                               secondButtonOnClick,
+                                               secondButtonDisabled
+                                           }: DoubleActionButtonProps) {
     return (
         <Grid container spacing={2} sx={{width: "100%"}}>
             <Grid item size={{xs: 6}}>
@@ -28,10 +32,10 @@ export default function DoubleActionButton({secondLabel, secondOnClick, secondDi
                     color="primary"
                     variant="contained"
                     sx={{width: "100%", fontSize: "16px"}}
-                    onClick={secondOnClick}
-                    disabled={secondDisabled}
+                    onClick={secondButtonOnClick}
+                    disabled={secondButtonDisabled}
                 >
-                    {secondLabel}
+                    {secondButtonLabel}
                 </Button>
             </Grid>
         </Grid>

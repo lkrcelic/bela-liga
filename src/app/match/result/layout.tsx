@@ -1,8 +1,8 @@
 "use client";
 
 import {Box} from "@mui/material";
-import ActionsButtons from "@/app/match/result/ui/ActionsButtons";
 import TeamsScoreSection from "@/app/match/result/ui/TeamsScoreSection";
+import React from "react";
 
 export default function Layout({children}) {
     return (
@@ -11,8 +11,8 @@ export default function Layout({children}) {
                 display: "grid",
                 gridTemplateRows: "auto 1fr auto",
                 gridTemplateAreas: `
-                    "score"
-                    "children"
+                    "top"
+                    "body"
                     "actions"
                 `,
                 height: "85vh",
@@ -21,15 +21,10 @@ export default function Layout({children}) {
                 gap: 4,
             }}
         >
-            <Box sx={{gridArea: "score", alignSelf: "end"}}>
+            <Box sx={{gridArea: "top", alignSelf: "end"}}>
                 <TeamsScoreSection/>
             </Box>
-            <Box sx={{gridArea: "children", alignSelf: "end"}}>
-                {children}
-            </Box>
-            <Box sx={{gridArea: "actions", alignSelf: "start"}}>
-                <ActionsButtons/>
-            </Box>
+            {children}
         </Box>
     );
 }
