@@ -1,13 +1,15 @@
-// src/app/api/teams/route.ts
+// src/app/api/matches/route.ts
 
 import { prisma } from "@/app/lib/prisma";
 import { z } from "zod";
-import { matchValidation } from "@/app/lib/interfaces/match";
+import { MatchValidation } from "@/app/lib/interfaces/match";
 import { NextResponse } from "next/server";
 import { STATUS } from "@/app/lib/statusCodes";
+import { checkPlayersValid, insertPlayerPair } from "@/app/lib/belaValidation/playersValidation";
 
 export async function GET() {
   try {
+    // TODO: check user!
     // TODO?: implement limit/offset
     const allMatches = await prisma.match.findMany();
 
@@ -25,38 +27,25 @@ export async function POST(request: Request) {
             score_threshold: ...,
             start_time: ...,
             ...,
-            results: [{result1}, {result2} ...],
             players: [{team1ids}, {team2ids}]
         }
   */
   try {
     const req_data = await request.json();
+    let matchData = MatchValidation.parse(req_data);
+    let players = matchData.players;
+    delete matchData.players;
 
-    let matchData = matchValidation.parse(req_data);
+    if (await checkPlayersValid(players))
+      return NextResponse.json({ error: "Valid players for both teams must be provided!" },
+                               { status: STATUS.BadRequest });
 
-    // TODO: validate data adheres to game rules
-    // TODO: check both teams approved match/result!
-    // TODO: insert playerPair combinations
-    // calcualte_scores(match);
-    // validate(match);
+    matchData.player_pair_id1 = await insertPlayerPair(players?.team1Ids);
+    matchData.player_pair_id2 = await insertPlayerPair(players?.team2Ids);
 
-    // assumes validation and calculate_scores have been successful
-    // strip results from matchData and treat it as a separate array
-    let resultData = matchData.results;
-    delete matchData.results;
+    const ongoingMatch = await prisma.ongoingMatch.create({data: matchData});
 
-    let match = await prisma.match.create({data: matchData});
-    let results;
-    if (resultData !== undefined)
-    {
-        resultData.forEach(belaResult => {
-            belaResult.match_id = match.id;
-        });
-        // TODO: try-catch in case inserting fails, rollback change to match table
-        results = await prisma.belaResult.createManyAndReturn({data: resultData});
-    }
-
-    return NextResponse.json({ "match": match, "results": results }, { status: STATUS.OK });
+    return NextResponse.json({ "match": ongoingMatch }, { status: STATUS.OK });
   } catch (error) {
     if (error instanceof z.ZodError){
       return NextResponse.json({ error: error.issues }, { status: STATUS.BadRequest });
