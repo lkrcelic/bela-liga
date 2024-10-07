@@ -23,6 +23,9 @@ const theme = createTheme({
       primary: '#212121',  // Text color
       secondary: '#757575',  // Secondary text color
     },
+    background: {
+      default: "#F1F1F1"
+    }
   },
   typography: {
     fontFamily: 'Roboto, sans-serif',

@@ -21,11 +21,11 @@ export default function Layout({children}) {
                 gap: 4,
             }}
         >
-            <Box sx={{gridArea: "children", alignSelf: "end"}}>
-                {children}
-            </Box>
             <Box sx={{gridArea: "score", alignSelf: "end"}}>
                 <TeamsScoreSection/>
+            </Box>
+            <Box sx={{gridArea: "children", alignSelf: "end"}}>
+                {children}
             </Box>
             <Box sx={{gridArea: "actions", alignSelf: "start"}}>
                 <ActionsButtons/>

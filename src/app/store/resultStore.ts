@@ -11,6 +11,7 @@ type ResultState = {
     team2TotalPoints: number;
     activeTeam: "team1" | "team2";
     trumpCallerId: number | null;
+    cardShufflerId: number | null;
     stigljaActive: boolean;
     setTrumpCallerId: (playerId: number) => void;
     setActiveTeam: (team: "team1" | "team2") => void;

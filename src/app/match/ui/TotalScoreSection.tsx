@@ -2,9 +2,11 @@ import React from 'react';
 import {Box, Typography} from '@mui/material';
 import {Grid} from "@mui/system";
 import useMatchStore from "@/app/store/matchStore";
+import useRoundStore from "@/app/store/RoundStore";
 
 export default function TotalScoreSection() {
     const {team1TotalPoints, team2TotalPoints} = useMatchStore();
+    const {team1wins,team2wins} = useRoundStore();
 
     return (<Grid container justifyContent="space-between" alignItems="center" spacing={6} >
             <Grid item size={{xs: 6}}>
@@ -20,7 +22,7 @@ export default function TotalScoreSection() {
                             justifyContent: 'center',
                             alignItems: 'center'
                         }}>
-                        <Typography variant="h6" color="#fff">0</Typography>
+                        <Typography variant="h6" color="#fff">{team1wins}</Typography>
                     </Box>
                     <Typography variant="h1" fontWeight="bold">{team1TotalPoints}</Typography>
                     <Typography variant="h6">MI</Typography>
@@ -38,7 +40,7 @@ export default function TotalScoreSection() {
                         justifyContent: 'center',
                         alignItems: 'center'
                     }}>
-                        <Typography variant="h6" color="#fff">0</Typography>
+                        <Typography variant="h6" color="#fff">{team2wins}</Typography>
                     </Box>
                     <Typography variant="h1" fontWeight="bold">{team2TotalPoints}</Typography>
                     <Typography variant="h6">VI</Typography>

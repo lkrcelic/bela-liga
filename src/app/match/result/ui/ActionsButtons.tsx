@@ -6,6 +6,7 @@ import {Grid} from "@mui/system";
 import useAnnouncementStore from "@/app/store/announcementStore";
 import useMatchStore from "@/app/store/matchStore";
 import useResultStore from "@/app/store/resultStore";
+import DoubleActionButton from "@/app/ui/doubleActionButton";
 
 export default function ActionsButtons() {
     const {noAnnouncements} = useAnnouncementStore();
@@ -26,13 +27,13 @@ export default function ActionsButtons() {
     const pathname = usePathname();
     const router = useRouter();
 
-    const getNextAction = () => {
+    const getProps = () => {
         switch (pathname) {
             case "/match/result/trump-caller":
                 return {
                     label: "Dalje",
                     disabled: trumpCallerId === null,
-                    action: () => {
+                    onClick: () => {
                         router.push("/match/result/announcement");
                     },
                 };
@@ -40,7 +41,7 @@ export default function ActionsButtons() {
                 return {
                     label: noAnnouncements ? "Nema Zvanja" : "Dalje",
                     disabled: false,
-                    action: () => {
+                    onClick: () => {
                         router.push("/match/result/score");
                     },
                 };
@@ -48,7 +49,7 @@ export default function ActionsButtons() {
                 return {
                     label: "Spremi",
                     disabled: team1GamePoints === 0 && team2GamePoints === 0,
-                    action: () => {
+                    onClick: () => {
                         addResult({
                             stigljaActive,
                             team1TotalPoints,
@@ -64,33 +65,7 @@ export default function ActionsButtons() {
         }
     };
 
-    const nextAction = getNextAction();
+    const props = getProps();
 
-    return (
-        <Grid container spacing={2} sx={{width: "100%"}}>
-            <Grid item size={{xs: 6}}>
-                <Button
-                    color="primary"
-                    variant="outlined"
-                    sx={{width: "100%", fontSize: "16px"}}
-                    onClick={() => {
-                        window.history.back();
-                    }}
-                >
-                    Nazad
-                </Button>
-            </Grid>
-            <Grid item size={{xs: 6}}>
-                <Button
-                    color="primary"
-                    variant="contained"
-                    sx={{width: "100%", fontSize: "16px"}}
-                    onClick={nextAction.action}
-                    disabled={nextAction.disabled}
-                >
-                    {nextAction.label}
-                </Button>
-            </Grid>
-        </Grid>
-    );
+    return <DoubleActionButton secondLabel={props.label} secondOnClick={props.onClick} secondDisabled={props.disabled}/>
 }

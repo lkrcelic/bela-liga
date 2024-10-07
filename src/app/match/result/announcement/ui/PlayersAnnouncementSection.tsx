@@ -1,33 +1,27 @@
 import React from "react";
 import useAnnouncementStore from "@/app/store/announcementStore";
-import {Player} from "@/app/types/types";
 import PlayersContainer from "@/app/match/result/ui/PlayersContainer";
 import {Button, Typography} from "@mui/material";
+import usePlayerPairStore from "@/app/store/playerPairStore";
 
 export default function PlayersAnnouncementSection() {
-    const players: Player[] = [
-        {id: 1, name: "Player 1", color: "team1"},
-        {id: 2, name: "Player 2", color: "team2"},
-        {id: 3, name: "Player 3", color: "team1"},
-        {id: 4, name: "Player 4", color: "team2"},
-    ];
-
     const {
         playerAnnouncements,
         activePlayerId,
         setActivePlayerId,
     } = useAnnouncementStore();
+    const {playerPair1, playerPair2} = usePlayerPairStore();
 
     return (
-        <PlayersContainer players={players}>
+        <PlayersContainer playerPair1={playerPair1} playerPair2={playerPair2}>
             {(player) => (
                 <PlayerAnnouncementBox
                     key={player.id}
-                    playerName={player.name}
+                    playerName={player.username}
                     announcementValue={
                         playerAnnouncements[player.id]?.totalAnnouncements || 0
                     }
-                    teamColor={player.color}
+                    teamColor={player === playerPair1.player1 || player === playerPair1.player2 ? "team1" : "team2"}
                     isActive={activePlayerId === player.id}
                     onClick={() => setActivePlayerId(player.id)}
                 />

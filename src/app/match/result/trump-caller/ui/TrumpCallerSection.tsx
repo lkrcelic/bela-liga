@@ -1,28 +1,22 @@
 "use client";
 
 import React from "react";
-import {Button, Typography} from "@mui/material";
-import {Player} from "@/app/types/types";
 import PlayersContainer from "@/app/match/result/ui/PlayersContainer";
 import useResultStore from "@/app/store/resultStore";
+import usePlayerPairStore from "@/app/store/playerPairStore";
+import {Button, Typography} from "@mui/material";
 
 export default function TrumpCallerSection() {
-    const players: Player[] = [
-        {id: 1, name: "Player 1", color: "team1"},
-        {id: 2, name: "Player 2", color: "team2"},
-        {id: 3, name: "Player 3", color: "team1"},
-        {id: 4, name: "Player 4", color: "team2"},
-    ];
-
+    const {playerPair1, playerPair2} = usePlayerPairStore();
     const {trumpCallerId, setTrumpCallerId} = useResultStore();
 
     return (
-        <PlayersContainer players={players}>
+        <PlayersContainer playerPair1={playerPair1} playerPair2={playerPair2}>
             {(player) => (
-                <PlayerBox
+                <TrumpCallerButton
                     key={player.id}
-                    playerName={player.name}
-                    color={player.color}
+                    playerName={player.username}
+                    color={player === playerPair1.player1 || player === playerPair1.player2 ? "team1" : "team2"}
                     onClick={() => setTrumpCallerId(player.id)}
                     isTrumpCaller={player.id === trumpCallerId}
                 />
@@ -38,7 +32,7 @@ type PlayerBoxProps = {
     onClick?: () => void;
 };
 
-function PlayerBox({playerName, color, isTrumpCaller, onClick}: PlayerBoxProps) {
+function TrumpCallerButton({playerName, color, isTrumpCaller, onClick}: PlayerBoxProps) {
     return (
         <Button
             onClick={onClick}

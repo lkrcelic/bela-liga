@@ -8,7 +8,7 @@ export default function CardDealer() {
     return (
         <Box sx={{display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
             <Box component="img" src="/card.png" alt="Card dealer" sx={{width: "30px", height: 'auto', paddingRight: 2}}/>
-            <Typography variant="h6" sx={{fontWeight: 'bold'}}>
+            <Typography alignSelf="end" sx={{fontSize: 18, fontWeight: 'bold'}}>
                 {currentDealer}
             </Typography>
         </Box>
