@@ -12,13 +12,12 @@ export default function ActionsButtons() {
     const {noAnnouncements} = useAnnouncementStore();
     const {
         trump_caller_id,
-        stigljaActive,
-        team1TotalPoints,
-        team2TotalPoints,
-        team1AnnouncementPoints,
-        team2AnnouncementPoints,
-        team1GamePoints,
-        team2GamePoints,
+        player_pair1_game_points,
+        player_pair2_game_points,
+        player_pair1_announcement_points,
+        player_pair2_announcement_points,
+        playerPair1TotalPoints,
+        playerPair2TotalPoints,
         resetResult,
     } = useResultStore();
     const {addResult} = useMatchStore();
@@ -48,14 +47,13 @@ export default function ActionsButtons() {
             case "/match/result/score":
                 return {
                     label: "Spremi",
-                    disabled: team1GamePoints === 0 && team2GamePoints === 0,
+                    disabled: player_pair1_game_points === 0 && player_pair2_game_points === 0,
                     onClick: () => {
                         addResult({
-                            stigljaActive,
-                            team1TotalPoints,
-                            team2TotalPoints,
-                            team1AnnouncementPoints,
-                            team2AnnouncementPoints,
+                            playerPair1ResultPoints: playerPair1TotalPoints,
+                            playerPair2ResultPoints: playerPair2TotalPoints,
+                            playerPair1ResultAnnouncements: player_pair1_announcement_points,
+                            playerPair2ResultAnnouncements: player_pair2_announcement_points,
                         });
                         resetResult();
                         resetAnnouncements();

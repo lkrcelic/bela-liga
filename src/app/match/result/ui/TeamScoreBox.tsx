@@ -31,7 +31,7 @@ export function TeamScoreBox({label, teamColor, onClick, value, secondValue, tex
                 {(label && <Typography variant="caption">{label}</Typography>)}
                 {(value && <Typography variant={textVariant}>{value}</Typography>)}
             </Button>
-            {(secondValue && <Typography variant="h6" color="black" paddingLeft={1}>{"Σ: " + secondValue}</Typography>)}
+            {(secondValue && <Typography variant="caption" paddingLeft={1}>{"Σ: " + secondValue}</Typography>)}
         </>
     );
 }

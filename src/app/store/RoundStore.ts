@@ -4,7 +4,7 @@ import {create} from "zustand";
 export type RoundState = {
     team1wins: number;
     team2wins: number;
-    addMatch: ({team1TotalPoints, team2TotalPoints}: { team1TotalPoints: number; team2TotalPoints: number; }) => void;
+    addMatch: ({playerPair1TotalPoints, playerPair2TotalPoints}: { playerPair1TotalPoints: number; playerPair2TotalPoints: number; }) => void;
     resetRound: () => void;
 };
 
@@ -13,10 +13,10 @@ const useRoundStore = create<RoundState>((set) => ({
     team1wins: 0,
     team2wins: 0,
 
-    addMatch: ({team1TotalPoints, team2TotalPoints}) => {
+    addMatch: ({playerPair1TotalPoints, playerPair2TotalPoints}) => {
         set((state) => ({
-            team1wins: state.team1wins + (team1TotalPoints > team2TotalPoints ? 1 : 0),
-            team2wins: state.team2wins + (team2TotalPoints > team1TotalPoints ? 1 : 0),
+            team1wins: state.team1wins + (playerPair1TotalPoints > playerPair2TotalPoints ? 1 : 0),
+            team2wins: state.team2wins + (playerPair2TotalPoints > playerPair1TotalPoints ? 1 : 0),
         }));
     },
 

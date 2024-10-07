@@ -6,17 +6,17 @@ import useResultStore from "@/app/store/bela/resultStore";
 import SingleActionButton from "@/app/ui/singeActionButton";
 
 export default function Action() {
-    const {team1TotalPoints, team2TotalPoints, resetMatch} = useMatchStore();
+    const {playerPair1TotalPoints, playerPair2TotalPoints, resetMatch} = useMatchStore();
     const {addMatch} = useRoundStore();
     const {resetResult} = useResultStore();
     const router = useRouter();
 
     const getProps = () => {
-        if (team1TotalPoints >= 1001 || team2TotalPoints >= 1001) {
+        if (playerPair1TotalPoints >= 1001 || playerPair2TotalPoints >= 1001) {
             return {
                 label: "Završi meč",
                 onClick: () => {
-                    addMatch({team1TotalPoints: playerPair1TotalPoints, team2TotalPoints: playerPair2TotalPoints});
+                    addMatch({ playerPair1TotalPoints, playerPair2TotalPoints});
                     resetMatch();
                     resetResult();
                 },

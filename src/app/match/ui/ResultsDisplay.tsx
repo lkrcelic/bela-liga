@@ -5,7 +5,6 @@ import useMatchStore from "@/app/store/matchStore";
 
 export default function ResultsDisplay() {
     const {results} = useMatchStore();
-    console.log(results)
 
     return (
             <Grid container spacing={1.5} justifyContent="center">
