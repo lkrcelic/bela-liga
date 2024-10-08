@@ -7,7 +7,8 @@ export type ResultState = BelaResultType & {
     team1TotalPoints: number;
     team2TotalPoints: number;
     activeTeam: "team1" | "team2";
-    stigljaActive: boolean;
+    complete_victory: boolean;
+    pass: boolean;
     setTrumpCallerId: (playerId: number) => void;
     setActiveTeam: (team: "team1" | "team2") => void;
     updateScore: (digit: number) => void;
@@ -23,16 +24,17 @@ const MAX_SCORE = 162;
 const STIGLJA_SCORE = 252;
 
 const initialState = {
-    stigljaActive: false,
+    complete_victory: false,
     player_pair1_game_points: 0,
     player_pair2_game_points: 0,
     player_pair1_announcement_points: 0,
     player_pair2_announcement_points: 0,
-    card_shuffler_id: null,
+    card_shuffler_id: 1,  //TODO: Remove this hardcoded 1
     trumpCallerPosition: null,
     playerPair1TotalPoints: 0,
     playerPair2TotalPoints: 0,
-    trump_caller_id: null,
+    trump_caller_id: 1, //TODO: Remove this hardcoded 1
+    pass: true, //TODO think about this is this needed (if added total points)
     activeTeam: "team1",
 };
 
@@ -106,7 +108,7 @@ const useResultStore = create<ResultState>((set) => ({
                 player_pair2_game_points: 0,
                 playerPair1TotalPoints: state.player_pair1_announcement_points,
                 playerPair2TotalPoints: state.player_pair2_announcement_points,
-                stigljaActive: false,
+                complete_victory: false,
             })),
 
         setStiglja:
@@ -120,7 +122,7 @@ const useResultStore = create<ResultState>((set) => ({
                     /*TODO Add check for trump caller*/
                     if (activeTeam === "team1") {
                         return {
-                            stigljaActive: true,
+                            complete_victory: true,
                             player_pair1_game_points: STIGLJA_SCORE,
                             player_pair2_game_points: 0,
                             playerPair1TotalPoints:
@@ -129,7 +131,7 @@ const useResultStore = create<ResultState>((set) => ({
                         };
                     } else {
                         return {
-                            stigljaActive: true,
+                            complete_victory: true,
                             player_pair1_game_points: 0,
                             player_pair2_game_points: STIGLJA_SCORE,
                             playerPair1TotalPoints: 0,

@@ -7,7 +7,7 @@ const DigitGrid = () => {
     const updateScore = useResultStore((state) => state.updateScore);
     const resetScore = useResultStore((state) => state.resetScore);
     const setStiglja = useResultStore((state) => state.setStiglja);
-    const stigljaActive = useResultStore((state) => state.stigljaActive);
+    const complete_victory = useResultStore((state) => state.complete_victory);
 
     const handleClick = (digit: number) => {
         updateScore(digit);
@@ -28,7 +28,7 @@ const DigitGrid = () => {
                             variant="contained"
                             sx={{width: "100%", height:"70px",fontSize: "24px"}}
                             onClick={() => handleClick(digit as number)}
-                            disabled={stigljaActive}
+                            disabled={complete_victory}
                         >
                             {digit}
                         </Button>

@@ -19,10 +19,13 @@ export default function ActionButtons() {
     } = useResultStore();
     const {addResult} = useMatchStore();
     const {resetAnnouncements} = useAnnouncementStore();
+    const resultStoreState = useResultStore.getState?.();
+
 
     const router = useRouter();
 
-    const handleSave = () => {
+    const handleSave = async () => {
+
         addResult({
             playerPair1ResultPoints: playerPair1TotalPoints,
             playerPair2ResultPoints: playerPair2TotalPoints,
@@ -31,6 +34,27 @@ export default function ActionButtons() {
         });
         resetResult();
         resetAnnouncements();
+
+        // Make the POST request with the Zustand state as the body
+        try {
+            const response = await fetch("/api/belaResult", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({...resultStoreState, match_id: 2}),
+            });
+
+            if (!response.ok) {
+                throw new Error(`Failed to send store state: ${response.statusText}`);
+            }
+
+            const data = await response.json();
+            console.log("Response from the server:", data);
+        } catch (error) {
+            console.error("Error sending Zustand state:", error);
+        }
+
         router.push("/match");
     };
 
