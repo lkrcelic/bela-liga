@@ -8,6 +8,7 @@ import ActionButtons from "@/app/match/result/score/ui/ActionButtons";
 export default function Result() {
     return (
         <>
+
             <Box sx={{gridArea: "body", alignSelf: "end"}}>
                 <DigitGrid/>
             </Box>

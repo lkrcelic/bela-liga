@@ -9,30 +9,18 @@ import CardDealer from "@/app/match/ui/CardDealer";
 
 const MobileScoreBoard = () => {
     return (
-        <Box sx={{
-            display: "grid",
-            gridTemplateRows: "auto 1fr auto",
-            gridTemplateAreas: `
-                    "score"
-                    "results"
-                    "actions"
-                `,
-            height: "85vh",
-            paddingX: 2,
-            paddingTop: 1,
-            gap: 3,
-        }}>
-            <Box sx={{gridArea: "score", alignSelf: "end"}}>
+        <>
+            <Box sx={{gridArea: "top", alignSelf: "end"}}>
                 <TotalScoreSection/>
                 <CardDealer/>
             </Box>
-            <Box sx={{gridArea: "results", overflowY: 'auto',}}>
+            <Box sx={{gridArea: "body", overflowY: 'auto',}}>
                 <ResultsDisplay/>
             </Box>
             <Box sx={{gridArea: "actions", alignSelf: "start"}}>
                 <Action/>
             </Box>
-        </Box>
+        </>
     );
 };
 
