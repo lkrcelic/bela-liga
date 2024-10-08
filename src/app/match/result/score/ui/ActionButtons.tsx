@@ -6,29 +6,27 @@ import useMatchStore from "@/app/store/matchStore";
 import {useRouter} from "next/navigation";
 import DoubleActionButton from "@/app/ui/DoubleActionButton";
 
-
 export default function ActionButtons() {
     const {
         player_pair1_game_points,
         player_pair2_game_points,
         player_pair1_announcement_points,
         player_pair2_announcement_points,
-        playerPair1TotalPoints,
-        playerPair2TotalPoints,
+        player_pair1_total_points,
+        player_pair2_total_points,
         resetResult,
     } = useResultStore();
     const {addResult} = useMatchStore();
     const {resetAnnouncements} = useAnnouncementStore();
     const resultStoreState = useResultStore.getState?.();
 
-
     const router = useRouter();
 
     const handleSave = async () => {
 
         addResult({
-            playerPair1ResultPoints: playerPair1TotalPoints,
-            playerPair2ResultPoints: playerPair2TotalPoints,
+            playerPair1ResultPoints: player_pair1_total_points,
+            playerPair2ResultPoints: player_pair2_total_points,
             playerPair1ResultAnnouncements: player_pair1_announcement_points,
             playerPair2ResultAnnouncements: player_pair2_announcement_points,
         });
@@ -42,7 +40,7 @@ export default function ActionButtons() {
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({...resultStoreState, match_id: 2}),
+                body: JSON.stringify({...resultStoreState, match_id: 1}),
             });
 
             if (!response.ok) {

@@ -13,7 +13,7 @@ export default function ResultsDisplay() {
                           sx={{ backgroundColor: "secondary.main", borderRadius: "20px" , paddingY: 0.5 }}>
                         <Grid item size={{ xs: 4 }}>
                             <Typography variant="h4" textAlign="center" color={"default"} paddingRight={1}>
-                                {result.team1TotalPoints}
+                                {result.player_pair1_total_points}
                             </Typography>
                         </Grid>
 
@@ -25,7 +25,7 @@ export default function ResultsDisplay() {
 
                         <Grid item size={{ xs: 4 }}>
                             <Typography variant="h4" textAlign="center" color={"default"} paddingLeft={1}>
-                                {result.team2TotalPoints}
+                                {result.player_pair2_total_points}
                             </Typography>
                         </Grid>
                     </Grid>

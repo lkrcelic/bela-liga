@@ -58,27 +58,27 @@ model Player {
   last_updated_at DateTime? @updatedAt
 
   // Relationships
-  founder1Teams                   Team[]                          @relation("PlayerFounder1")
-  founder2Teams                   Team[]                          @relation("PlayerFounder2")
-  creatorTeams                    Team[]                          @relation("PlayerCreator")
-  teamPlayers                     TeamPlayer[]
-  playerPairs1                    PlayerPair[]                    @relation("Player1Pair")
-  playerPairs2                    PlayerPair[]                    @relation("Player2Pair")
-  cardShufflerBelaResults         BelaResult[]                    @relation("PlayerCardShuffler")
-  trumpCallerBelaResults          BelaResult[]                    @relation("PlayerTrumpCaller")
-  ongoingCardShufflerBelaResults  OngoingBelaResult[]             @relation("OngoingCardShuffler")
-  ongoingTrumpCallerBelaResults   OngoingBelaResult[]             @relation("OngoingTrumpCaller")
-  belaPlayerAnnouncements         BelaPlayerAnnouncement[]
-  tresetaPlayerAnnouncements      TresetaPlayerAnnouncement[]
-  ongoingBelaPlayerAnnouncements  OngoingBelaPlayerAnnouncement[]
-  sessions                        Session[]
+  founder1Teams                  Team[]                          @relation("PlayerFounder1")
+  founder2Teams                  Team[]                          @relation("PlayerFounder2")
+  creatorTeams                   Team[]                          @relation("PlayerCreator")
+  teamPlayers                    TeamPlayer[]
+  playerPairs1                   PlayerPair[]                    @relation("Player1Pair")
+  playerPairs2                   PlayerPair[]                    @relation("Player2Pair")
+  cardShufflerBelaResults        BelaResult[]                    @relation("PlayerCardShuffler")
+  trumpCallerBelaResults         BelaResult[]                    @relation("PlayerTrumpCaller")
+  ongoingCardShufflerBelaResults OngoingBelaResult[]             @relation("OngoingCardShuffler")
+  ongoingTrumpCallerBelaResults  OngoingBelaResult[]             @relation("OngoingTrumpCaller")
+  belaPlayerAnnouncements        BelaPlayerAnnouncement[]
+  tresetaPlayerAnnouncements     TresetaPlayerAnnouncement[]
+  ongoingBelaPlayerAnnouncements OngoingBelaPlayerAnnouncement[]
+  sessions                       Session[]
 }
 
 model Session {
-  id         String    @id @default(uuid()) @db.Uuid
-  expiresAt  DateTime?
-  userId     Int?
-  player     Player?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+  id        String    @id @default(uuid()) @db.Uuid
+  expiresAt DateTime?
+  userId    Int?
+  player    Player?   @relation(fields: [userId], references: [id], onDelete: SetNull)
 }
 
 model Tournament {
@@ -191,12 +191,12 @@ model PlayerPair {
   player_id1 Int
   player_id2 Int
 
-  player1           Player          @relation("Player1Pair", fields: [player_id1], references: [id], onDelete: Cascade)
-  player2           Player          @relation("Player2Pair", fields: [player_id2], references: [id], onDelete: Cascade)
-  matchesAsPair1    Match[]         @relation("MatchPair1")
-  matchesAsPair2    Match[]         @relation("MatchPair2")
-  ongoingMatchesp1  OngoingMatch[]  @relation("MatchPair1")
-  ongoingMatchesp2  OngoingMatch[]  @relation("MatchPair2")
+  player1          Player         @relation("Player1Pair", fields: [player_id1], references: [id], onDelete: Cascade)
+  player2          Player         @relation("Player2Pair", fields: [player_id2], references: [id], onDelete: Cascade)
+  matchesAsPair1   Match[]        @relation("MatchPair1")
+  matchesAsPair2   Match[]        @relation("MatchPair2")
+  ongoingMatchesp1 OngoingMatch[] @relation("MatchPair1")
+  ongoingMatchesp2 OngoingMatch[] @relation("MatchPair2")
 
   @@unique([player_id1, player_id2])
 }
@@ -213,27 +213,27 @@ model Match {
   end_time           DateTime?
   match_date         DateTime? @default(now())
 
-  round          Round?               @relation(fields: [round_id], references: [id], onDelete: SetNull)
-  playerPair1    PlayerPair?          @relation("MatchPair1", fields: [player_pair_id1], references: [id], onDelete: Cascade)
-  playerPair2    PlayerPair?          @relation("MatchPair2", fields: [player_pair_id2], references: [id], onDelete: Cascade)
+  round          Round?          @relation(fields: [round_id], references: [id], onDelete: SetNull)
+  playerPair1    PlayerPair?     @relation("MatchPair1", fields: [player_pair_id1], references: [id], onDelete: Cascade)
+  playerPair2    PlayerPair?     @relation("MatchPair2", fields: [player_pair_id2], references: [id], onDelete: Cascade)
   belaResults    BelaResult[]
   tresetaResults TresetaResult[]
 }
 
 model OngoingMatch {
-  id                 Int       @id @default(autoincrement())
-  round_id           Int?
-  player_pair_id1    Int?
-  player_pair_id2    Int?
-  score_threshold    Int?
-  start_time         DateTime?
-  end_time           DateTime?
-  match_date         DateTime? @default(now())
+  id              Int       @id @default(autoincrement())
+  round_id        Int?
+  player_pair_id1 Int?
+  player_pair_id2 Int?
+  score_threshold Int?
+  start_time      DateTime?
+  end_time        DateTime?
+  match_date      DateTime? @default(now())
 
-  round          Round?          @relation(fields: [round_id], references: [id], onDelete: SetNull)
-  playerPair1    PlayerPair?     @relation("MatchPair1", fields: [player_pair_id1], references: [id], onDelete: Cascade)
-  playerPair2    PlayerPair?     @relation("MatchPair2", fields: [player_pair_id2], references: [id], onDelete: Cascade)
-  belaResults    OngoingBelaResult[]
+  round       Round?              @relation(fields: [round_id], references: [id], onDelete: SetNull)
+  playerPair1 PlayerPair?         @relation("MatchPair1", fields: [player_pair_id1], references: [id], onDelete: Cascade)
+  playerPair2 PlayerPair?         @relation("MatchPair2", fields: [player_pair_id2], references: [id], onDelete: Cascade)
+  belaResults OngoingBelaResult[]
 }
 
 model BelaResult {
@@ -243,6 +243,8 @@ model BelaResult {
   player_pair2_game_points         Int                     @default(0)
   player_pair1_announcement_points Int                     @default(0)
   player_pair2_announcement_points Int                     @default(0)
+  player_pair1_total_points        Int                     @default(0)
+  player_pair2_total_points        Int                     @default(0)
   card_shuffler_id                 Int?
   trump_caller_id                  Int?
   trump_caller_position            TrumpCallerPositionEnum
@@ -263,6 +265,8 @@ model OngoingBelaResult {
   player_pair2_game_points         Int                     @default(0)
   player_pair1_announcement_points Int                     @default(0)
   player_pair2_announcement_points Int                     @default(0)
+  player_pair1_total_points        Int                     @default(0)
+  player_pair2_total_points        Int                     @default(0)
   card_shuffler_id                 Int?
   trump_caller_id                  Int?
   trump_caller_position            TrumpCallerPositionEnum
@@ -270,9 +274,9 @@ model OngoingBelaResult {
   pass                             Boolean                 @default(false)
   complete_victory                 Boolean                 @default(false)
 
-  match                   OngoingMatch                     @relation(fields: [match_id], references: [id], onDelete: Cascade)
-  ongoingCardShuffler     Player?                          @relation("OngoingCardShuffler", fields: [card_shuffler_id], references: [id], onDelete: SetNull)
-  ongoingTrumpCaller      Player?                          @relation("OngoingTrumpCaller", fields: [trump_caller_id], references: [id], onDelete: SetNull)
+  match                   OngoingMatch                    @relation(fields: [match_id], references: [id], onDelete: Cascade)
+  ongoingCardShuffler     Player?                         @relation("OngoingCardShuffler", fields: [card_shuffler_id], references: [id], onDelete: SetNull)
+  ongoingTrumpCaller      Player?                         @relation("OngoingTrumpCaller", fields: [trump_caller_id], references: [id], onDelete: SetNull)
   belaPlayerAnnouncements OngoingBelaPlayerAnnouncement[]
 }
 
@@ -284,7 +288,7 @@ model TresetaResult {
   player_pair1_announcement_points Int @default(0)
   player_pair2_announcement_points Int @default(0)
 
-  match                      Match            @relation(fields: [match_id], references: [id], onDelete: Cascade)
+  match                      Match                       @relation(fields: [match_id], references: [id], onDelete: Cascade)
   tresetaPlayerAnnouncements TresetaPlayerAnnouncement[]
 }
 

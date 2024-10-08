@@ -7,6 +7,8 @@ export const BelaResultValidation = z.object({
     player_pair2_game_points: z.number().int(),
     player_pair1_announcement_points: z.number().int(),
     player_pair2_announcement_points: z.number().int(),
+    player_pair1_total_points: z.number().int(),
+    player_pair2_total_points: z.number().int(),
     card_shuffler_id: z.number().int().optional(),
     trump_caller_id: z.number().int().optional(),
     trump_caller_position: z.union([

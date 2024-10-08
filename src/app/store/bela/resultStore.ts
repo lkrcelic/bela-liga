@@ -4,8 +4,6 @@ import {PlayerAnnouncements} from "@/app/types/types";
 import {BelaResultType} from "@/app/lib/interfaces/belaResult";
 
 export type ResultState = BelaResultType & {
-    team1TotalPoints: number;
-    team2TotalPoints: number;
     activeTeam: "team1" | "team2";
     complete_victory: boolean;
     pass: boolean;
@@ -31,8 +29,8 @@ const initialState = {
     player_pair2_announcement_points: 0,
     card_shuffler_id: 1,  //TODO: Remove this hardcoded 1
     trumpCallerPosition: null,
-    playerPair1TotalPoints: 0,
-    playerPair2TotalPoints: 0,
+    player_pair1_total_points: 0,
+    player_pair2_total_points: 0,
     trump_caller_id: 1, //TODO: Remove this hardcoded 1
     pass: true, //TODO think about this is this needed (if added total points)
     activeTeam: "team1",
@@ -97,8 +95,8 @@ const useResultStore = create<ResultState>((set) => ({
                 return {
                     player_pair1_game_points: pp1UpdatedGamePoints,
                     player_pair2_game_points: pp2UpdatedGamePoints,
-                    playerPair1TotalPoints: updatedPP1TotalPoints,
-                    playerPair2TotalPoints: updatedPP2TotalPoints,
+                    player_pair1_total_points: updatedPP1TotalPoints,
+                    player_pair2_total_points: updatedPP2TotalPoints,
                 };
             }),
 
@@ -106,8 +104,8 @@ const useResultStore = create<ResultState>((set) => ({
             set((state) => ({
                 player_pair1_game_points: 0,
                 player_pair2_game_points: 0,
-                playerPair1TotalPoints: state.player_pair1_announcement_points,
-                playerPair2TotalPoints: state.player_pair2_announcement_points,
+                player_pair1_total_points: state.player_pair1_announcement_points,
+                player_pair2_total_points: state.player_pair2_announcement_points,
                 complete_victory: false,
             })),
 
@@ -125,17 +123,17 @@ const useResultStore = create<ResultState>((set) => ({
                             complete_victory: true,
                             player_pair1_game_points: STIGLJA_SCORE,
                             player_pair2_game_points: 0,
-                            playerPair1TotalPoints:
+                            player_pair1_total_points:
                                 STIGLJA_SCORE + player_pair1_announcement_points + player_pair2_announcement_points,
-                            playerPair2TotalPoints: 0,
+                            player_pair2_total_points: 0,
                         };
                     } else {
                         return {
                             complete_victory: true,
                             player_pair1_game_points: 0,
                             player_pair2_game_points: STIGLJA_SCORE,
-                            playerPair1TotalPoints: 0,
-                            playerPair2TotalPoints:
+                            player_pair1_total_points: 0,
+                            player_pair2_total_points:
                                 STIGLJA_SCORE + player_pair2_announcement_points + player_pair1_announcement_points,
                         };
                     }
@@ -164,8 +162,8 @@ const useResultStore = create<ResultState>((set) => ({
                 });
 
                 set((state) => ({
-                    playerPair1TotalPoints: state.player_pair1_game_points + state.player_pair1_announcement_points,
-                    playerPair2TotalPoints: state.player_pair2_game_points + state.player_pair2_announcement_points,
+                    player_pair1_total_points: state.player_pair1_game_points + state.player_pair1_announcement_points,
+                    player_pair2_total_points: state.player_pair2_game_points + state.player_pair2_announcement_points,
                 }));
             },
     }))
