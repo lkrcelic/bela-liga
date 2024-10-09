@@ -5,8 +5,6 @@ import {BelaResultType} from "@/app/lib/interfaces/belaResult";
 
 export type ResultState = BelaResultType & {
     activeTeam: "team1" | "team2";
-    complete_victory: boolean;
-    pass: boolean;
     setTrumpCallerId: (playerId: number) => void;
     setActiveTeam: (team: "team1" | "team2") => void;
     updateScore: (digit: number) => void;

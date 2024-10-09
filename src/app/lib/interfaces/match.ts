@@ -4,14 +4,14 @@ const TeamPlayers = z.object({
   player1Id: z.number(),
   player2Id: z.number()
 });
+export type TeamPlayersType = z.infer<typeof TeamPlayers>;
 
 const MatchTeamPlayers = z.object({
   team1: TeamPlayers,
   team2: TeamPlayers
 });
-
 export type MatchTeamPlayersType = z.infer<typeof MatchTeamPlayers>;
-export type TeamPlayersType = z.infer<typeof TeamPlayers>;
+
 
 export const MatchValidation = z.object({
   round_id: z.number().int().optional(),
@@ -23,3 +23,5 @@ export const MatchValidation = z.object({
   match_date: z.date().optional(),
   players: MatchTeamPlayers,
 });
+
+export const MatchType = z.infer<typeof MatchValidation>;
