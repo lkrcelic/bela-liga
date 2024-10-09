@@ -1,5 +1,5 @@
-import {Player} from "@/app/types/types";
 import {create} from "zustand";
+import {Player} from "@prisma/client";
 
 export type PlayersState = {
     playerPair1: {

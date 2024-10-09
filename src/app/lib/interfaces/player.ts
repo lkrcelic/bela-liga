@@ -41,3 +41,5 @@ const PlayersOutput = z.array(PlayerOutput);
 export const playerValidation = PlayerValidation;
 export const playerOutput = PlayerOutput;
 export const playersOutput = PlayersOutput;
+
+export type Player = z.infer<typeof PlayerOutput>;

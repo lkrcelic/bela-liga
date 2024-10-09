@@ -1,6 +1,6 @@
 import React from "react";
 import {Box} from "@mui/material";
-import {Player} from "@/app/types/types";
+import {Player} from "@prisma/client";
 import {Grid} from "@mui/system";
 
 type PlayersContainerProps = {

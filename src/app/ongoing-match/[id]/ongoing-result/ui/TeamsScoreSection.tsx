@@ -1,6 +1,6 @@
 import React from "react";
 import {Grid} from "@mui/system";
-import {TeamScoreBox} from "@/app/match/result/ui/TeamScoreBox";
+import {TeamScoreBox} from "@/app/ongoing-match/ongoing-result/ui/TeamScoreBox";
 import useResultStore from "@/app/store/bela/resultStore";
 import {usePathname} from "next/navigation";
 

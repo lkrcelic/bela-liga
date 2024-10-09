@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import PlayersContainer from "@/app/match/result/ui/PlayersContainer";
+import PlayersContainer from "@/app/ongoing-match/ongoing-result/ui/PlayersContainer";
 import useResultStore from "@/app/store/bela/resultStore";
 import usePlayerPairStore from "@/app/store/playerPairStore";
 import {Button, Typography} from "@mui/material";

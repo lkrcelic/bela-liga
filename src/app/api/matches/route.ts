@@ -36,12 +36,12 @@ export async function POST(request: Request) {
     let players = matchData.players;
     delete matchData.players;
 
-    if (await checkPlayersValid(players))
+    if (!await checkPlayersValid(players))
       return NextResponse.json({ error: "Valid players for both teams must be provided!" },
                                { status: STATUS.BadRequest });
 
-    matchData.player_pair_id1 = await insertPlayerPair(players?.team1Ids);
-    matchData.player_pair_id2 = await insertPlayerPair(players?.team2Ids);
+    matchData.player_pair_id1 = await insertPlayerPair(players?.team1);
+    matchData.player_pair_id2 = await insertPlayerPair(players?.team2);
 
     const ongoingMatch = await prisma.ongoingMatch.create({data: matchData});
 

@@ -2,10 +2,10 @@
 
 import React from 'react';
 import {Box} from '@mui/material';
-import TotalScoreSection from "@/app/match/ui/TotalScoreSection";
-import ResultsDisplay from "@/app/match/ui/ResultsDisplay";
-import Action from "@/app/match/ui/Action";
-import CardDealer from "@/app/match/ui/CardDealer";
+import TotalScoreSection from "@/app/ongoing-match/ui/TotalScoreSection";
+import ResultsDisplay from "@/app/ongoing-match/ui/ResultsDisplay";
+import Action from "@/app/ongoing-match/ui/Action";
+import CardDealer from "@/app/ongoing-match/ui/CardDealer";
 
 const MobileScoreBoard = () => {
     return (

@@ -1,17 +1,17 @@
 import { z } from "zod";
 
-const TeamIds = z.object({
+const TeamPlayers = z.object({
   player1Id: z.number(),
   player2Id: z.number()
 });
 
-const GameIds = z.object({
-  team1Ids: TeamIds,
-  team2Ids: TeamIds
+const MatchTeamPlayers = z.object({
+  team1: TeamPlayers,
+  team2: TeamPlayers
 });
 
-export type TeamIdsType = z.infer<typeof TeamIds>;
-export type GameIdsType = z.infer<typeof GameIds>;
+export type MatchTeamPlayersType = z.infer<typeof MatchTeamPlayers>;
+export type TeamPlayersType = z.infer<typeof TeamPlayers>;
 
 export const MatchValidation = z.object({
   round_id: z.number().int().optional(),
@@ -21,5 +21,5 @@ export const MatchValidation = z.object({
   start_time: z.date().optional(),
   end_time: z.date().optional(),
   match_date: z.date().optional(),
-  players: GameIds.optional()
+  players: MatchTeamPlayers,
 });

@@ -1,6 +1,6 @@
 "use client";
 
-import DoubleActionButton from "@/app/ui/DoubleActionButton";
+import DoubleActionButton from "../../../../../ui/DoubleActionButton";
 import useAnnouncementStore from "@/app/store/bela/announcementStore";
 import {useRouter} from "next/navigation";
 

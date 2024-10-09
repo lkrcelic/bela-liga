@@ -1,7 +1,7 @@
 import React from "react";
-import TrumpCallerSection from "@/app/match/result/trump-caller/ui/TrumpCallerSection";
+import TrumpCallerSection from "@/app/ongoing-match/ongoing-result/trump-caller/ui/TrumpCallerSection";
 import {Box, Typography} from "@mui/material";
-import ActionButtons from "@/app/match/result/trump-caller/ui/ActionButtons";
+import ActionButtons from "@/app/ongoing-match/ongoing-result/trump-caller/ui/ActionButtons";
 
 export default function Result() {
     return (

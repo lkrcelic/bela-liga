@@ -6,4 +6,3 @@ export type PlayerAnnouncements = {
     announcementCounts: { [key: number]: number };
 };
 
-export type Player = z.infer<typeof playerOutput>;
