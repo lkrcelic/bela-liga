@@ -24,4 +24,4 @@ export const MatchValidation = z.object({
   players: MatchTeamPlayers,
 });
 
-export const MatchType = z.infer<typeof MatchValidation>;
+export type MatchType = z.infer<typeof MatchValidation>;

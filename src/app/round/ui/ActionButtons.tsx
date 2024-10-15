@@ -3,10 +3,10 @@
 import DoubleActionButton from "@/app/ui/DoubleActionButton";
 import {useRouter} from "next/navigation";
 import {MatchTeamPlayersType} from "@/app/lib/interfaces/match";
+import React from "react";
 
 export default function ActionButtons() {
     const router = useRouter();
-    let matchId;
 
     const startMatch = async () => {
         try {
@@ -28,13 +28,10 @@ export default function ActionButtons() {
             }
 
             const data = await response.json();
-            matchId = data.match.id;
-            console.log("Response from the server:", data);
+            router.push(`/ongoing-match/${data.match.id}`);
         } catch (error) {
             console.error("Error sending Zustand state:", error);
         }
-
-        router.push(`/ongoing-match/${matchId}`);
     }
 
     return <DoubleActionButton secondButtonOnClick={startMatch} secondButtonLabel="Započni rundu"/>

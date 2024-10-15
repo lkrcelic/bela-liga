@@ -6,9 +6,9 @@ import useRoundStore from "@/app/store/RoundStore";
 
 export default function TotalScoreSection() {
     const {player_pair1_total_points, player_pair2_total_points} = useMatchStore();
-    const {team1wins,team2wins} = useRoundStore();
+    const {roundData: {team1wins, team2wins}} = useRoundStore();
 
-    return (<Grid container justifyContent="space-between" alignItems="center" spacing={6} >
+    return (<Grid container justifyContent="space-between" alignItems="center" spacing={6}>
             <Grid item size={{xs: 6}}>
                 <Grid container direction="column" alignItems="center">
                     <Box

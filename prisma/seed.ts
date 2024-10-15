@@ -103,6 +103,17 @@ async function main() {
     { player_id1: player3.id, player_id2: player4.id }
   ];
   await prisma.playerPair.createMany({data: playerPairs});
+
+const rounds = [
+  {
+    round_number: 1,
+    round_date: new Date('2024-01-01'),
+    team1_id: 1,
+    team2_id: 2
+  }
+];
+await prisma.round.createMany({ data: rounds });
+
 }
 
 main()
