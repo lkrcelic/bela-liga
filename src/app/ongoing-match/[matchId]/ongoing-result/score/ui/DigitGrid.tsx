@@ -7,7 +7,7 @@ const DigitGrid = () => {
     const updateScore = useResultStore((state) => state.updateScore);
     const resetScore = useResultStore((state) => state.resetScore);
     const setStiglja = useResultStore((state) => state.setStiglja);
-    const complete_victory = useResultStore((state) => state.complete_victory);
+    const complete_victory = useResultStore((state) => state.resultData.complete_victory);
 
     const handleClick = (digit: number) => {
         updateScore(digit);

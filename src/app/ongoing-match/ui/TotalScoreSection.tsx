@@ -5,7 +5,7 @@ import useMatchStore from "@/app/store/matchStore";
 import useRoundStore from "@/app/store/RoundStore";
 
 export default function TotalScoreSection() {
-    const {player_pair1_total_points, player_pair2_total_points} = useMatchStore();
+    const {matchData: {player_pair1_score, player_pair2_score}} = useMatchStore();
     const {roundData: {team1wins, team2wins}} = useRoundStore();
 
     return (<Grid container justifyContent="space-between" alignItems="center" spacing={6}>
@@ -24,7 +24,7 @@ export default function TotalScoreSection() {
                         }}>
                         <Typography variant="h6" color="#fff">{team1wins}</Typography>
                     </Box>
-                    <Typography variant="h1" fontWeight="bold">{player_pair1_total_points}</Typography>
+                    <Typography variant="h1" fontWeight="bold">{player_pair1_score}</Typography>
                     <Typography variant="h6">MI</Typography>
                 </Grid>
             </Grid>
@@ -42,7 +42,7 @@ export default function TotalScoreSection() {
                     }}>
                         <Typography variant="h6" color="#fff">{team2wins}</Typography>
                     </Box>
-                    <Typography variant="h1" fontWeight="bold">{player_pair2_total_points}</Typography>
+                    <Typography variant="h1" fontWeight="bold">{player_pair2_score}</Typography>
                     <Typography variant="h6">VI</Typography>
                 </Grid>
             </Grid>

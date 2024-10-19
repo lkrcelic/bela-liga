@@ -8,9 +8,9 @@ type RoundTypeExtended = RoundType & {
 
 export type RoundState = {
     roundData: RoundTypeExtended | null;
-    addMatch: ({player_pair1_total_points, player_pair2_total_points}: {
-        player_pair1_total_points: number;
-        player_pair2_total_points: number;
+    addMatch: ({player_pair1_score, player_pair2_score}: {
+        player_pair1_score: number;
+        player_pair2_score: number;
     }) => void;
     resetRound: () => void;
     setRoundData: (data: RoundType) => void;
@@ -28,11 +28,11 @@ const useRoundStore = create<RoundState>((set) => ({
 
     setRoundData: (data) => set({ roundData: data }),
 
-    addMatch: ({player_pair1_total_points, player_pair2_total_points}) => {
+    addMatch: ({player_pair1_score, player_pair2_score}) => {
         set((state) => ({
             roundData: {
-                team1wins: state.roundData.team1wins + (player_pair1_total_points > player_pair2_total_points ? 1 : 0),
-                team2wins: state.roundData.team2wins + (player_pair2_total_points > player_pair1_total_points ? 1 : 0),
+                team1wins: state.roundData.team1wins + (player_pair1_score > player_pair2_score ? 1 : 0),
+                team2wins: state.roundData.team2wins + (player_pair2_score > player_pair1_score ? 1 : 0),
             }
         }));
     },

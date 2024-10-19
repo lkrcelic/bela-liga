@@ -1,10 +1,11 @@
 "use client";
 
 import React from "react";
-import PlayersAnnouncementSection from "@/app/ongoing-match/ongoing-result/announcement/ui/PlayersAnnouncementSection";
-import AnnouncementSection from "@/app/ongoing-match/ongoing-result/announcement/ui/AnnouncementsSection";
 import {Box} from "@mui/material";
-import ActionButtons from "@/app/ongoing-match/ongoing-result/announcement/ui/ActionButtons";
+import AnnouncementSection from "@/app/ongoing-match/[matchId]/ongoing-result/announcement/ui/AnnouncementsSection";
+import PlayersAnnouncementSection
+    from "@/app/ongoing-match/[matchId]/ongoing-result/announcement/ui/PlayersAnnouncementSection";
+import ActionButtons from "@/app/ongoing-match/[matchId]/ongoing-result/announcement/ui/ActionButtons";
 
 export default function Result() {
     return (

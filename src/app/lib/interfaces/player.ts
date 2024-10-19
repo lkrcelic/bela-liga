@@ -27,7 +27,7 @@ const PlayerValidation = z.object({
   }));
 
 // output schema
-const PlayerOutput = z.object({
+export const PlayerOutput = z.object({
     id: z.number(),
     username: z.string(),
     email: z.string(),

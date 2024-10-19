@@ -9,14 +9,14 @@ import useRoundStore from "@/app/store/RoundStore";
 
 export default function PlayersSeating() {
     const params = useParams();
-    const id = params.id;
+    const roundId = params.roundId;
 
     const setRoundData = useRoundStore((state) => state.setRoundData);
 
     React.useEffect(() => {
         const fetchTeamData = async () => {
             try {
-                const response = await fetch(`/api/rounds/${id}`);
+                const response = await fetch(`/api/rounds/${roundId}`);
                 if (!response.ok) {
                     throw new Error('Failed to fetch team data');
                 }
@@ -28,12 +28,12 @@ export default function PlayersSeating() {
         };
 
         fetchTeamData();
-    }, [id]);
+    }, [roundId]);
 
     return (
         <>
             <Box sx={{gridArea: "top", alignSelf: "center"}}>
-                <Typography variant="h3" align="center" fontWeight="bold">Raspored sjedenja</Typography>
+                <Typography variant="h4" align="center" fontWeight="bold">Raspored sjedenja</Typography>
             </Box>
             <Box sx={{gridArea: "body", alignSelf: "start"}}>
                 <PlayersAroundTable/>

@@ -2,8 +2,8 @@
 
 import React from "react";
 import {Box} from "@mui/material";
-import DigitGrid from "@/app/ongoing-match/[id]/ongoing-result/score/ui/DigitGrid";
-import ActionButtons from "@/app/ongoing-match/[id]/ongoing-result/score/ui/ActionButtons";
+import DigitGrid from "@/app/ongoing-match/[matchId]/ongoing-result/score/ui/DigitGrid";
+import ActionButtons from "@/app/ongoing-match/[matchId]/ongoing-result/score/ui/ActionButtons";
 
 export default function Result() {
     return (

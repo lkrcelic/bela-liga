@@ -24,7 +24,7 @@ const initialState = {
     noAnnouncements: true,
 }
 
-const useAnnouncementStore = create<AnnouncementState>((set, get) => ({
+const useAnnouncementStore = create<AnnouncementState>((set) => ({
     ...initialState,
 
     resetAnnouncements: () => set(initialState),

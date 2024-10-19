@@ -15,7 +15,7 @@ export default function ActionButtons() {
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({
+                body: JSON.stringify({ //TODO maknuti hardcode
                     players: {
                         team1: {player1Id: 2, player2Id: 3},
                         team2: {player1Id: 4, player2Id: 5}

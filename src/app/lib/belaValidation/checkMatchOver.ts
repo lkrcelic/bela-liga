@@ -1,26 +1,28 @@
-import { BelaResultType } from "../interfaces/belaResult";
-import { prisma } from "../prisma";
+import {BelaResultType} from "../interfaces/belaResult";
+import {prisma} from "../prisma";
+import {runPrismaQuery} from "@/app/lib/helpers/prismaClientHelper";
 
-export async function checkMatchOver(belaResult: BelaResultType) : Promise<boolean> {
-  let match = await prisma.ongoingMatch.findUnique({ where: { id: belaResult.match_id }, 
-                                                     include: { belaResults: true } });
-  if (!match)
-    return false;
+export async function checkMatchOver(belaResult: BelaResultType): Promise<boolean> {
+    const updatedMatch = await runPrismaQuery(
+        prisma.ongoingMatch.update({
+            where: {id: belaResult.match_id},
+            data: {
+                player_pair1_score: {
+                    increment: belaResult.player_pair1_total_points,
+                },
+                player_pair2_score: {
+                    increment: belaResult.player_pair2_total_points,
+                },
+            },
+            select: {
+                player_pair1_score: true,
+                player_pair2_score: true,
+                score_threshold: true,
+            },
+        })
+    );
 
-  let match_sum_t1 = match?.belaResults.reduce((sum, br) => 
-    sum + br.player_pair1_game_points + br.player_pair1_announcement_points, 0);
-  match_sum_t1 += belaResult.player_pair1_announcement_points + belaResult.player_pair1_game_points;
-  let match_sum_t2 = match?.belaResults.reduce((sum, br) => 
-    sum + br.player_pair2_game_points + br.player_pair2_announcement_points, 0);
-  match_sum_t2 += belaResult.player_pair2_announcement_points + belaResult.player_pair2_game_points;
-  if (match_sum_t1 == match_sum_t2)
-    return false;
-
-  const score_threshold = match.score_threshold ?? 1001;
-  if((match_sum_t1 > score_threshold) || 
-      match_sum_t2 > score_threshold) {
-    return true;
-  }
-
-  return false;
+    const score_threshold = updatedMatch.score_threshold ?? 1001;
+    return updatedMatch.player_pair1_score > score_threshold ||
+        updatedMatch.player_pair2_score > score_threshold;
 }
