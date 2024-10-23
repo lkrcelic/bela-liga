@@ -1,7 +1,6 @@
 import { z } from "zod";
 
-// validation schema
-const PlayerValidation = z.object({
+export const PlayerRequestValidation = z.object({
     username: z.string().min(1),
     password: z.string().min(1),
     email: z.string().min(1).email(),
@@ -26,8 +25,7 @@ const PlayerValidation = z.object({
     last_updated_at: o.last_updated_at
   }));
 
-// output schema
-export const PlayerOutput = z.object({
+export const PlayerResponseValidation = z.object({
     id: z.number(),
     username: z.string(),
     email: z.string(),
@@ -36,10 +34,7 @@ export const PlayerOutput = z.object({
     last_name: z.string()
 });
 
-const PlayersOutput = z.array(PlayerOutput);
+const PlayerResponses = z.array(PlayerResponseValidation);
 
-export const playerValidation = PlayerValidation;
-export const playerOutput = PlayerOutput;
-export const playersOutput = PlayersOutput;
-
-export type Player = z.infer<typeof PlayerOutput>;
+export const playersOutput = PlayerResponses;
+export type PlayerResponse = z.infer<typeof PlayerResponseValidation>;

@@ -90,7 +90,7 @@ export default function TeamsScoreSection() {
                     label={scoreSectionType.label}
                     teamColor={scoreSectionType.team1Color}
                     value={String(scoreSectionType.team1Value)}
-                    setActiveTeam={() => scoreSectionType.onClick?.("team1")}
+                    onClick={() => scoreSectionType.onClick?.("team1")}
                     textVariant={scoreSectionType.textVariant}
                     secondValue={String(scoreSectionType?.team1SecondValue)}
                     buttonVariant={scoreSectionType.team1ButtonVariant}
@@ -102,7 +102,7 @@ export default function TeamsScoreSection() {
                     label={scoreSectionType.label}
                     teamColor={scoreSectionType.team2Color}
                     value={String(scoreSectionType.team2Value)}
-                    setActiveTeam={() => scoreSectionType.onClick?.("team2")}
+                    onClick={() => scoreSectionType.onClick?.("team2")}
                     textVariant={scoreSectionType.textVariant}
                     secondValue={String(scoreSectionType?.team2SecondValue)}
                     buttonVariant={scoreSectionType.team2ButtonVariant}

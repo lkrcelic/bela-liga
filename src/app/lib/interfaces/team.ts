@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-const TeamValidation = z.object({
+export const TeamRequestValidation = z.object({
     team_name: z.string().min(1),
     founder_id1: z.number().int().optional(),
     founder_id2: z.number().int().optional(),
@@ -9,13 +9,10 @@ const TeamValidation = z.object({
     last_updated_at: z.date().optional()
 });
 
-const TeamOutput = z.object({
+export const TeamResponseValidation = z.object({
     team_id: z.number(),
     team_name: z.string()
 });
 
-const TeamsOutput = z.array(TeamOutput);
+export const TeamsResponseValidation = z.array(TeamResponseValidation);
 
-export const teamValidation = TeamValidation;
-export const teamOutput = TeamOutput;
-export const teamsOutput = TeamsOutput;

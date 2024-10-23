@@ -1,7 +1,7 @@
 import { prisma } from "@/app/lib/prisma";
 import { NextResponse } from "next/server";
 import { STATUS } from "@/app/lib/statusCodes";
-import { OutputMatch } from "@/app/lib/interfaces/match";
+import { MatchResponseValidation } from "@/app/lib/interfaces/match";
 
 export async function GET(request: Request, { params }: { params: { id:string } }) {
     const { id } = params;
@@ -72,7 +72,7 @@ export async function GET(request: Request, { params }: { params: { id:string } 
             return NextResponse.json({ error: "Ongoing match not found." }, { status: STATUS.NotFound });
         }
 
-        const ongoingMatch = OutputMatch.parse(dbOngoingMatch);
+        const ongoingMatch = MatchResponseValidation.parse(dbOngoingMatch);
 
         return NextResponse.json(ongoingMatch, { status: STATUS.OK });
     } catch (error) {

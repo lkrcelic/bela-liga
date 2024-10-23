@@ -1,5 +1,5 @@
 import { BelaAnnouncementEnum, BelaPlayerAnnouncement, OngoingMatch, TrumpCallerPositionEnum, TrumpEnum } from "@prisma/client"
-import { BelaResultType } from "../interfaces/belaResult"
+import { BelaResultRequest } from "../interfaces/belaResult"
 
 // BELA RESULT
 interface BelaResultTransformed {
@@ -19,7 +19,7 @@ interface BelaResultTransformed {
   belaPlayerAnnouncements: object
 }
 
-export function transformBelaResult(belaResult: BelaResultType): BelaResultTransformed {
+export function transformBelaResult(belaResult: BelaResultRequest): BelaResultTransformed {
   return {
     match_id: belaResult.match_id,
     player_pair1_game_points: belaResult.player_pair1_game_points,

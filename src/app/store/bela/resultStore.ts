@@ -1,9 +1,9 @@
 // src/store/scoreStore.ts
 import {create} from "zustand";
 import {PlayerAnnouncements} from "@/app/types/types";
-import {BelaResultType} from "@/app/lib/interfaces/belaResult";
+import {BelaResultRequest} from "@/app/lib/interfaces/belaResult";
 
-type BelaResultTypeExtended = BelaResultType & {
+type BelaResultTypeExtended = BelaResultRequest & {
     activeTeam: "team1" | "team2";
 }
 
@@ -49,7 +49,9 @@ const useResultStore = create<ResultState>((set) => ({
         resultData: {...state.resultData, trump_caller_id: playerId}
     })),
 
-    setActiveTeam: (team) => set({resultData: {activeTeam: team}}),
+    setActiveTeam: (team) => set((state) => ({
+        resultData: {...state.resultData, activeTeam: team}
+    })),
 
     updateScore: (digit: number) =>
         set((state) => {

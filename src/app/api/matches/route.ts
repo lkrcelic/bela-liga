@@ -2,7 +2,7 @@
 
 import { prisma } from "@/app/lib/prisma";
 import { z } from "zod";
-import { MatchValidation } from "@/app/lib/interfaces/match";
+import { MatchRequestValidation } from "@/app/lib/interfaces/match";
 import { NextResponse } from "next/server";
 import { STATUS } from "@/app/lib/statusCodes";
 import { checkPlayersValid, insertPlayerPair } from "@/app/lib/belaValidation/playersValidation";
@@ -32,7 +32,7 @@ export async function POST(request: Request) {
   */
   try {
     const req_data = await request.json();
-    let matchData = MatchValidation.parse(req_data);
+    let matchData = MatchRequestValidation.parse(req_data);
     let players = matchData.players;
     delete matchData.players;
 

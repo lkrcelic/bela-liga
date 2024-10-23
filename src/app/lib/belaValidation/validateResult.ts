@@ -1,11 +1,11 @@
-import { BelaResultType } from "../interfaces/belaResult";
+import { BelaResultRequest } from "../interfaces/belaResult";
 
 const BELA_SUM = 162;
 const COMPLETE_VICTORY = 252;
 
 const ann_map = {"TWENTY": 20, "FIFTY": 50, "ONE_HUNDRED": 100, "ONE_HUNDRED_FIFTY": 150, "TWO_HUNDRED": 200};
 
-export function belaResultIsValid(belaResult: BelaResultType) : boolean {
+export function belaResultIsValid(belaResult: BelaResultRequest) : boolean {
     // TODO: Implement validation of pass/fall -> need information on exact player pairs from MATCH
   if (belaResult.complete_victory){
     if (belaResult.player_pair1_game_points === belaResult.player_pair2_game_points){

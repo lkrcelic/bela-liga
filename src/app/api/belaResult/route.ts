@@ -2,7 +2,7 @@
 
 import {prisma} from "@/app/lib/prisma";
 import {z} from "zod";
-import {BelaResultValidation} from "@/app/lib/interfaces/belaResult";
+import {BelaResultValidationRequestValidation} from "@/app/lib/interfaces/belaResult";
 import {NextResponse} from "next/server";
 import {STATUS} from "@/app/lib/statusCodes";
 import {belaResultIsValid} from "@/app/lib/belaValidation/validateResult";
@@ -40,7 +40,7 @@ export async function POST(request: Request) {
     try {
         const req_data = await request.json();
 
-        const resultData = BelaResultValidation.parse(req_data);
+        const resultData = BelaResultValidationRequestValidation.parse(req_data);
 
         if (!belaResultIsValid(resultData)) {
             return NextResponse.json({error: "Invalid bela result entry."}, {status: STATUS.BadRequest});

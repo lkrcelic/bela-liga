@@ -1,12 +1,12 @@
 import {create} from "zustand";
-import {MatchType} from "@/app/lib/interfaces/match";
-import {BelaResultType} from "@/app/lib/interfaces/belaResult";
+import {MatchResponse} from "@/app/lib/interfaces/match";
+import {BelaResultRequest} from "@/app/lib/interfaces/belaResult";
 import {RoundType} from "@/app/lib/interfaces/round";
 
 export type MatchState = {
-    matchData: MatchType;
-    setMatchData: (data: MatchType) => void;
-    addResult: (result: BelaResultType) => void;
+    matchData: MatchResponse;
+    setMatchData: (data: MatchResponse) => void;
+    addResult: (result: BelaResultRequest) => void;
     resetMatch: () => void;
 };
 
@@ -17,7 +17,7 @@ const useMatchStore = create<MatchState>((set) => ({
             belaResults: [],
         },
 
-        setMatchData: (data: MatchType) => set({matchData: data}),
+        setMatchData: (data: MatchResponse) => set({matchData: data}),
 
         addResult: (result) => {
             set((state) => ({

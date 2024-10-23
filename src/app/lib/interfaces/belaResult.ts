@@ -1,9 +1,7 @@
 import {z} from "zod";
-import {BelaPlayerAnnouncements} from "./belaPlayerAnnouncement";
+import {BelaPlayerAnnouncementRequestValidation} from "./belaPlayerAnnouncement";
 
-export type BelaResultType = z.infer<typeof BelaResultValidation>;
-
-export const BelaResultValidation = z.object({
+export const BelaResultValidationRequestValidation = z.object({
     match_id: z.number().int(),
     player_pair1_game_points: z.number().int(),
     player_pair2_game_points: z.number().int(),
@@ -28,11 +26,17 @@ export const BelaResultValidation = z.object({
         .optional(),
     pass: z.boolean(),
     complete_victory: z.boolean(),
-    announcements: BelaPlayerAnnouncements.optional(), // Assuming BelaPlayerAnnouncements is defined
+    announcements: BelaPlayerAnnouncementRequestValidation.optional(),
 });
 
-export const BasicBelaResultValidation = z.object({
+export const BelaResultValidationResponseValidation = BelaResultValidationRequestValidation.extend({
+    result_id: z.number().int(),
+});
+
+export const PartialBelaResultResponseValidation = z.object({
     player_pair1_total_points: z.number(),
     player_pair2_total_points: z.number(),
 });
 
+export type BelaResultRequest = z.infer<typeof BelaResultValidationRequestValidation>;
+export type BelaResultResponse = z.infer<typeof BelaResultValidationResponseValidation>;
