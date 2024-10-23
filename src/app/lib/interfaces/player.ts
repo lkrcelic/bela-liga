@@ -25,16 +25,20 @@ export const PlayerRequestValidation = z.object({
     last_updated_at: o.last_updated_at
   }));
 
-export const PlayerResponseValidation = z.object({
-    id: z.number(),
+export const PlayerPartialResponseValidation = z.object({
+    id: z.number().int(),
     username: z.string(),
+    first_name: z.string(),
+    last_name: z.string(),
+});
+
+export const PlayerResponseValidation = PlayerPartialResponseValidation.extend({
     email: z.string(),
     player_role: z.string(),
-    first_name: z.string(),
-    last_name: z.string()
 });
 
 const PlayerResponses = z.array(PlayerResponseValidation);
 
 export const playersOutput = PlayerResponses;
 export type PlayerResponse = z.infer<typeof PlayerResponseValidation>;
+export type PlayerPartialResponse = z.infer<typeof PlayerPartialResponseValidation>;

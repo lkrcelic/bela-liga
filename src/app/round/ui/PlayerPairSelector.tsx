@@ -1,19 +1,21 @@
 import React, {useState} from 'react';
 import {Button, Menu, MenuItem} from '@mui/material';
-import {PlayerType, TeamPlayersType} from "@/app/lib/interfaces/round";
 import {Grid} from "@mui/system";
+import useMatchStore from "@/app/store/matchStore";
+import useRoundStore from "@/app/store/RoundStore";
+import {PlayerPartialResponse} from "@/app/lib/interfaces/player";
+import {TeamResponse} from "@/app/lib/interfaces/team";
 
-type PlayerPairSelectorProps = {
-    team1Players: TeamPlayersType | undefined;
-    team2Players: TeamPlayersType | undefined;
-};
+export default function PlayerPairSelector() {
+    const {roundData: {team1, team2}} = useRoundStore();
+    const {playersSeatingOrder, setPlayersSeatingOrder} = useMatchStore();
 
-export default function PlayerPairSelector({team1Players, team2Players}: PlayerPairSelectorProps) {
-    const [team1Player1, setTeam1Player1] = useState<PlayerType | null>(null);
-    const [team1Player2, setTeam1Player2] = useState<PlayerType | null>(null);
-
-    const [team2Player1, setTeam2Player1] = useState<PlayerType | null>(null);
-    const [team2Player2, setTeam2Player2] = useState<PlayerType | null>(null);
+    const handlePlayerSelection = (seatIndex: number) =>
+        (player: PlayerPartialResponse | null) => {
+            const newSeatingOrder = [...playersSeatingOrder];
+            newSeatingOrder[seatIndex] = player;
+            setPlayersSeatingOrder(newSeatingOrder);
+        };
 
     return (
         <>
@@ -23,10 +25,10 @@ export default function PlayerPairSelector({team1Players, team2Players}: PlayerP
                 sx={{display: "flex", justifyContent: "flex-start", alignItems: "flex-start"}}
             >
                 <TeamPlayerSelector
-                    selectedPlayer={team1Player1}
-                    setSelectedPlayer={setTeam1Player1}
-                    selectedTeammate={team1Player2}
-                    teamPlayers={team1Players || []}
+                    selectedPlayer={playersSeatingOrder[0]}
+                    setSelectedPlayer={handlePlayerSelection(0)}
+                    selectedTeammate={playersSeatingOrder[2]}
+                    team={team1 as TeamResponse}
                     color="team1"
                 />
             </Grid>
@@ -36,10 +38,10 @@ export default function PlayerPairSelector({team1Players, team2Players}: PlayerP
                 sx={{display: "flex", justifyContent: "flex-end", alignItems: "flex-start"}}
             >
                 <TeamPlayerSelector
-                    selectedPlayer={team2Player1}
-                    setSelectedPlayer={setTeam2Player1}
-                    selectedTeammate={team2Player2}
-                    teamPlayers={team2Players || []}
+                    selectedPlayer={playersSeatingOrder[1]}
+                    setSelectedPlayer={handlePlayerSelection(1)}
+                    selectedTeammate={playersSeatingOrder[3]}
+                    team={team2 as TeamResponse}
                     color="team2"
                 />
             </Grid>
@@ -49,10 +51,10 @@ export default function PlayerPairSelector({team1Players, team2Players}: PlayerP
                 sx={{display: "flex", justifyContent: "flex-start", alignItems: "flex-end"}}
             >
                 <TeamPlayerSelector
-                    selectedPlayer={team2Player2}
-                    setSelectedPlayer={setTeam2Player2}
-                    selectedTeammate={team2Player1}
-                    teamPlayers={team2Players || []}
+                    selectedPlayer={playersSeatingOrder[3]}
+                    setSelectedPlayer={handlePlayerSelection(3)}
+                    selectedTeammate={playersSeatingOrder[1]}
+                    team={team2 as TeamResponse}
                     color="team2"
                 />
             </Grid>
@@ -62,10 +64,10 @@ export default function PlayerPairSelector({team1Players, team2Players}: PlayerP
                 sx={{display: "flex", justifyContent: "flex-end", alignItems: "flex-end"}}
             >
                 <TeamPlayerSelector
-                    selectedPlayer={team1Player2}
-                    setSelectedPlayer={setTeam1Player2}
-                    selectedTeammate={team1Player1}
-                    teamPlayers={team1Players || []}
+                    selectedPlayer={playersSeatingOrder[2]}
+                    setSelectedPlayer={handlePlayerSelection(2)}
+                    selectedTeammate={playersSeatingOrder[0]}
+                    team={team1 as TeamResponse}
                     color="team1"
                 />
             </Grid>
@@ -75,11 +77,11 @@ export default function PlayerPairSelector({team1Players, team2Players}: PlayerP
 
 
 type PlayerSelectorProps = {
-    selectedPlayer: PlayerType | null;
-    setSelectedPlayer: React.Dispatch<React.SetStateAction<PlayerType | null>>;
-    selectedTeammate: PlayerType | null;
+    selectedPlayer: PlayerPartialResponse | null;
+    setSelectedPlayer: (player: PlayerPartialResponse | null) => void;
+    selectedTeammate: PlayerPartialResponse | null;
     color: 'team1' | 'team2';
-    teamPlayers: TeamPlayersType;
+    team: TeamResponse;
 }
 
 function TeamPlayerSelector({
@@ -87,7 +89,7 @@ function TeamPlayerSelector({
                                 setSelectedPlayer,
                                 selectedTeammate,
                                 color,
-                                teamPlayers,
+                                team,
                             }: PlayerSelectorProps) {
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
@@ -99,15 +101,8 @@ function TeamPlayerSelector({
         setAnchorEl(null);
     };
 
-    const handleMenuItemClick = (playerId: number) => {
-        if (playerId === -1) {
-            setSelectedPlayer(null);
-        } else {
-            const player = teamPlayers.find((p) => p.player.id === playerId)?.player || null;
-            if (player) {
-                setSelectedPlayer(player);
-            }
-        }
+    const handleMenuItemClick = (player: PlayerPartialResponse | null) => {
+        setSelectedPlayer(player);
         setAnchorEl(null);
     };
 
@@ -139,16 +134,16 @@ function TeamPlayerSelector({
                     },
                 }}
             >
-                <MenuItem key="empty-option" onClick={() => handleMenuItemClick(-1)}>
+                <MenuItem key="empty-option" onClick={() => handleMenuItemClick(null)}>
                     Obriši
                 </MenuItem>
-                {teamPlayers.filter((player) => !(selectedTeammate && selectedTeammate.id === player.player.id))
-                    .map((player) => (
+                {team?.teamPlayers.filter((p) => !(selectedTeammate?.id === p.player.id))
+                    .map((p) => (
                         <MenuItem
-                            key={player.player.id}
-                            onClick={() => handleMenuItemClick(player.player.id)}
+                            key={p.player.id}
+                            onClick={() => handleMenuItemClick(p.player)}
                         >
-                            {player.player.username}
+                            {p.player.username}
                         </MenuItem>
                     ))}
             </Menu>

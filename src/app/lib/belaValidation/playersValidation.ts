@@ -1,46 +1,41 @@
 import {prisma} from "../prisma";
-import {MatchTeamPlayersType, TeamPlayersType} from "../interfaces/match";
+import {OngoingMatchCreateRequest} from "../interfaces/match";
+import {PlayerPairRequestValidation} from "@/app/lib/interfaces/playerPair";
 
-export async function checkPlayersValid(players: MatchTeamPlayersType | undefined): Promise<boolean> {
-    if (!players)
-        return false;
-
-    let playerIds = [players.team1.player1Id, players.team1.player2Id,
-        players.team2.player1Id, players.team2.player2Id];
+export async function checkPlayersValid(createRequest: OngoingMatchCreateRequest): Promise<boolean> {
+    let playerIds = [
+        createRequest.player_pair1.player_id1,
+        createRequest.player_pair1.player_id2,
+        createRequest.player_pair2.player_id1,
+        createRequest.player_pair2.player_id2,
+    ];
 
     const dbPlayers = await prisma.player.findMany({
         where: {id: {in: playerIds}}
     });
 
-    if (dbPlayers.length !== 4)
-        return false;
-
-    return true;
+    return dbPlayers.length === 4;
 }
 
-export async function insertPlayerPair(players: TeamPlayersType | undefined): Promise<number> {
-    if (!players)
-        return -1;
-
+export async function insertPlayerPair(playerPair: PlayerPairRequestValidation): Promise<number> {
     const existingPair = await prisma.playerPair.findMany({
         where: {
-            OR: [{player_id1: players.player1Id, player_id2: players.player2Id},
-                {player_id1: players.player2Id, player_id2: players.player1Id}]
+            OR: [{player_id1: playerPair.player_id1, player_id2: playerPair.player_id2},
+                {player_id1: playerPair.player_id2, player_id2: playerPair.player_id1}]
         }
     });
 
-    if (existingPair.length === 0) {
-        const newPair = await prisma.playerPair.create({
-            data: {
-                player_id1: players.player1Id,
-                player_id2: players.player2Id
-            }
-        });
-        return newPair.id;
+    if (existingPair.length != 0) {
+        console.log("PlayerPair already exists!");
+        return existingPair[0].id;
     }
 
-    if (existingPair.length === 2)
-        console.log("Multiple playerPair entries detected for same pair!");
+    const newPair = await prisma.playerPair.create({
+        data: {
+            player_id1: playerPair.player_id1,
+            player_id2: playerPair.player_id2,
+        }
+    });
 
-    return existingPair[0].id;
+    return newPair.id;
 }

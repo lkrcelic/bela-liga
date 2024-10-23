@@ -7,13 +7,9 @@ import useRoundStore from "@/app/store/RoundStore";
 import PlayerPairSelector from "@/app/round/ui/PlayerPairSelector";
 
 export default function PlayersAroundTable() {
-    const {roundData} = useRoundStore();
-
     return (
         <Grid container spacing={2} sx={{position: "relative", width: "100%", height: "400px"}}>
-            <PlayerPairSelector team1Players={roundData?.team1?.teamPlayers}
-                                team2Players={roundData?.team2?.teamPlayers}
-            />
+            <PlayerPairSelector />
             <Grid
                 item
                 size={{xs: 12}}

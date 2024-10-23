@@ -2,24 +2,29 @@
 
 import DoubleActionButton from "@/app/ui/DoubleActionButton";
 import {useRouter} from "next/navigation";
-import {MatchTeamPlayersType} from "@/app/lib/interfaces/match";
 import React from "react";
+import useMatchStore from "@/app/store/matchStore";
 
 export default function ActionButtons() {
     const router = useRouter();
+    const playersSeatingOrder = useMatchStore(state => state.playersSeatingOrder)
 
     const startMatch = async () => {
         try {
-            const response = await fetch("/api/matches", {
+            const response = await fetch("/api/ongoing-matches", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({ //TODO maknuti hardcode
-                    players: {
-                        team1: {player1Id: 2, player2Id: 3},
-                        team2: {player1Id: 4, player2Id: 5}
-                    } as MatchTeamPlayersType
+                body: JSON.stringify({
+                    player_pair1: {
+                        player_id1: playersSeatingOrder[0]?.id,
+                        player_id2: playersSeatingOrder[2]?.id,
+                    },
+                    player_pair2: {
+                        player_id1: playersSeatingOrder[1]?.id,
+                        player_id2: playersSeatingOrder[3]?.id,
+                    }
                 }),
             });
 

@@ -76,6 +76,7 @@ export async function GET(request: Request, { params }: { params: { id:string } 
 
         return NextResponse.json(ongoingMatch, { status: STATUS.OK });
     } catch (error) {
+        console.log("Error: ", error);
         return NextResponse.json({ error: "Failed to fetch ongoing match." }, { status: STATUS.BadRequest });
     }
 }

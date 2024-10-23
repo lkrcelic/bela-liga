@@ -1,22 +1,30 @@
 import {create} from "zustand";
 import {MatchResponse} from "@/app/lib/interfaces/match";
 import {BelaResultRequest} from "@/app/lib/interfaces/belaResult";
+import {PlayerPartialResponse} from "@/app/lib/interfaces/player";
 
 export type MatchState = {
     matchData: MatchResponse;
+    playersSeatingOrder: (PlayerPartialResponse | null)[]
     setMatchData: (data: MatchResponse) => void;
     addResult: (result: BelaResultRequest) => void;
     resetMatch: () => void;
+    setPlayersSeatingOrder: (newOrder: (PlayerPartialResponse | null)[]) => void;
 };
 
 const useMatchStore = create<MatchState>((set) => ({
+        playersSeatingOrder: [null, null, null, null],
         matchData: {
             player_pair1_score: 0,
             player_pair2_score: 0,
             belaResults: [],
         },
 
-        setMatchData: (data: MatchResponse) => set({matchData: data}),
+        setPlayersSeatingOrder: (newOrder) => set({playersSeatingOrder: newOrder}),
+
+        setMatchData: (data: MatchResponse) => set((state) => ({
+            matchData: {...state.matchData, ...data}
+        })),
 
         addResult: (result) => {
             set((state) => ({

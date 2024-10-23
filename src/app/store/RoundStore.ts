@@ -7,7 +7,7 @@ type RoundTypeExtended = RoundType & {
 }
 
 export type RoundState = {
-    roundData: RoundTypeExtended | null;
+    roundData: RoundTypeExtended;
     addMatch: ({player_pair1_score, player_pair2_score}: {
         player_pair1_score: number;
         player_pair2_score: number;
