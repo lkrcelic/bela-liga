@@ -5,10 +5,9 @@ import useMatchStore from "@/app/store/matchStore";
 
 export default function ResultsDisplay() {
     const {matchData: {belaResults}} = useMatchStore();
-
     return (
             <Grid container spacing={1.5} justifyContent="center">
-                {belaResults.map((result, index) => (
+                {belaResults?.map((result, index) => (
                     <Grid key={index} container item size={{ xs: 11 }} justifyContent="space-evenly" alignItems="center"
                           sx={{ backgroundColor: "secondary.main", borderRadius: "20px" , paddingY: 0.5 }}>
                         <Grid item size={{ xs: 4 }}>

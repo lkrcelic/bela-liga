@@ -4,13 +4,13 @@ import {Grid} from "@mui/system";
 import useResultStore from "@/app/store/bela/resultStore";
 
 const DigitGrid = () => {
-    const updateScore = useResultStore((state) => state.updateScore);
+    const setGamePoints = useResultStore((state) => state.setGamePoints);
     const resetScore = useResultStore((state) => state.resetScore);
     const setStiglja = useResultStore((state) => state.setStiglja);
     const complete_victory = useResultStore((state) => state.resultData.complete_victory);
 
     const handleClick = (digit: number) => {
-        updateScore(digit);
+        setGamePoints(digit);
     };
 
     return (
@@ -26,7 +26,7 @@ const DigitGrid = () => {
                         <Button
                             color="secondary"
                             variant="contained"
-                            sx={{width: "100%", height:"70px",fontSize: "24px"}}
+                            sx={{width: "100%", height: "70px", fontSize: "24px"}}
                             onClick={() => handleClick(digit as number)}
                             disabled={complete_victory}
                         >
@@ -47,7 +47,7 @@ const DigitGrid = () => {
                         <Button
                             color="secondary"
                             variant="contained"
-                            sx={{width: "100%",height: "70px", fontSize: "20px",fontWeight:"500" , color:"#3C4A67"}}
+                            sx={{width: "100%", height: "70px", fontSize: "20px", fontWeight: "500", color: "#3C4A67"}}
                             onClick={setStiglja}
                         >
                             Štiglja

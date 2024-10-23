@@ -1,7 +1,6 @@
 import {create} from "zustand";
 import {MatchResponse} from "@/app/lib/interfaces/match";
 import {BelaResultRequest} from "@/app/lib/interfaces/belaResult";
-import {RoundType} from "@/app/lib/interfaces/round";
 
 export type MatchState = {
     matchData: MatchResponse;

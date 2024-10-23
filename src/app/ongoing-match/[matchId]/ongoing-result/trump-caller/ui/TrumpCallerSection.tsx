@@ -2,23 +2,23 @@
 
 import React from "react";
 import useResultStore from "@/app/store/bela/resultStore";
-import usePlayerPairStore from "@/app/store/playerPairStore";
 import {Button, Typography} from "@mui/material";
 import PlayersContainer from "@/app/ongoing-match/[matchId]/ongoing-result/ui/PlayersContainer";
+import useMatchStore from "@/app/store/matchStore";
 
 export default function TrumpCallerSection() {
-    const {playerPair1, playerPair2} = usePlayerPairStore();
+    const {matchData: {playerPair1, playerPair2}} = useMatchStore();
     const {resultData: {trump_caller_id}, setTrumpCallerId} = useResultStore();
 
     return (
         <PlayersContainer playerPair1={playerPair1} playerPair2={playerPair2}>
             {(player) => (
                 <TrumpCallerButton
-                    key={player.id}
-                    playerName={player.username}
-                    color={player === playerPair1.player1 || player === playerPair1.player2 ? "team1" : "team2"}
-                    onClick={() => setTrumpCallerId(player.id)}
-                    isTrumpCaller={player.id === trump_caller_id}
+                    key={player?.id}
+                    playerName={player?.username}
+                    color={[playerPair1?.player_id1, playerPair1?.player_id2].includes(player?.id) ? "team1" : "team2"}
+                    onClick={() => setTrumpCallerId(player?.id)}
+                    isTrumpCaller={player?.id === trump_caller_id}
                 />
             )}
         </PlayersContainer>
@@ -26,7 +26,7 @@ export default function TrumpCallerSection() {
 }
 
 type PlayerBoxProps = {
-    playerName: string;
+    playerName?: string;
     color: string;
     isTrumpCaller: boolean;
     onClick?: () => void;

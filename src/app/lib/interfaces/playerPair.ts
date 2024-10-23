@@ -1,4 +1,4 @@
-import { z } from "zod";
+import {z} from "zod";
 import {PlayerResponseValidation} from "@/app/lib/interfaces/player";
 
 export const PlayerPairResponseValidation = z.object({
@@ -8,3 +8,6 @@ export const PlayerPairResponseValidation = z.object({
     player1: PlayerResponseValidation,
     player2: PlayerResponseValidation,
 });
+
+
+export type PlayerPairResponse = z.infer<typeof PlayerPairResponseValidation>;

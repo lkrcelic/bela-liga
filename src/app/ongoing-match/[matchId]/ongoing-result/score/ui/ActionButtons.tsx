@@ -10,26 +10,28 @@ export default function ActionButtons() {
     const {
         resultData,
         resetResult,
+        setTotalPoints,
     } = useResultStore();
-    const {addResult} = useMatchStore();
+    const {matchData: {playerPair1, playerPair2}, addResult} = useMatchStore();
     const {resetAnnouncements} = useAnnouncementStore();
 
     const router = useRouter();
     const {matchId} = useParams();
 
     const handleSave = async () => {
-        addResult(resultData);
+        setTotalPoints(playerPair1, playerPair2);
+        const updatedResultData = useResultStore.getState?.().resultData;
+        addResult(updatedResultData!);
         resetResult();
         resetAnnouncements();
 
-        // Make the POST request with the Zustand state as the body
         try {
             const response = await fetch("/api/belaResult", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({...resultData, match_id: 1}),
+                body: JSON.stringify({...updatedResultData}),
             });
 
             if (!response.ok) {

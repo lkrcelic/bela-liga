@@ -30,6 +30,7 @@ const MobileScoreBoard = () => {
 
         fetchTeamData();
     }, [matchId]);
+
     return (
         <>
             <Box sx={{gridArea: "top", alignSelf: "end"}}>

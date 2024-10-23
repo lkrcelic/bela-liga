@@ -2,6 +2,7 @@
 import {create} from "zustand";
 import {PlayerAnnouncements} from "@/app/types/types";
 import {BelaResultRequest} from "@/app/lib/interfaces/belaResult";
+import {PlayerPairResponse} from "@/app/lib/interfaces/playerPair";
 
 type BelaResultTypeExtended = BelaResultRequest & {
     activeTeam: "team1" | "team2";
@@ -9,11 +10,13 @@ type BelaResultTypeExtended = BelaResultRequest & {
 
 export type ResultState = {
     resultData: BelaResultTypeExtended;
-    setTrumpCallerId: (playerId: number) => void;
+    setTrumpCallerId: (playerId?: number) => void;
     setActiveTeam: (team: "team1" | "team2") => void;
-    updateScore: (digit: number) => void;
+    setTotalPoints: (playerPair1?: PlayerPairResponse, playerPair2?: PlayerPairResponse) => ResultState;
+    setGamePoints: (digit: number) => void;
     resetScore: () => void;
     setStiglja: () => void;
+    setMatchId: (id: number) => void;
     updateAnnouncementPoints: (playerAnnouncements: {
         [key: number]: PlayerAnnouncements;
     }) => void;
@@ -30,12 +33,11 @@ const initialState = {
         player_pair2_game_points: 0,
         player_pair1_announcement_points: 0,
         player_pair2_announcement_points: 0,
-        card_shuffler_id: 1,  //TODO: Remove this hardcoded 1
+        card_shuffler_id: 1,
         trumpCallerPosition: null,
         player_pair1_total_points: 0,
         player_pair2_total_points: 0,
         trump_caller_id: 1, //TODO: Remove this hardcoded 1
-        pass: true, //TODO think about this is this needed (if added total points)
         activeTeam: "team1",
     }
 };
@@ -53,24 +55,18 @@ const useResultStore = create<ResultState>((set) => ({
         resultData: {...state.resultData, activeTeam: team}
     })),
 
-    updateScore: (digit: number) =>
+    setMatchId: (id) => set((state) => ({resultData: {...state.resultData, match_id: id}})),
+
+    setGamePoints: (digit: number) =>
         set((state) => {
             const {
                 resultData: {
                     activeTeam,
                     player_pair1_game_points,
                     player_pair2_game_points,
-                    player_pair1_announcement_points,
-                    player_pair2_announcement_points,
-                    trump_caller_id,
                 }
             } = state;
-
-            if (trump_caller_id === null) {
-                throw new Error("Trump caller ID is not set");
-            }
             let newScore, pp1UpdatedGamePoints, pp2UpdatedGamePoints;
-            const team1Called = trump_caller_id === 1 || trump_caller_id === 3;
 
             if (activeTeam === "team1") {
                 newScore = player_pair1_game_points * 10 + digit;
@@ -90,24 +86,61 @@ const useResultStore = create<ResultState>((set) => ({
                 pp1UpdatedGamePoints = MAX_SCORE - newScore;
             }
 
-            let updatedPP1TotalPoints = pp1UpdatedGamePoints + player_pair1_announcement_points;
-            let updatedPP2TotalPoints = pp2UpdatedGamePoints + player_pair2_announcement_points;
-
-            if (team1Called && updatedPP1TotalPoints <= updatedPP2TotalPoints) {
-                updatedPP1TotalPoints = 0;
-                updatedPP2TotalPoints = MAX_SCORE + player_pair2_announcement_points + player_pair1_announcement_points;
-            } else if (!team1Called && updatedPP2TotalPoints <= updatedPP1TotalPoints) {
-                updatedPP2TotalPoints = 0;
-                updatedPP1TotalPoints = MAX_SCORE + player_pair1_announcement_points + player_pair2_announcement_points;
-            }
-
             return {
                 resultData: {
                     ...state.resultData,
                     player_pair1_game_points: pp1UpdatedGamePoints,
                     player_pair2_game_points: pp2UpdatedGamePoints,
-                    player_pair1_total_points: updatedPP1TotalPoints,
-                    player_pair2_total_points: updatedPP2TotalPoints,
+                }
+            };
+        }),
+
+    setTotalPoints: (playerPair1, playerPair2) =>
+        set((state) => {
+            const {
+                resultData: {
+                    player_pair1_game_points,
+                    player_pair2_game_points,
+                    player_pair1_announcement_points,
+                    player_pair2_announcement_points,
+                    trump_caller_id,
+                }
+            } = state;
+
+            if (trump_caller_id === null) {
+                throw new Error("Trump caller ID is not set");
+            }
+
+            let playerPair1Called, playerPair2Called;
+
+            if ([playerPair1?.player_id1, playerPair1?.player_id2].includes(trump_caller_id)) {
+                playerPair1Called = true;
+            } else if ([playerPair2?.player_id1, playerPair2?.player_id2].includes(trump_caller_id)) {
+                playerPair2Called = true;
+            } else {
+                throw new Error("Trump caller not from player pairs");
+            }
+
+            let PlayerPair1TotalPoints = player_pair1_game_points + player_pair1_announcement_points;
+            let PlayerPair2TotalPoints = player_pair2_game_points + player_pair2_announcement_points;
+            let pass = true;
+
+            if (playerPair1Called && PlayerPair1TotalPoints <= PlayerPair2TotalPoints) {
+                PlayerPair1TotalPoints = 0;
+                PlayerPair2TotalPoints = MAX_SCORE + player_pair2_announcement_points + player_pair1_announcement_points;
+                pass = false;
+            } else if (playerPair2Called && PlayerPair2TotalPoints <= PlayerPair1TotalPoints) {
+                PlayerPair2TotalPoints = 0;
+                PlayerPair1TotalPoints = MAX_SCORE + player_pair1_announcement_points + player_pair2_announcement_points;
+                pass = false;
+            }
+
+            return {
+                resultData: {
+                    ...state.resultData,
+                    player_pair1_total_points: PlayerPair1TotalPoints,
+                    player_pair2_total_points: PlayerPair2TotalPoints,
+                    pass: pass,
                 }
             };
         }),
