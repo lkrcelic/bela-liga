@@ -3,6 +3,7 @@ import {create} from "zustand";
 import {PlayerAnnouncements} from "@/app/types/types";
 import {BelaResultResponse} from "@/app/lib/interfaces/belaResult";
 import {PlayerPairResponse} from "@/app/lib/interfaces/playerPair";
+import {PlayerPartialResponse} from "@/app/lib/interfaces/player";
 
 type BelaResultTypeExtended = BelaResultResponse & {
     activeTeam: "team1" | "team2";
@@ -17,6 +18,8 @@ export type ResultState = {
     resetScore: () => void;
     setCompleteVictory: () => void;
     setMatchId: (id: number) => void;
+    setCardShufflerIdAndTrumpCallerPosition:
+        (seatingOrder: (PlayerPartialResponse | null)[], currentShufflerIndex: number) => void;
     updateAnnouncementPoints: (playerAnnouncements: {
         [key: number]: PlayerAnnouncements;
     }) => void;
@@ -58,6 +61,27 @@ const useResultStore = create<ResultState>((set) => ({
         setMatchId: (id) => set((state) => ({
             resultData: {...state.resultData, match_id: id}
         })),
+
+        setCardShufflerIdAndTrumpCallerPosition: (seatingOrder, currentShufflerIndex) => set((state) => {
+            const {trump_caller_id} = state.resultData;
+            const cardShufflerId = seatingOrder[currentShufflerIndex]?.id;
+
+            const positionsMap = {0: "FIRST", 1: "SECOND", 2: "THIRD", 3: "FOURTH"};
+
+            const trumpCallerIndex = seatingOrder.findIndex(player => player.id === trump_caller_id);
+            const relativeDistance = trumpCallerIndex - currentShufflerIndex - 1;
+            const relativeIndex = (relativeDistance + seatingOrder.length) % seatingOrder.length
+            const trumpCallerPosition = positionsMap[relativeIndex];
+
+            return {
+                resultData: {
+                    ...state.resultData,
+                    card_shuffler_id: cardShufflerId,
+                    trump_caller_position: trumpCallerPosition,
+                },
+            };
+        }),
+
 
         setGamePoints: (digit: number) => set((state) => {
             const {
@@ -104,20 +128,20 @@ const useResultStore = create<ResultState>((set) => ({
                     player_pair1_announcement_points,
                     player_pair2_announcement_points,
                     trump_caller_id,
+                    complete_victory,
                 }
             } = state;
+
+            const isCallerInPair = (pair) => [pair?.player_id1, pair?.player_id2].includes(trump_caller_id);
 
             if (trump_caller_id === null) {
                 throw new Error("Trump caller ID is not set");
             }
 
-            let playerPair1Called, playerPair2Called;
+            const playerPair1Called = isCallerInPair(playerPair1);
+            const playerPair2Called = isCallerInPair(playerPair2);
 
-            if ([playerPair1?.player_id1, playerPair1?.player_id2].includes(trump_caller_id)) {
-                playerPair1Called = true;
-            } else if ([playerPair2?.player_id1, playerPair2?.player_id2].includes(trump_caller_id)) {
-                playerPair2Called = true;
-            } else {
+            if (!playerPair1Called && !playerPair2Called) {
                 throw new Error("Trump caller not from player pairs");
             }
 
@@ -126,12 +150,14 @@ const useResultStore = create<ResultState>((set) => ({
             let pass = true;
 
             if (playerPair1Called && PlayerPair1TotalPoints <= PlayerPair2TotalPoints) {
+                const allAnnouncements = player_pair2_announcement_points + player_pair1_announcement_points;
+                PlayerPair2TotalPoints = (complete_victory ? COMPLETE_VICTORY_SCORE : MAX_SCORE) + allAnnouncements;
                 PlayerPair1TotalPoints = 0;
-                PlayerPair2TotalPoints = MAX_SCORE + player_pair2_announcement_points + player_pair1_announcement_points;
                 pass = false;
             } else if (playerPair2Called && PlayerPair2TotalPoints <= PlayerPair1TotalPoints) {
+                const allAnnouncements = player_pair1_announcement_points + player_pair2_announcement_points;
+                PlayerPair1TotalPoints = (complete_victory ? COMPLETE_VICTORY_SCORE : MAX_SCORE) + allAnnouncements;
                 PlayerPair2TotalPoints = 0;
-                PlayerPair1TotalPoints = MAX_SCORE + player_pair1_announcement_points + player_pair2_announcement_points;
                 pass = false;
             }
 
@@ -163,8 +189,6 @@ const useResultStore = create<ResultState>((set) => ({
                 resultData: {
                     activeTeam,
                     trump_caller_id,
-                    player_pair1_announcement_points,
-                    player_pair2_announcement_points,
                 }
             } = state;
             if (trump_caller_id === null) {
@@ -178,21 +202,16 @@ const useResultStore = create<ResultState>((set) => ({
                         complete_victory: true,
                         player_pair1_game_points: COMPLETE_VICTORY_SCORE,
                         player_pair2_game_points: 0,
-                        player_pair1_total_points:
-                            COMPLETE_VICTORY_SCORE + player_pair1_announcement_points + player_pair2_announcement_points,
-                        player_pair2_total_points: 0,
                     }
                 };
-            } else {
+            }
+            if (activeTeam === "team2") {
                 return {
                     resultData: {
                         ...state.resultData,
                         complete_victory: true,
                         player_pair1_game_points: 0,
                         player_pair2_game_points: COMPLETE_VICTORY_SCORE,
-                        player_pair1_total_points: 0,
-                        player_pair2_total_points:
-                            COMPLETE_VICTORY_SCORE + player_pair2_announcement_points + player_pair1_announcement_points,
                     }
                 };
             }

@@ -11,7 +11,7 @@ export function belaResultIsValid(belaResult: BelaResultRequest): boolean {
         if (belaResult.player_pair1_game_points === belaResult.player_pair2_game_points) {
             return false;
         }
-        if ((belaResult.player_pair1_game_points !== COMPLETE_VICTORY) ||
+        if ((belaResult.player_pair1_game_points !== COMPLETE_VICTORY) &&
             (belaResult.player_pair2_game_points !== COMPLETE_VICTORY)) {
             return false;
         }

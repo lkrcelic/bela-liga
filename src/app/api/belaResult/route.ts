@@ -39,7 +39,6 @@ export async function POST(request: Request) {
     */
     try {
         const req_data = await request.json();
-
         const resultData = BelaResultValidationRequestValidation.parse(req_data);
 
         if (!belaResultIsValid(resultData)) {

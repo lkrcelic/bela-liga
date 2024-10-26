@@ -30,7 +30,7 @@ export const BelaResultValidationRequestValidation = z.object({
 });
 
 export const BelaResultValidationResponseValidation = BelaResultValidationRequestValidation.extend({
-    result_id: z.number().int(),
+    result_id: z.number().int().nullable(),
 });
 
 export const PartialBelaResultResponseValidation = z.object({

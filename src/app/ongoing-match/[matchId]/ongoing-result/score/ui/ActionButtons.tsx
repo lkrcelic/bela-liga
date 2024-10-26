@@ -11,8 +11,16 @@ export default function ActionButtons() {
         resultData,
         resetResult,
         setTotalPoints,
+        setCardShufflerIdAndTrumpCallerPosition,
     } = useResultStore();
-    const {matchData: {playerPair1, playerPair2}, addResult} = useMatchStore();
+    const {
+        matchData: {
+            playerPair1,
+            playerPair2,
+            seating_order,
+            current_shuffler_index,
+        },
+    } = useMatchStore();
     const {resetAnnouncements} = useAnnouncementStore();
 
     const router = useRouter();
@@ -20,12 +28,11 @@ export default function ActionButtons() {
 
     const handleSave = async () => {
         setTotalPoints(playerPair1, playerPair2);
+        setCardShufflerIdAndTrumpCallerPosition(seating_order!, current_shuffler_index!);
         const updatedResultData = useResultStore.getState?.().resultData;
-        addResult(updatedResultData!);
-        resetResult();
-        resetAnnouncements();
 
         try {
+            console.log(resultData);
             const response = await fetch("/api/belaResult", {
                 method: "POST",
                 headers: {
@@ -37,14 +44,15 @@ export default function ActionButtons() {
             if (!response.ok) {
                 throw new Error(`Failed to send store state: ${response.statusText}`);
             }
-
         } catch (error) {
             console.error("Error sending Zustand state:", error);
         }
 
+        resetResult();
+        resetAnnouncements();
+
         router.push(`/ongoing-match/${matchId}`);
     };
-
 
     return <DoubleActionButton
         secondButtonLabel={"Spremi"}
