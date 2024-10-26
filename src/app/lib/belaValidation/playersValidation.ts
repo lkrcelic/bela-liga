@@ -1,17 +1,9 @@
 import {prisma} from "../prisma";
-import {OngoingMatchCreateRequest} from "../interfaces/match";
 import {PlayerPairRequestValidation} from "@/app/lib/interfaces/playerPair";
 
-export async function checkPlayersValid(createRequest: OngoingMatchCreateRequest): Promise<boolean> {
-    let playerIds = [
-        createRequest.player_pair1.player_id1,
-        createRequest.player_pair1.player_id2,
-        createRequest.player_pair2.player_id1,
-        createRequest.player_pair2.player_id2,
-    ];
-
+export async function checkPlayersValid(seatingOrder: number[]): Promise<boolean> {
     const dbPlayers = await prisma.player.findMany({
-        where: {id: {in: playerIds}}
+        where: {id: {in: seatingOrder}}
     });
 
     return dbPlayers.length === 4;

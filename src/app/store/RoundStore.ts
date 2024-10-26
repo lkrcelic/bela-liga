@@ -26,7 +26,7 @@ const useRoundStore = create<RoundState>((set) => ({
         team2wins: 0,
     },
 
-    setRoundData: (data) => set((state) => ({ roundData: {...state.roundData, ...data} })),
+    setRoundData: (data) => set((state) => ({roundData: {...state.roundData, ...data}})),
 
     addMatch: ({player_pair1_score, player_pair2_score}) => {
         set((state) => ({

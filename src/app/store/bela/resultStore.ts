@@ -1,10 +1,10 @@
 // src/store/scoreStore.ts
 import {create} from "zustand";
 import {PlayerAnnouncements} from "@/app/types/types";
-import {BelaResultRequest} from "@/app/lib/interfaces/belaResult";
+import {BelaResultResponse} from "@/app/lib/interfaces/belaResult";
 import {PlayerPairResponse} from "@/app/lib/interfaces/playerPair";
 
-type BelaResultTypeExtended = BelaResultRequest & {
+type BelaResultTypeExtended = BelaResultResponse & {
     activeTeam: "team1" | "team2";
 }
 
@@ -15,7 +15,7 @@ export type ResultState = {
     setTotalPoints: (playerPair1?: PlayerPairResponse, playerPair2?: PlayerPairResponse) => ResultState;
     setGamePoints: (digit: number) => void;
     resetScore: () => void;
-    setStiglja: () => void;
+    setCompleteVictory: () => void;
     setMatchId: (id: number) => void;
     updateAnnouncementPoints: (playerAnnouncements: {
         [key: number]: PlayerAnnouncements;
@@ -24,7 +24,7 @@ export type ResultState = {
 };
 
 const MAX_SCORE = 162;
-const STIGLJA_SCORE = 252;
+const COMPLETE_VICTORY_SCORE = 252;
 
 const initialState = {
     resultData: {
@@ -33,32 +33,33 @@ const initialState = {
         player_pair2_game_points: 0,
         player_pair1_announcement_points: 0,
         player_pair2_announcement_points: 0,
-        card_shuffler_id: 1,
+        card_shuffler_id: null,
         trumpCallerPosition: null,
         player_pair1_total_points: 0,
         player_pair2_total_points: 0,
-        trump_caller_id: 1, //TODO: Remove this hardcoded 1
+        trump_caller_id: null,
         activeTeam: "team1",
     }
 };
 
 const useResultStore = create<ResultState>((set) => ({
-    ...initialState,
+        ...initialState,
 
-    resetResult: () => set({resultData: {...initialState.resultData}}),
+        resetResult: () => set({resultData: {...initialState.resultData}}),
 
-    setTrumpCallerId: (playerId) => set((state) => ({
-        resultData: {...state.resultData, trump_caller_id: playerId}
-    })),
+        setTrumpCallerId: (playerId) => set((state) => ({
+            resultData: {...state.resultData, trump_caller_id: playerId}
+        })),
 
-    setActiveTeam: (team) => set((state) => ({
-        resultData: {...state.resultData, activeTeam: team}
-    })),
+        setActiveTeam: (team) => set((state) => ({
+            resultData: {...state.resultData, activeTeam: team}
+        })),
 
-    setMatchId: (id) => set((state) => ({resultData: {...state.resultData, match_id: id}})),
+        setMatchId: (id) => set((state) => ({
+            resultData: {...state.resultData, match_id: id}
+        })),
 
-    setGamePoints: (digit: number) =>
-        set((state) => {
+        setGamePoints: (digit: number) => set((state) => {
             const {
                 resultData: {
                     activeTeam,
@@ -95,8 +96,7 @@ const useResultStore = create<ResultState>((set) => ({
             };
         }),
 
-    setTotalPoints: (playerPair1, playerPair2) =>
-        set((state) => {
+        setTotalPoints: (playerPair1, playerPair2) => set((state) => {
             const {
                 resultData: {
                     player_pair1_game_points,
@@ -145,37 +145,41 @@ const useResultStore = create<ResultState>((set) => ({
             };
         }),
 
-    resetScore: () =>
-        set((state) => ({
-            resultData: {
-                ...state.resultData,
-                player_pair1_game_points: 0,
-                player_pair2_game_points: 0,
-                player_pair1_total_points: state.resultData.player_pair1_announcement_points,
-                player_pair2_total_points: state.resultData.player_pair2_announcement_points,
-                complete_victory: false,
-            }
-        })),
+        resetScore:
+            () =>
+                set((state) => ({
+                    resultData: {
+                        ...state.resultData,
+                        player_pair1_game_points: 0,
+                        player_pair2_game_points: 0,
+                        player_pair1_total_points: state.resultData.player_pair1_announcement_points,
+                        player_pair2_total_points: state.resultData.player_pair2_announcement_points,
+                        complete_victory: false,
+                    }
+                })),
 
-    setStiglja: () =>
-        set((state) => {
+        setCompleteVictory: () => set((state) => {
             const {
                 resultData: {
                     activeTeam,
+                    trump_caller_id,
                     player_pair1_announcement_points,
                     player_pair2_announcement_points,
                 }
             } = state;
-            /*TODO Add check for trump caller*/
+            if (trump_caller_id === null) {
+                throw new Error("Trump caller ID is not set");
+            }
+
             if (activeTeam === "team1") {
                 return {
                     resultData: {
                         ...state.resultData,
                         complete_victory: true,
-                        player_pair1_game_points: STIGLJA_SCORE,
+                        player_pair1_game_points: COMPLETE_VICTORY_SCORE,
                         player_pair2_game_points: 0,
                         player_pair1_total_points:
-                            STIGLJA_SCORE + player_pair1_announcement_points + player_pair2_announcement_points,
+                            COMPLETE_VICTORY_SCORE + player_pair1_announcement_points + player_pair2_announcement_points,
                         player_pair2_total_points: 0,
                     }
                 };
@@ -185,43 +189,45 @@ const useResultStore = create<ResultState>((set) => ({
                         ...state.resultData,
                         complete_victory: true,
                         player_pair1_game_points: 0,
-                        player_pair2_game_points: STIGLJA_SCORE,
+                        player_pair2_game_points: COMPLETE_VICTORY_SCORE,
                         player_pair1_total_points: 0,
                         player_pair2_total_points:
-                            STIGLJA_SCORE + player_pair2_announcement_points + player_pair1_announcement_points,
+                            COMPLETE_VICTORY_SCORE + player_pair2_announcement_points + player_pair1_announcement_points,
                     }
                 };
             }
         }),
 
-    updateAnnouncementPoints: (playerAnnouncements: { [key: number]: PlayerAnnouncements; }) => {
-        const calculateTeamPoints = (playerIds) =>
-            playerIds.reduce(
-                (total, playerId) => total + (playerAnnouncements[playerId]?.totalAnnouncements || 0),
-                0
-            );
+        updateAnnouncementPoints:
+            (playerAnnouncements: { [key: number]: PlayerAnnouncements; }) => {
+                const calculateTeamPoints = (playerIds) =>
+                    playerIds.reduce(
+                        (total, playerId) => total + (playerAnnouncements[playerId]?.totalAnnouncements || 0),
+                        0
+                    );
 
-        const team1Players = [1, 2];
-        const team2Players = [3, 4];
+                const team1Players = [1, 2];
+                const team2Players = [3, 4];
 
-        const updatedPP1AnnouncementPoints = calculateTeamPoints(team1Players);
-        const updatedPP2AnnouncementPoints = calculateTeamPoints(team2Players);
+                const updatedPP1AnnouncementPoints = calculateTeamPoints(team1Players);
+                const updatedPP2AnnouncementPoints = calculateTeamPoints(team2Players);
 
-        set((state) => {
-            const updatedPP1TotalPoints = state.resultData.player_pair1_game_points + updatedPP1AnnouncementPoints;
-            const updatedPP2TotalPoints = state.resultData.player_pair2_game_points + updatedPP2AnnouncementPoints;
+                set((state) => {
+                    const updatedPP1TotalPoints = state.resultData.player_pair1_game_points + updatedPP1AnnouncementPoints;
+                    const updatedPP2TotalPoints = state.resultData.player_pair2_game_points + updatedPP2AnnouncementPoints;
 
-            return {
-                resultData: {
-                    ...state.resultData,
-                    player_pair1_announcement_points: updatedPP1AnnouncementPoints,
-                    player_pair2_announcement_points: updatedPP2AnnouncementPoints,
-                    player_pair1_total_points: updatedPP1TotalPoints,
-                    player_pair2_total_points: updatedPP2TotalPoints,
-                },
-            };
-        });
-    },
-}));
+                    return {
+                        resultData: {
+                            ...state.resultData,
+                            player_pair1_announcement_points: updatedPP1AnnouncementPoints,
+                            player_pair2_announcement_points: updatedPP2AnnouncementPoints,
+                            player_pair1_total_points: updatedPP1TotalPoints,
+                            player_pair2_total_points: updatedPP2TotalPoints,
+                        },
+                    };
+                });
+            },
+    }))
+;
 
 export default useResultStore;

@@ -6,7 +6,7 @@ import {BelaResultValidationRequestValidation} from "@/app/lib/interfaces/belaRe
 import {NextResponse} from "next/server";
 import {STATUS} from "@/app/lib/statusCodes";
 import {belaResultIsValid} from "@/app/lib/belaValidation/validateResult";
-import {checkMatchOver} from "@/app/lib/belaValidation/checkMatchOver";
+import {updateMatchAndCheckIfOver} from "@/app/lib/belaValidation/updateMatchAndCheckIfOver";
 import {transformBelaMatch, transformBelaResult} from "@/app/lib/helpers/databaseHelpers";
 
 export async function GET() {
@@ -47,7 +47,7 @@ export async function POST(request: Request) {
         }
 
         // TODO: Validate one of the 4 players playing the game is entering the result?
-        const match_over = await checkMatchOver(resultData);
+        const match_over = await updateMatchAndCheckIfOver(resultData);
         const createNested = transformBelaResult(resultData); // TODO DO I NEED THIS
         const result = await prisma.ongoingBelaResult.create({data: createNested});
 

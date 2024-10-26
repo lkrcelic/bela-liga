@@ -8,13 +8,13 @@ import {TeamResponse} from "@/app/lib/interfaces/team";
 
 export default function PlayerPairSelector() {
     const {roundData: {team1, team2}} = useRoundStore();
-    const {playersSeatingOrder, setPlayersSeatingOrder} = useMatchStore();
+    const {matchData: {seating_order}, setSeatingOrder} = useMatchStore();
 
     const handlePlayerSelection = (seatIndex: number) =>
         (player: PlayerPartialResponse | null) => {
-            const newSeatingOrder = [...playersSeatingOrder];
+            const newSeatingOrder = [...seating_order];
             newSeatingOrder[seatIndex] = player;
-            setPlayersSeatingOrder(newSeatingOrder);
+            setSeatingOrder(newSeatingOrder);
         };
 
     return (
@@ -25,9 +25,9 @@ export default function PlayerPairSelector() {
                 sx={{display: "flex", justifyContent: "flex-start", alignItems: "flex-start"}}
             >
                 <TeamPlayerSelector
-                    selectedPlayer={playersSeatingOrder[0]}
+                    selectedPlayer={seating_order![0]}
                     setSelectedPlayer={handlePlayerSelection(0)}
-                    selectedTeammate={playersSeatingOrder[2]}
+                    selectedTeammate={seating_order![2]}
                     team={team1 as TeamResponse}
                     color="team1"
                 />
@@ -38,9 +38,9 @@ export default function PlayerPairSelector() {
                 sx={{display: "flex", justifyContent: "flex-end", alignItems: "flex-start"}}
             >
                 <TeamPlayerSelector
-                    selectedPlayer={playersSeatingOrder[1]}
+                    selectedPlayer={seating_order![1]}
                     setSelectedPlayer={handlePlayerSelection(1)}
-                    selectedTeammate={playersSeatingOrder[3]}
+                    selectedTeammate={seating_order![3]}
                     team={team2 as TeamResponse}
                     color="team2"
                 />
@@ -51,9 +51,9 @@ export default function PlayerPairSelector() {
                 sx={{display: "flex", justifyContent: "flex-start", alignItems: "flex-end"}}
             >
                 <TeamPlayerSelector
-                    selectedPlayer={playersSeatingOrder[3]}
+                    selectedPlayer={seating_order![3]}
                     setSelectedPlayer={handlePlayerSelection(3)}
-                    selectedTeammate={playersSeatingOrder[1]}
+                    selectedTeammate={seating_order![1]}
                     team={team2 as TeamResponse}
                     color="team2"
                 />
@@ -64,9 +64,9 @@ export default function PlayerPairSelector() {
                 sx={{display: "flex", justifyContent: "flex-end", alignItems: "flex-end"}}
             >
                 <TeamPlayerSelector
-                    selectedPlayer={playersSeatingOrder[2]}
+                    selectedPlayer={seating_order![2]}
                     setSelectedPlayer={handlePlayerSelection(2)}
-                    selectedTeammate={playersSeatingOrder[0]}
+                    selectedTeammate={seating_order![0]}
                     team={team1 as TeamResponse}
                     color="team1"
                 />

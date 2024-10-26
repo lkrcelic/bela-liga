@@ -6,7 +6,7 @@ import useResultStore from "@/app/store/bela/resultStore";
 const DigitGrid = () => {
     const setGamePoints = useResultStore((state) => state.setGamePoints);
     const resetScore = useResultStore((state) => state.resetScore);
-    const setStiglja = useResultStore((state) => state.setStiglja);
+    const setStiglja = useResultStore((state) => state.setCompleteVictory);
     const complete_victory = useResultStore((state) => state.resultData.complete_victory);
 
     const handleClick = (digit: number) => {

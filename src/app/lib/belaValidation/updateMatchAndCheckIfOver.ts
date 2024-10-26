@@ -2,7 +2,7 @@ import {BelaResultRequest} from "../interfaces/belaResult";
 import {prisma} from "../prisma";
 import {runPrismaQuery} from "@/app/lib/helpers/prismaClientHelper";
 
-export async function checkMatchOver(belaResult: BelaResultRequest): Promise<boolean> {
+export async function updateMatchAndCheckIfOver(belaResult: BelaResultRequest): Promise<boolean> {
     const updatedMatch = await runPrismaQuery(
         prisma.ongoingMatch.update({
             where: {id: belaResult.match_id},

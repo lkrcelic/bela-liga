@@ -39,7 +39,7 @@ export default function PlayersSeating() {
                 <PlayersAroundTable/>
             </Box>
             <Box sx={{gridArea: "actions", alignSelf: "end"}}>
-               <ActionButtons />
+                <ActionButtons/>
             </Box>
         </>
     );

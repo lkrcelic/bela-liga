@@ -5,29 +5,32 @@ import {PlayerPartialResponse} from "@/app/lib/interfaces/player";
 
 export type MatchState = {
     matchData: MatchResponse;
-    playersSeatingOrder: (PlayerPartialResponse | null)[]
     setMatchData: (data: MatchResponse) => void;
     addResult: (result: BelaResultRequest) => void;
     resetMatch: () => void;
-    setPlayersSeatingOrder: (newOrder: (PlayerPartialResponse | null)[]) => void;
+    setSeatingOrder: (newOrder: (PlayerPartialResponse | null)[]) => void;
 };
 
 const useMatchStore = create<MatchState>((set) => ({
-        playersSeatingOrder: [null, null, null, null],
         matchData: {
             player_pair1_score: 0,
             player_pair2_score: 0,
             belaResults: [],
+            seating_order: [null, null, null, null],
         },
 
-        setPlayersSeatingOrder: (newOrder) => set({playersSeatingOrder: newOrder}),
+        setSeatingOrder: (newOrder) => set((state) => ({
+            matchData: {...state.matchData, seating_order: newOrder}
+        })),
 
         setMatchData: (data: MatchResponse) => set((state) => ({
             matchData: {...state.matchData, ...data}
         })),
 
+
         addResult: (result) => {
             set((state) => ({
+                ...state,
                 matchData: {
                     ...state.matchData,
                     player_pair1_score: state.matchData?.player_pair1_score + result.player_pair1_total_points,

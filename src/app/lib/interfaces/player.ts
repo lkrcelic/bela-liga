@@ -1,4 +1,4 @@
-import { z } from "zod";
+import {z} from "zod";
 
 export const PlayerRequestValidation = z.object({
     username: z.string().min(1),
@@ -11,8 +11,8 @@ export const PlayerRequestValidation = z.object({
     city: z.string().optional(),
     created_at: z.date().optional(),
     last_updated_at: z.date().optional(),
-  }).transform((o) => ({
-    
+}).transform((o) => ({
+
     username: o.username,
     password_hash: o.password,
     email: o.email,
@@ -23,7 +23,7 @@ export const PlayerRequestValidation = z.object({
     city: o.city,
     created_at: o.created_at,
     last_updated_at: o.last_updated_at
-  }));
+}));
 
 export const PlayerPartialResponseValidation = z.object({
     id: z.number().int(),

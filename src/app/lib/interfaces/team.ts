@@ -1,5 +1,5 @@
 import {z} from "zod";
-import {PlayerPartialResponseValidation, PlayerResponseValidation} from "@/app/lib/interfaces/player";
+import {PlayerPartialResponseValidation} from "@/app/lib/interfaces/player";
 
 export const TeamRequestValidation = z.object({
     team_name: z.string().min(1),
@@ -10,7 +10,7 @@ export const TeamRequestValidation = z.object({
     last_updated_at: z.date().optional()
 });
 
-export const TeamResponseValidation =  z.object({
+export const TeamResponseValidation = z.object({
     team_id: z.number().int(),
     team_name: z.string(),
     teamPlayers: z.array(

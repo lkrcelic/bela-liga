@@ -7,7 +7,7 @@ import useMatchStore from "@/app/store/matchStore";
 
 export default function ActionButtons() {
     const router = useRouter();
-    const playersSeatingOrder = useMatchStore(state => state.playersSeatingOrder)
+    const seatingOrder = useMatchStore(state => state.matchData.seating_order)
 
     const startMatch = async () => {
         try {
@@ -17,14 +17,7 @@ export default function ActionButtons() {
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
-                    player_pair1: {
-                        player_id1: playersSeatingOrder[0]?.id,
-                        player_id2: playersSeatingOrder[2]?.id,
-                    },
-                    player_pair2: {
-                        player_id1: playersSeatingOrder[1]?.id,
-                        player_id2: playersSeatingOrder[3]?.id,
-                    }
+                    seating_order_ids: seatingOrder?.map((player) => player.id),
                 }),
             });
 

@@ -1,5 +1,5 @@
-import { z } from "zod";
-import { playerOutput } from "./player";
+import {z} from "zod";
+import {playerOutput} from "./player";
 
 export const SessionOut = z.object({
     id: z.string(),

@@ -56,6 +56,6 @@ export async function GET(request: Request, {params}: { params: { id: string } }
         return NextResponse.json(round, {status: STATUS.OK});
     } catch (error) {
         console.error('Error fetching round:', error);
-        return NextResponse.json({ error: "Failed to fetch round." }, { status: STATUS.BadRequest });
+        return NextResponse.json({error: "Failed to fetch round."}, {status: STATUS.BadRequest});
     }
 }

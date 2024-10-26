@@ -10,7 +10,7 @@ export default function Action() {
     const {addMatch} = useRoundStore();
     const {resetResult, setMatchId} = useResultStore();
     const router = useRouter();
-     const {matchId} = useParams();
+    const {matchId} = useParams();
     const pathname = usePathname();
 
 

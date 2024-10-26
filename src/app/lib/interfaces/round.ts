@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import {z} from 'zod';
 import {TeamResponseValidation} from "@/app/lib/interfaces/team";
 
 export const RoundResponseValidation = z.object({

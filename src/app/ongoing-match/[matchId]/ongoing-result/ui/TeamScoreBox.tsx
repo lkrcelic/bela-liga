@@ -10,7 +10,15 @@ type ScoreBoxProps = {
     buttonVariant: "contained" | "outlined";
 }
 
-export function TeamScoreBox({label, teamColor, onClick, value, secondValue, textVariant, buttonVariant}: ScoreBoxProps) {
+export function TeamScoreBox({
+                                 label,
+                                 teamColor,
+                                 onClick,
+                                 value,
+                                 secondValue,
+                                 textVariant,
+                                 buttonVariant
+                             }: ScoreBoxProps) {
     return (
         <>
             <Button

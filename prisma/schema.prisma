@@ -231,6 +231,7 @@ model OngoingMatch {
   start_time         DateTime?
   end_time           DateTime?
   match_date         DateTime? @default(now())
+  seating_order_ids  Int[]
 
   round       Round?              @relation(fields: [round_id], references: [id], onDelete: SetNull)
   playerPair1 PlayerPair?         @relation("MatchPair1", fields: [player_pair_id1], references: [id], onDelete: Cascade)
