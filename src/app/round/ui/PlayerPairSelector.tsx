@@ -1,14 +1,14 @@
 import React, {useState} from 'react';
 import {Button, Menu, MenuItem} from '@mui/material';
 import {Grid} from "@mui/system";
-import useMatchStore from "@/app/store/matchStore";
 import useRoundStore from "@/app/store/RoundStore";
 import {PlayerPartialResponse} from "@/app/lib/interfaces/player";
 import {TeamResponse} from "@/app/lib/interfaces/team";
+import useOngoingMatchStore from "@/app/store/ongoingMatchStore";
 
 export default function PlayerPairSelector() {
     const {roundData: {team1, team2}} = useRoundStore();
-    const {matchData: {seating_order}, setSeatingOrder} = useMatchStore();
+    const {ongoingMatch: {seating_order}, setSeatingOrder} = useOngoingMatchStore();
 
     const handlePlayerSelection = (seatIndex: number) =>
         (player: PlayerPartialResponse | null) => {

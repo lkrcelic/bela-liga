@@ -221,17 +221,18 @@ model Match {
 }
 
 model OngoingMatch {
-  id                 Int       @id @default(autoincrement())
-  round_id           Int?
-  player_pair1_score Int       @default(0)
-  player_pair2_score Int       @default(0)
-  player_pair_id1    Int?
-  player_pair_id2    Int?
-  score_threshold    Int?
-  start_time         DateTime?
-  end_time           DateTime?
-  match_date         DateTime? @default(now())
-  seating_order_ids  Int[]
+  id                     Int       @id @default(autoincrement())
+  round_id               Int?
+  player_pair1_score     Int       @default(0)
+  player_pair2_score     Int       @default(0)
+  player_pair_id1        Int?
+  player_pair_id2        Int?
+  score_threshold        Int?
+  start_time             DateTime?
+  end_time               DateTime?
+  match_date             DateTime? @default(now())
+  seating_order_ids      Int[]
+  current_shuffler_index Int       @default(0)
 
   round       Round?              @relation(fields: [round_id], references: [id], onDelete: SetNull)
   playerPair1 PlayerPair?         @relation("MatchPair1", fields: [player_pair_id1], references: [id], onDelete: Cascade)

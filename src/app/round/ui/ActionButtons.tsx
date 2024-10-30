@@ -3,11 +3,11 @@
 import DoubleActionButton from "@/app/ui/DoubleActionButton";
 import {useRouter} from "next/navigation";
 import React from "react";
-import useMatchStore from "@/app/store/matchStore";
+import useOngoingMatchStore from "@/app/store/ongoingMatchStore";
 
 export default function ActionButtons() {
     const router = useRouter();
-    const seatingOrder = useMatchStore(state => state.matchData.seating_order)
+    const seatingOrder = useOngoingMatchStore(state => state.ongoingMatch.seating_order)
 
     const startMatch = async () => {
         try {

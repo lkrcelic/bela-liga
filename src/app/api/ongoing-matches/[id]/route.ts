@@ -1,7 +1,7 @@
 import {prisma} from "@/app/lib/prisma";
 import {NextResponse} from "next/server";
 import {STATUS} from "@/app/lib/statusCodes";
-import {MatchResponseValidation} from "@/app/lib/interfaces/match";
+import {OngoingMatchResponseValidation} from "@/app/lib/interfaces/match";
 import {PlayerPartialResponseValidation} from "@/app/lib/interfaces/player";
 import {runPrismaQuery} from "@/app/lib/helpers/prismaClientHelper";
 
@@ -103,7 +103,7 @@ export async function GET(request: Request, {params}: { params: { id: string } }
             return PlayerPartialResponseValidation.parse(player);
         });
 
-        const ongoingMatch = MatchResponseValidation.parse(dbOngoingMatch);
+        const ongoingMatch = OngoingMatchResponseValidation.parse(dbOngoingMatch);
         ongoingMatch.seating_order = seatingOrder;
 
         ongoingMatch.current_shuffler_index =

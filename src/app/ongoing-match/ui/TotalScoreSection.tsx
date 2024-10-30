@@ -1,11 +1,11 @@
 import React from 'react';
 import {Box, Typography} from '@mui/material';
 import {Grid} from "@mui/system";
-import useMatchStore from "@/app/store/matchStore";
 import useRoundStore from "@/app/store/RoundStore";
+import useOngoingMatchStore from "@/app/store/ongoingMatchStore";
 
 export default function TotalScoreSection() {
-    const {matchData: {player_pair1_score, player_pair2_score}} = useMatchStore();
+    const {ongoingMatch: {player_pair1_score, player_pair2_score}} = useOngoingMatchStore();
     const {roundData: {team1wins, team2wins}} = useRoundStore();
 
     return (<Grid container justifyContent="space-between" alignItems="center" spacing={6}>

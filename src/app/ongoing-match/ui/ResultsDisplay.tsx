@@ -1,10 +1,10 @@
 import React from 'react';
 import {Typography} from '@mui/material';
 import {Grid} from "@mui/system";
-import useMatchStore from "@/app/store/matchStore";
+import useOngoingMatchStore from "@/app/store/ongoingMatchStore";
 
 export default function ResultsDisplay() {
-    const {matchData: {belaResults}} = useMatchStore();
+    const {ongoingMatch: {belaResults}} = useOngoingMatchStore();
     return (
         <Grid container spacing={1.5} justifyContent="center">
             {belaResults?.map((result, index) => (

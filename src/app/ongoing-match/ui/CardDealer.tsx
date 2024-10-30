@@ -1,9 +1,9 @@
 import {Box, Typography} from '@mui/material';
 import React from "react";
-import useMatchStore from "@/app/store/matchStore"; // Adjust this import based on your store setup
+import useOngoingMatchStore from "@/app/store/ongoingMatchStore"; // Adjust this import based on your store setup
 
 export default function CardDealer() {
-    const {seating_order, current_shuffler_index} = useMatchStore(state => state.matchData);
+    const {seating_order, current_shuffler_index} = useOngoingMatchStore(state => state.ongoingMatch);
     const currentDealer = seating_order![current_shuffler_index];
 
     return (

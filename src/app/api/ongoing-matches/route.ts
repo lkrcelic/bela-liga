@@ -1,4 +1,4 @@
-import {MatchRequestValidation} from "@/app/lib/interfaces/match";
+import {OngoingMatchRequestValidation} from "@/app/lib/interfaces/match";
 import {checkPlayersValid, insertPlayerPair} from "@/app/lib/belaValidation/playersValidation";
 import {NextResponse} from "next/server";
 import {STATUS} from "@/app/lib/statusCodes";
@@ -8,7 +8,7 @@ import {z} from "zod";
 export async function POST(request: Request) {
     try {
         const req_data = await request.json();
-        const createRequest = MatchRequestValidation.parse(req_data);
+        const createRequest = OngoingMatchRequestValidation.parse(req_data);
         const seatingOrderIds = createRequest.seating_order_ids!;
 
         if (!await checkPlayersValid(seatingOrderIds)) {

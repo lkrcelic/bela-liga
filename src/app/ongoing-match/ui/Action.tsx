@@ -1,27 +1,50 @@
 import React from 'react';
 import {useParams, usePathname, useRouter} from "next/navigation";
-import useMatchStore from "@/app/store/matchStore";
-import useRoundStore from "@/app/store/RoundStore";
 import useResultStore from "@/app/store/bela/resultStore";
 import SingleActionButton from "@/app/ui/singeActionButton";
+import useOngoingMatchStore from "@/app/store/ongoingMatchStore";
 
 export default function Action() {
-    const {matchData: {player_pair1_score, player_pair2_score}, resetMatch} = useMatchStore();
-    const {addMatch} = useRoundStore();
-    const {resetResult, setMatchId} = useResultStore();
+    const {ongoingMatch, resetMatch} = useOngoingMatchStore();
+    const {setMatchId} = useResultStore();
     const router = useRouter();
     const {matchId} = useParams();
     const pathname = usePathname();
 
 
     const getProps = () => {
-        if (player_pair1_score >= 1001 || player_pair2_score >= 1001) {
+        if (ongoingMatch.player_pair1_score >= 1001 || ongoingMatch.player_pair2_score >= 1001) {
             return {
                 label: "Završi meč",
-                onClick: () => {
-                    addMatch({player_pair1_score, player_pair2_score});
+                onClick: async () => {
+                    try {
+                        const response = await fetch("/api/matches", {
+                            method: "POST",
+                            headers: {"Content-type": "application/json"},
+                            body: JSON.stringify(ongoingMatch)
+                        })
+                        if (!response.ok) {
+                            throw new Error(`Failed to store match: ${response.statusText}`);
+                        }
+
+                        const response2 = await fetch("/api/ongoing-matches", {
+                            method: "POST",
+                            headers: {"Content-type": "application/json"},
+                            body: JSON.stringify({
+                                seating_order_ids: ongoingMatch.seating_order?.map((player) => player.id),
+                                current_shuffler_index: ongoingMatch.current_shuffler_index,
+                            }),
+                        })
+                        if (!response2.ok) {
+                            throw new Error(`Failed to create ongoing match: ${response2.statusText}`);
+                        }
+
+                        const data = await response2.json();
+                        router.push(`/ongoing-match/${data.match.id}`);
+                    } catch (error) {
+                        console.error("Error: ", error);
+                    }
                     resetMatch();
-                    resetResult();
                 },
 
             }

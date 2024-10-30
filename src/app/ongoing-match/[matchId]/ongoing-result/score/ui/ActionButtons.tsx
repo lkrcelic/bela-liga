@@ -2,9 +2,9 @@
 
 import useAnnouncementStore from "@/app/store/bela/announcementStore";
 import useResultStore from "@/app/store/bela/resultStore";
-import useMatchStore from "@/app/store/matchStore";
 import {useParams, useRouter} from "next/navigation";
 import DoubleActionButton from "@/app/ui/DoubleActionButton";
+import useOngoingMatchStore from "@/app/store/ongoingMatchStore";
 
 export default function ActionButtons() {
     const {
@@ -14,13 +14,13 @@ export default function ActionButtons() {
         setCardShufflerIdAndTrumpCallerPosition,
     } = useResultStore();
     const {
-        matchData: {
+        ongoingMatch: {
             playerPair1,
             playerPair2,
             seating_order,
             current_shuffler_index,
         },
-    } = useMatchStore();
+    } = useOngoingMatchStore();
     const {resetAnnouncements} = useAnnouncementStore();
 
     const router = useRouter();
@@ -32,7 +32,6 @@ export default function ActionButtons() {
         const updatedResultData = useResultStore.getState?.().resultData;
 
         try {
-            console.log(resultData);
             const response = await fetch("/api/belaResult", {
                 method: "POST",
                 headers: {

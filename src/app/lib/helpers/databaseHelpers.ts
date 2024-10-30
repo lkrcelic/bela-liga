@@ -87,9 +87,9 @@ interface BelaMatchTransformed {
 }
 
 export function transformBelaMatch(match: BelaMatchAllIncluded): BelaMatchTransformed {
-    let sumT1 = match.belaResults.reduce((sum, br) =>
+    const sumT1 = match.belaResults.reduce((sum, br) =>
         sum + br.player_pair1_game_points + br.player_pair1_announcement_points, 0);
-    let sumT2 = match.belaResults.reduce((sum, br) =>
+    const sumT2 = match.belaResults.reduce((sum, br) =>
         sum + br.player_pair2_game_points + br.player_pair2_announcement_points, 0);
     return {
         round_id: match.round_id,
