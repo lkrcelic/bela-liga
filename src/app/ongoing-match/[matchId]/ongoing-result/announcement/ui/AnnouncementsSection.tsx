@@ -6,7 +6,7 @@ import useResultStore from "@/app/store/bela/resultStore";
 
 export default function AnnouncementSection() {
     const {
-        playerAnnouncements,
+        playersAnnouncements,
         setAnnouncement,
         resetPlayerAnnouncements,
         activePlayerId,
@@ -14,8 +14,8 @@ export default function AnnouncementSection() {
     const {updateAnnouncementPoints} = useResultStore();
 
     React.useEffect(() => {
-        updateAnnouncementPoints(playerAnnouncements);
-    }, [playerAnnouncements, updateAnnouncementPoints]);
+        updateAnnouncementPoints(playersAnnouncements);
+    }, [playersAnnouncements, updateAnnouncementPoints]);
 
     return (
         <Box
@@ -34,9 +34,7 @@ export default function AnnouncementSection() {
                 {[20, 50, 100, 150, 200].map((points) => (
                     <Grid item key={points}>
                         <Badge
-                            badgeContent={
-                                playerAnnouncements[activePlayerId].announcementCounts[points]
-                            }
+                            badgeContent={activePlayerId && playersAnnouncements[activePlayerId]?.announcementCounts[points]}
                             color="primary"
                             anchorOrigin={{
                                 vertical: "top",

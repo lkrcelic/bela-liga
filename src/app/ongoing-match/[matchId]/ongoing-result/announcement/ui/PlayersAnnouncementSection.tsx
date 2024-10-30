@@ -3,29 +3,29 @@
 import React from "react";
 import useAnnouncementStore from "@/app/store/bela/announcementStore";
 import {Button, Typography} from "@mui/material";
-import usePlayerPairStore from "@/app/store/playerPairStore";
 import PlayersContainer from "@/app/ongoing-match/[matchId]/ongoing-result/ui/PlayersContainer";
+import useOngoingMatchStore from "@/app/store/ongoingMatchStore";
 
 export default function PlayersAnnouncementSection() {
     const {
-        playerAnnouncements,
+        playersAnnouncements,
         activePlayerId,
         setActivePlayerId,
     } = useAnnouncementStore();
-    const {playerPair1, playerPair2} = usePlayerPairStore();
+    const {ongoingMatch: {playerPair1, playerPair2}} = useOngoingMatchStore();
 
     return (
         <PlayersContainer playerPair1={playerPair1} playerPair2={playerPair2}>
             {(player) => (
                 <PlayerAnnouncementBox
-                    key={player.id}
-                    playerName={player.username}
+                    key={player?.id}
+                    playerName={player?.username}
                     announcementValue={
-                        playerAnnouncements[player.id]?.totalAnnouncements || 0
+                        playersAnnouncements[player?.id].totalAnnouncements || 0
                     }
-                    teamColor={player === playerPair1.player1 || player === playerPair1.player2 ? "team1" : "team2"}
-                    isActive={activePlayerId === player.id}
-                    onClick={() => setActivePlayerId(player.id)}
+                    teamColor={player === playerPair1?.player1 || player === playerPair1?.player2 ? "team1" : "team2"}
+                    isActive={activePlayerId === player?.id}
+                    onClick={() => setActivePlayerId(player?.id)}
                 />
             )}
         </PlayersContainer>
@@ -33,7 +33,7 @@ export default function PlayersAnnouncementSection() {
 }
 
 type AnnouncementBoxProps = {
-    playerName: string;
+    playerName: string | undefined;
     announcementValue: number | string;
     teamColor: string;
     isActive: boolean;

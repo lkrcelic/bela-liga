@@ -1,78 +1,108 @@
 // src/store/announcementStore.ts
-import {create} from "zustand";
-import {PlayerAnnouncements} from "@/app/types/types";
+import {create} from 'zustand';
+import {PlayerPairResponse} from "@/app/lib/interfaces/playerPair";
+
+type PlayerAnnouncements = {
+    totalAnnouncements: number;
+    team: 'ONE' | 'TWO';
+    announcementCounts: { [key: number]: number };
+};
+
+export type PlayersAnnouncements = { [key: number]: PlayerAnnouncements };
 
 type AnnouncementState = {
-    playerAnnouncements: { [key: number]: PlayerAnnouncements };
-    activePlayerId: number;
+    playersAnnouncements: PlayersAnnouncements;
+    activePlayerId: number | null;
     noAnnouncements: boolean;
-    setActivePlayerId: (playerId: number) => void;
-    setAnnouncement: (playerId: number, points: number) => void;
+
+    setActivePlayerId: (playerId: number | undefined) => void;
+    setAnnouncement: (playerId: number | null, points: number) => void;
     resetPlayerAnnouncements: (playerId: number) => void;
-    getTotalAnnouncementsPerTeam: () => { team1: number; team2: number };
     resetAnnouncements: () => void;
+    initializePlayersAnnouncements: (
+        playerPair1: PlayerPairResponse | null,
+        playerPair2: PlayerPairResponse | null
+    ) => void;
 };
 
 const initialState = {
-    playerAnnouncements: {
-        1: {totalAnnouncements: 0, announcementCounts: {}},
-        2: {totalAnnouncements: 0, announcementCounts: {}},
-        3: {totalAnnouncements: 0, announcementCounts: {}},
-        4: {totalAnnouncements: 0, announcementCounts: {}},
-    },
-    activePlayerId: 1,
+    playersAnnouncements: {},
+    activePlayerId: null,
     noAnnouncements: true,
-}
+};
 
 const useAnnouncementStore = create<AnnouncementState>((set) => ({
     ...initialState,
 
-    resetAnnouncements: () => set(initialState),
+    initializePlayersAnnouncements: (playerPair1, playerPair2) => set(() => ({
+        playersAnnouncements: {
+            [playerPair1!.player_id1]: {totalAnnouncements: 0, announcementCounts: {}, team: "ONE"},
+            [playerPair1!.player_id2]: {totalAnnouncements: 0, announcementCounts: {}, team: "ONE"},
+            [playerPair2!.player_id1]: {totalAnnouncements: 0, announcementCounts: {}, team: "TWO"},
+            [playerPair2!.player_id2]: {totalAnnouncements: 0, announcementCounts: {}, team: "TWO"},
+        },
+    })),
 
-    setActivePlayerId: (playerId) => set({activePlayerId: playerId}),
+    resetAnnouncements: () => set(() => ({...initialState})),
+
+    setActivePlayerId: (playerId) => set({activePlayerId: playerId ?? null}),
 
     setAnnouncement: (playerId, points) =>
         set((state) => {
-            const updatedCounts = {
-                ...state.playerAnnouncements[playerId].announcementCounts,
-                [points]:
-                (state.playerAnnouncements[playerId].announcementCounts[points] ||
-                    0) + 1,
-            };
+            if (!playerId) {
+                return state;
+            }
 
+            const playerAnnouncements = state.playersAnnouncements[playerId];
+            if (!playerAnnouncements) {
+                return state;
+            }
+
+            const updatedCounts = {
+                ...playerAnnouncements.announcementCounts,
+                [points]: (playerAnnouncements.announcementCounts[points] || 0) + 1,
+            };
             const totalAnnouncements = Object.entries(updatedCounts).reduce(
                 (total, [pointValue, count]) => total + Number(pointValue) * count,
                 0
             );
-
-            return {
-                playerAnnouncements: {
-                    ...state.playerAnnouncements,
-                    [playerId]: {
-                        totalAnnouncements,
-                        announcementCounts: updatedCounts,
-                    },
+            const updatedPlayersAnnouncements = {
+                ...state.playersAnnouncements,
+                [playerId]: {
+                    ...playerAnnouncements,
+                    totalAnnouncements,
+                    announcementCounts: updatedCounts,
                 },
-                noAnnouncements: false,
+            };
+            const hasAnnouncements = Object.values(updatedPlayersAnnouncements).some(
+                (player) => player.totalAnnouncements > 0
+            );
+            return {
+                playersAnnouncements: updatedPlayersAnnouncements,
+                noAnnouncements: !hasAnnouncements,
             };
         }),
 
     resetPlayerAnnouncements: (playerId) =>
         set((state) => {
-            const updatedPlayerAnnouncements = {
-                ...state.playerAnnouncements,
+            const player = state.playersAnnouncements[playerId];
+            if (!player) {
+                return state;
+            }
+
+            const updatedPlayersAnnouncements = {
+                ...state.playersAnnouncements,
                 [playerId]: {
+                    ...player,
                     totalAnnouncements: 0,
                     announcementCounts: {},
                 },
             };
-
-            const hasAnnouncements = Object.values(updatedPlayerAnnouncements).some(
+            const hasAnnouncements = Object.values(updatedPlayersAnnouncements).some(
                 (player) => player.totalAnnouncements > 0
             );
-
             return {
-                playerAnnouncements: updatedPlayerAnnouncements,
+                playersAnnouncements: updatedPlayersAnnouncements,
                 noAnnouncements: !hasAnnouncements,
             };
         }),

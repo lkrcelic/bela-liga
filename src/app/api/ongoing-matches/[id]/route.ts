@@ -106,9 +106,6 @@ export async function GET(request: Request, {params}: { params: { id: string } }
         const ongoingMatch = OngoingMatchResponseValidation.parse(dbOngoingMatch);
         ongoingMatch.seating_order = seatingOrder;
 
-        ongoingMatch.current_shuffler_index =
-            ongoingMatch.belaResults?.length % ongoingMatch.seating_order?.length;
-
         return NextResponse.json(ongoingMatch, {status: STATUS.OK});
     } catch (error) {
         console.log("Error: ", error);

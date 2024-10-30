@@ -1,9 +1,10 @@
 // src/store/scoreStore.ts
 import {create} from "zustand";
-import {PlayerAnnouncements} from "@/app/types/types";
 import {BelaResultResponse} from "@/app/lib/interfaces/belaResult";
 import {PlayerPairResponse} from "@/app/lib/interfaces/playerPair";
 import {PlayerPartialResponse} from "@/app/lib/interfaces/player";
+import {PlayersAnnouncements} from "@/app/store/bela/announcementStore";
+import {BelaPlayerAnnouncementsRequest} from "@/app/lib/interfaces/belaPlayerAnnouncement";
 
 type BelaResultTypeExtended = BelaResultResponse & {
     activeTeam: "team1" | "team2";
@@ -20,14 +21,19 @@ export type ResultState = {
     setMatchId: (id: number) => void;
     setCardShufflerIdAndTrumpCallerPosition:
         (seatingOrder: (PlayerPartialResponse | null)[], currentShufflerIndex: number) => void;
-    updateAnnouncementPoints: (playerAnnouncements: {
-        [key: number]: PlayerAnnouncements;
-    }) => void;
+    updateAnnouncementPoints: (playerAnnouncements: PlayersAnnouncements) => void;
     resetResult: () => void;
 };
 
 const MAX_SCORE = 162;
 const COMPLETE_VICTORY_SCORE = 252;
+const PrismaAnnouncementEnumValueMap = {
+    20: "TWENTY",
+    50: "FIFTY",
+    100: "ONE_HUNDRED",
+    150: "ONE_HUNDRED_FIFTY",
+    200: "TWO_HUNDRED",
+};
 
 const initialState = {
     resultData: {
@@ -217,35 +223,50 @@ const useResultStore = create<ResultState>((set) => ({
             }
         }),
 
-        updateAnnouncementPoints:
-            (playerAnnouncements: { [key: number]: PlayerAnnouncements; }) => {
-                const calculateTeamPoints = (playerIds) =>
-                    playerIds.reduce(
-                        (total, playerId) => total + (playerAnnouncements[playerId]?.totalAnnouncements || 0),
-                        0
-                    );
+        updateAnnouncementPoints: (playerAnnouncements: PlayersAnnouncements) => {
+            const teamPoints: { [team: string]: number } = {ONE: 0, TWO: 0};
+            const announcements: BelaPlayerAnnouncementsRequest[] = [];
 
-                const team1Players = [1, 2];
-                const team2Players = [3, 4];
+            Object.entries(playerAnnouncements).forEach(([playerIdStr, playerData]) => {
+                const playerId = Number(playerIdStr);
 
-                const updatedPP1AnnouncementPoints = calculateTeamPoints(team1Players);
-                const updatedPP2AnnouncementPoints = calculateTeamPoints(team2Players);
+                teamPoints[playerData.team] += playerData.totalAnnouncements;
 
-                set((state) => {
-                    const updatedPP1TotalPoints = state.resultData.player_pair1_game_points + updatedPP1AnnouncementPoints;
-                    const updatedPP2TotalPoints = state.resultData.player_pair2_game_points + updatedPP2AnnouncementPoints;
+                Object.entries(playerData.announcementCounts).forEach(
+                    ([announcementTypeStr, count]) => {
+                        const announcementType = Number(announcementTypeStr);
+                        for (let i = 0; i < count; i++) {
+                            announcements.push({
+                                player_id: playerId,
+                                announcement_type: PrismaAnnouncementEnumValueMap[announcementType],
+                            });
+                        }
+                    }
+                );
+            });
 
-                    return {
-                        resultData: {
-                            ...state.resultData,
-                            player_pair1_announcement_points: updatedPP1AnnouncementPoints,
-                            player_pair2_announcement_points: updatedPP2AnnouncementPoints,
-                            player_pair1_total_points: updatedPP1TotalPoints,
-                            player_pair2_total_points: updatedPP2TotalPoints,
-                        },
-                    };
-                });
-            },
+            set((state) => {
+                const updatedPP1AnnouncementPoints = teamPoints['ONE'] || 0;
+                const updatedPP2AnnouncementPoints = teamPoints['TWO'] || 0;
+
+                const updatedPP1TotalPoints =
+                    state.resultData.player_pair1_game_points + updatedPP1AnnouncementPoints;
+                const updatedPP2TotalPoints =
+                    state.resultData.player_pair2_game_points + updatedPP2AnnouncementPoints;
+
+                return {
+                    resultData: {
+                        ...state.resultData,
+                        player_pair1_announcement_points: updatedPP1AnnouncementPoints,
+                        player_pair2_announcement_points: updatedPP2AnnouncementPoints,
+                        player_pair1_total_points: updatedPP1TotalPoints,
+                        player_pair2_total_points: updatedPP2TotalPoints,
+                        announcements: announcements,
+                    },
+                };
+            });
+        },
+
     }))
 ;
 

@@ -8,11 +8,13 @@ import Action from "@/app/ongoing-match/ui/Action";
 import CardDealer from "@/app/ongoing-match/ui/CardDealer";
 import {useParams} from "next/navigation";
 import useOngoingMatchStore from "@/app/store/ongoingMatchStore";
+import useAnnouncementStore from "@/app/store/bela/announcementStore";
 
 const MobileScoreBoard = () => {
     const {matchId} = useParams();
 
     const setOngoingMatch = useOngoingMatchStore((state) => state.setOngoingMatch);
+    const initializePlayerAnnouncements = useAnnouncementStore(state => state.initializePlayersAnnouncements);
 
     React.useEffect(() => {
         const fetchTeamData = async () => {
@@ -23,6 +25,7 @@ const MobileScoreBoard = () => {
                 }
                 const data = await response.json();
                 setOngoingMatch(data);
+                initializePlayerAnnouncements(data.playerPair1, data.playerPair2);
             } catch (error) {
                 console.error('Error fetching team data:', error);
             }

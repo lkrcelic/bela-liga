@@ -23,10 +23,7 @@ export async function POST(request: Request) {
     const req_data = await request.json();
     const ongoingMatchId = MatchRequestValidation.parse(req_data);
 
-
     try {
-
-        // match is over after entering this result. Move it to 'persisted' table
         const dbMatch = await prisma.ongoingMatch.findUnique({
             where: {id: ongoingMatchId},
             include: {belaResults: {include: {belaPlayerAnnouncements: true}}}
@@ -38,7 +35,6 @@ export async function POST(request: Request) {
         const matchPersisted = await prisma.match.create({data: matchNested});
 
         //await prisma.ongoingMatch.delete({where: {id: result.match_id}});
-
 
         return NextResponse.json({"match": matchPersisted,}, {status: STATUS.OK});
 

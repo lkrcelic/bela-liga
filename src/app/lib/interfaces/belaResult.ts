@@ -1,4 +1,4 @@
-import {z} from "zod";
+import {array, z} from "zod";
 import {BelaPlayerAnnouncementRequestValidation} from "./belaPlayerAnnouncement";
 
 export const BelaResultValidationRequestValidation = z.object({
@@ -26,7 +26,7 @@ export const BelaResultValidationRequestValidation = z.object({
         .optional(),
     pass: z.boolean(),
     complete_victory: z.boolean(),
-    announcements: BelaPlayerAnnouncementRequestValidation.optional(),
+    announcements: z.array(BelaPlayerAnnouncementRequestValidation).optional().nullable(),
 });
 
 export const BelaResultValidationResponseValidation = BelaResultValidationRequestValidation.extend({

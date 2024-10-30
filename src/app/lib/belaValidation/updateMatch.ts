@@ -2,9 +2,8 @@ import {BelaResultRequest} from "../interfaces/belaResult";
 import {prisma} from "../prisma";
 import {runPrismaQuery} from "@/app/lib/helpers/prismaClientHelper";
 
-export async function updateMatchAndCheckIfOver(belaResult: BelaResultRequest): Promise<boolean> {
-    const updatedMatch = await runPrismaQuery(
-        prisma.ongoingMatch.update({
+export async function updateMatch(belaResult: BelaResultRequest): Promise<void> {
+    await runPrismaQuery(prisma.ongoingMatch.update({
             where: {id: belaResult.match_id},
             data: {
                 player_pair1_score: {
@@ -22,8 +21,4 @@ export async function updateMatchAndCheckIfOver(belaResult: BelaResultRequest): 
             },
         })
     );
-
-    const score_threshold = updatedMatch.score_threshold ?? 1001;
-    return updatedMatch.player_pair1_score > score_threshold ||
-        updatedMatch.player_pair2_score > score_threshold;
 }

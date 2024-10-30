@@ -6,6 +6,8 @@ import {BelaResultValidationRequestValidation} from "@/app/lib/interfaces/belaRe
 import {NextResponse} from "next/server";
 import {STATUS} from "@/app/lib/statusCodes";
 import {belaResultIsValid} from "@/app/lib/belaValidation/validateResult";
+import {transformBelaResult} from "@/app/lib/helpers/databaseHelpers";
+import {updateMatch} from "@/app/lib/belaValidation/updateMatch";
 
 export async function GET() {
     try {
@@ -28,17 +30,15 @@ export async function POST(request: Request) {
             return NextResponse.json({error: "Invalid bela result entry."}, {status: STATUS.BadRequest});
         }
 
-        const announcements = await prisma.ongoingBelaPlayerAnnouncement.findMany({
-            where: {
-                result_id: result.result_id
-            }
-        });
+        // TODO: Validate one of the 4 players playing the game is entering the result?
 
-        return NextResponse.json({
-            "result": result,
-            "announcements": announcements,
-            "matchOver": match_over
-        }, {status: STATUS.OK});
+        await updateMatch(resultData)
+
+        const createNested = transformBelaResult(resultData); // TODO DO I NEED THIS
+        const result = await prisma.ongoingBelaResult.create({data: createNested});
+
+
+        return NextResponse.json({"result": result}, {status: STATUS.OK});
     } catch (error) {
         if (error instanceof z.ZodError) {
             return NextResponse.json({error: error.issues}, {status: STATUS.BadRequest});
