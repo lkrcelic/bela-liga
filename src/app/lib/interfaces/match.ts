@@ -10,7 +10,7 @@ const parseDate = z.preprocess((arg) => {
     return arg;
 }, z.date());
 
-const MatchRequestValidation = z.number();
+export const MatchRequestValidation = z.number();
 
 export const OngoingMatchRequestValidation = z.object({
     round_id: z.number().int().nullable().optional(),

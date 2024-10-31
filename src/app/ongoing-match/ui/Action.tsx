@@ -21,7 +21,7 @@ export default function Action() {
                         const response = await fetch("/api/matches", {
                             method: "POST",
                             headers: {"Content-type": "application/json"},
-                            body: JSON.stringify(ongoingMatch)
+                            body: JSON.stringify(Number(matchId))
                         })
                         if (!response.ok) {
                             throw new Error(`Failed to store match: ${response.statusText}`);
@@ -39,12 +39,13 @@ export default function Action() {
                             throw new Error(`Failed to create ongoing match: ${response2.statusText}`);
                         }
 
+                        resetMatch();
+
                         const data = await response2.json();
                         router.push(`/ongoing-match/${data.match.id}`);
                     } catch (error) {
                         console.error("Error: ", error);
                     }
-                    resetMatch();
                 },
 
             }

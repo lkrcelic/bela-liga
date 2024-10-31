@@ -45,6 +45,8 @@ interface BelaMatchAllIncluded {
     round_id: number | null,
     player_pair_id1: number | null,
     player_pair_id2: number | null,
+    player_pair1_score: number,
+    player_pair2_score: number,
     score_threshold: number | null,
     start_time: Date | null,
     end_time: Date | null,
@@ -87,16 +89,12 @@ interface BelaMatchTransformed {
 }
 
 export function transformBelaMatch(match: BelaMatchAllIncluded): BelaMatchTransformed {
-    const sumT1 = match.belaResults.reduce((sum, br) =>
-        sum + br.player_pair1_game_points + br.player_pair1_announcement_points, 0);
-    const sumT2 = match.belaResults.reduce((sum, br) =>
-        sum + br.player_pair2_game_points + br.player_pair2_announcement_points, 0);
     return {
         round_id: match.round_id,
         player_pair_id1: match.player_pair_id1,
         player_pair_id2: match.player_pair_id2,
-        player_pair1_score: sumT1,
-        player_pair2_score: sumT2,
+        player_pair1_score: match.player_pair1_score,
+        player_pair2_score: match.player_pair2_score,
         score_threshold: match.score_threshold,
         start_time: match.start_time,
         end_time: match.end_time,

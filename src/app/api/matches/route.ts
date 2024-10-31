@@ -24,17 +24,18 @@ export async function POST(request: Request) {
     const ongoingMatchId = MatchRequestValidation.parse(req_data);
 
     try {
-        const dbMatch = await prisma.ongoingMatch.findUnique({
+        const dbOngoingMatch = await prisma.ongoingMatch.findUnique({
             where: {id: ongoingMatchId},
             include: {belaResults: {include: {belaPlayerAnnouncements: true}}}
         });
-        if (!dbMatch)
-            throw new Error("Something went wrong...");
 
-        const matchNested = transformBelaMatch(dbMatch);
-        const matchPersisted = await prisma.match.create({data: matchNested});
+        if (!dbOngoingMatch)
+            throw new Error("Something went wrong no ongoing match with that id");
 
-        //await prisma.ongoingMatch.delete({where: {id: result.match_id}});
+        const ongoingMatchNested = transformBelaMatch(dbOngoingMatch);
+        const matchPersisted = await prisma.match.create({data: ongoingMatchNested});
+
+        await prisma.ongoingMatch.delete({where: {id: ongoingMatchId}});
 
         return NextResponse.json({"match": matchPersisted,}, {status: STATUS.OK});
 
@@ -44,7 +45,4 @@ export async function POST(request: Request) {
         }
         return NextResponse.json({error: error}, {status: STATUS.ServerError});
     }
-
-
-    return NextResponse.json({"match": match.id}, {status: STATUS.OK});
 }
