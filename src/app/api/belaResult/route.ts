@@ -5,9 +5,9 @@ import {z} from "zod";
 import {BelaResultValidationRequestValidation} from "@/app/lib/interfaces/belaResult";
 import {NextResponse} from "next/server";
 import {STATUS} from "@/app/lib/statusCodes";
-import {belaResultIsValid} from "@/app/lib/belaValidation/validateResult";
-import {transformBelaResult} from "@/app/lib/helpers/databaseHelpers";
-import {updateMatch} from "@/app/lib/belaValidation/updateMatch";
+import {belaResultIsValid} from "@/app/lib/apiValidation/validateResult";
+import {transformBelaResult} from "@/app/lib/apiHelpers/databaseHelpers";
+import {updateMatch} from "@/app/lib/apiHelpers/updateMatch";
 
 export async function GET() {
     try {

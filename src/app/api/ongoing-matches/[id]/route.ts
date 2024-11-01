@@ -3,7 +3,7 @@ import {NextResponse} from "next/server";
 import {STATUS} from "@/app/lib/statusCodes";
 import {OngoingMatchResponseValidation} from "@/app/lib/interfaces/match";
 import {PlayerPartialResponseValidation} from "@/app/lib/interfaces/player";
-import {runPrismaQuery} from "@/app/lib/helpers/prismaClientHelper";
+import {runPrismaQuery} from "@/app/lib/apiHelpers/prismaClientHelper";
 
 export async function GET(request: Request, {params}: { params: { id: string } }) {
     const {id} = params;

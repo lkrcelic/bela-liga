@@ -9,29 +9,33 @@ import CardDealer from "@/app/ongoing-match/ui/CardDealer";
 import {useParams} from "next/navigation";
 import useOngoingMatchStore from "@/app/store/ongoingMatchStore";
 import useAnnouncementStore from "@/app/store/bela/announcementStore";
+import {getOngoingMatch} from "@/app/lib/fetchers/ongoingMatch/getOne";
+import {getRoundData} from "@/app/lib/fetchers/round/getOne";
+import useRoundStore from "@/app/store/RoundStore";
 
 const MobileScoreBoard = () => {
     const {matchId} = useParams();
 
-    const setOngoingMatch = useOngoingMatchStore((state) => state.setOngoingMatch);
+    const {setOngoingMatch} = useOngoingMatchStore();
+    const setRoundData = useRoundStore(state => state.setRoundData)
     const initializePlayerAnnouncements = useAnnouncementStore(state => state.initializePlayersAnnouncements);
 
-    React.useEffect(() => {
-        const fetchTeamData = async () => {
-            try {
-                const response = await fetch(`/api/ongoing-matches/${matchId}`);
-                if (!response.ok) {
-                    throw new Error('Failed to fetch team data');
-                }
-                const data = await response.json();
-                setOngoingMatch(data);
-                initializePlayerAnnouncements(data.playerPair1, data.playerPair2);
-            } catch (error) {
-                console.error('Error fetching team data:', error);
-            }
-        };
+    const fetchOngoingMatchAndRoundData = async () => {
+        try {
+            const response = await getOngoingMatch(Number(matchId));
+            setOngoingMatch(response);
+            initializePlayerAnnouncements(response.playerPair1, response.playerPair2);
 
-        fetchTeamData();
+            const data = await getRoundData(Number(response.round_id));
+            setRoundData(data);
+
+        } catch (error) {
+            console.error('Error fetching ongoing match or round  data:', error);
+        }
+    }
+
+    React.useEffect(() => {
+        fetchOngoingMatchAndRoundData();
     }, [matchId]);
 
     return (

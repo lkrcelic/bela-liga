@@ -5,7 +5,8 @@ import {NextResponse} from "next/server";
 import {STATUS} from "@/app/lib/statusCodes";
 import {MatchRequestValidation} from "@/app/lib/interfaces/match";
 import {z} from "zod";
-import {transformBelaMatch} from "@/app/lib/helpers/databaseHelpers";
+import {transformBelaMatch} from "@/app/lib/apiHelpers/databaseHelpers";
+import {updateRoundWins} from "@/app/lib/apiHelpers/updateRoundWins";
 
 export async function GET() {
     try {
@@ -36,6 +37,8 @@ export async function POST(request: Request) {
         const matchPersisted = await prisma.match.create({data: ongoingMatchNested});
 
         await prisma.ongoingMatch.delete({where: {id: ongoingMatchId}});
+
+        await updateRoundWins(ongoingMatchNested.round_id!, ongoingMatchNested.player_pair1_score,ongoingMatchNested.player_pair2_score)
 
         return NextResponse.json({"match": matchPersisted,}, {status: STATUS.OK});
 

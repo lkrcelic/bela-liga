@@ -3,9 +3,19 @@ import {useParams, usePathname, useRouter} from "next/navigation";
 import useResultStore from "@/app/store/bela/resultStore";
 import SingleActionButton from "@/app/ui/singeActionButton";
 import useOngoingMatchStore from "@/app/store/ongoingMatchStore";
+import {createOngoingMatch} from "@/app/lib/fetchers/ongoingMatch/create";
+import {createMatch} from "@/app/lib/fetchers/match/create";
 
 export default function Action() {
-    const {ongoingMatch, resetMatch} = useOngoingMatchStore();
+    const {
+        ongoingMatch: {
+            player_pair1_score,
+            player_pair2_score,
+            seating_order,
+            current_shuffler_index
+        },
+        resetOngoingMatch
+    } = useOngoingMatchStore();
     const {setMatchId} = useResultStore();
     const router = useRouter();
     const {matchId} = useParams();
@@ -13,42 +23,25 @@ export default function Action() {
 
 
     const getProps = () => {
-        if (ongoingMatch.player_pair1_score >= 1001 || ongoingMatch.player_pair2_score >= 1001) {
+        if ((player_pair1_score >= 1001 || player_pair2_score >= 1001) && player_pair1_score !== player_pair2_score) {
             return {
                 label: "Završi meč",
                 onClick: async () => {
-                    try {
-                        const response = await fetch("/api/matches", {
-                            method: "POST",
-                            headers: {"Content-type": "application/json"},
-                            body: JSON.stringify(Number(matchId))
-                        })
-                        if (!response.ok) {
-                            throw new Error(`Failed to store match: ${response.statusText}`);
-                        }
+                    await createMatch(Number(matchId));
 
-                        const response2 = await fetch("/api/ongoing-matches", {
-                            method: "POST",
-                            headers: {"Content-type": "application/json"},
-                            body: JSON.stringify({
-                                seating_order_ids: ongoingMatch.seating_order?.map((player) => player.id),
-                                current_shuffler_index: ongoingMatch.current_shuffler_index,
-                            }),
-                        })
-                        if (!response2.ok) {
-                            throw new Error(`Failed to create ongoing match: ${response2.statusText}`);
-                        }
+                    const response = await createOngoingMatch({
+                        round_id: 1, //TODO remove hardcode,
+                        seating_order_ids: seating_order?.map((player) => player.id),
+                        current_shuffler_index: current_shuffler_index | 0,
+                        score_threshold: 1001,
+                    })
 
-                        resetMatch();
+                    resetOngoingMatch();
 
-                        const data = await response2.json();
-                        router.push(`/ongoing-match/${data.match.id}`);
-                    } catch (error) {
-                        console.error("Error: ", error);
-                    }
+                    router.push(`/ongoing-match/${response.match.id}`);
                 },
-
             }
+
         } else {
             return {
                 label: "Upiši igru",
@@ -58,7 +51,6 @@ export default function Action() {
                 },
             }
         }
-        //TODO dodati kada oboje prijeđu 1001
     };
 
     const props = getProps();

@@ -1,35 +1,25 @@
 "use client";
 
 import DoubleActionButton from "@/app/ui/DoubleActionButton";
-import {useRouter} from "next/navigation";
+import {useParams, useRouter} from "next/navigation";
 import React from "react";
 import useOngoingMatchStore from "@/app/store/ongoingMatchStore";
+import {createOngoingMatch} from "@/app/lib/fetchers/ongoingMatch/create";
 
 export default function ActionButtons() {
     const router = useRouter();
+    const {roundId} = useParams();
     const seatingOrder = useOngoingMatchStore(state => state.ongoingMatch.seating_order)
 
     const startMatch = async () => {
-        try {
-            const response = await fetch("/api/ongoing-matches", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    seating_order_ids: seatingOrder?.map((player) => player.id),
-                }),
-            });
+        const data = await createOngoingMatch({
+            round_id: Number(roundId),
+            seating_order_ids: seatingOrder?.map((player) => player.id),
+            current_shuffler_index: 0,
+            score_threshold: 1001,
+        });
 
-            if (!response.ok) {
-                throw new Error(`Failed to send store state: ${response.statusText}`);
-            }
-
-            const data = await response.json();
-            router.push(`/ongoing-match/${data.match.id}`);
-        } catch (error) {
-            console.error("Error sending Zustand state:", error);
-        }
+        router.push(`/ongoing-match/${data.match.id}`);
     }
 
     return <DoubleActionButton secondButtonOnClick={startMatch} secondButtonLabel="Započni rundu"/>

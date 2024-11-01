@@ -1,5 +1,5 @@
 import {OngoingMatchRequestValidation} from "@/app/lib/interfaces/match";
-import {checkPlayersValid, insertPlayerPair} from "@/app/lib/belaValidation/playersValidation";
+import {checkPlayersValid, insertPlayerPair} from "@/app/lib/apiValidation/playersValidation";
 import {NextResponse} from "next/server";
 import {STATUS} from "@/app/lib/statusCodes";
 import {prisma} from "@/app/lib/prisma";

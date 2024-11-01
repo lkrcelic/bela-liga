@@ -6,27 +6,23 @@ import {Box, Typography} from "@mui/material";
 import ActionButtons from "@/app/round/ui/ActionButtons";
 import {useParams} from "next/navigation";
 import useRoundStore from "@/app/store/RoundStore";
+import {getRoundData} from "@/app/lib/fetchers/round/getOne";
 
 export default function PlayersSeating() {
-    const params = useParams();
-    const roundId = params.roundId;
+    const {roundId} = useParams();
 
     const setRoundData = useRoundStore((state) => state.setRoundData);
 
-    React.useEffect(() => {
-        const fetchTeamData = async () => {
-            try {
-                const response = await fetch(`/api/rounds/${roundId}`);
-                if (!response.ok) {
-                    throw new Error('Failed to fetch team data');
-                }
-                const data = await response.json();
-                setRoundData(data);
-            } catch (error) {
-                console.error('Error fetching team data:', error);
-            }
-        };
+    const fetchTeamData = async () => {
+        try {
+            const data = await getRoundData(Number(roundId));
+            setRoundData(data);
+        } catch (error) {
+            console.error('Error fetching round data:', error);
+        }
+    };
 
+    React.useEffect(() => {
         fetchTeamData();
     }, [roundId]);
 

@@ -9,6 +9,8 @@ export const RoundResponseValidation = z.object({
     round_date: z.date(),
     team1_id: z.number().int(),
     team2_id: z.number().int(),
+    team1_wins: z.number().int(),
+    team2_wins: z.number().int(),
 });
 
 export const ExtendedRoundResponseValidation = RoundResponseValidation.extend({

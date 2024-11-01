@@ -1,6 +1,6 @@
 import {BelaResultRequest} from "../interfaces/belaResult";
 import {prisma} from "../prisma";
-import {runPrismaQuery} from "@/app/lib/helpers/prismaClientHelper";
+import {runPrismaQuery} from "@/app/lib/apiHelpers/prismaClientHelper";
 
 export async function updateMatch(belaResult: BelaResultRequest): Promise<void> {
     await runPrismaQuery(prisma.ongoingMatch.update({
