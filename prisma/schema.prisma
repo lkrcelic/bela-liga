@@ -89,6 +89,7 @@ model Tournament {
   // Relationships
   tournamentTeams  TournamentTeam[]
   tournamentRounds TournamentRound[]
+  teamScore        TeamScore[]
 }
 
 model League {
@@ -99,6 +100,7 @@ model League {
   // Relationships
   leagueTeams  LeagueTeam[]
   leagueRounds LeagueRound[]
+  teamScore    TeamScore[]
 }
 
 model Team {
@@ -119,6 +121,25 @@ model Team {
   leagueTeams     LeagueTeam[]
   roundsAsTeam1   Round[]          @relation("RoundTeam1")
   roundsAsTeam2   Round[]          @relation("RoundTeam2")
+  teamScore       TeamScore[]
+}
+
+model TeamScore {
+  id            Int @id @default(autoincrement())
+  team_id       Int
+  league_id     Int?
+  tournament_id Int?
+  score         Int @default(0)
+
+
+  // Relationships
+  team        Team        @relation(fields: [team_id], references: [team_id], onDelete: Cascade)
+  league      League?     @relation(fields: [league_id], references: [league_id], onDelete: Cascade)
+  tournament  Tournament? @relation(fields: [tournament_id], references: [tournament_id], onDelete: Cascade)
+
+  // This model is additionaly modified in the migration script to add a constraint of 
+  // either league_id or tournament_id not being null!
+  // CHECK if this constraint is removed after every modification of TeamScore model!
 }
 
 model TeamPlayer {
