@@ -1,4 +1,4 @@
-import {z} from 'zod';
+import {z} from "zod";
 import {TeamResponseValidation} from "@/app/lib/interfaces/team";
 
 export const RoundResponseValidation = z.object({
@@ -14,8 +14,13 @@ export const RoundResponseValidation = z.object({
 });
 
 export const ExtendedRoundResponseValidation = RoundResponseValidation.extend({
-    team1: TeamResponseValidation.optional(),
-    team2: TeamResponseValidation.optional(),
+  team1: TeamResponseValidation.optional(),
+  team2: TeamResponseValidation.optional(),
+});
+
+export const CreateRound = z.object({
+  league_id: z.number().int(),
+  present_teams: z.array(z.number().int()).min(1),
 });
 
 export type RoundType = z.infer<typeof ExtendedRoundResponseValidation>;
