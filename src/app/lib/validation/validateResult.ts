@@ -1,4 +1,4 @@
-import {BelaResultRequest} from "../interfaces/belaResult";
+import {BelaResultRequest} from "@/app/interfaces/belaResult";
 
 const BELA_SUM = 162;
 const COMPLETE_VICTORY = 252;

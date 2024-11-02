@@ -1,13 +1,12 @@
 // src/app/api/belaResult/route.ts
 
 import {prisma} from "@/app/lib/prisma";
-import {z} from "zod";
-import {BelaResultValidationRequestValidation} from "@/app/lib/interfaces/belaResult";
+import {BelaResultValidationRequestValidation} from "@/app/interfaces/belaResult";
 import {NextResponse} from "next/server";
 import {STATUS} from "@/app/lib/statusCodes";
-import {belaResultIsValid} from "@/app/lib/apiValidation/validateResult";
-import {transformBelaResult} from "@/app/lib/apiHelpers/databaseHelpers";
-import {updateMatch} from "@/app/lib/apiHelpers/updateMatch";
+import {belaResultIsValid} from "@/app/lib/validation/validateResult";
+import {updateMatch} from "@/app/lib/service/match/update";
+import {createBelaResult} from "@/app/lib/service/belaResult/create";
 
 export async function GET() {
     try {
@@ -26,23 +25,11 @@ export async function POST(request: Request) {
         const req_data = await request.json();
         const resultData = BelaResultValidationRequestValidation.parse(req_data);
 
-        if (!belaResultIsValid(resultData)) {
-            return NextResponse.json({error: "Invalid bela result entry."}, {status: STATUS.BadRequest});
-        }
+        await createBelaResult(resultData);
+        await updateMatch(resultData);
 
-        // TODO: Validate one of the 4 players playing the game is entering the result?
-
-        await updateMatch(resultData)
-
-        const createNested = transformBelaResult(resultData); // TODO DO I NEED THIS
-        const result = await prisma.ongoingBelaResult.create({data: createNested});
-
-
-        return NextResponse.json({"result": result}, {status: STATUS.OK});
+        return NextResponse.json({message: "Result successfully created"},{status: STATUS.OK});
     } catch (error) {
-        if (error instanceof z.ZodError) {
-            return NextResponse.json({error: error.issues}, {status: STATUS.BadRequest});
-        }
         return NextResponse.json({error: error}, {status: STATUS.ServerError});
     }
 }

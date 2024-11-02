@@ -1,6 +1,6 @@
 import {create} from "zustand";
-import {OngoingMatchResponse} from "@/app/lib/interfaces/match";
-import {PlayerPartialResponse} from "@/app/lib/interfaces/player";
+import {OngoingMatchResponse} from "@/app/interfaces/match";
+import {PlayerPartialResponse} from "@/app/interfaces/player";
 
 export type OngoingMatchState = {
     ongoingMatch: OngoingMatchResponse;

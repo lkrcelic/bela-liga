@@ -125,17 +125,16 @@ model Team {
 }
 
 model TeamScore {
-  id            Int @id @default(autoincrement())
+  id            Int  @id @default(autoincrement())
   team_id       Int
   league_id     Int?
   tournament_id Int?
-  score         Int @default(0)
-
+  score         Int  @default(0)
 
   // Relationships
-  team        Team        @relation(fields: [team_id], references: [team_id], onDelete: Cascade)
-  league      League?     @relation(fields: [league_id], references: [league_id], onDelete: Cascade)
-  tournament  Tournament? @relation(fields: [tournament_id], references: [tournament_id], onDelete: Cascade)
+  team       Team        @relation(fields: [team_id], references: [team_id], onDelete: Cascade)
+  league     League?     @relation(fields: [league_id], references: [league_id], onDelete: Cascade)
+  tournament Tournament? @relation(fields: [tournament_id], references: [tournament_id], onDelete: Cascade)
 
   // This model is additionaly modified in the migration script to add a constraint of 
   // either league_id or tournament_id not being null!

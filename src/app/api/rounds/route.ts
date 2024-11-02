@@ -2,7 +2,7 @@ import {NextResponse} from "next/server";
 import {STATUS} from "@/app/lib/statusCodes";
 import {matchTeams} from "@/app/lib/matching/matching";
 import {getLeagueTeamsWithScores} from "@/app/lib/helpers/query/leagueScores";
-import {CreateRound} from "@/app/lib/interfaces/round";
+import {CreateRound} from "@/app/interfaces/round";
 
 export async function GET(request: Request) {
   try {

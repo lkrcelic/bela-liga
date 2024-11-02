@@ -1,5 +1,5 @@
 import {z} from "zod";
-import {PlayerPartialResponseValidation} from "@/app/lib/interfaces/player";
+import {PlayerPartialResponseValidation} from "@/app/interfaces/player";
 
 export const TeamRequestValidation = z.object({
   team_name: z.string().min(1),

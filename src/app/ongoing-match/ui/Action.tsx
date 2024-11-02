@@ -3,8 +3,8 @@ import {useParams, usePathname, useRouter} from "next/navigation";
 import useResultStore from "@/app/store/bela/resultStore";
 import SingleActionButton from "@/app/ui/singeActionButton";
 import useOngoingMatchStore from "@/app/store/ongoingMatchStore";
-import {createOngoingMatch} from "@/app/lib/fetchers/ongoingMatch/create";
-import {createMatch} from "@/app/lib/fetchers/match/create";
+import {createOngoingMatchAPI} from "@/app/fetchers/ongoingMatch/create";
+import {createMatchAPI} from "@/app/fetchers/match/create";
 
 export default function Action() {
     const {
@@ -27,9 +27,9 @@ export default function Action() {
             return {
                 label: "Završi meč",
                 onClick: async () => {
-                    await createMatch(Number(matchId));
+                    await createMatchAPI(Number(matchId));
 
-                    const response = await createOngoingMatch({
+                    const response = await createOngoingMatchAPI({
                         round_id: 1, //TODO remove hardcode,
                         seating_order_ids: seating_order?.map((player) => player.id),
                         current_shuffler_index: current_shuffler_index | 0,
@@ -38,7 +38,7 @@ export default function Action() {
 
                     resetOngoingMatch();
 
-                    router.push(`/ongoing-match/${response.match.id}`);
+                    router.push(`/ongoing-match/${response.id}`);
                 },
             }
 

@@ -1,5 +1,5 @@
 import {NextRequest, NextResponse} from "next/server";
-import {playerOutput, playerValidation} from "@/app/lib/interfaces/player";
+import {playerOutput, playerValidation} from "@/app/interfaces/player";
 import {prisma} from "@/app/lib/prisma";
 import {z} from "zod";
 import argon2 from "argon2";

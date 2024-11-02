@@ -1,5 +1,5 @@
 import {getAuthorizedUser} from "@/app/lib/auth";
-import {SessionsOut} from "@/app/lib/interfaces/session";
+import {SessionsOut} from "@/app/interfaces/session";
 import {prisma} from "@/app/lib/prisma";
 import {STATUS} from "@/app/lib/statusCodes";
 import {NextRequest, NextResponse} from "next/server";

@@ -1,7 +1,7 @@
 // src/app/api/teams/route.ts
 
 import {prisma} from "@/app/lib/prisma";
-import {TeamRequestValidation, TeamResponseValidation, TeamsResponseValidation} from "@/app/lib/interfaces/team";
+import {TeamRequestValidation, TeamResponseValidation, TeamsResponseValidation} from "@/app/interfaces/team";
 import {z} from "zod";
 import {NextResponse} from "next/server";
 import {STATUS} from "@/app/lib/statusCodes";

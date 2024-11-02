@@ -1,4 +1,4 @@
-export async function createMatch(ongoingMatch: number): Promise<void> {
+export async function createMatchAPI(ongoingMatch: number): Promise<void> {
     const response = await fetch("/api/matches", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

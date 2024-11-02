@@ -1,7 +1,7 @@
 // src/app/api/players/route.ts
 
 import {prisma} from "@/app/lib/prisma";
-import {playersOutput} from "@/app/lib/interfaces/player";
+import {playersOutput} from "@/app/interfaces/player";
 import {NextRequest, NextResponse} from "next/server";
 import {getAuthorizedUser} from "@/app/lib/auth";
 import {STATUS} from "@/app/lib/statusCodes";

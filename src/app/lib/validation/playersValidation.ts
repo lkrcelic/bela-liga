@@ -1,5 +1,5 @@
 import {prisma} from "../prisma";
-import {PlayerPairRequestValidation} from "@/app/lib/interfaces/playerPair";
+import {PlayerPairRequestValidation} from "@/app/interfaces/playerPair";
 
 export async function checkPlayersValid(seatingOrder: number[]): Promise<boolean> {
     const dbPlayers = await prisma.player.findMany({
@@ -18,7 +18,7 @@ export async function insertPlayerPair(playerPair: PlayerPairRequestValidation):
     });
 
     if (existingPair.length != 0) {
-        console.log("PlayerPair already exists!");
+        console.log("Player pair already exists!");
         return existingPair[0].id;
     }
 

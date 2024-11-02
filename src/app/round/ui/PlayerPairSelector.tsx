@@ -2,8 +2,8 @@ import React, {useState} from 'react';
 import {Button, Menu, MenuItem} from '@mui/material';
 import {Grid} from "@mui/system";
 import useRoundStore from "@/app/store/RoundStore";
-import {PlayerPartialResponse} from "@/app/lib/interfaces/player";
-import {TeamResponse} from "@/app/lib/interfaces/team";
+import {PlayerPartialResponse} from "@/app/interfaces/player";
+import {TeamResponse} from "@/app/interfaces/team";
 import useOngoingMatchStore from "@/app/store/ongoingMatchStore";
 
 export default function PlayerPairSelector() {

@@ -1,5 +1,5 @@
 import {z} from "zod";
-import {PlayerResponseValidation} from "@/app/lib/interfaces/player";
+import {PlayerResponseValidation} from "@/app/interfaces/player";
 
 export const PlayerPairResponseValidation = z.object({
     id: z.number().int(),

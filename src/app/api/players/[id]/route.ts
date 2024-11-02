@@ -1,7 +1,7 @@
 // src/app/api/players/[id]/route.ts
 import {NextResponse} from "next/server";
 import {prisma} from "@/app/lib/prisma";
-import {playerOutput} from "@/app/lib/interfaces/player";
+import {playerOutput} from "@/app/interfaces/player";
 import {STATUS} from "@/app/lib/statusCodes";
 
 // Handle GET request to fetch a single player by ID

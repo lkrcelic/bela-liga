@@ -1,6 +1,6 @@
-import {OngoingMatchResponseValidation} from "@/app/lib/interfaces/match";
+import {OngoingMatchResponseValidation} from "@/app/interfaces/match";
 
-export async function getOngoingMatch(matchId: number): Promise<OngoingMatchResponseValidation> {
+export async function getOngoingMatchAPI(matchId: number): Promise<OngoingMatchResponseValidation> {
     const response = await fetch(`/api/ongoing-matches/${matchId}`);
 
     if (!response.ok) {

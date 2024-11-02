@@ -1,5 +1,5 @@
 import {z} from "zod";
-import {TeamResponseValidation} from "@/app/lib/interfaces/team";
+import {TeamResponseValidation} from "@/app/interfaces/team";
 
 export const RoundResponseValidation = z.object({
     id: z.number().int().optional(),

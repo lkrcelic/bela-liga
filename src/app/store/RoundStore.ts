@@ -1,5 +1,5 @@
 import {create} from "zustand";
-import {RoundType} from "@/app/lib/interfaces/round";
+import {RoundType} from "@/app/interfaces/round";
 
 export type RoundState = {
     roundData: RoundType;

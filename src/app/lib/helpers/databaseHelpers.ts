@@ -1,5 +1,5 @@
 import {BelaAnnouncementEnum, TrumpCallerPositionEnum, TrumpEnum} from "@prisma/client"
-import {BelaResultRequest} from "../interfaces/belaResult"
+import {BelaResultRequest} from "@/app/interfaces/belaResult"
 
 // BELA RESULT
 interface BelaResultTransformed {

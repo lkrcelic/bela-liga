@@ -1,10 +1,10 @@
 // src/store/scoreStore.ts
 import {create} from "zustand";
-import {BelaResultResponse} from "@/app/lib/interfaces/belaResult";
-import {PlayerPairResponse} from "@/app/lib/interfaces/playerPair";
-import {PlayerPartialResponse} from "@/app/lib/interfaces/player";
+import {BelaResultResponse} from "@/app/interfaces/belaResult";
+import {PlayerPairResponse} from "@/app/interfaces/playerPair";
+import {PlayerPartialResponse} from "@/app/interfaces/player";
 import {PlayersAnnouncements} from "@/app/store/bela/announcementStore";
-import {BelaPlayerAnnouncementsRequest} from "@/app/lib/interfaces/belaPlayerAnnouncement";
+import {BelaPlayerAnnouncementsRequest} from "@/app/interfaces/belaPlayerAnnouncement";
 
 type BelaResultTypeExtended = BelaResultResponse & {
     activeTeam: "team1" | "team2";

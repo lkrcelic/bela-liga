@@ -1,7 +1,7 @@
 import {z} from "zod";
-import {PartialBelaResultResponseValidation} from "@/app/lib/interfaces/belaResult";
-import {PlayerPairResponseValidation} from "@/app/lib/interfaces/playerPair";
-import {PlayerPartialResponseValidation} from "@/app/lib/interfaces/player";
+import {PartialBelaResultResponseValidation} from "@/app/interfaces/belaResult";
+import {PlayerPairResponseValidation} from "@/app/interfaces/playerPair";
+import {PlayerPartialResponseValidation} from "@/app/interfaces/player";
 
 const parseDate = z.preprocess((arg) => {
     if (typeof arg === 'string' || arg instanceof Date) {

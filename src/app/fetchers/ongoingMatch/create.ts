@@ -1,4 +1,4 @@
-export async function createOngoingMatch(data: {
+export async function createOngoingMatchAPI(data: {
     score_threshold: number;
     round_id: number;
     current_shuffler_index: number;

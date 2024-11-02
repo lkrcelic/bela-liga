@@ -6,7 +6,7 @@ import {Box, Typography} from "@mui/material";
 import ActionButtons from "@/app/round/ui/ActionButtons";
 import {useParams} from "next/navigation";
 import useRoundStore from "@/app/store/RoundStore";
-import {getRoundData} from "@/app/lib/fetchers/round/getOne";
+import {getRoundDataAPI} from "@/app/fetchers/round/getOne";
 
 export default function PlayersSeating() {
     const {roundId} = useParams();
@@ -15,7 +15,7 @@ export default function PlayersSeating() {
 
     const fetchTeamData = async () => {
         try {
-            const data = await getRoundData(Number(roundId));
+            const data = await getRoundDataAPI(Number(roundId));
             setRoundData(data);
         } catch (error) {
             console.error('Error fetching round data:', error);

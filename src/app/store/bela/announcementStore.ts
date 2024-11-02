@@ -1,6 +1,6 @@
 // src/store/announcementStore.ts
 import {create} from 'zustand';
-import {PlayerPairResponse} from "@/app/lib/interfaces/playerPair";
+import {PlayerPairResponse} from "@/app/interfaces/playerPair";
 
 type PlayerAnnouncements = {
     totalAnnouncements: number;

@@ -4,7 +4,7 @@ import {NextRequest, NextResponse} from "next/server";
 import {randomUUID} from "crypto";
 
 import argon2 from "argon2";
-import {LoginUser} from "@/app/lib/interfaces/login";
+import {LoginUser} from "@/app/interfaces/login";
 import {STATUS} from "@/app/lib/statusCodes";
 
 const notFoundResponse = NextResponse.json({error: "Incorrect username or password."},

@@ -9,8 +9,8 @@ import CardDealer from "@/app/ongoing-match/ui/CardDealer";
 import {useParams} from "next/navigation";
 import useOngoingMatchStore from "@/app/store/ongoingMatchStore";
 import useAnnouncementStore from "@/app/store/bela/announcementStore";
-import {getOngoingMatch} from "@/app/lib/fetchers/ongoingMatch/getOne";
-import {getRoundData} from "@/app/lib/fetchers/round/getOne";
+import {getOngoingMatchAPI} from "@/app/fetchers/ongoingMatch/getOne";
+import {getRoundDataAPI} from "@/app/fetchers/round/getOne";
 import useRoundStore from "@/app/store/RoundStore";
 
 const MobileScoreBoard = () => {
@@ -22,15 +22,15 @@ const MobileScoreBoard = () => {
 
     const fetchOngoingMatchAndRoundData = async () => {
         try {
-            const response = await getOngoingMatch(Number(matchId));
+            const response = await getOngoingMatchAPI(Number(matchId));
             setOngoingMatch(response);
             initializePlayerAnnouncements(response.playerPair1, response.playerPair2);
 
-            const data = await getRoundData(Number(response.round_id));
+            const data = await getRoundDataAPI(Number(response.round_id));
             setRoundData(data);
 
         } catch (error) {
-            console.error('Error fetching ongoing match or round  data:', error);
+            console.error('Error fetching ongoing match or round data:', error);
         }
     }
 
