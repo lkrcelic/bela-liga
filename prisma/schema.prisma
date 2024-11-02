@@ -175,13 +175,13 @@ model Round {
   id           Int       @id @default(autoincrement())
   round_number Int?
   round_date   DateTime?
-  team1_id     Int?
-  team2_id     Int?
+  team1_id     Int
+  team2_id     Int
   team1_wins   Int       @default(0)
   team2_wins   Int       @default(0)
 
-  team1            Team?             @relation("RoundTeam1", fields: [team1_id], references: [team_id], onDelete: SetNull)
-  team2            Team?             @relation("RoundTeam2", fields: [team2_id], references: [team_id], onDelete: SetNull)
+  team1            Team             @relation("RoundTeam1", fields: [team1_id], references: [team_id], onDelete: SetNull)
+  team2            Team             @relation("RoundTeam2", fields: [team2_id], references: [team_id], onDelete: SetNull)
   matches          Match[]
   ongoingMatches   OngoingMatch[]
   tournamentRounds TournamentRound[]
