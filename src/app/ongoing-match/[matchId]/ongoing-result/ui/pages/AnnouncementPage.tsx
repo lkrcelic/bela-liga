@@ -2,12 +2,12 @@
 
 import React from "react";
 import {Box} from "@mui/material";
-import AnnouncementSection from "@/app/ongoing-match/[matchId]/ongoing-result/announcement/ui/AnnouncementsSection";
+import AnnouncementSection from "@/app/ongoing-match/[matchId]/ongoing-result/ui/AnnouncementsSection";
 import PlayersAnnouncementSection
-    from "@/app/ongoing-match/[matchId]/ongoing-result/announcement/ui/PlayersAnnouncementSection";
-import ActionButtons from "@/app/ongoing-match/[matchId]/ongoing-result/announcement/ui/ActionButtons";
+    from "@/app/ongoing-match/[matchId]/ongoing-result/ui/PlayersAnnouncementSection";
+import ActionButtons from "@/app/ongoing-match/[matchId]/ongoing-result/new/announcement/ActionButtons";
 
-export default function Result() {
+export default function AnnouncementPage() {
     return (
         <>
             <Box sx={{gridArea: "body", alignSelf: "end"}}>

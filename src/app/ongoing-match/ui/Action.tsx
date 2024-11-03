@@ -47,7 +47,7 @@ export default function Action() {
                 label: "Upiši igru",
                 onClick: () => {
                     setMatchId(Number(matchId));
-                    router.push(`${pathname}/ongoing-result/trump-caller`);
+                    router.push(`${pathname}/ongoing-result/new/trump-caller`);
                 },
             }
         }

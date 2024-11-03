@@ -34,6 +34,7 @@ export const BelaResultValidationResponseValidation = BelaResultValidationReques
 });
 
 export const PartialBelaResultResponseValidation = z.object({
+    result_id: z.number().int().nullable(), //TODO dodati id na svaki result i napraviti update
     player_pair1_total_points: z.number(),
     player_pair2_total_points: z.number(),
 });
