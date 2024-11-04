@@ -10,8 +10,7 @@ export async function updateMatch(belaResult: BelaResultRequest): Promise<void> 
             },
             player_pair2_score: {
                 increment: belaResult.player_pair2_total_points,
-            },
-            current_shuffler_index: {increment: 1}
+            }
         },
         select: {
             player_pair1_score: true,

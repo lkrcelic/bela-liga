@@ -9,6 +9,7 @@ export async function findOngoingMatchWithResultsAndPlayers(id: number): Promise
         include: {
             belaResults: {
                 select: {
+                    result_id: true,
                     player_pair1_total_points: true,
                     player_pair2_total_points: true,
                 },
