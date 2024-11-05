@@ -1,5 +1,5 @@
 import {BelaAnnouncementEnum, TrumpCallerPositionEnum, TrumpEnum} from "@prisma/client"
-import {BelaResultRequest} from "@/app/interfaces/belaResult"
+import {BelaResultCreateRequest} from "@/app/interfaces/belaResult"
 
 // BELA RESULT
 interface BelaResultTransformed {
@@ -13,13 +13,12 @@ interface BelaResultTransformed {
     card_shuffler_id: number | undefined,
     trump_caller_id: number | undefined,
     trump_caller_position: TrumpCallerPositionEnum,
-    trump_type: TrumpEnum | undefined,
     pass: boolean,
     complete_victory: boolean,
     belaPlayerAnnouncements: object
 }
 
-export function transformBelaResult(belaResult: BelaResultRequest): BelaResultTransformed {
+export function transformBelaResult(belaResult: BelaResultCreateRequest): BelaResultTransformed {
     return {
         match_id: belaResult.match_id,
         player_pair1_game_points: belaResult.player_pair1_game_points,
@@ -31,7 +30,6 @@ export function transformBelaResult(belaResult: BelaResultRequest): BelaResultTr
         card_shuffler_id: belaResult.card_shuffler_id,
         trump_caller_id: belaResult.trump_caller_id,
         trump_caller_position: belaResult.trump_caller_position,
-        trump_type: belaResult.trump_type,
         pass: belaResult.pass,
         complete_victory: belaResult.complete_victory,
         belaPlayerAnnouncements: {create: belaResult.announcements ?? []}
@@ -63,7 +61,6 @@ interface BelaMatchAllIncluded {
         card_shuffler_id: number | null,
         trump_caller_id: number | null,
         trump_caller_position: TrumpCallerPositionEnum,
-        trump_type: TrumpEnum | null,
         pass: boolean,
         complete_victory: boolean,
         belaPlayerAnnouncements: {
@@ -111,7 +108,6 @@ export function transformBelaMatch(match: BelaMatchAllIncluded): BelaMatchTransf
                     card_shuffler_id: res.card_shuffler_id,
                     trump_caller_id: res.trump_caller_id,
                     trump_caller_position: res.trump_caller_position,
-                    trump_type: res.trump_type,
                     pass: res.pass,
                     complete_victory: res.complete_victory,
                     belaPlayerAnnouncements: {

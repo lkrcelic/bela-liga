@@ -1,6 +1,7 @@
 // src/store/announcementStore.ts
 import {create} from 'zustand';
 import {PlayerPairResponse} from "@/app/interfaces/playerPair";
+import {BelaPlayerAnnouncementResponse} from "@/app/interfaces/belaPlayerAnnouncement";
 
 type PlayerAnnouncements = {
     totalAnnouncements: number;
@@ -23,12 +24,21 @@ type AnnouncementState = {
         playerPair1: PlayerPairResponse | null,
         playerPair2: PlayerPairResponse | null
     ) => void;
+    setPlayersAnnouncements: (data: BelaPlayerAnnouncementResponse[]) => void;
 };
 
 const initialState = {
     playersAnnouncements: {},
     activePlayerId: null,
     noAnnouncements: true,
+};
+
+const PrismaAnnouncementEnumValueMap = {
+    "TWENTY": 20,
+    "FIFTY": 50,
+    "ONE_HUNDRED": 100,
+    "ONE_HUNDRED_FIFTY": 150,
+    "TWO_HUNDRED": 200,
 };
 
 const useAnnouncementStore = create<AnnouncementState>((set) => ({
@@ -42,6 +52,30 @@ const useAnnouncementStore = create<AnnouncementState>((set) => ({
             [playerPair2!.player_id2]: {totalAnnouncements: 0, announcementCounts: {}, team: "TWO"},
         },
     })),
+
+    setPlayersAnnouncements: (data: BelaPlayerAnnouncementResponse[]) => set((state) => {
+        const updatedPlayersAnnouncements: PlayersAnnouncements = {...state.playersAnnouncements};
+        data.forEach((announcement) => {
+            const {player_id, announcement_type} = announcement;
+            const announcementValue = PrismaAnnouncementEnumValueMap[announcement_type];
+            if (announcementValue !== undefined && updatedPlayersAnnouncements[player_id]) {
+                const playerAnn = updatedPlayersAnnouncements[player_id];
+                playerAnn.announcementCounts[announcementValue] = (playerAnn.announcementCounts[announcementValue] || 0) + 1;
+                playerAnn.totalAnnouncements = Object.entries(playerAnn.announcementCounts).reduce(
+                    (total, [pointValue, count]) => total + Number(pointValue) * count,
+                    0
+                );
+            }
+        });
+        const hasAnnouncements = Object.values(updatedPlayersAnnouncements).some(
+            (player) => player.totalAnnouncements > 0
+        );
+
+        return {
+            playersAnnouncements: updatedPlayersAnnouncements,
+            noAnnouncements: !hasAnnouncements,
+        };
+    }),
 
     resetAnnouncements: () => set(() => ({...initialState})),
 

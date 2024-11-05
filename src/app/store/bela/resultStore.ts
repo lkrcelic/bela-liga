@@ -23,6 +23,7 @@ export type ResultState = {
         (seatingOrder: (PlayerPartialResponse | null)[], currentShufflerIndex: number) => void;
     updateAnnouncementPoints: (playerAnnouncements: PlayersAnnouncements) => void;
     resetResult: () => void;
+    setResultData: (data: BelaResultResponse) => void;
 };
 
 const MAX_SCORE = 162;
@@ -53,6 +54,10 @@ const initialState = {
 
 const useResultStore = create<ResultState>((set) => ({
         ...initialState,
+
+        setResultData: (data: BelaResultResponse) => set((state) => ({
+            resultData: {...state.resultData, ...data}
+        })),
 
         resetResult: () => set({resultData: {...initialState.resultData}}),
 

@@ -1,9 +1,9 @@
-import {BelaResultRequest} from "@/app/interfaces/belaResult";
+import {BelaResultCreateRequest} from "@/app/interfaces/belaResult";
 import {prisma} from "@/app/lib/prisma";
 import {transformBelaResult} from "@/app/lib/helpers/databaseHelpers";
 import {belaResultIsValid} from "@/app/lib/validation/validateResult";
 
-export async function createBelaResult(resultData: BelaResultRequest): Promise<void> {
+export async function createBelaResult(resultData: BelaResultCreateRequest): Promise<void> {
     if (!belaResultIsValid(resultData)) {
         throw new Error("Invalid bela result entry.");
     }

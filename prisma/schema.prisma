@@ -17,13 +17,6 @@ enum GameEnum {
   TRESETA
 }
 
-enum TrumpEnum {
-  PIK
-  HERC
-  KARO
-  TREF
-}
-
 enum BelaAnnouncementEnum {
   TWENTY
   FIFTY
@@ -274,7 +267,6 @@ model BelaResult {
   card_shuffler_id                 Int?
   trump_caller_id                  Int?
   trump_caller_position            TrumpCallerPositionEnum
-  trump_type                       TrumpEnum?
   pass                             Boolean                 @default(false)
   complete_victory                 Boolean                 @default(false)
 
@@ -296,7 +288,6 @@ model OngoingBelaResult {
   card_shuffler_id                 Int?
   trump_caller_id                  Int?
   trump_caller_position            TrumpCallerPositionEnum
-  trump_type                       TrumpEnum?
   pass                             Boolean                 @default(false)
   complete_victory                 Boolean                 @default(false)
 

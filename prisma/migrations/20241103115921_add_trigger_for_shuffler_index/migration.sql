@@ -1,17 +1,23 @@
--- Trigger Function to enforce modulo 4 on current_shuffler_index
-CREATE OR REPLACE FUNCTION enforce_shuffler_index_modulo()
+-- Trigger Function to Update current_shuffler_index in OngoingMatch
+CREATE
+OR REPLACE FUNCTION update_shuffler_index_on_new_result()
 RETURNS TRIGGER AS $$
 BEGIN
-    NEW.current_shuffler_index := (NEW.current_shuffler_index + 1) % 4;
+UPDATE "OngoingMatch"
+SET current_shuffler_index = (current_shuffler_index + 1) % 4
+WHERE id = NEW.match_id;
+
 RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$
+LANGUAGE plpgsql;
 
--- Create Trigger to apply the function before each update on OngoingMatch
-CREATE TRIGGER trg_enforce_shuffler_index_modulo
-    BEFORE UPDATE ON "OngoingMatch"
+-- New Trigger on OngoingBelaResult to Update Shuffler Index
+CREATE TRIGGER trg_update_shuffler_index_on_new_result
+    AFTER INSERT
+    ON "OngoingBelaResult"
     FOR EACH ROW
-EXECUTE FUNCTION enforce_shuffler_index_modulo();
+    EXECUTE FUNCTION update_shuffler_index_on_new_result();
 
 -- Add CHECK constraint for current_shuffler_index
 ALTER TABLE "OngoingMatch"

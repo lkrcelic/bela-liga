@@ -9,9 +9,9 @@ import CardDealer from "@/app/ongoing-match/ui/CardDealer";
 import {useParams} from "next/navigation";
 import useOngoingMatchStore from "@/app/store/ongoingMatchStore";
 import useAnnouncementStore from "@/app/store/bela/announcementStore";
-import {getOngoingMatchAPI} from "@/app/fetchers/ongoingMatch/getOne";
 import {getRoundDataAPI} from "@/app/fetchers/round/getOne";
 import useRoundStore from "@/app/store/RoundStore";
+import {getOngoingMatchAPI} from "@/app/fetchers/ongoingMatch/getOne";
 
 const MobileScoreBoard = () => {
     const {matchId} = useParams();
