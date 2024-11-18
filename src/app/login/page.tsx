@@ -1,12 +1,18 @@
 "use client";
 
 import LogInForm from "@/app/login/ui/LogInForm";
+import {useRouter} from "next/navigation";
 import {useState} from "react";
 
 export default function LogIn() {
   const [success, setSuccess] = useState<boolean | undefined>(undefined);
+  const router = useRouter();
+
   const handleFormSubmit = (success: boolean) => {
     setSuccess(success);
+    if (success) {
+      setTimeout(() => router.push("/"), 500);
+    }
   };
 
   return (

@@ -6,6 +6,7 @@ import {randomUUID} from "crypto";
 import argon2 from "argon2";
 import {LoginUser} from "@/app/interfaces/login";
 import {STATUS} from "@/app/lib/statusCodes";
+import {signCookie} from "@/app/lib/signCookie";
 
 const notFoundResponse = NextResponse.json({error: "Incorrect username or password."}, {status: STATUS.NotFound});
 const alreadyLoggedIn = NextResponse.json({error: "You are already logged it."}, {status: STATUS.BadRequest});
@@ -32,11 +33,12 @@ export async function POST(req: NextRequest) {
     }
 
     /*
-          It is neccessary to provide sessionId because lucia implements a different kind of id generator
-          which is not conformant with postgresql for some reason.
-        */
+      It is neccessary to provide sessionId because lucia implements a different kind of id generator
+      which is not conformant with postgresql for some reason.
+    */
     const session = await lucia.createSession(existingUser.id, {}, {sessionId: randomUUID()});
     const cookie = lucia.createSessionCookie(session.id);
+    signCookie(cookie);
 
     const response = NextResponse.json({message: "Login successful."}, {status: STATUS.OK});
     response.cookies.set(cookie);
