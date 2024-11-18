@@ -6,10 +6,9 @@ export async function POST(req: NextRequest) {
   try {
     let res = NextResponse.json({}, {status: STATUS.OK});
     const val = await validateRequest(req);
-    if (!val) {
-      return NextResponse.json({error: "Could not signout user."}, {status: STATUS.Forbidden});
+    if (val) {
+      await lucia.invalidateSession(val.session.id);
     }
-    await lucia.invalidateSession(val.session.id);
     res.cookies.set(lucia.createBlankSessionCookie());
     return res;
   } catch (error) {

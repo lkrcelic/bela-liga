@@ -13,15 +13,12 @@ const authCookieName = process.env.AUTH_COOKIE ?? "BelaTresetaSession";
 export const lucia = new Lucia(adapter, {
   sessionCookie: {
     name: authCookieName,
-    // this sets cookies with super long expiration
-    // since Next.js doesn't allow Lucia to extend cookie expiration when rendering pages
-    expires: true,
+    expires: false,
     attributes: {
       // set to `true` when using HTTPS
       secure: process.env.NODE_ENV === "production",
     },
   },
-  sessionExpiresIn: new TimeSpan(5, "s"),
   getUserAttributes: (attributes) => {
     return {
       // attributes has the type of DatabaseUserAttributes
@@ -48,7 +45,6 @@ export async function getAuthorizedUser(req: NextRequest): Promise<Player | null
     return null;
   }
   const cookie = extractCookieWithoutSignature(signedCookie);
-  console.log(cookie);
   const session = await prisma.session.findUnique({
     where: {id: cookie.value},
   });
