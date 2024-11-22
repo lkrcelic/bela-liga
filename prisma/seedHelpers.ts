@@ -23,7 +23,7 @@ export async function createRandomPlayer() {
       username: name,
       password_hash: generateString(12),
       email: name + "@gmail.com",
-      player_role: "ADMIN",
+      player_role: "PLAYER",
       first_name: generateString(5),
       last_name: generateString(5),
       birth_year: 1996,

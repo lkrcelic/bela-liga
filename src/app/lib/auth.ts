@@ -1,6 +1,7 @@
-import {Lucia, TimeSpan} from "lucia";
+import {Lucia} from "lucia";
 import {PrismaAdapter} from "@lucia-auth/adapter-prisma";
 import {prisma} from "./prisma";
+import {RoleEnum} from "@prisma/client";
 
 import type {Player, Session} from "@prisma/client";
 import {NextRequest, NextResponse} from "next/server";
@@ -58,6 +59,11 @@ export async function getAuthorizedUser(req: NextRequest): Promise<Player | null
   return await prisma.player.findUnique({
     where: {id: result.user.id},
   });
+}
+
+export async function checkCurrentUserIsAdmin(req: NextRequest): Promise<boolean> {
+  const user = await getAuthorizedUser(req);
+  return user?.player_role === RoleEnum.ADMIN;
 }
 
 export async function validateRequest(req: NextRequest): Promise<{userId: number; session: Session} | null> {

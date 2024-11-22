@@ -108,6 +108,14 @@ async function main() {
   const player11 = await createRandomPlayer();
   const player12 = await createRandomPlayer();
 
+  const teamBYE = await prisma.team.create({
+    data: {
+      team_id: 0,
+      team_name: "BYE",
+      creator_id: player0.id,
+    },
+  });
+
   const team1 = await prisma.team.create({
     data: {
       team_name: "Alen Kitasović",
@@ -155,15 +163,15 @@ async function main() {
   ];
   await prisma.teamPlayer.createMany({data: teamPlayers});
 
-  const playerPairs = [
-    {id: 1, player_id1: player1.id, player_id2: player2.id},
-    {id: 2, player_id1: player3.id, player_id2: player4.id},
-    {id: 3, player_id1: player5.id, player_id2: player6.id},
-    {id: 4, player_id1: player7.id, player_id2: player8.id},
-    {id: 5, player_id1: player9.id, player_id2: player10.id},
-    {id: 6, player_id1: player11.id, player_id2: player12.id},
+  const playerPairsData = [
+    {player_id1: player1.id, player_id2: player2.id},
+    {player_id1: player3.id, player_id2: player4.id},
+    {player_id1: player5.id, player_id2: player6.id},
+    {player_id1: player7.id, player_id2: player8.id},
+    {player_id1: player9.id, player_id2: player10.id},
+    {player_id1: player11.id, player_id2: player12.id},
   ];
-  await prisma.playerPair.createMany({data: playerPairs});
+  const playerPairs = await prisma.playerPair.createManyAndReturn({data: playerPairsData});
 
   const league = await prisma.league.create({
     data: {
@@ -171,38 +179,38 @@ async function main() {
       game_type: "TRESETA",
     },
   });
+  const teams = [team1, team2, team3, team4, team5, team6];
+  await prisma.leagueTeam.createMany({
+    data: teams.map((team) => ({league_id: league.league_id, team_id: team.team_id})),
+  });
 
-  const rounds = [
+  const roundsData = [
     {
-      id: 1,
       round_number: 1,
       round_date: new Date("2024-01-01"),
       team1_id: team1.team_id,
       team2_id: team2.team_id,
     },
     {
-      id: 2,
       round_number: 2,
       round_date: new Date("2024-01-02"),
       team1_id: team1.team_id,
       team2_id: team2.team_id,
     },
     {
-      id: 3,
       round_number: 3,
       round_date: new Date("2024-02-01"),
       team1_id: team3.team_id,
       team2_id: team1.team_id,
     },
     {
-      id: 4,
-      round_number: 4,
+      round_number: 1,
       round_date: new Date("2024-01-01"),
       team1_id: team5.team_id,
       team2_id: team6.team_id,
     },
   ];
-  await prisma.round.createMany({data: rounds});
+  const rounds = await prisma.round.createManyAndReturn({data: roundsData});
 
   const leagueRounds = [
     {league_id: league.league_id, round_id: rounds[0].id},

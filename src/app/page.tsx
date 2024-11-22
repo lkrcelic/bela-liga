@@ -1,48 +1,57 @@
 "use client"; // This is a client component
 
-import {useEffect, useState} from "react";
-import styles from "@/app/styles/Form.modules.css";
+import {useEffect} from "react";
 import {logoutUser} from "@/app/fetchers/authentication/logout";
+import {Box, Button} from "@mui/material";
+import {useRouter} from "next/navigation";
 
 export default function Home() {
-  const [players, setPlayers] = useState([]);
+  const router = useRouter();
 
   async function logOut(): Promise<void> {
     await logoutUser();
     window.location.reload();
   }
 
+  async function startGame(): Promise<void> {
+    console.log("Starting game...");
+  }
+
+  async function createRound() {
+    router.push("/createRound");
+  }
+
   // Fetch all players
   useEffect(() => {
-    async function fetchPlayers() {
+    async function checkUserAdmin() {
       try {
-        const response = await fetch("/api/players");
-        const data = await response.json();
-        setPlayers(data);
-      } catch (error) {
-        console.error("Error fetching players:", error);
-      }
+        // check if user is admin
+      } catch (error) {}
     }
-
-    fetchPlayers();
   }, []);
 
   return (
-    <div>
-      <h2>Welcome to the Bela Tournament App</h2>
-      <p>Organize and participate in Bela and Treseta tournaments!</p>
-
-      <h3>Player List:</h3>
-      <ul>
-        {players.length > 0 ? (
-          players.map((player) => <li key={player.player_id}>{player.username}</li>)
-        ) : (
-          <li>No players found</li>
-        )}
-      </ul>
-      <button type="submit" onClick={logOut} className={styles.button}>
-        Log out
-      </button>
-    </div>
+    <>
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          gap: 2,
+          width: "100%",
+          padding: 2,
+          boxSizing: "border-box",
+        }}
+      >
+        <Button variant="contained" color="primary" onClick={createRound}>
+          Create round
+        </Button>
+        <Button variant="contained" color="primary" onClick={startGame}>
+          Start game
+        </Button>
+        <Button variant="contained" color="secondary" onClick={logOut}>
+          Log out
+        </Button>
+      </Box>
+    </>
   );
 }

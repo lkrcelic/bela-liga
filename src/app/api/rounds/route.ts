@@ -1,23 +1,17 @@
-import {NextResponse} from "next/server";
+import {NextRequest, NextResponse} from "next/server";
 import {STATUS} from "@/app/lib/statusCodes";
 import {matchTeams} from "@/app/lib/matching/matching";
 import {getLeagueTeamsWithScores} from "@/app/lib/helpers/query/leagueScores";
 import {CreateRound} from "@/app/interfaces/round";
-
-export async function GET(request: Request) {
-  try {
-    let teamData = await getLeagueTeamsWithScores(1);
-    let pairs = matchTeams(teamData);
-
-    return NextResponse.json(pairs, {status: STATUS.OK});
-  } catch (error) {
-    console.error("Error fetching round:", error);
-    return NextResponse.json({error: "Failed to fetch."}, {status: STATUS.BadRequest});
-  }
-}
+import {checkCurrentUserIsAdmin} from "@/app/lib/auth";
+import {insertPairRounds} from "@/app/lib/service/round/insertPairRounds";
 
 export async function POST(request: Request) {
   try {
+    const isUserAdmin = await checkCurrentUserIsAdmin(request as NextRequest);
+    if (!isUserAdmin)
+      return NextResponse.json("You are not authorized for this action.", {status: STATUS.Unauthorized});
+
     const req_data = await request.json();
     let parsedRequest = CreateRound.parse(req_data);
 
@@ -28,9 +22,11 @@ export async function POST(request: Request) {
     let filteredTeams = teamData.filter((team) => parsedRequest.present_teams.includes(team.id));
     const pairs = matchTeams(filteredTeams);
 
-    return NextResponse.json(pairs, {status: STATUS.OK});
+    const roundNum = await insertPairRounds(pairs);
+
+    return NextResponse.json({round_number: roundNum}, {status: STATUS.OK});
   } catch (error) {
-    console.error("Error fetching round:", error);
-    return NextResponse.json({error: "Failed to fetch round."}, {status: STATUS.BadRequest});
+    //console.error(error);
+    return NextResponse.json({error: "Failed to create round."}, {status: STATUS.BadRequest});
   }
 }
