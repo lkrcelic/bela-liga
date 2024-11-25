@@ -1,4 +1,4 @@
-import {Lucia} from "lucia";
+import {Lucia, TimeSpan} from "lucia";
 import {PrismaAdapter} from "@lucia-auth/adapter-prisma";
 import {prisma} from "./prisma";
 import {RoleEnum} from "@prisma/client";
@@ -14,12 +14,13 @@ const authCookieName = process.env.AUTH_COOKIE ?? "BelaTresetaSession";
 export const lucia = new Lucia(adapter, {
   sessionCookie: {
     name: authCookieName,
-    expires: false,
+    expires: true,
     attributes: {
       // set to `true` when using HTTPS
       secure: process.env.NODE_ENV === "production",
     },
   },
+  sessionExpiresIn: new TimeSpan(1, "h"),
   getUserAttributes: (attributes) => {
     return {
       // attributes has the type of DatabaseUserAttributes

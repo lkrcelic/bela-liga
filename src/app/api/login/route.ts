@@ -41,7 +41,9 @@ export async function POST(req: NextRequest) {
     signCookie(cookie);
 
     const response = NextResponse.json({message: "Login successful."}, {status: STATUS.OK});
-    response.cookies.set(cookie);
+    response.cookies.set(cookie.name, cookie.value, {
+      ...cookie.attributes,
+    });
     return response;
   } catch (error) {
     return NextResponse.json({message: "Login unsuccessful."}, {status: STATUS.ServerError});
