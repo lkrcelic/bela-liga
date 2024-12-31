@@ -1,4 +1,4 @@
-import {findBelaResultWithAnnouncements} from "@/app/lib/service/ongoingBelaResult/findOneWithAnnouncements";
+import {getBelaResultWithAnnouncements} from "@/app/lib/service/ongoingBelaResult/getOneWithAnnouncements";
 import {BelaResultCreateRequestValidation, BelaResultResponseValidation} from "@/app/interfaces/belaResult";
 import {NextResponse} from "next/server";
 import {STATUS} from "@/app/lib/statusCodes";
@@ -9,7 +9,7 @@ export async function GET(request: Request, {params}: { params: { id: string } }
     const {id} = params;
 
     try {
-        const dbOngoingBelaResult = await findBelaResultWithAnnouncements(Number(id));
+        const dbOngoingBelaResult = await getBelaResultWithAnnouncements(Number(id));
 
         const ongoingBelaResult = BelaResultResponseValidation.parse(dbOngoingBelaResult);
 

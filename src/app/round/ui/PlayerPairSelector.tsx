@@ -134,9 +134,6 @@ function TeamPlayerSelector({
                     },
                 }}
             >
-                <MenuItem key="empty-option" onClick={() => handleMenuItemClick(null)}>
-                    Obriši
-                </MenuItem>
                 {team?.teamPlayers.filter((p) => !(selectedTeammate?.id === p.player.id))
                     .map((p) => (
                         <MenuItem

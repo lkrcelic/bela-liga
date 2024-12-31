@@ -49,6 +49,12 @@ const theme = createTheme({
       fontWeight: 500,
       color: '#212121',
     },
+    h7: {
+      fontFamily: 'Roboto, sans-serif',
+      fontSize: '1.1rem',
+      fontWeight: 500,
+      color: '#212121',
+    },
     body1: {
       fontSize: '1rem',
       color: '#212121',

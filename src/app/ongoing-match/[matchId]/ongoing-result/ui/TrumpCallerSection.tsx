@@ -49,7 +49,7 @@ function TrumpCallerButton({playerName, color, isTrumpCaller, onClick}: PlayerBo
                 textAlign: "center",
             }}
         >
-            <Typography variant="h7">{playerName}</Typography>
+            <Typography variant="subtitle2">{playerName}</Typography>
         </Button>
     );
 }

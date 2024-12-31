@@ -7,7 +7,7 @@ export default function CardDealer() {
     const currentDealer = seating_order![current_shuffler_index];
 
     return (
-        <Box sx={{display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
+        <Box sx={{display: 'flex', justifyContent: 'center', alignItems: 'center', paddingTop:1}}>
             <Box component="img" src="/card.png" alt="Card dealer"
                  sx={{width: "30px", height: 'auto', paddingRight: 2}}/>
             <Typography alignSelf="end" sx={{fontSize: 18, fontWeight: 'bold'}}>

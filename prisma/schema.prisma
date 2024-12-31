@@ -4,7 +4,8 @@ datasource db {
 }
 
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["views"]
 }
 
 enum RoleEnum {
@@ -118,20 +119,26 @@ model Team {
 }
 
 model TeamScore {
-  id            Int  @id @default(autoincrement())
-  team_id       Int
-  league_id     Int?
-  tournament_id Int?
-  score         Int  @default(0)
+  id               Int  @id @default(autoincrement())
+  team_id          Int
+  league_id        Int?
+  tournament_id    Int?
+  rounds_played    Int  @default(0)
+  wins             Int  @default(0)
+  draws            Int  @default(0)
+  losses           Int  @default(0)
+  point_difference Int  @default(0)
+  score            Int  @default(0)
 
   // Relationships
   team       Team        @relation(fields: [team_id], references: [team_id], onDelete: Cascade)
   league     League?     @relation(fields: [league_id], references: [league_id], onDelete: Cascade)
   tournament Tournament? @relation(fields: [tournament_id], references: [tournament_id], onDelete: Cascade)
 
-  // This model is additionaly modified in the migration script to add a constraint of 
+  // This model is additionaly modified in the migration script to add a constraint of
   // either league_id or tournament_id not being null!
   // CHECK if this constraint is removed after every modification of TeamScore model!
+  @@unique([team_id, league_id])
 }
 
 model TeamPlayer {
@@ -172,9 +179,10 @@ model Round {
   team2_id     Int
   team1_wins   Int       @default(0)
   team2_wins   Int       @default(0)
+  active       Boolean   @default(true)
 
-  team1            Team             @relation("RoundTeam1", fields: [team1_id], references: [team_id], onDelete: SetNull)
-  team2            Team             @relation("RoundTeam2", fields: [team2_id], references: [team_id], onDelete: SetNull)
+  team1            Team              @relation("RoundTeam1", fields: [team1_id], references: [team_id], onDelete: SetNull)
+  team2            Team              @relation("RoundTeam2", fields: [team2_id], references: [team_id], onDelete: SetNull)
   matches          Match[]
   ongoingMatches   OngoingMatch[]
   tournamentRounds TournamentRound[]

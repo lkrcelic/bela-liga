@@ -11,7 +11,7 @@ export default function LogIn() {
   const handleFormSubmit = (success: boolean) => {
     setSuccess(success);
     if (success) {
-      setTimeout(() => router.push("/"), 500);
+      setTimeout(() => router.push("/"), 100);
     }
   };
 

@@ -7,8 +7,10 @@ import {MatchRequestValidation} from "@/app/interfaces/match";
 import {updateRoundWins} from "@/app/lib/service/round/updateWins";
 import {createMatch} from "@/app/lib/service/match/create";
 import {deleteOngoingMatch} from "@/app/lib/service/ongoingMatch/delete";
-import {findOngoingMatchWithResultsAndAnnouncements} from "@/app/lib/service/ongoingMatch/findOneWithResultAndAnnouncements";
 import {updateScores} from "@/app/lib/updateScores";
+import {
+  getOngoingMatchWithResultsAndAnnouncements
+} from "@/app/lib/service/ongoingMatch/getOneWithResultAndAnnouncements";
 
 export async function GET() {
   try {
@@ -27,7 +29,7 @@ export async function POST(request: Request) {
     const req_data = await request.json();
     const ongoingMatchId = MatchRequestValidation.parse(req_data);
 
-    const dbOngoingMatch = await findOngoingMatchWithResultsAndAnnouncements(ongoingMatchId);
+    const dbOngoingMatch = await getOngoingMatchWithResultsAndAnnouncements(ongoingMatchId);
 
     if (!dbOngoingMatch) {
       throw new Error("Something went wrong no ongoing match with that id");

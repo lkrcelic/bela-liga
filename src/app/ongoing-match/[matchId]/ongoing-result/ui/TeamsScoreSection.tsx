@@ -3,6 +3,7 @@ import {Grid} from "@mui/system";
 import useResultStore from "@/app/store/bela/resultStore";
 import {usePathname} from "next/navigation";
 import {TeamScoreBox} from "@/app/ongoing-match/[matchId]/ongoing-result/ui/TeamScoreBox";
+import useRoundStore from "@/app/store/RoundStore";
 
 type ScoreSectionType = {
     team1Color: string;
@@ -11,7 +12,7 @@ type ScoreSectionType = {
     team2Value: string | number;
     team1SecondValue: string | number;
     team2SecondValue: string | number;
-    textVariant: "h4" | "h5";
+    textVariant: "h4" | "h6";
     label: string | undefined;
     onClick: null | ((team: "team1" | "team2") => void);
     team1ButtonVariant: "contained" | "outlined";
@@ -29,6 +30,7 @@ export default function TeamsScoreSection() {
         },
         setActiveTeam,
     } = useResultStore();
+    const {roundData: {team1, team2}} = useRoundStore();
     const pathname = usePathname();
 
     const getScoreSectionType = (): ScoreSectionType => {
@@ -36,11 +38,11 @@ export default function TeamsScoreSection() {
             return {
                 team1Color: "team1",
                 team2Color: "team2",
-                team1Value: "Team 1",
-                team2Value: "Team 2",
+                team1Value: team1?.team_name || "MI",
+                team2Value: team2?.team_name || "VI",
                 team1SecondValue: "",
                 team2SecondValue: "",
-                textVariant: "h5",
+                textVariant: "h6",
                 team1ButtonVariant: "contained",
                 team2ButtonVariant: "contained",
                 label: undefined,
@@ -76,8 +78,11 @@ export default function TeamsScoreSection() {
             };
         }
     };
+
     const scoreSectionType = getScoreSectionType();
 
+    console.log(scoreSectionType.team1Value)
+    console.log(team1?.team_name)
     return (
         <Grid
             container

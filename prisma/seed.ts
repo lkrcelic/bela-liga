@@ -230,15 +230,23 @@ async function main() {
   const match5 = await createMatch(rounds[2].id, playerPairs[0].id, playerPairs[1].id, false);
   const match6 = await createMatch(rounds[2].id, playerPairs[0].id, playerPairs[1].id, false);
 
-  let teamScores = [
-    {team_id: team1.team_id, league_id: league.league_id, score: 4},
-    {team_id: team2.team_id, league_id: league.league_id, score: 4},
-    {team_id: team3.team_id, league_id: league.league_id, score: 1},
-  ];
-  await prisma.teamScore.createMany({data: teamScores});
-
   const match7 = await createMatch(null, playerPairs[0].id, playerPairs[1].id, true);
   const match8 = await createMatch(rounds[3].id, playerPairs[4].id, playerPairs[5].id, true);
+
+
+  const leagueTeams = await prisma.leagueTeam.findMany({
+    select: {
+      team_id: true,
+      league_id: true,
+    },
+  });
+
+  for (const {team_id, league_id} of leagueTeams) {
+    await prisma.$queryRaw`
+      CALL update_team_score(${team_id}, ${league_id})
+    `;
+  }
+
 }
 
 main()

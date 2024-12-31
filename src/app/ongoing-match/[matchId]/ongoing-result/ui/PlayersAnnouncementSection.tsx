@@ -64,7 +64,7 @@ function PlayerAnnouncementBox({
                 cursor: "pointer",
             }}
         >
-            <Typography variant="h7">{playerName}</Typography>
+            <Typography variant="subtitle2">{playerName}</Typography>
             <Typography variant="h6">{announcementValue}</Typography>
         </Button>
     );

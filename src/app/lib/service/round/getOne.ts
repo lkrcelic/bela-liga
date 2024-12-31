@@ -1,7 +1,7 @@
 import {ExtendedRoundResponseValidation} from "@/app/interfaces/round";
 import {prisma} from "@/app/lib/prisma";
 
-export async function findOneRound(id: number): Promise<ExtendedRoundResponseValidation> {
+export async function getOneRound(id: number): Promise<ExtendedRoundResponseValidation> {
     const dbRound = await prisma.round.findUnique({
         where: {
             id: Number(id),

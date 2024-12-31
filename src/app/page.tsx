@@ -1,9 +1,10 @@
-"use client"; // This is a client component
+"use client";
 
 import {useEffect} from "react";
 import {logoutUser} from "@/app/fetchers/authentication/logout";
 import {Box, Button} from "@mui/material";
 import {useRouter} from "next/navigation";
+import {getActiveRoundByPlayerIdAPI} from "@/app/fetchers/round/getActiveByPlayerId";
 
 export default function Home() {
   const router = useRouter();
@@ -14,11 +15,17 @@ export default function Home() {
   }
 
   async function startGame(): Promise<void> {
-    console.log("Starting game...");
+    const round = await getActiveRoundByPlayerIdAPI(2) //TOOD vući nekako iz cookie ili nekako imat aktivnog usera;
+
+    router.push(`/round/${round.id}/players-seating`);
   }
 
   async function createRound() {
     router.push("/createRound");
+  }
+
+  async function table() {
+    router.push("/league/1/standings");
   }
 
   // Fetch all players
@@ -47,6 +54,9 @@ export default function Home() {
         </Button>
         <Button variant="contained" color="primary" onClick={startGame}>
           Start game
+        </Button>
+        <Button variant="contained" color="primary" onClick={table}>
+          League Standings
         </Button>
         <Button variant="contained" color="secondary" onClick={logOut}>
           Log out
