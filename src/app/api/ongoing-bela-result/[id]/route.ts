@@ -5,7 +5,7 @@ import {STATUS} from "@/app/lib/statusCodes";
 import {updateOngoingMatchScore} from "@/app/lib/service/ongoingMatch/update";
 import {updateOngoingBelaResult} from "@/app/lib/service/ongoingBelaResult/update";
 
-export async function GET(request: Request, {params}: { params: { id: string } }): Promise<void> {
+export async function GET(request: Request, {params}: { params: { id: string } }): Promise<unknown> {
     const {id} = params;
 
     try {
@@ -20,7 +20,7 @@ export async function GET(request: Request, {params}: { params: { id: string } }
     }
 }
 
-export async function PUT(request: Request, {params}: { params: { id: string } }): Promise<void> {
+export async function PUT(request: Request, {params}: { params: { id: string } }): Promise<unknown> {
     const {id} = params;
 
     try {
