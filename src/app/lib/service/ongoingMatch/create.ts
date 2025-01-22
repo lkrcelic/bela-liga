@@ -1,7 +1,8 @@
 import {prisma} from "@/app/lib/prisma";
 import {checkPlayersValid, insertPlayerPair} from "@/app/lib/validation/playersValidation";
+import {OngoingMatch} from "@prisma/client";
 
-export async function createOngoingMatch(createRequest: unknown): Promise<unknown> {
+export async function createOngoingMatch(createRequest: unknown): Promise<OngoingMatch > {
     const seatingOrderIds = createRequest.seating_order_ids!;
 
     if (!await checkPlayersValid(seatingOrderIds)) {
