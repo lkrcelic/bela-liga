@@ -13,7 +13,7 @@ interface SignUpFormProperties {
 }
 
 export default function SignUpForm({onFormSubmit}: SignUpFormProperties) {
-  let initialState = {
+  const initialState = {
     username: "",
     password: "",
     email: "",
@@ -22,7 +22,7 @@ export default function SignUpForm({onFormSubmit}: SignUpFormProperties) {
   } as PlayerCreateInterface;
   const [formData, setFormData] = useState(initialState);
 
-  let initialConfirm = {
+  const initialConfirm = {
     password: "",
     matching: true,
   };
@@ -30,7 +30,7 @@ export default function SignUpForm({onFormSubmit}: SignUpFormProperties) {
 
   const [errors, setErrors] = useState<ErrorState>({});
 
-  const handlePasswordChange = (e: any) => {
+  const handlePasswordChange = (e: unknown) => {
     // Password and confirm_password fields always need to match each other!
     const {name, value} = e.target;
     if (name == "confirm_password") confirm.password = value;
@@ -43,7 +43,7 @@ export default function SignUpForm({onFormSubmit}: SignUpFormProperties) {
     setConfirmPassword({...confirm});
   };
 
-  const handleChange = (e: any) => {
+  const handleChange = (e: unknown) => {
     const {name, value} = e.target;
     setFormData({...formData, [name]: value});
 
@@ -52,7 +52,7 @@ export default function SignUpForm({onFormSubmit}: SignUpFormProperties) {
       // Handle each property from the validation schema separately!
       PlayerCreate.pick({[fieldName]: true} as Record<FormField, true>).parse({[name]: value});
       setErrors((prevErrors) => ({...prevErrors, [fieldName]: undefined}));
-    } catch (error: any) {
+    } catch (error: unknown) {
       if (error.errors && error.errors[0]) {
         setErrors((prevErrors) => ({
           ...prevErrors,
@@ -68,7 +68,7 @@ export default function SignUpForm({onFormSubmit}: SignUpFormProperties) {
       if (!isAllFieldsFilled) throw new Error("Required properties are empty.");
       return true;
     } catch (error) {
-      let keys = Object.keys(formData) as FormField[];
+      const keys = Object.keys(formData) as FormField[];
       keys.forEach((key) => {
         if ((formData[key] as string).trim() === "") {
           errors[key] = (key as string) + " is a required property!";
@@ -97,7 +97,7 @@ export default function SignUpForm({onFormSubmit}: SignUpFormProperties) {
     }));
   }
 
-  async function handleSubmit(e: any) {
+  async function handleSubmit(e: unknown) {
     e.preventDefault();
     if (!checkAllFieldsPopulated()) return;
 
@@ -109,7 +109,7 @@ export default function SignUpForm({onFormSubmit}: SignUpFormProperties) {
 
     try {
       const parsedData = PlayerCreate.parse(formData);
-      let res = await signUp(parsedData);
+      const res = await signUp(parsedData);
       if (onFormSubmit) onFormSubmit(res.success);
       if (res.success) {
         setFormData({...initialState});
@@ -142,7 +142,7 @@ export default function SignUpForm({onFormSubmit}: SignUpFormProperties) {
         value={confirm.password}
         onChange={handlePasswordChange}
       />
-      {!confirm.matching && <p className="error">Passwords don't match.</p>}
+      {!confirm.matching && <p className="error">Passwords don&#39;t match.</p>}
       <label htmlFor="email" className={styles.label}>
         Email
       </label>

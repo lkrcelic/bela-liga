@@ -9,7 +9,7 @@ export async function recomputeTeamScore(leagueId: number): Promise<boolean> {
   const roundIds: number[] = rounds.map((r) => r.round_id);
   if (!roundIds.length) return false;
 
-  let scores: any[] = await prisma.$queryRaw`
+  const scores: unknown[] = await prisma.$queryRaw`
     WITH RoundWinners AS(
       SELECT
         m.round_id,

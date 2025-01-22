@@ -9,6 +9,6 @@ export async function createRoundsAPI(selectedLeagueId: number, teamIds: number[
   if (!response.ok) {
     throw new Error(`Failed to fetch team data: ${response.statusText}`);
   }
-  let data = await response.json();
+  const data = await response.json();
   return data.round_number;
 }

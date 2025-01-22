@@ -1,6 +1,5 @@
 "use client";
 
-import {useEffect} from "react";
 import {logoutUser} from "@/app/fetchers/authentication/logout";
 import {Box, Button} from "@mui/material";
 import {useRouter} from "next/navigation";
@@ -30,16 +29,6 @@ export default function Home() {
   async function table() {
     router.push("/league/1/standings");
   }
-
-  // Fetch all players
-  useEffect(() => {
-    async function checkUserAdmin() {
-      try {
-        // check if user is admin
-      } catch (error) {
-      }
-    }
-  }, []);
 
   return (
     <>

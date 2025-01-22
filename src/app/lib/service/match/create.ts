@@ -1,8 +1,8 @@
 import {prisma} from "@/app/lib/prisma";
-import {transformBelaMatch} from "@/app/lib/helpers/databaseHelpers";
-import {Match, OngoingMatch} from "@prisma/client";
+import {BelaMatchAllIncluded, transformBelaMatch} from "@/app/lib/helpers/databaseHelpers";
+import {Match} from "@prisma/client";
 
-export async function createMatch(ongoingMatch: any): Promise<Match> {
-  const ongoingMatchNested = transformBelaMatch(ongoingMatch);
+export async function createMatch(ongoingMatch: unknown): Promise<Match> {
+  const ongoingMatchNested = transformBelaMatch(ongoingMatch as BelaMatchAllIncluded);
   return prisma.match.create({data: ongoingMatchNested});
 }

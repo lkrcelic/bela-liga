@@ -1,7 +1,7 @@
 import {prisma} from "@/app/lib/prisma";
 import {checkPlayersValid, insertPlayerPair} from "@/app/lib/validation/playersValidation";
 
-export async function createOngoingMatch(createRequest: any): Promise<any> {
+export async function createOngoingMatch(createRequest: unknown): Promise<unknown> {
     const seatingOrderIds = createRequest.seating_order_ids!;
 
     if (!await checkPlayersValid(seatingOrderIds)) {
@@ -13,5 +13,7 @@ export async function createOngoingMatch(createRequest: any): Promise<any> {
     createRequest.player_pair_id1 = await insertPlayerPair(playerPair1);
     createRequest.player_pair_id2 = await insertPlayerPair(playerPair2);
 
-    return prisma.ongoingMatch.create({data: createRequest});
+    //TODO
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return prisma.ongoingMatch.create({data: createRequest as any});
 }

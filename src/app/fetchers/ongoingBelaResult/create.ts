@@ -1,7 +1,7 @@
 import {BelaResultResponse} from "@/app/interfaces/belaResult";
 
 type CreateOngoingBelaResultAPIProps = {
-    result: any;
+    result: unknown;
 }
 
 export async function createOngoingBelaResultAPI({result}: CreateOngoingBelaResultAPIProps): Promise<BelaResultResponse> {

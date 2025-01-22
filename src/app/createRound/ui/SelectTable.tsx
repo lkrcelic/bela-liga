@@ -63,7 +63,7 @@ export default function SelectTable({onLoad, onCreate}: SelectTableProperties) {
 
   useEffect(() => {
     const fetchData = async () => {
-      let data = await onLoad();
+      const data = await onLoad();
       setEntries(data);
       setFilteredEntries(data);
       setSwitchStates(new Array(data.length).fill(true));

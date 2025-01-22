@@ -23,7 +23,7 @@ export default function Dropdown({onSelect, getOptions}: DropdownProperties) {
 
   useEffect(() => {
     const fetchOptions = async () => {
-      let data = await getOptions();
+      const data = await getOptions();
       setLeagues(data);
     };
     fetchOptions();

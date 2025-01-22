@@ -4,7 +4,7 @@ import {NextRequest, NextResponse} from "next/server";
 
 export async function POST(req: NextRequest) {
   try {
-    let res = NextResponse.json({}, {status: STATUS.OK});
+    const res = NextResponse.json({}, {status: STATUS.OK});
     const val = await validateRequest(req);
     if (val) {
       await lucia.invalidateSession(val.session.id);

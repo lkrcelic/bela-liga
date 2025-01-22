@@ -1,6 +1,6 @@
 import {prisma} from "@/app/lib/prisma";
 
-export async function getLeagueStandings(league_id: number): Promise<any> {
+export async function getLeagueStandings(league_id: number): Promise<unknown> {
   const standings = await prisma.teamScore.findMany({
     include: {
       team: {

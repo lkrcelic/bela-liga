@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
         */
 
     // TODO: make username case insensitive?
-    let playerVal = PlayerCreateValidation.parse(req_data);
+    const playerVal = PlayerCreateValidation.parse(req_data);
     await validateUniqueConstraintsPlayer(playerVal);
 
     playerVal.password_hash = await argon2.hash(playerVal.password_hash);

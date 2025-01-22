@@ -2,7 +2,7 @@ import {BelaResultResponse} from "@/app/interfaces/belaResult";
 
 type UpdateOngoingBelaResultAPIProps = {
     resultId: string | string[];
-    result: any;
+    result: unknown;
 }
 
 export async function updateOngoingBelaResultAPI({

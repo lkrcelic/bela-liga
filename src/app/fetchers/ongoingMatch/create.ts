@@ -2,7 +2,7 @@ export async function createOngoingMatchAPI(data: {
     score_threshold: number;
     round_id: number;
     current_shuffler_index: number;
-    seating_order_ids: any[] | undefined
+    seating_order_ids: unknown[] | undefined
 }) {
     const response = await fetch('/api/ongoing-matches', {
         method: 'POST',

@@ -15,7 +15,7 @@ function selectIndex(cumProb: number[]): number {
   /*
    * Select a random index from a cumulative probability array cumProb
    */
-  let rand = Math.random();
+  const rand = Math.random();
 
   for (let i = 0; i < cumProb.length; i++) {
     if (rand <= cumProb[i]) {
@@ -27,7 +27,7 @@ function selectIndex(cumProb: number[]): number {
 }
 
 export function matchTeams(teams: Team[]): TeamPair[] {
-  let team_pairs: TeamPair[] = [];
+  const team_pairs: TeamPair[] = [];
 
   teams.sort((a, b) => b.score - a.score);
 
@@ -47,11 +47,11 @@ export function matchTeams(teams: Team[]): TeamPair[] {
     // pop the first team
     if (teams.length == 0) break;
 
-    let currentTeam = teams.shift();
+    const currentTeam = teams.shift();
     if (!currentTeam) break;
     let opponentTeam: Team;
 
-    let times_played_against: Record<number, number> = {};
+    const times_played_against: Record<number, number> = {};
     currentTeam.played_against.forEach((num) => {
       times_played_against[num] = (times_played_against[num] || 0) + 1;
     });
@@ -83,12 +83,12 @@ export function matchTeams(teams: Team[]): TeamPair[] {
     });
 
     // for each team calculate the probability for selection
-    let probs: number[] = Array<number>(teams.length).fill(0);
-    let scores_sum = teams.reduce((sum, t) => sum + (t.modified_score ?? 0), 0);
+    const probs: number[] = Array<number>(teams.length).fill(0);
+    const scores_sum = teams.reduce((sum, t) => sum + (t.modified_score ?? 0), 0);
 
     if (scores_sum == 0) {
       // first iteration (unless scores can be negative) -̣> return random opponent
-      let idx = Math.ceil(Math.random() * teams.length) - 1;
+      const idx = Math.ceil(Math.random() * teams.length) - 1;
       opponentTeam = teams.splice(idx, 1)[0];
     } else {
       /*
@@ -99,7 +99,7 @@ export function matchTeams(teams: Team[]): TeamPair[] {
         probs[i] = probs[i - 1] + (teams[i].modified_score ?? 0) / scores_sum;
       }
 
-      let idx = selectIndex(probs);
+      const idx = selectIndex(probs);
       opponentTeam = teams.splice(idx, 1)[0];
     }
     team_pairs.push({teamOne: currentTeam, teamTwo: opponentTeam});

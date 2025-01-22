@@ -15,11 +15,13 @@ export class ValidationError extends Error {
 
 // Prisma only returns a single contraint violation even if there are multiple
 export async function validateUniqueConstraintsPlayer(player: z.infer<typeof PlayerCreateValidation>): Promise<void> {
-  let data = await prisma.player.findMany({where: {OR: [{username: player.username}, {email: player.email}]}});
+  const data = await prisma.player.findMany({where: {OR: [{username: player.username}, {email: player.email}]}});
 
   if (!data || data.length === 0) return;
 
-  let errors: any = {};
+  //TODO
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const errors: any = {};
   if (data.find((p) => p.username === player.username))
     errors["username"] = "Someone is using this username already...";
   if (data.find((p) => p.email === player.email)) errors["email"] = "This email is already in use.";

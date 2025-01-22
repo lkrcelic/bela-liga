@@ -8,7 +8,7 @@ export interface UpdateScoreParameters {
 }
 
 async function getTeamScores(params: UpdateScoreParameters, teamIds: number[]): Promise<TeamScore[]> {
-  let existingScores: TeamScore[] = [];
+  const existingScores: TeamScore[] = [];
   if (params.leagueId) {
     existingScores = await prisma.teamScore.findMany({
       where: {team_id: {in: teamIds}, league_id: params.leagueId},
@@ -29,10 +29,10 @@ async function checkAndCreateTeamScores(
 ): Promise<TeamScore[]> {
   if (existingScores.length === 2) return existingScores;
 
-  let existing_ids = existingScores.map((score) => score.team_id);
-  let to_create = teamIds.filter((id) => !existing_ids.includes(id));
+  const existing_ids = existingScores.map((score) => score.team_id);
+  const to_create = teamIds.filter((id) => !existing_ids.includes(id));
 
-  let teamScores = to_create.map((id) =>
+  const teamScores = to_create.map((id) =>
     params.leagueId ? {team_id: id, league_id: params.leagueId} : {team_id: id, tournament_id: params.tournamentId}
   );
 
@@ -44,31 +44,31 @@ async function checkAndCreateTeamScores(
 export async function updateScores(roundId: number): Promise<void> {
   try {
     // TODO: Why is does round have m2m connections to tournament and league???
-    let round = await prisma.round.findUnique({
+    const round = await prisma.round.findUnique({
       where: {id: roundId},
       include: {tournamentRounds: true, leagueRounds: true},
     });
     if (!round) return;
-    let params: UpdateScoreParameters = {
+    const params: UpdateScoreParameters = {
       roundId: roundId,
       leagueId: round.leagueRounds[0].league_id,
       tournamentId: round.tournamentRounds[0].tournament_id,
     };
     if (!params.leagueId && !params.tournamentId) return;
 
-    let teamIds: number[] = [round.team1_id, round.team2_id];
+    const teamIds: number[] = [round.team1_id, round.team2_id];
 
-    let existingScores = await getTeamScores(params, teamIds);
+    const existingScores = await getTeamScores(params, teamIds);
     checkAndCreateTeamScores(params, teamIds, existingScores);
 
-    let scoreTeam1 = existingScores.find((item) => item.team_id == round.team1_id);
-    let scoreTeam2 = existingScores.find((item) => item.team_id == round.team2_id);
+    const scoreTeam1 = existingScores.find((item) => item.team_id == round.team1_id);
+    const scoreTeam2 = existingScores.find((item) => item.team_id == round.team2_id);
     if (!scoreTeam1 || !scoreTeam2) {
       console.error("Could not update team scores");
       return;
     }
 
-    let t1_wins = round.team1_wins;
+    const t1_wins = round.team1_wins;
     switch (t1_wins) {
       case 0: {
         // team 2 won both matches

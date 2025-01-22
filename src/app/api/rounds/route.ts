@@ -13,13 +13,13 @@ export async function POST(request: Request) {
       return NextResponse.json("You are not authorized for this action.", {status: STATUS.Unauthorized});
 
     const req_data = await request.json();
-    let parsedRequest = CreateRound.parse(req_data);
+    const parsedRequest = CreateRound.parse(req_data);
 
-    let teamData = await getLeagueTeamsWithScores(parsedRequest.league_id);
+    const teamData = await getLeagueTeamsWithScores(parsedRequest.league_id);
     if (!teamData || teamData.length === 0) return NextResponse.json("Invalid league id.", {status: STATUS.BadRequest});
 
     // filter out teams that are not present
-    let filteredTeams = teamData.filter((team) => parsedRequest.present_teams.includes(team.id));
+    const filteredTeams = teamData.filter((team) => parsedRequest.present_teams.includes(team.id));
     const pairs = matchTeams(filteredTeams);
 
     const roundNum = await insertPairRounds(pairs, parsedRequest.league_id);

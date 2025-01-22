@@ -1,6 +1,5 @@
 import {BelaResultCreateRequest} from "@/app/interfaces/belaResult";
 import {prisma} from "../../prisma";
-import {belaResultIsValid} from "@/app/lib/validation/validateResult";
 
 export async function incrementOngoingMatchScore(belaResult: BelaResultCreateRequest): Promise<void> {
     await prisma.ongoingMatch.update({

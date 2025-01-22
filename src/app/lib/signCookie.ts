@@ -33,7 +33,7 @@ export async function verifyCookie(cookie: Cookie): Promise<Cookie | null> {
 }
 
 export function extractCookieWithoutSignature(signedCookie: RequestCookie): Cookie {
-  const [cookieData, providedSignature] = signedCookie.value.split(".");
+  const [cookieData] = signedCookie.value.split(".");
   return JSON.parse(cookieData) as Cookie;
 }
 

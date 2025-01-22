@@ -1,7 +1,7 @@
 import {prisma} from "@/app/lib/prisma";
 import {PlayerPartialResponseValidation} from "@/app/interfaces/player";
 
-export async function extractPlayersSeatingOrder(dbOngoingMatch: any) {
+export async function extractPlayersSeatingOrder(dbOngoingMatch: unknown) {
     const {seating_order_ids} = dbOngoingMatch
     if (!seating_order_ids) {
         throw new Error("Incomplete seating data");

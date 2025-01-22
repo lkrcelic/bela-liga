@@ -14,14 +14,14 @@ interface LogInFormProperties {
 }
 
 export default function LogInForm({onFormSubmit}: LogInFormProperties) {
-  let initialState = {
+  const initialState = {
     username: "",
     password: "",
   } as LoginUserInterface;
   const [formData, setFormData] = useState(initialState);
   const [errors, setErrors] = useState<ErrorState>({});
 
-  const handleChange = (e: any) => {
+  const handleChange = (e: unknown) => {
     const {name, value} = e.target;
     setFormData({...formData, [name]: value});
 
@@ -29,7 +29,7 @@ export default function LogInForm({onFormSubmit}: LogInFormProperties) {
     try {
       PlayerCreate.pick({[fieldName]: true} as Record<FormField, true>).parse({[name]: value});
       setErrors((prevErrors) => ({...prevErrors, [fieldName]: undefined}));
-    } catch (error: any) {
+    } catch (error: unknown) {
       if (error.errors && error.errors[0]) {
         setErrors((prevErrors) => ({
           ...prevErrors,
@@ -39,13 +39,13 @@ export default function LogInForm({onFormSubmit}: LogInFormProperties) {
     }
   };
 
-  async function handleSubmit(e: any) {
+  async function handleSubmit(e: unknown) {
     e.preventDefault();
     try {
       const isAllFieldsFilled = Object.values(formData).every((value) => (value as string).trim() !== "");
       if (!isAllFieldsFilled) throw new Error("Required properties are empty.");
     } catch (error) {
-      let keys = Object.keys(formData) as FormField[];
+      const keys = Object.keys(formData) as FormField[];
       keys.forEach((key) => {
         if ((formData[key] as string).trim() === "") {
           errors[key] = key + " is a required property!";
@@ -58,7 +58,7 @@ export default function LogInForm({onFormSubmit}: LogInFormProperties) {
     }
     try {
       const parsedData = LoginUser.parse(formData);
-      let success = await loginUser(parsedData);
+      const success = await loginUser(parsedData);
       if (onFormSubmit) onFormSubmit(success);
       if (success) setFormData({...initialState});
     } catch (error) {

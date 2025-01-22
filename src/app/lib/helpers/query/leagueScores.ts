@@ -2,7 +2,7 @@ import {prisma} from "@/app/lib/prisma";
 import {Team} from "../../matching/matching";
 
 export async function getLeagueTeamsWithScores(leagueId: number): Promise<Team[]> {
-  let data: any[] = await prisma.$queryRaw`
+  const data: unknown[] = await prisma.$queryRaw`
     SELECT
       t.team_id AS id,
       t.team_name AS name,

@@ -8,7 +8,7 @@ export async function signUp(createPlayer: PlayerCreateInterface): Promise<Reque
     body: JSON.stringify(createPlayer),
   });
 
-  let rVal: RequestResponse = {success: true};
+  const rVal: RequestResponse = {success: true};
 
   if (!response.ok) {
     rVal.success = false;

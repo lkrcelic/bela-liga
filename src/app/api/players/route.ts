@@ -9,7 +9,7 @@ import {Player} from "@prisma/client";
 
 export async function GET(req: NextRequest) {
   try {
-    let user = await getAuthorizedUser(req);
+    const user = await getAuthorizedUser(req);
     if (!user) {
       return NextResponse.json({message: "You are not authorized for this action."}, {status: STATUS.NotAllowed});
     }

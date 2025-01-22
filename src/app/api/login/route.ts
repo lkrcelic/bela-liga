@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const user = LoginUser.parse(body);
 
-    let currentUser = await getAuthorizedUser(req);
+    const currentUser = await getAuthorizedUser(req);
     // TODO?: Check if the user is already logged in, decide what to do
     // Disallow log in?, Logout from other device and log in on this one?, Both logged in?
     // TODO: Implement rate limiting per login credential.

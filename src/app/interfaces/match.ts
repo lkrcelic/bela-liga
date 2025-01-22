@@ -48,4 +48,5 @@ export const OngoingMatchResponseValidation = OngoingMatchRequestValidation.omit
 
 export type MatchResponse = z.infer<typeof MatchResponseValidation>;
 export type OngoingMatchResponse = z.infer<typeof OngoingMatchResponseValidation>;
+export type OngoingMatchRequest = z.infer<typeof OngoingMatchRequestValidation>;
 export type MatchRequest = z.infer<typeof MatchRequestValidation>
