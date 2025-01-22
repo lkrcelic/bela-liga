@@ -8,7 +8,7 @@ export interface UpdateScoreParameters {
 }
 
 async function getTeamScores(params: UpdateScoreParameters, teamIds: number[]): Promise<TeamScore[]> {
-  const existingScores: TeamScore[] = [];
+  let existingScores: TeamScore[] = [];
   if (params.leagueId) {
     existingScores = await prisma.teamScore.findMany({
       where: {team_id: {in: teamIds}, league_id: params.leagueId},
