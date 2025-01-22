@@ -10,7 +10,8 @@
     "seed": "prisma db seed",
     "build": "prisma generate && prisma migrate reset --force && next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "postinstall": "npm rebuild argon2 --build-from-source"
   },
   "dependencies": {
     "@emotion/react": "^11.13.3",
