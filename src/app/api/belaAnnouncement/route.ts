@@ -2,7 +2,7 @@ import {prisma} from "@/app/lib/prisma";
 import {NextResponse} from "next/server";
 import {STATUS} from "@/app/lib/statusCodes";
 
-export async function GET() {
+export async function GET() : Promise<Response> {
     try {
         // TODO?: implement limit/offset
         const allMatches = await prisma.belaPlayerAnnouncement.findMany();
