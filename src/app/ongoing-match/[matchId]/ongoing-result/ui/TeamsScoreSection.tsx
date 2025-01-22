@@ -81,8 +81,6 @@ export default function TeamsScoreSection() {
 
     const scoreSectionType = getScoreSectionType();
 
-    console.log(scoreSectionType.team1Value)
-    console.log(team1?.team_name)
     return (
         <Grid
             container

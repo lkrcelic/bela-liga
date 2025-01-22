@@ -6,7 +6,7 @@ import {useParams, useRouter} from "next/navigation";
 import {getRoundDataAPI} from "@/app/fetchers/round/getOne";
 import useRoundStore from "@/app/store/RoundStore";
 import {Grid} from "@mui/system";
-import SingleActionButton from "@/app/ui/SingeActionButton";
+import SingleActionButton from "@/app/ui/SingleActionButton";
 import {finishRoundAPI} from "@/app/fetchers/round/finish";
 import {getAllMatchesByRoundIdAPI} from "@/app/fetchers/match/getAllByRoundId";
 

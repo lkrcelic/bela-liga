@@ -11,12 +11,12 @@ export async function POST(request: Request) {
     try {
         const req_data = await request.json();
         const resultData = BelaResultCreateRequestValidation.parse(req_data);
-
         await createBelaResult(resultData);
         await incrementOngoingMatchScore(resultData);
 
         return NextResponse.json({message: "Result successfully created"},{status: STATUS.OK});
     } catch (error) {
+        console.error(error);
         return NextResponse.json({error: error}, {status: STATUS.ServerError});
     }
 }

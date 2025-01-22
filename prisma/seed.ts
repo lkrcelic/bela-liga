@@ -101,12 +101,152 @@ async function main() {
     },
   });
 
-  const player7 = await createRandomPlayer();
-  const player8 = await createRandomPlayer();
-  const player9 = await createRandomPlayer();
-  const player10 = await createRandomPlayer();
-  const player11 = await createRandomPlayer();
-  const player12 = await createRandomPlayer();
+  const player7 = await prisma.player.create({
+    data: {
+      username: "Mujo",
+      password_hash: "securepassword",
+      email: "huseineee1@example.com",
+      player_role: "PLAYER",
+      first_name: "Muje",
+      last_name: "Mujic",
+      birth_year: 1992,
+      city: "Los Angeles",
+    },
+  });
+
+  const player8 = await prisma.player.create({
+    data: {
+      username: "Haso",
+      password_hash: "securepassword",
+      email: "huseineee2@example.com",
+      player_role: "PLAYER",
+      first_name: "Haso",
+      last_name: "Hasic",
+      birth_year: 1992,
+      city: "Los Angeles",
+    },
+  });
+
+  const player9 = await prisma.player.create({
+    data: {
+      username: "Magud",
+      // password is 'sifra'
+      password_hash:
+        "$argon2id$v=19$m=65536,t=3,p=4$pDs5fiTYGTo0XSEt/3Cf7w$x8wFo37pR763HFqVMKupfveO0dBebHhLweI15eac8EI",
+      email: "jan3e@example.com",
+      player_role: "PLAYER",
+      first_name: "Jane",
+      last_name: "Smith",
+      birth_year: 1992,
+      city: "Los Angeles",
+    },
+  });
+
+  const player10 = await prisma.player.create({
+    data: {
+      username: "Nera",
+      // password is 'sifra'
+      password_hash:
+        "$argon2id$v=19$m=65536,t=3,p=4$pDs5fiTYGTo0XSEt/3Cf7w$x8wFo37pR763HFqVMKupfveO0dBebHhLweI15eac8EI",
+      email: "jan4e@example.com",
+      player_role: "PLAYER",
+      first_name: "Jane",
+      last_name: "Smith",
+      birth_year: 1992,
+      city: "Los Angeles",
+    },
+  });
+
+  const player11 = await prisma.player.create({
+    data: {
+      username: "Marić",
+      // password is 'sifra'
+      password_hash:
+        "$argon2id$v=19$m=65536,t=3,p=4$pDs5fiTYGTo0XSEt/3Cf7w$x8wFo37pR763HFqVMKupfveO0dBebHhLweI15eac8EI",
+      email: "jan5@example.com",
+      player_role: "PLAYER",
+      first_name: "Jane",
+      last_name: "Smith",
+      birth_year: 1992,
+      city: "Los Angeles",
+    },
+  });
+
+  const player12 = await prisma.player.create({
+    data: {
+      username: "Josipović",
+      // password is 'sifra'
+      password_hash:
+        "$argon2id$v=19$m=65536,t=3,p=4$pDs5fiTYGTo0XSEt/3Cf7w$x8wFo37pR763HFqVMKupfveO0dBebHhLweI15eac8EI",
+      email: "jan6e@example.com",
+      player_role: "PLAYER",
+      first_name: "Jane",
+      last_name: "Smith",
+      birth_year: 1992,
+      city: "Los Angeles",
+    },
+  });
+
+  const player13 = await prisma.player.create({
+    data: {
+      username: "Raguz",
+      // password is 'sifra'
+      password_hash:
+        "$argon2id$v=19$m=65536,t=3,p=4$pDs5fiTYGTo0XSEt/3Cf7w$x8wFo37pR763HFqVMKupfveO0dBebHhLweI15eac8EI",
+      email: "jane7@example.com",
+      player_role: "PLAYER",
+      first_name: "Jane",
+      last_name: "Smith",
+      birth_year: 1992,
+      city: "Los Angeles",
+    },
+  });
+
+  const player14 = await prisma.player.create({
+    data: {
+      username: "Curic",
+      // password is 'sifra'
+      password_hash:
+        "$argon2id$v=19$m=65536,t=3,p=4$pDs5fiTYGTo0XSEt/3Cf7w$x8wFo37pR763HFqVMKupfveO0dBebHhLweI15eac8EI",
+      email: "jane8@example.com",
+      player_role: "PLAYER",
+      first_name: "Jane",
+      last_name: "Smith",
+      birth_year: 1992,
+      city: "Los Angeles",
+    },
+  });
+
+  const player15 = await prisma.player.create({
+    data: {
+      username: "Vid",
+      // password is 'sifra'
+      password_hash:
+        "$argon2id$v=19$m=65536,t=3,p=4$pDs5fiTYGTo0XSEt/3Cf7w$x8wFo37pR763HFqVMKupfveO0dBebHhLweI15eac8EI",
+      email: "jane9@example.com",
+      player_role: "PLAYER",
+      first_name: "Jane",
+      last_name: "Smith",
+      birth_year: 1992,
+      city: "Los Angeles",
+    },
+  });
+
+  const player16 = await prisma.player.create({
+    data: {
+      username: "Roko",
+      // password is 'sifra'
+      password_hash:
+        "$argon2id$v=19$m=65536,t=3,p=4$pDs5fiTYGTo0XSEt/3Cf7w$x8wFo37pR763HFqVMKupfveO0dBebHhLweI15eac8EI",
+      email: "jane10@example.com",
+      player_role: "PLAYER",
+      first_name: "Jane",
+      last_name: "Smith",
+      birth_year: 1992,
+      city: "Los Angeles",
+    },
+  });
+
 
   const teamBYE = await prisma.team.create({
     data: {
@@ -143,9 +283,50 @@ async function main() {
     },
   });
 
-  const team4 = await createRandomTeam(player0.id, player7.id, player8.id);
-  const team5 = await createRandomTeam(player0.id, player9.id, player10.id);
-  const team6 = await createRandomTeam(player0.id, player11.id, player12.id);
+  const team4 = await prisma.team.create({
+    data: {
+      team_name: "Mujo i Haso",
+      creator_id: player0.id,
+      founder_id1: player7.id,
+      founder_id2: player8.id,
+    },
+  });
+
+  const team5 = await prisma.team.create({
+    data: {
+      team_name: "Barcelona",
+      creator_id: player0.id,
+      founder_id1: player9.id,
+      founder_id2: player10.id,
+    },
+  });
+
+  const team6 = await prisma.team.create({
+    data: {
+      team_name: "Dubec kartel",
+      creator_id: player0.id,
+      founder_id1: player11.id,
+      founder_id2: player12.id,
+    },
+  });
+
+  const team7 = await prisma.team.create({
+    data: {
+      team_name: "Astletičari",
+      creator_id: player0.id,
+      founder_id1: player13.id,
+      founder_id2: player14.id,
+    },
+  });
+
+  const team8 = await prisma.team.create({
+    data: {
+      team_name: "Lavovi",
+      creator_id: player0.id,
+      founder_id1: player15.id,
+      founder_id2: player16.id,
+    },
+  });
 
   const teamPlayers = [
     {team_id: team1.team_id, player_id: player1.id},
@@ -160,18 +341,14 @@ async function main() {
     {team_id: team5.team_id, player_id: player10.id},
     {team_id: team6.team_id, player_id: player11.id},
     {team_id: team6.team_id, player_id: player12.id},
+    {team_id: team7.team_id, player_id: player13.id},
+    {team_id: team7.team_id, player_id: player14.id},
+    {team_id: team8.team_id, player_id: player15.id},
+    {team_id: team8.team_id, player_id: player16.id},
   ];
   await prisma.teamPlayer.createMany({data: teamPlayers});
 
-  const playerPairsData = [
-    {player_id1: player1.id, player_id2: player2.id},
-    {player_id1: player3.id, player_id2: player4.id},
-    {player_id1: player5.id, player_id2: player6.id},
-    {player_id1: player7.id, player_id2: player8.id},
-    {player_id1: player9.id, player_id2: player10.id},
-    {player_id1: player11.id, player_id2: player12.id},
-  ];
-  const playerPairs = await prisma.playerPair.createManyAndReturn({data: playerPairsData});
+
 
   const league = await prisma.league.create({
     data: {
@@ -179,7 +356,7 @@ async function main() {
       game_type: "TRESETA",
     },
   });
-  const teams = [team1, team2, team3, team4, team5, team6];
+  const teams = [team1, team2, team3, team4, team5, team6, team7, team8];
   await prisma.leagueTeam.createMany({
     data: teams.map((team) => ({league_id: league.league_id, team_id: team.team_id})),
   });
@@ -219,20 +396,6 @@ async function main() {
     {league_id: league.league_id, round_id: rounds[3].id},
   ];
   await prisma.leagueRound.createMany({data: leagueRounds});
-
-  // create matches for each round!
-  const match1 = await createMatch(rounds[0].id, playerPairs[0].id, playerPairs[1].id, true);
-  const match2 = await createMatch(rounds[0].id, playerPairs[0].id, playerPairs[1].id, false);
-
-  const match3 = await createMatch(rounds[1].id, playerPairs[0].id, playerPairs[1].id, true);
-  const match4 = await createMatch(rounds[1].id, playerPairs[0].id, playerPairs[0].id, true);
-
-  const match5 = await createMatch(rounds[2].id, playerPairs[0].id, playerPairs[1].id, false);
-  const match6 = await createMatch(rounds[2].id, playerPairs[0].id, playerPairs[1].id, false);
-
-  const match7 = await createMatch(null, playerPairs[0].id, playerPairs[1].id, true);
-  const match8 = await createMatch(rounds[3].id, playerPairs[4].id, playerPairs[5].id, true);
-
 
   const leagueTeams = await prisma.leagueTeam.findMany({
     select: {

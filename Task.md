@@ -1,9 +1,10 @@
 # Tasks
-- provjeri je li poredak igrača isti kada stave sjednje oko stola i kada se bira trum caller?
+- Brisnaje seating ordera ne smije biti spremljeno zauvik i jednom kreirano nema editiranja
+- render tablice u chrome-u
+- zabrani unos u isto vrijeme preko dva uređaja
 
 ## TODOs
 
-- Treba zabraniti klikanje gumobvaa dok je neka akcija u tijeku
 - Treba nekako zabraniti korisniku da se vraća nazad kada to ne bi trebao, npr. kada je upisao rezultat i želi se
   vratiti nazad ne smije biti jer ništa od resulta nije popunjeno i sve moze ici u pm.
-- Treba refactorirati način kako rade anauncmentsi
+- Treba refactorirati način kako rade anauncmentsi pametniji modeli korekcije

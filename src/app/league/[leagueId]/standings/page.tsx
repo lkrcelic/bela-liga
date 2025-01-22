@@ -4,7 +4,7 @@ import React from "react";
 import {Grid} from "@mui/system";
 import {Box, CircularProgress, Typography} from "@mui/material";
 import {getLeagueStandingsAPI} from "@/app/fetchers/league/getStandings";
-import SingleActionButton from "@/app/ui/SingeActionButton";
+import SingleActionButton from "@/app/ui/SingleActionButton";
 
 export default function PlayersSeating() {
   const [leagueStandings, setLeagueStandings] = React.useState(null);
@@ -48,15 +48,19 @@ export default function PlayersSeating() {
         sx={{
           gridArea: "body",
           alignSelf: "start",
+          justifyContent: {
+            xs: "flex-start",
+            sm: "center",
+          },
           display: "flex",
-          justifyContent: "center",
           overflow: "auto",
           maxHeight: "100%",
+          width: "100%",
           fontFamily: "Roboto, sans-serif",
         }}
       >
         <Box
-          sx={{display: "inline-block", width: "100%", maxWidth: "1200px", minWidth: "650px", overflow: "auto"}}
+          sx={{display: "inline-block", width: "100%", minWidth: "550px", maxWidth: "1200px", overflow: "auto"}}
         >
           <Grid
             container

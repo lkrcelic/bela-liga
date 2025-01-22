@@ -1,7 +1,7 @@
 import React from 'react';
 import {useParams, usePathname, useRouter} from "next/navigation";
 import useResultStore from "@/app/store/bela/resultStore";
-import SingleActionButton from "@/app/ui/singeActionButton";
+import SingleActionButton from "@/app/ui/SingleActionButton";
 import useOngoingMatchStore from "@/app/store/ongoingMatchStore";
 import {createOngoingMatchAPI} from "@/app/fetchers/ongoingMatch/create";
 import {createMatchAPI} from "@/app/fetchers/match/create";

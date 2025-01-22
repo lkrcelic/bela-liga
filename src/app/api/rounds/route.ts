@@ -22,7 +22,7 @@ export async function POST(request: Request) {
     let filteredTeams = teamData.filter((team) => parsedRequest.present_teams.includes(team.id));
     const pairs = matchTeams(filteredTeams);
 
-    const roundNum = await insertPairRounds(pairs);
+    const roundNum = await insertPairRounds(pairs, parsedRequest.league_id);
 
     return NextResponse.json({round_number: roundNum}, {status: STATUS.OK});
   } catch (error) {

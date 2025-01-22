@@ -2,6 +2,7 @@
 import {create} from 'zustand';
 import {PlayerPairResponse} from "@/app/interfaces/playerPair";
 import {BelaPlayerAnnouncementResponse} from "@/app/interfaces/belaPlayerAnnouncement";
+import {createJSONStorage, persist} from "zustand/middleware";
 
 type PlayerAnnouncements = {
   totalAnnouncements: number;
@@ -44,7 +45,7 @@ const PrismaAnnouncementEnumValueMap = {
 
 const PrismaAnnouncementCardCountMap = {20: 3, 50: 4, 100: 4, 150: 4, 200: 4,};
 
-const useAnnouncementStore = create<AnnouncementState>((set) => ({
+const useAnnouncementStore = create<AnnouncementState>(persist((set) => ({
     ...initialState,
 
     initializePlayersAnnouncements: (playerPair1, playerPair2) => set(() => ({
@@ -101,9 +102,7 @@ const useAnnouncementStore = create<AnnouncementState>((set) => ({
             return state;
           }
 
-
           const updatedCardCount = playerAnnouncements.cardCount + PrismaAnnouncementCardCountMap[points];
-          console.log(updatedCardCount)
           if (updatedCardCount > 11) { // 9 for bela
             return state;
           }
@@ -163,7 +162,10 @@ const useAnnouncementStore = create<AnnouncementState>((set) => ({
             noAnnouncements: !hasAnnouncements,
           };
         }),
-  }))
-;
+  }), {
+    name: 'announcement-store',
+    storage: createJSONStorage(() => localStorage),
+  })
+);
 
 export default useAnnouncementStore;

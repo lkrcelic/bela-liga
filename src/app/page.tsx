@@ -15,9 +15,12 @@ export default function Home() {
   }
 
   async function startGame(): Promise<void> {
-    const round = await getActiveRoundByPlayerIdAPI(2) //TOOD vući nekako iz cookie ili nekako imat aktivnog usera;
-
-    router.push(`/round/${round.id}/players-seating`);
+    const {roundId, ongoingMatchId} = await getActiveRoundByPlayerIdAPI()
+    if (ongoingMatchId) {
+      router.push(`/ongoing-match/${ongoingMatchId}`);
+    } else {
+      router.push(`/round/${roundId}/players-seating`);
+    }
   }
 
   async function createRound() {
@@ -33,7 +36,8 @@ export default function Home() {
     async function checkUserAdmin() {
       try {
         // check if user is admin
-      } catch (error) {}
+      } catch (error) {
+      }
     }
   }, []);
 

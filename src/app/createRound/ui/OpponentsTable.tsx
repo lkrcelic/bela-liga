@@ -28,7 +28,6 @@ export default function OpponentsTable({roundNumber}: MatchupTableProperties) {
           team2: round.team2?.team_name ?? "",
         }))
       );
-      console.log(entries);
     };
     fetchData();
   }, []);

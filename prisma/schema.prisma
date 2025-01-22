@@ -251,9 +251,9 @@ model OngoingMatch {
   player_pair_id1        Int?
   player_pair_id2        Int?
   score_threshold        Int?
-  start_time             DateTime?
-  end_time               DateTime?
-  match_date             DateTime? @default(now())
+  start_time             DateTime? @db.Time() @default(dbgenerated("CURRENT_TIME"))
+  end_time               DateTime? @db.Time()
+  match_date             DateTime? @db.Date @default(now())
   seating_order_ids      Int[]
   current_shuffler_index Int       @default(0)
 

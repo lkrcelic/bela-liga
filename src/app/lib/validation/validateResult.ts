@@ -19,12 +19,12 @@ export function belaResultIsValid(belaResult: BelaResultCreateRequest): boolean 
         if ((belaResult.player_pair1_game_points + belaResult.player_pair2_game_points) !== BELA_SUM) {
             return false;
         }
-        if (belaResult.player_pair1_game_points === belaResult.player_pair2_game_points) {
+        if (belaResult.player_pair1_total_points === belaResult.player_pair2_total_points) {
             return false;
         }
     }
     if (belaResult.announcements?.length) {
-        let announcement_sum = belaResult.announcements.reduce((sum, a) => sum + ann_map[a.announcement_type], 0);
+        const announcement_sum = belaResult.announcements.reduce((sum, a) => sum + ann_map[a.announcement_type], 0);
         if (announcement_sum != (belaResult.player_pair1_announcement_points + belaResult.player_pair2_announcement_points)) {
             return false;
         }

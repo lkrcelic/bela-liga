@@ -5,6 +5,7 @@ import {PlayerPairResponse} from "@/app/interfaces/playerPair";
 import {PlayerPartialResponse} from "@/app/interfaces/player";
 import {PlayersAnnouncements} from "@/app/store/bela/announcementStore";
 import {BelaPlayerAnnouncementsRequest} from "@/app/interfaces/belaPlayerAnnouncement";
+import {createJSONStorage, persist} from "zustand/middleware";
 
 type BelaResultTypeExtended = BelaResultResponse & {
   activeTeam: "team1" | "team2";
@@ -52,7 +53,7 @@ const initialState = {
   }
 };
 
-const useResultStore = create<ResultState>((set) => ({
+const useResultStore = create<ResultState>(persist((set) => ({
     ...initialState,
 
     setResultData: (data: BelaResultResponse) => set((state) => ({
@@ -158,13 +159,10 @@ const useResultStore = create<ResultState>((set) => ({
 
       let PlayerPair1TotalPoints = player_pair1_game_points + player_pair1_announcement_points;
       let PlayerPair2TotalPoints = player_pair2_game_points + player_pair2_announcement_points;
-      console.log("PlayerPair1TotalPoints: ", PlayerPair1TotalPoints)
-      console.log("PlayerPair2TotalPoints: ", PlayerPair2TotalPoints)
       let pass = true;
 
 
       if (playerPair1Called) {
-        console.log("playerPair1Called")
         const allAnnouncements = player_pair2_announcement_points + player_pair1_announcement_points;
         if (complete_victory) {
           PlayerPair1TotalPoints = COMPLETE_VICTORY_SCORE + allAnnouncements;
@@ -175,7 +173,6 @@ const useResultStore = create<ResultState>((set) => ({
           pass = false;
         }
       } else if (playerPair2Called) {
-        console.log("playerPair2Called")
         const allAnnouncements = player_pair2_announcement_points + player_pair1_announcement_points;
         if (complete_victory) {
           PlayerPair2TotalPoints = COMPLETE_VICTORY_SCORE + allAnnouncements;
@@ -286,8 +283,10 @@ const useResultStore = create<ResultState>((set) => ({
         };
       });
     },
-
-  }))
-;
+  }), {
+    name: 'result-store',
+    storage: createJSONStorage(() => localStorage),
+  })
+);
 
 export default useResultStore;

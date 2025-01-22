@@ -2,26 +2,36 @@ import {prisma} from "@/app/lib/prisma";
 import {TeamPair} from "@/app/lib/matching/matching";
 import {Round} from "@prisma/client";
 
-export async function insertPairRounds(pairs: TeamPair[]): Promise<number> {
-  const maxRound = await prisma.round.aggregate({
-    _max: {round_number: true},
-  });
+export async function insertPairRounds(pairs: TeamPair[], leagueId: number): Promise<number> {
+  const maxRound = await prisma.round.aggregate({_max: {round_number: true}}); //TODO
+
   const now = new Date();
   const roundNum = (maxRound._max.round_number ?? 0) + 1;
 
-  const insertData = pairs.map(
-    (pair: TeamPair) =>
-      ({
-        round_number: roundNum,
-        round_date: now,
-        team1_id: pair.teamOne.id,
-        team2_id: pair.teamTwo.id,
-      } as Round)
-  );
+  const insertData = pairs.map((pair: TeamPair) => ({
+    round_number: roundNum,
+    round_date: now,
+    team1_id: pair.teamOne.id,
+    team2_id: pair.teamTwo.id,
+  }));
 
   setRoundWinsForBYE(insertData);
 
-  await prisma.round.createMany({data: insertData});
+// Loop through each pair and create both Round and LeagueRound
+  for (const roundData of insertData) {
+    const createdRound = await prisma.round.create({
+      data: roundData,
+    });
+
+    // Create LeagueRound entry
+    await prisma.leagueRound.create({
+      data: {
+        league_id: leagueId,
+        round_id: createdRound.id,
+      },
+    });
+  }
+
   return roundNum;
 }
 
