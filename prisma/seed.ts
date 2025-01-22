@@ -360,7 +360,7 @@ async function main() {
   await prisma.leagueTeam.createMany({
     data: teams.map((team) => ({league_id: league.league_id, team_id: team.team_id})),
   });
-
+  /*
   const roundsData = [
     {
       round_number: 1,
@@ -396,7 +396,7 @@ async function main() {
     {league_id: league.league_id, round_id: rounds[3].id},
   ];
   await prisma.leagueRound.createMany({data: leagueRounds});
-
+  */
   const leagueTeams = await prisma.leagueTeam.findMany({
     select: {
       team_id: true,
