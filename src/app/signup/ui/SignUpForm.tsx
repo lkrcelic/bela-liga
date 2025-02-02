@@ -4,7 +4,6 @@ import {useState} from "react";
 import styles from "@/app/styles/Form.modules.css";
 import {PlayerCreate, PlayerCreateInterface} from "@/app/interfaces/player";
 import {signUp} from "@/app/fetchers/authentication/signup";
-import {log} from "node:util";
 
 type FormField = keyof typeof PlayerCreate.shape;
 type ErrorState = Partial<Record<FormField, string>>;
