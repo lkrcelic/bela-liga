@@ -3,11 +3,11 @@ import {OngoingMatchResponse} from "@/app/interfaces/match";
 import {PlayerPartialResponse} from "@/app/interfaces/player";
 import {createJSONStorage, persist} from 'zustand/middleware';
 
-
 export type OngoingMatchState = {
   ongoingMatch: OngoingMatchResponse;
   setOngoingMatch: (data: OngoingMatchResponse) => void;
-  resetOngoingMatch: () => void;
+  softResetOngoingMatch: () => void;
+  hardResetOngoingMatch: () => void;
   setSeatingOrder: (newOrder: (PlayerPartialResponse | null)[]) => void;
   createOngoingMatch: (round_id: number) => Promise<number>;
 };
@@ -29,13 +29,23 @@ const useOngoingMatchStore = create<OngoingMatchState>(persist((set) => ({
       ongoingMatch: {...state.ongoingMatch, ...data}
     })),
 
-    resetOngoingMatch: () => set((state) => ({
+    softResetOngoingMatch: () => set((state) => ({
       ongoingMatch: {
         seating_order: state.ongoingMatch.seating_order || [null, null, null, null],
         player_pair1_score: 0,
         player_pair2_score: 0,
         belaResults: [],
         current_shuffler_index: state.current_shuffler_index || 0,
+      },
+    })),
+
+    hardResetOngoingMatch: () => set(() => ({
+      ongoingMatch: {
+        seating_order: [null, null, null, null],
+        player_pair1_score: 0,
+        player_pair2_score: 0,
+        belaResults: [],
+        current_shuffler_index: 0,
       },
     })),
   }), {

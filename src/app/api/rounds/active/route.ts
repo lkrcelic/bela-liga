@@ -18,5 +18,5 @@ export async function GET(request: NextRequest) {
     console.error(error);
     return NextResponse.json({error: "Failed to fetch round."}, {status: STATUS.BadRequest});
   }
-
+  
 }

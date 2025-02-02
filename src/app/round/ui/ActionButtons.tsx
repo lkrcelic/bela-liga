@@ -15,7 +15,7 @@ export default function ActionButtons() {
         const data = await createOngoingMatchAPI({
             round_id: Number(roundId),
             seating_order_ids: seatingOrder?.map((player) => player.id),
-            current_shuffler_index: 0,
+            current_shuffler_index: Math.floor(Math.random() * 4),
             score_threshold: 1001,
         });
 

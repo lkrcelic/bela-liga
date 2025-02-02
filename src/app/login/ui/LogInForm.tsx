@@ -77,7 +77,7 @@ export default function LogInForm({onFormSubmit}: LogInFormProperties) {
       <input type="password" id="password" name="password" value={formData.password} onChange={handleChange} />
       {errors.password && <p className="error">{errors.password}</p>}
       <button type="submit" className={styles.button}>
-        Submit
+        Log in
       </button>
     </form>
   );

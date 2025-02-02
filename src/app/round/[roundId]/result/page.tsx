@@ -9,12 +9,14 @@ import {Grid} from "@mui/system";
 import SingleActionButton from "@/app/ui/SingleActionButton";
 import {finishRoundAPI} from "@/app/fetchers/round/finish";
 import {getAllMatchesByRoundIdAPI} from "@/app/fetchers/match/getAllByRoundId";
+import useOngoingMatchStore from "@/app/store/ongoingMatchStore";
 
 const MobileScoreBoard = () => {
   const router = useRouter();
   const {roundId} = useParams();
 
   const {roundData: {team1_wins, team2_wins, team1, team2}, setRoundData} = useRoundStore();
+  const {hardResetOngoingMatch} = useOngoingMatchStore()
   const [matches, setMatches] = useState();
 
   const fetchRoundData = async () => {
@@ -42,7 +44,8 @@ const MobileScoreBoard = () => {
 
   const onClick = async () => {
     await finishRoundAPI(Number(roundId));
-
+    hardResetOngoingMatch();
+    localStorage.clear();
     router.push(`/`);
   };
 

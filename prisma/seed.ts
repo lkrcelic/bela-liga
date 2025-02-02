@@ -1,7 +1,6 @@
 // prisma/seed.ts
 
 import {PrismaClient} from "@prisma/client";
-import {createMatch, createRandomPlayer, createRandomTeam} from "./seedHelpers";
 
 const prisma = new PrismaClient();
 
@@ -16,8 +15,7 @@ async function main() {
       player_role: "ADMIN",
       first_name: "Marko",
       last_name: "Blazevic",
-      birth_year: 1996,
-      city: "Saskatoon",
+      birth_date: "2000-01-15T00:00:00.000Z",
     },
   });
 
@@ -31,8 +29,7 @@ async function main() {
       player_role: "PLAYER",
       first_name: "Jane",
       last_name: "Smith",
-      birth_year: 1992,
-      city: "Los Angeles",
+      birth_date: "2000-01-15T00:00:00.000Z",
     },
   });
 
@@ -44,8 +41,7 @@ async function main() {
       player_role: "PLAYER",
       first_name: "Johnny",
       last_name: "Smith",
-      birth_year: 1992,
-      city: "New York",
+      birth_date: "2000-01-15T00:00:00.000Z",
     },
   });
 
@@ -57,8 +53,7 @@ async function main() {
       player_role: "PLAYER",
       first_name: "De'Shaun",
       last_name: "Smith",
-      birth_year: 1992,
-      city: "Chicago",
+      birth_date: "2000-01-15T00:00:00.000Z",
     },
   });
 
@@ -70,8 +65,7 @@ async function main() {
       player_role: "PLAYER",
       first_name: "Brock",
       last_name: "Smith",
-      birth_year: 1992,
-      city: "Los Angeles",
+      birth_date: "2000-01-15T00:00:00.000Z",
     },
   });
 
@@ -83,8 +77,7 @@ async function main() {
       player_role: "PLAYER",
       first_name: "Jusuf",
       last_name: "Palidza",
-      birth_year: 1991,
-      city: "Los Angeles",
+      birth_date: "2000-01-15T00:00:00.000Z",
     },
   });
 
@@ -96,8 +89,7 @@ async function main() {
       player_role: "PLAYER",
       first_name: "Husein",
       last_name: "Kapetan",
-      birth_year: 1992,
-      city: "Los Angeles",
+      birth_date: "2000-01-15T00:00:00.000Z",
     },
   });
 
@@ -109,8 +101,7 @@ async function main() {
       player_role: "PLAYER",
       first_name: "Muje",
       last_name: "Mujic",
-      birth_year: 1992,
-      city: "Los Angeles",
+      birth_date: "2000-01-15T00:00:00.000Z",
     },
   });
 
@@ -122,8 +113,7 @@ async function main() {
       player_role: "PLAYER",
       first_name: "Haso",
       last_name: "Hasic",
-      birth_year: 1992,
-      city: "Los Angeles",
+      birth_date: "2000-01-15T00:00:00.000Z",
     },
   });
 
@@ -137,8 +127,7 @@ async function main() {
       player_role: "PLAYER",
       first_name: "Jane",
       last_name: "Smith",
-      birth_year: 1992,
-      city: "Los Angeles",
+      birth_date: "2000-01-15T00:00:00.000Z",
     },
   });
 
@@ -152,8 +141,7 @@ async function main() {
       player_role: "PLAYER",
       first_name: "Jane",
       last_name: "Smith",
-      birth_year: 1992,
-      city: "Los Angeles",
+      birth_date: "2000-01-15T00:00:00.000Z",
     },
   });
 
@@ -167,8 +155,7 @@ async function main() {
       player_role: "PLAYER",
       first_name: "Jane",
       last_name: "Smith",
-      birth_year: 1992,
-      city: "Los Angeles",
+      birth_date: "2000-01-15T00:00:00.000Z",
     },
   });
 
@@ -182,8 +169,7 @@ async function main() {
       player_role: "PLAYER",
       first_name: "Jane",
       last_name: "Smith",
-      birth_year: 1992,
-      city: "Los Angeles",
+      birth_date: "2000-01-15T00:00:00.000Z",
     },
   });
 
@@ -197,8 +183,7 @@ async function main() {
       player_role: "PLAYER",
       first_name: "Jane",
       last_name: "Smith",
-      birth_year: 1992,
-      city: "Los Angeles",
+      birth_date: "2000-01-15T00:00:00.000Z",
     },
   });
 
@@ -212,8 +197,7 @@ async function main() {
       player_role: "PLAYER",
       first_name: "Jane",
       last_name: "Smith",
-      birth_year: 1992,
-      city: "Los Angeles",
+      birth_date: "2000-01-15T00:00:00.000Z",
     },
   });
 
@@ -227,8 +211,7 @@ async function main() {
       player_role: "PLAYER",
       first_name: "Jane",
       last_name: "Smith",
-      birth_year: 1992,
-      city: "Los Angeles",
+      birth_date: "2000-01-15T00:00:00.000Z",
     },
   });
 
@@ -242,8 +225,7 @@ async function main() {
       player_role: "PLAYER",
       first_name: "Jane",
       last_name: "Smith",
-      birth_year: 1992,
-      city: "Los Angeles",
+      birth_date: "2000-01-15T00:00:00.000Z",
     },
   });
 
@@ -347,7 +329,6 @@ async function main() {
     {team_id: team8.team_id, player_id: player16.id},
   ];
   await prisma.teamPlayer.createMany({data: teamPlayers});
-
 
 
   const league = await prisma.league.create({

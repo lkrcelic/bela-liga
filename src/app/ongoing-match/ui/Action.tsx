@@ -15,7 +15,7 @@ export default function Action() {
       seating_order,
       current_shuffler_index
     },
-    resetOngoingMatch
+    softResetOngoingMatch
   } = useOngoingMatchStore();
   const {roundData: {id, team1_wins, team2_wins}} = useRoundStore();
   const {setMatchId} = useResultStore();
@@ -36,16 +36,16 @@ export default function Action() {
             const response = await createOngoingMatchAPI({
               round_id: Number(id),
               seating_order_ids: seating_order?.map((player) => player.id),
-              current_shuffler_index: current_shuffler_index | 0,
+              current_shuffler_index: current_shuffler_index | Math.floor(Math.random() * 4),
               score_threshold: 1001,
             })
 
-            resetOngoingMatch();
+            softResetOngoingMatch();
             router.push(`/ongoing-match/${response.id}`);
           }
 
           if (team1_wins + team2_wins >= 1) {
-            resetOngoingMatch();
+            softResetOngoingMatch();
             router.push(`/round/${id}/result`);
           }
         },

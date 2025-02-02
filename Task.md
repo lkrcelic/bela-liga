@@ -1,9 +1,5 @@
 # Tasks
-- Ne radi završi rundu??
-- disavle zvanja kada nitko nije odabran
-- produži sesiju na 4h isto tako kada sesija istekne ne brise se cooike ili nes pa login jebe
-- Tko miješa prvi mora ici na random
-- Brisnaje seating ordera ne smije biti spremljeno zauvik i jednom kreirano nema editiranja
+- Kada sesija istekne ne brise se cooike ili nes pa login jebe
 - Dodati create team ekran
 - Dodati user profile ekran
 - dodati pregled svih odigranih mečeva ekran

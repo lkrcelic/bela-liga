@@ -45,6 +45,7 @@ export default function AnnouncementSection() {
                                 color="secondary"
                                 variant="contained"
                                 sx={{fontSize: "16px", minWidth: "60px", height: "60px"}}
+                                disabled={!Boolean(activePlayerId)}
                                 onClick={() => setAnnouncement(activePlayerId, points)}
                             >
                                 {points}
@@ -57,6 +58,7 @@ export default function AnnouncementSection() {
                         color="error"
                         variant="outlined"
                         sx={{fontSize: "16px", minWidth: "60px", height: "60px"}}
+                        disabled={!Boolean(activePlayerId)}
                         onClick={() => resetPlayerAnnouncements(activePlayerId)}
                     >
                         Obriši zvanja

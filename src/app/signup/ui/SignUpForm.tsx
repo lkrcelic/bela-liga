@@ -4,11 +4,12 @@ import {useState} from "react";
 import styles from "@/app/styles/Form.modules.css";
 import {PlayerCreate, PlayerCreateInterface} from "@/app/interfaces/player";
 import {signUp} from "@/app/fetchers/authentication/signup";
+import {log} from "node:util";
 
 type FormField = keyof typeof PlayerCreate.shape;
 type ErrorState = Partial<Record<FormField, string>>;
 
-interface SignUpFormProperties {
+type SignUpFormProperties = {
   onFormSubmit?: (success: boolean) => void;
 }
 
@@ -19,6 +20,7 @@ export default function SignUpForm({onFormSubmit}: SignUpFormProperties) {
     email: "",
     first_name: "",
     last_name: "",
+    birth_date: "",
   } as PlayerCreateInterface;
   const [formData, setFormData] = useState(initialState);
 
@@ -31,10 +33,14 @@ export default function SignUpForm({onFormSubmit}: SignUpFormProperties) {
   const [errors, setErrors] = useState<ErrorState>({});
 
   const handlePasswordChange = (e: unknown) => {
-    // Password and confirm_password fields always need to match each other!
     const {name, value} = e.target;
-    if (name == "confirm_password") confirm.password = value;
-    if (name == "password") formData.password = value;
+
+    if (name == "confirm_password") {
+      confirm.password = value;
+    } else if (name == "password") {
+      formData.password = value;
+      handleChange(e);
+    }
 
     if (confirm.password != formData.password && confirm.password.trim() != "") confirm.matching = false;
     else confirm.matching = true;
@@ -46,10 +52,9 @@ export default function SignUpForm({onFormSubmit}: SignUpFormProperties) {
   const handleChange = (e: unknown) => {
     const {name, value} = e.target;
     setFormData({...formData, [name]: value});
-
+    console.log(formData)
     const fieldName = name as FormField;
     try {
-      // Handle each property from the validation schema separately!
       PlayerCreate.pick({[fieldName]: true} as Record<FormField, true>).parse({[name]: value});
       setErrors((prevErrors) => ({...prevErrors, [fieldName]: undefined}));
     } catch (error: unknown) {
@@ -71,7 +76,7 @@ export default function SignUpForm({onFormSubmit}: SignUpFormProperties) {
       const keys = Object.keys(formData) as FormField[];
       keys.forEach((key) => {
         if ((formData[key] as string).trim() === "") {
-          errors[key] = (key as string) + " is a required property!";
+          errors[key] = "Required";
         }
       });
       setErrors((prevErrors) => ({
@@ -100,15 +105,18 @@ export default function SignUpForm({onFormSubmit}: SignUpFormProperties) {
   async function handleSubmit(e: unknown) {
     e.preventDefault();
     if (!checkAllFieldsPopulated()) return;
+    console.log("proso 1")
 
     // check if password and confirm password match
     if (formData.password != confirm.password) {
       setConfirmPassword({...confirm, matching: false});
       return;
     }
+    console.log("proos 2")
 
     try {
       const parsedData = PlayerCreate.parse(formData);
+      console.log("proso 3")
       const res = await signUp(parsedData);
       if (onFormSubmit) onFormSubmit(res.success);
       if (res.success) {
@@ -125,12 +133,12 @@ export default function SignUpForm({onFormSubmit}: SignUpFormProperties) {
   return (
     <form onSubmit={handleSubmit} className={styles.form}>
       <label htmlFor="username">Username</label>
-      <input type="text" id="username" name="username" value={formData.username} onChange={handleChange} />
+      <input type="text" id="username" name="username" value={formData.username} onChange={handleChange}/>
       {errors.username && <p className="error">{errors.username}</p>}
       <label htmlFor="password" className={styles.label}>
         Password
       </label>
-      <input type="password" id="password" name="password" value={formData.password} onChange={handlePasswordChange} />
+      <input type="password" id="password" name="password" value={formData.password} onChange={handlePasswordChange}/>
       {errors.password && <p className="error">{errors.password}</p>}
       <label htmlFor="confirm_password" className={styles.label}>
         Confirm password
@@ -146,18 +154,28 @@ export default function SignUpForm({onFormSubmit}: SignUpFormProperties) {
       <label htmlFor="email" className={styles.label}>
         Email
       </label>
-      <input type="text" id="email" name="email" value={formData.email} onChange={handleChange} />
+      <input type="text" id="email" name="email" value={formData.email} onChange={handleChange}/>
       {errors.email && <p className="error">{errors.email}</p>}
       <label htmlFor="name" className={styles.label}>
         Name
       </label>
-      <input type="text" id="name" name="first_name" value={formData.first_name} onChange={handleChange} />
+      <input type="text" id="name" name="first_name" value={formData.first_name} onChange={handleChange}/>
       {errors.first_name && <p className="error">{errors.first_name}</p>}
       <label htmlFor="lastname" className={styles.label}>
         Lastname
       </label>
-      <input type="text" id="lastname" name="last_name" value={formData.last_name} onChange={handleChange} />
+      <input type="text" id="lastname" name="last_name" value={formData.last_name} onChange={handleChange}/>
       {errors.last_name && <p className="error">{errors.last_name}</p>}
+      <label htmlFor="birth_date" className={styles.label}>Date of Birth</label>
+      <input
+        type="date"
+        id="birth_date"
+        name="birth_date"
+        value={formData.birth_date}
+        onChange={handleChange}
+      />
+      {errors.birth_date && <p className="error">{errors.birth_date}</p>}
+
       <button type="submit" className={styles.button}>
         Submit
       </button>

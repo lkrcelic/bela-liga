@@ -11,7 +11,7 @@ export default function SignUp() {
 
   return (
     <div>
-      <SignUpForm onFormSubmit={handleFormSubmit} />
+      <SignUpForm onFormSubmit={handleFormSubmit}/>
       {created && <p className="success">User created!</p>}
     </div>
   );

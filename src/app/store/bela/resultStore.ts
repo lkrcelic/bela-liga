@@ -159,29 +159,26 @@ const useResultStore = create<ResultState>(persist((set) => ({
 
       let PlayerPair1TotalPoints = player_pair1_game_points + player_pair1_announcement_points;
       let PlayerPair2TotalPoints = player_pair2_game_points + player_pair2_announcement_points;
+
+      const allAnnouncements = player_pair2_announcement_points + player_pair1_announcement_points;
       let pass = true;
 
-
-      if (playerPair1Called) {
-        const allAnnouncements = player_pair2_announcement_points + player_pair1_announcement_points;
-        if (complete_victory) {
+      if(complete_victory) {
+        if (player_pair1_game_points == COMPLETE_VICTORY_SCORE) {
           PlayerPair1TotalPoints = COMPLETE_VICTORY_SCORE + allAnnouncements;
           PlayerPair2TotalPoints = 0;
-        } else if (PlayerPair1TotalPoints <= PlayerPair2TotalPoints) {
+        } else if (player_pair2_game_points == COMPLETE_VICTORY_SCORE) {
+          PlayerPair2TotalPoints = COMPLETE_VICTORY_SCORE + allAnnouncements;
+          PlayerPair1TotalPoints = 0;
+        }
+      } else if (playerPair1Called && PlayerPair1TotalPoints <= PlayerPair2TotalPoints) {
           PlayerPair2TotalPoints = MAX_SCORE + allAnnouncements;
           PlayerPair1TotalPoints = 0;
           pass = false;
-        }
-      } else if (playerPair2Called) {
-        const allAnnouncements = player_pair2_announcement_points + player_pair1_announcement_points;
-        if (complete_victory) {
-          PlayerPair2TotalPoints = COMPLETE_VICTORY_SCORE + allAnnouncements;
-          PlayerPair1TotalPoints = 0;
-        } else if (PlayerPair2TotalPoints <= PlayerPair1TotalPoints) {
+      } else if (playerPair2Called &&PlayerPair2TotalPoints <= PlayerPair1TotalPoints) {
           PlayerPair1TotalPoints = MAX_SCORE + allAnnouncements;
           PlayerPair2TotalPoints = 0;
           pass = false;
-        }
       }
 
       return {

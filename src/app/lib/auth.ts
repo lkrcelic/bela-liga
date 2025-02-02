@@ -20,7 +20,7 @@ export const lucia = new Lucia(adapter, {
       secure: process.env.NODE_ENV === "production",
     },
   },
-  sessionExpiresIn: new TimeSpan(1, "h"),
+  sessionExpiresIn: new TimeSpan(4, "h"),
   getUserAttributes: (attributes) => {
     return {
       // attributes has the type of DatabaseUserAttributes

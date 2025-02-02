@@ -6,6 +6,7 @@ import TrumpCallerSection from "@/app/ongoing-match/[matchId]/ongoing-result/ui/
 import useResultStore from "@/app/store/bela/resultStore";
 import {useParams, useRouter} from "next/navigation";
 import DoubleActionButton from "@/app/ui/DoubleActionButton";
+import useAnnouncementStore from "@/app/store/bela/announcementStore";
 
 export default function TrumpCallerPage({actionType}: ActionProps) {
   return (
@@ -27,9 +28,16 @@ export type ActionProps = {
 }
 
 function ActionButtons({actionType}: ActionProps) {
-  const {resultData: {trump_caller_id}} = useResultStore();
+  const {resultData: {trump_caller_id}, resetResult} = useResultStore();
+  const {resetAnnouncements} = useAnnouncementStore();
   const router = useRouter();
   const params = useParams();
+
+  const firstButtonOnClick = () => {
+    resetResult();
+    resetAnnouncements();
+    window.history.back();
+  }
 
   let href;
   if (actionType === "CREATE") {
@@ -40,6 +48,7 @@ function ActionButtons({actionType}: ActionProps) {
   }
 
   return <DoubleActionButton
+    firstButtonOnClick={firstButtonOnClick}
     secondButtonLabel={"Dalje"}
     secondButtonOnClick={() => router.push(href)}
     secondButtonDisabled={trump_caller_id == undefined}

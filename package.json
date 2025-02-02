@@ -8,7 +8,7 @@
   "scripts": {
     "dev": "npx prisma migrate reset --force && next dev -H 0.0.0.0",
     "seed": "prisma db seed",
-    "build": "prisma generate && prisma migrate reset --force && next build",
+    "build": "prisma generate && prisma migrate deploy && next build",
     "start": "next start",
     "lint": "next lint",
     "postinstall": "npm rebuild argon2 --build-from-source"

@@ -3,7 +3,6 @@ form {
     display: flex;
     flex-direction: column;
     width: 100%;
-    padding: 10px;
     box-sizing: border-box;
 }
 
@@ -16,30 +15,32 @@ label {
 
 p.error {
     color: red;
-    font-size: 14px; 
-    margin-top: -10px; 
-    margin-bottom: 15px; 
+    font-size: 14px;
+    margin-top: -10px;
+    margin-bottom: 15px;
     text-align: center;
 }
 
 p.error-button {
     color: red;
-    font-size: 14px; 
-    margin-top: 5px; 
-    margin-bottom: 15px; 
+    font-size: 14px;
+    margin-top: 5px;
+    margin-bottom: 15px;
     text-align: center;
 }
 
 p.success {
     color: green;
-    font-size: 14px; 
-    margin-top: 5px; 
-    margin-bottom: 15px; 
+    font-size: 14px;
+    margin-top: 5px;
+    margin-bottom: 15px;
+    padding-top: 5px;
     text-align: center;
 }
 
 input[type="text"],
-input[type="password"] {
+input[type="password"],
+input[type="date"] {
     width: 100%;
     padding: 10px;
     margin-bottom: 15px;
@@ -63,10 +64,6 @@ button[type="submit"] {
 
 /* Additional mobile-specific styling */
 @media (max-width: 600px) {
-    form {
-        padding: 15px;
-    }
-
     input,
     button {
         font-size: 18px;

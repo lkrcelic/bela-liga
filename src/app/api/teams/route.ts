@@ -1,10 +1,12 @@
 // src/app/api/teams/route.ts
 
 import {prisma} from "@/app/lib/prisma";
-import {TeamRequestValidation, TeamResponseValidation, TeamsResponseValidation} from "@/app/interfaces/team";
+import {TeamRequestValidation, TeamsResponseValidation} from "@/app/interfaces/team";
 import {z} from "zod";
-import {NextResponse} from "next/server";
+import {NextRequest, NextResponse} from "next/server";
 import {STATUS} from "@/app/lib/statusCodes";
+import {getAuthorizedUser} from "@/app/lib/auth";
+import {createTeam} from "@/app/lib/service/team/create";
 
 export async function GET() {
   try {
@@ -23,15 +25,16 @@ export async function GET() {
   }
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
+    const user = await getAuthorizedUser(request);
     const req_data = await request.json();
 
     const teamVal = TeamRequestValidation.parse(req_data);
-    const createdTeam = await prisma.team.create({data: teamVal});
-    const team = TeamResponseValidation.parse(createdTeam);
 
-    return NextResponse.json(team, {status: STATUS.OK});
+    const createdTeam = await createTeam(teamVal, user.id);
+
+    return NextResponse.json(createdTeam, {status: STATUS.OK});
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({error: error.issues}, {status: STATUS.BadRequest});

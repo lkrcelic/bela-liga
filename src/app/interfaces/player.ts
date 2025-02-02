@@ -2,16 +2,16 @@ import {RoleEnum} from "@prisma/client";
 import {z} from "zod";
 
 export const PlayerCreate = z.object({
-  username: z.string().min(1),
-  password: z.string().min(1),
-  email: z.string().min(1).email(),
-  first_name: z.string().min(1),
-  last_name: z.string().min(1),
-  birth_year: z.number().int().optional(),
-  city: z.string().optional(),
+  username: z.string().min(3),
+  password: z.string().min(5),
+  email: z.string().email(),
+  first_name: z.string().min(3),
+  last_name: z.string().min(3),
+  birth_date: z.string().regex(/^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$/, "Invalid date format."),
   created_at: z.date().optional(),
   last_updated_at: z.date().optional(),
 });
+
 
 export type PlayerCreateInterface = z.infer<typeof PlayerCreate>;
 
@@ -21,8 +21,7 @@ export const PlayerCreateValidation = PlayerCreate.transform((o) => ({
   email: o.email,
   first_name: o.first_name,
   last_name: o.last_name,
-  birth_year: o.birth_year,
-  city: o.city,
+  birth_date: new Date(o.birth_date),
   created_at: o.created_at,
   last_updated_at: o.last_updated_at,
   player_role: RoleEnum.PLAYER, // No creating admins from API!
