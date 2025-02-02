@@ -1,4 +1,4 @@
-import {PrismaClient, RoleEnum} from "@prisma/client";
+import {PrismaClient} from "@prisma/client";
 
 const prisma = new PrismaClient();
 
@@ -16,7 +16,7 @@ function generateString(length: number) {
 
 export async function createRandomPlayer() {
   // TODO:  implement retries (try multiple times if same username etc)
-  let name = generateString(15);
+  const name = generateString(15);
 
   return await prisma.player.create({
     data: {
@@ -33,7 +33,7 @@ export async function createRandomPlayer() {
 }
 
 export async function createRandomTeam(creator_id: number, p1_id: number, p2_id: number) {
-  let name = generateString(15);
+  const name = generateString(15);
 
   return await prisma.team.create({
     data: {
