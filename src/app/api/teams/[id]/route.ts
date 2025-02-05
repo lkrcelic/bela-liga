@@ -1,8 +1,8 @@
 // src/app/api/teams/[id]/route.ts
 import {NextResponse} from "next/server";
-import {prisma} from "@/app/lib/prisma";
-import {TeamResponseValidation} from "@/app/interfaces/team";
-import {STATUS} from "@/app/lib/statusCodes";
+import {prisma} from "@/app/_lib/prisma";
+import {TeamResponseValidation} from "@/app/_interfaces/team";
+import {STATUS} from "@/app/_lib/statusCodes";
 
 // Handle GET request to fetch a single team by ID
 export async function GET(

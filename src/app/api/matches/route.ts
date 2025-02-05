@@ -1,16 +1,16 @@
 // src/app/api/matches/route.ts
 
-import {prisma} from "@/app/lib/prisma";
+import {prisma} from "@/app/_lib/prisma";
 import {NextResponse} from "next/server";
-import {STATUS} from "@/app/lib/statusCodes";
-import {MatchRequestValidation} from "@/app/interfaces/match";
-import {updateRoundWins} from "@/app/lib/service/round/updateWins";
-import {createMatch} from "@/app/lib/service/match/create";
-import {deleteOngoingMatch} from "@/app/lib/service/ongoingMatch/delete";
-import {updateScores} from "@/app/lib/updateScores";
+import {STATUS} from "@/app/_lib/statusCodes";
+import {MatchRequestValidation} from "@/app/_interfaces/match";
+import {updateRoundWins} from "@/app/_lib/service/round/updateWins";
+import {createMatch} from "@/app/_lib/service/match/create";
+import {deleteOngoingMatch} from "@/app/_lib/service/ongoingMatch/delete";
+import {updateScores} from "@/app/_lib/updateScores";
 import {
   getOngoingMatchWithResultsAndAnnouncements
-} from "@/app/lib/service/ongoingMatch/getOneWithResultAndAnnouncements";
+} from "@/app/_lib/service/ongoingMatch/getOneWithResultAndAnnouncements";
 
 export async function GET() {
   try {

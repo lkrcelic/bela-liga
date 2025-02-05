@@ -3,8 +3,8 @@
 import React from "react";
 import {Grid} from "@mui/system";
 import {Box, CircularProgress, Typography} from "@mui/material";
-import {getLeagueStandingsAPI} from "@/app/fetchers/league/getStandings";
-import SingleActionButton from "@/app/ui/SingleActionButton";
+import {getLeagueStandingsAPI} from "@/app/_fetchers/league/getStandings";
+import SingleActionButton from "@/app/_ui/SingleActionButton";
 
 export default function PlayersSeating() {
   const [leagueStandings, setLeagueStandings] = React.useState(null);

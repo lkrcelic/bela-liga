@@ -1,12 +1,12 @@
-import {getAuthorizedUser, lucia} from "@/app/lib/auth";
-import {prisma} from "@/app/lib/prisma";
+import {getAuthorizedUser, lucia} from "@/app/_lib/auth";
+import {prisma} from "@/app/_lib/prisma";
 import {NextRequest, NextResponse} from "next/server";
 import {randomUUID} from "crypto";
 
 import argon2 from "argon2";
-import {LoginUser} from "@/app/interfaces/login";
-import {STATUS} from "@/app/lib/statusCodes";
-import {signCookie} from "@/app/lib/signCookie";
+import {LoginUser} from "@/app/_interfaces/login";
+import {STATUS} from "@/app/_lib/statusCodes";
+import {signCookie} from "@/app/_lib/signCookie";
 
 const notFoundResponse = NextResponse.json({error: "Incorrect username or password."}, {status: STATUS.NotFound});
 const alreadyLoggedIn = NextResponse.json({error: "You are already logged it."}, {status: STATUS.BadRequest});

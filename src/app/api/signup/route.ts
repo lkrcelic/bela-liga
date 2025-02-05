@@ -1,10 +1,10 @@
 import {NextRequest, NextResponse} from "next/server";
-import {PlayerCreateValidation, PlayerResponse} from "@/app/interfaces/player";
-import {prisma} from "@/app/lib/prisma";
+import {PlayerCreateValidation, PlayerResponse} from "@/app/_interfaces/player";
+import {prisma} from "@/app/_lib/prisma";
 import {z} from "zod";
 import argon2 from "argon2";
-import {STATUS} from "@/app/lib/statusCodes";
-import {validateUniqueConstraintsPlayer, ValidationError} from "@/app/lib/validation/playerUniqueConstraints";
+import {STATUS} from "@/app/_lib/statusCodes";
+import {validateUniqueConstraintsPlayer, ValidationError} from "@/app/_lib/validation/playerUniqueConstraints";
 
 export async function POST(request: NextRequest) {
   try {

@@ -1,5 +1,5 @@
-import {lucia, validateRequest} from "@/app/lib/auth";
-import {STATUS} from "@/app/lib/statusCodes";
+import {lucia, validateRequest} from "@/app/_lib/auth";
+import {STATUS} from "@/app/_lib/statusCodes";
 import {NextRequest, NextResponse} from "next/server";
 
 export async function POST(req: NextRequest) {

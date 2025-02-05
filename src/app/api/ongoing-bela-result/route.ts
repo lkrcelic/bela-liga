@@ -1,10 +1,10 @@
 // src/app/api/ongoing-bela-result/route.ts
 
-import {BelaResultCreateRequestValidation} from "@/app/interfaces/belaResult";
+import {BelaResultCreateRequestValidation} from "@/app/_interfaces/belaResult";
 import {NextResponse} from "next/server";
-import {STATUS} from "@/app/lib/statusCodes";
-import {incrementOngoingMatchScore} from "@/app/lib/service/ongoingMatch/update";
-import {createBelaResult} from "@/app/lib/service/ongoingBelaResult/create";
+import {STATUS} from "@/app/_lib/statusCodes";
+import {incrementOngoingMatchScore} from "@/app/_lib/service/ongoingMatch/update";
+import {createBelaResult} from "@/app/_lib/service/ongoingBelaResult/create";
 
 
 export async function POST(request: Request) {

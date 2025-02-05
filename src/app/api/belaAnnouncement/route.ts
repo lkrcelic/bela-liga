@@ -1,6 +1,6 @@
-import {prisma} from "@/app/lib/prisma";
+import {prisma} from "@/app/_lib/prisma";
 import {NextResponse} from "next/server";
-import {STATUS} from "@/app/lib/statusCodes";
+import {STATUS} from "@/app/_lib/statusCodes";
 
 export async function GET() : Promise<Response> {
     try {

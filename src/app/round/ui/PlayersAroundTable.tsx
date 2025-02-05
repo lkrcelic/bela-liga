@@ -4,7 +4,7 @@ import React from "react";
 import {Box, Typography} from "@mui/material";
 import {Grid} from "@mui/system";
 import PlayerPairSelector from "@/app/round/ui/PlayerPairSelector";
-import useRoundStore from "@/app/store/RoundStore";
+import useRoundStore from "@/app/_store/RoundStore";
 
 export default function PlayersAroundTable() {
   const {roundData: {team1, team2}} = useRoundStore();

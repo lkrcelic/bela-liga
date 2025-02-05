@@ -1,8 +1,8 @@
 import {NextResponse} from "next/server";
-import {STATUS} from "@/app/lib/statusCodes";
-import {extractPlayersSeatingOrder} from "@/app/lib/service/ongoingMatch/extractPlayersSeatingOrder";
-import {OngoingMatchResponseValidation} from "@/app/interfaces/match";
-import {getOngoingMatchWithResultsAndPlayers} from "@/app/lib/service/ongoingMatch/getOneWithResultsAndPlayers";
+import {STATUS} from "@/app/_lib/statusCodes";
+import {extractPlayersSeatingOrder} from "@/app/_lib/service/ongoingMatch/extractPlayersSeatingOrder";
+import {OngoingMatchResponseValidation} from "@/app/_interfaces/match";
+import {getOngoingMatchWithResultsAndPlayers} from "@/app/_lib/service/ongoingMatch/getOneWithResultsAndPlayers";
 
 export async function GET(request: Request, {params}: { params: { id: string } }) {
     const {id} = params;

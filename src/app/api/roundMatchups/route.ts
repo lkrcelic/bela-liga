@@ -1,6 +1,6 @@
 import {NextResponse} from "next/server";
-import {STATUS} from "@/app/lib/statusCodes";
-import {getCurrentRoundMatchups} from "@/app/lib/service/round/getRoundMatchups";
+import {STATUS} from "@/app/_lib/statusCodes";
+import {getCurrentRoundMatchups} from "@/app/_lib/service/round/getRoundMatchups";
 
 export async function GET() {
   try {

@@ -1,6 +1,6 @@
 import {NextResponse} from "next/server";
-import {STATUS} from "@/app/lib/statusCodes";
-import {finishRound} from "@/app/lib/service/round/finish";
+import {STATUS} from "@/app/_lib/statusCodes";
+import {finishRound} from "@/app/_lib/service/round/finish";
 
 export async function POST(request: Request, {params}: { params: { id: string } }) {
   const {id} = params;

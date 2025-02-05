@@ -1,7 +1,7 @@
-import {getAuthorizedUser} from "@/app/lib/auth";
-import {SessionsOut} from "@/app/interfaces/session";
-import {prisma} from "@/app/lib/prisma";
-import {STATUS} from "@/app/lib/statusCodes";
+import {getAuthorizedUser} from "@/app/_lib/auth";
+import {SessionsOut} from "@/app/_interfaces/session";
+import {prisma} from "@/app/_lib/prisma";
+import {STATUS} from "@/app/_lib/statusCodes";
 import {NextRequest, NextResponse} from "next/server";
 
 export async function GET(req: NextRequest) {

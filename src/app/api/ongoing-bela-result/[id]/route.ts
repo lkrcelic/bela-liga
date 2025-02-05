@@ -1,9 +1,9 @@
-import {getBelaResultWithAnnouncements} from "@/app/lib/service/ongoingBelaResult/getOneWithAnnouncements";
-import {BelaResultCreateRequestValidation, BelaResultResponseValidation} from "@/app/interfaces/belaResult";
+import {getBelaResultWithAnnouncements} from "@/app/_lib/service/ongoingBelaResult/getOneWithAnnouncements";
+import {BelaResultCreateRequestValidation, BelaResultResponseValidation} from "@/app/_interfaces/belaResult";
 import {NextResponse} from "next/server";
-import {STATUS} from "@/app/lib/statusCodes";
-import {updateOngoingMatchScore} from "@/app/lib/service/ongoingMatch/update";
-import {updateOngoingBelaResult} from "@/app/lib/service/ongoingBelaResult/update";
+import {STATUS} from "@/app/_lib/statusCodes";
+import {updateOngoingMatchScore} from "@/app/_lib/service/ongoingMatch/update";
+import {updateOngoingBelaResult} from "@/app/_lib/service/ongoingBelaResult/update";
 
 export async function GET(request: Request, {params}: { params: { id: string } }): Promise<Response> {
     const {id} = params;

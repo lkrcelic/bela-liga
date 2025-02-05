@@ -1,8 +1,8 @@
 import {NextRequest, NextResponse} from "next/server";
-import {STATUS} from "@/app/lib/statusCodes";
-import {getActiveRoundByPlayerId} from "@/app/lib/service/round/getActiveByPlayerId";
-import {getAuthorizedUser} from "@/app/lib/auth";
-import {getNewestOngoingMatchByRoundId} from "@/app/lib/service/match/getNewstByRoundId";
+import {STATUS} from "@/app/_lib/statusCodes";
+import {getActiveRoundByPlayerId} from "@/app/_lib/service/round/getActiveByPlayerId";
+import {getAuthorizedUser} from "@/app/_lib/auth";
+import {getNewestOngoingMatchByRoundId} from "@/app/_lib/service/match/getNewstByRoundId";
 
 export async function GET(request: NextRequest) {
 

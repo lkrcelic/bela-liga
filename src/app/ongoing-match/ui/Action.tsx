@@ -1,11 +1,11 @@
 import React from 'react';
 import {useParams, usePathname, useRouter} from "next/navigation";
-import useResultStore from "@/app/store/bela/resultStore";
-import SingleActionButton from "@/app/ui/SingleActionButton";
-import useOngoingMatchStore from "@/app/store/ongoingMatchStore";
-import {createOngoingMatchAPI} from "@/app/fetchers/ongoingMatch/create";
-import {createMatchAPI} from "@/app/fetchers/match/create";
-import useRoundStore from "@/app/store/RoundStore";
+import useResultStore from "@/app/_store/bela/resultStore";
+import SingleActionButton from "@/app/_ui/SingleActionButton";
+import useOngoingMatchStore from "@/app/_store/ongoingMatchStore";
+import {createOngoingMatchAPI} from "@/app/_fetchers/ongoingMatch/create";
+import {createMatchAPI} from "@/app/_fetchers/match/create";
+import useRoundStore from "@/app/_store/RoundStore";
 
 export default function Action() {
   const {

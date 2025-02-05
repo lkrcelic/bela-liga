@@ -1,30 +1,28 @@
 // src/app/api/players/route.ts
 
-import {prisma} from "@/app/lib/prisma";
-import {playersOutput} from "@/app/interfaces/player";
 import {NextRequest, NextResponse} from "next/server";
-import {getAuthorizedUser} from "@/app/lib/auth";
-import {STATUS} from "@/app/lib/statusCodes";
-import {Player} from "@prisma/client";
+import {getAuthorizedUser} from "@/app/_lib/auth";
+import {STATUS} from "@/app/_lib/statusCodes";
+import {getAllPlayers} from "@/app/_lib/service/players/getAll";
+import {searchPlayers} from "@/app/_lib/service/players/search";
 
 export async function GET(req: NextRequest) {
+  const {searchParams} = new URL(req.url);
+  const query = searchParams.get("query");
+
+  const user = await getAuthorizedUser(req);
+  if (!user) {
+    return NextResponse.json({message: "You are not authorized for this action."}, {status: STATUS.NotAllowed});
+  }
+
   try {
-    const user = await getAuthorizedUser(req);
-    if (!user) {
-      return NextResponse.json({message: "You are not authorized for this action."}, {status: STATUS.NotAllowed});
-    }
+    let players;
 
-    // This is just for testing cookies/authorization
-    // If user has role PLAYER, then he can only see himself
-
-    let dbPlayers: Player[];
-
-    if (user.player_role === "PLAYER") {
-      dbPlayers = [user];
+    if (query) {
+      players = await searchPlayers(query)
     } else {
-      dbPlayers = await prisma.player.findMany();
+      players = await getAllPlayers();
     }
-    const players = playersOutput.parse(dbPlayers);
 
     return NextResponse.json(players, {status: STATUS.OK});
   } catch (error) {

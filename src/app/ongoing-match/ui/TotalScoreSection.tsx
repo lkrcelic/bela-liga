@@ -1,8 +1,8 @@
 import React from 'react';
 import {Box, Typography} from '@mui/material';
 import {Grid} from "@mui/system";
-import useRoundStore from "@/app/store/RoundStore";
-import useOngoingMatchStore from "@/app/store/ongoingMatchStore";
+import useRoundStore from "@/app/_store/RoundStore";
+import useOngoingMatchStore from "@/app/_store/ongoingMatchStore";
 
 export default function TotalScoreSection() {
     const {ongoingMatch: {player_pair1_score, player_pair2_score}} = useOngoingMatchStore();

@@ -3,10 +3,10 @@
 import React from "react";
 import {Box, Typography} from "@mui/material";
 import TrumpCallerSection from "@/app/ongoing-match/[matchId]/ongoing-result/ui/TrumpCallerSection";
-import useResultStore from "@/app/store/bela/resultStore";
+import useResultStore from "@/app/_store/bela/resultStore";
 import {useParams, useRouter} from "next/navigation";
-import DoubleActionButton from "@/app/ui/DoubleActionButton";
-import useAnnouncementStore from "@/app/store/bela/announcementStore";
+import DoubleActionButton from "@/app/_ui/DoubleActionButton";
+import useAnnouncementStore from "@/app/_store/bela/announcementStore";
 
 export default function TrumpCallerPage({actionType}: ActionProps) {
   return (

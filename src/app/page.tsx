@@ -1,18 +1,29 @@
 "use client";
 
-import {logoutUser} from "@/app/fetchers/authentication/logout";
+import {logoutUser} from "@/app/_fetchers/authentication/logout";
 import {Box, Button} from "@mui/material";
 import {useRouter} from "next/navigation";
-import {getActiveRoundByPlayerIdAPI} from "@/app/fetchers/round/getActiveByPlayerId";
+import {getActiveRoundByPlayerIdAPI} from "@/app/_fetchers/round/getActiveByPlayerId";
 import Image from "next/image";
+import {useEffect, useState} from "react";
 
 export default function Home() {
   const router = useRouter();
+  const [isAdmin, setIsAdmin] = useState(false);
 
   async function logOut(): Promise<void> {
     await logoutUser();
     window.location.reload();
   }
+
+
+  useEffect(() => {
+    fetch('/api/session/is-admin')
+      .then((res) => res.json())
+      .then((data) => setIsAdmin(data))
+      .catch((err) => console.error('Failed to fetch session', err));
+  }, []);
+
 
   async function startGame(): Promise<void> {
     const {roundId, ongoingMatchId} = await getActiveRoundByPlayerIdAPI()
@@ -56,12 +67,16 @@ export default function Home() {
           boxSizing: "border-box",
         }}
       >
-        <Button variant="contained" color="primary" onClick={createRound}>
-          Create round
-        </Button>
-        <Button variant="contained" color="primary" onClick={createTeam}>
+        {isAdmin &&
+          <Button variant="contained" color="primary" onClick={createRound}>
+            Create round
+          </Button>
+        }
+        {isAdmin &&
+          <Button variant="contained" color="primary" onClick={createTeam}>
           Create team
         </Button>
+        }
         <Button variant="contained" color="primary" onClick={startGame}>
           Start game
         </Button>

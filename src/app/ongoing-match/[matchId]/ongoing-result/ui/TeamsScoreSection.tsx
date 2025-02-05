@@ -1,9 +1,9 @@
 import React from "react";
 import {Grid} from "@mui/system";
-import useResultStore from "@/app/store/bela/resultStore";
+import useResultStore from "@/app/_store/bela/resultStore";
 import {usePathname} from "next/navigation";
 import {TeamScoreBox} from "@/app/ongoing-match/[matchId]/ongoing-result/ui/TeamScoreBox";
-import useRoundStore from "@/app/store/RoundStore";
+import useRoundStore from "@/app/_store/RoundStore";
 
 type ScoreSectionType = {
     team1Color: string;

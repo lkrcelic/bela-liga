@@ -4,9 +4,9 @@ import React from "react";
 import {Box} from "@mui/material";
 import AnnouncementSection from "@/app/ongoing-match/[matchId]/ongoing-result/ui/AnnouncementsSection";
 import PlayersAnnouncementSection from "@/app/ongoing-match/[matchId]/ongoing-result/ui/PlayersAnnouncementSection";
-import useAnnouncementStore from "@/app/store/bela/announcementStore";
+import useAnnouncementStore from "@/app/_store/bela/announcementStore";
 import {useParams, useRouter} from "next/navigation";
-import DoubleActionButton from "@/app/ui/DoubleActionButton";
+import DoubleActionButton from "@/app/_ui/DoubleActionButton";
 import {ActionProps} from "@/app/ongoing-match/[matchId]/ongoing-result/ui/pages/TrumpCallerPage";
 
 export default function AnnouncementPage({actionType}: ActionProps) {

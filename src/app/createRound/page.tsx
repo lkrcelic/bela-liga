@@ -5,7 +5,7 @@ import Dropdown, {DropdownOption} from "@/app/createRound/ui/Dropdown";
 import {useState} from "react";
 import SelectTable, {TableEntry} from "@/app/createRound/ui/SelectTable";
 import {Team} from "@prisma/client";
-import {createRoundsAPI} from "../fetchers/round/createRounds";
+import {createRoundsAPI} from "@/app/_fetchers/round/createRounds";
 import OpponentsTable from "./ui/OpponentsTable";
 
 interface LeagueTeam {

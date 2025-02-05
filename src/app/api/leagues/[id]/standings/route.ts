@@ -1,7 +1,7 @@
 import {NextRequest, NextResponse} from "next/server";
-import {getAuthorizedUser} from "@/app/lib/auth";
-import {STATUS} from "@/app/lib/statusCodes";
-import {getLeagueStandings} from "@/app/lib/service/league/getStandings";
+import {getAuthorizedUser} from "@/app/_lib/auth";
+import {STATUS} from "@/app/_lib/statusCodes";
+import {getLeagueStandings} from "@/app/_lib/service/league/getStandings";
 
 export async function GET(request: NextRequest, {params}: { params: { id: string } }) {
   const {id} = params;

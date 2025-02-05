@@ -1,6 +1,6 @@
 import {NextResponse} from "next/server";
-import {STATUS} from "@/app/lib/statusCodes";
-import {getOneRound} from "@/app/lib/service/round/getOne";
+import {STATUS} from "@/app/_lib/statusCodes";
+import {getOneRound} from "@/app/_lib/service/round/getOne";
 
 export async function GET(request: Request, {params}: { params: { id: string } }) {
     const {id} = params;

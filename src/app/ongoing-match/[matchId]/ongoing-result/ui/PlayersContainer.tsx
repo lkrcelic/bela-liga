@@ -1,8 +1,8 @@
 import React from "react";
 import {Box} from "@mui/material";
 import {Grid} from "@mui/system";
-import {PlayerPairResponse} from "@/app/interfaces/playerPair";
-import {PlayerResponse} from "@/app/interfaces/player";
+import {PlayerPairResponse} from "@/app/_interfaces/playerPair";
+import {PlayerResponse} from "@/app/_interfaces/player";
 
 type PlayersContainerProps = {
     playerPair1?: PlayerPairResponse;

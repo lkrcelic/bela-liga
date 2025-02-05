@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import theme from "@/app/styles/theme";
+import theme from "@/app/_styles/theme";
 import {ThemeProvider} from "@mui/system";
 import {Box} from "@mui/material";
 

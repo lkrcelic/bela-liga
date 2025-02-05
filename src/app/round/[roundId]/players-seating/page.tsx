@@ -5,8 +5,8 @@ import PlayersAroundTable from "@/app/round/ui/PlayersAroundTable";
 import {Box, Typography} from "@mui/material";
 import ActionButtons from "@/app/round/ui/ActionButtons";
 import {useParams} from "next/navigation";
-import useRoundStore from "@/app/store/RoundStore";
-import {getRoundDataAPI} from "@/app/fetchers/round/getOne";
+import useRoundStore from "@/app/_store/RoundStore";
+import {getRoundDataAPI} from "@/app/_fetchers/round/getOne";
 
 export default function PlayersSeating() {
     const {roundId} = useParams();

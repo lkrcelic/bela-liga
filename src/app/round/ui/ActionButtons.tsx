@@ -1,10 +1,10 @@
 "use client";
 
-import DoubleActionButton from "@/app/ui/DoubleActionButton";
+import DoubleActionButton from "@/app/_ui/DoubleActionButton";
 import {useParams, useRouter} from "next/navigation";
 import React from "react";
-import useOngoingMatchStore from "@/app/store/ongoingMatchStore";
-import {createOngoingMatchAPI} from "@/app/fetchers/ongoingMatch/create";
+import useOngoingMatchStore from "@/app/_store/ongoingMatchStore";
+import {createOngoingMatchAPI} from "@/app/_fetchers/ongoingMatch/create";
 
 export default function ActionButtons() {
     const router = useRouter();

@@ -3,13 +3,13 @@
 import React, {useState} from 'react';
 import {Box, Typography} from '@mui/material';
 import {useParams, useRouter} from "next/navigation";
-import {getRoundDataAPI} from "@/app/fetchers/round/getOne";
-import useRoundStore from "@/app/store/RoundStore";
+import {getRoundDataAPI} from "@/app/_fetchers/round/getOne";
+import useRoundStore from "@/app/_store/RoundStore";
 import {Grid} from "@mui/system";
-import SingleActionButton from "@/app/ui/SingleActionButton";
-import {finishRoundAPI} from "@/app/fetchers/round/finish";
-import {getAllMatchesByRoundIdAPI} from "@/app/fetchers/match/getAllByRoundId";
-import useOngoingMatchStore from "@/app/store/ongoingMatchStore";
+import SingleActionButton from "@/app/_ui/SingleActionButton";
+import {finishRoundAPI} from "@/app/_fetchers/round/finish";
+import {getAllMatchesByRoundIdAPI} from "@/app/_fetchers/match/getAllByRoundId";
+import useOngoingMatchStore from "@/app/_store/ongoingMatchStore";
 
 const MobileScoreBoard = () => {
   const router = useRouter();

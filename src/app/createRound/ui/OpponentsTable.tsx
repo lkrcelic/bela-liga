@@ -2,8 +2,8 @@
 
 import {useState, useEffect} from "react";
 import {Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper} from "@mui/material";
-import {getRoundsByRoundNumber} from "@/app/fetchers/round/getRoundsByRoundNumber";
-import {RoundMatchup} from "@/app/lib/service/round/getRoundMatchups";
+import {getRoundsByRoundNumber} from "@/app/_fetchers/round/getRoundsByRoundNumber";
+import {RoundMatchup} from "@/app/_lib/service/round/getRoundMatchups";
 
 export interface MatchupTableEntry {
   id: number;

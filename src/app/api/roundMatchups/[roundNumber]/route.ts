@@ -1,6 +1,6 @@
 import {NextRequest, NextResponse} from "next/server";
-import {STATUS} from "@/app/lib/statusCodes";
-import {getRoundMatchups} from "@/app/lib/service/round/getRoundMatchups";
+import {STATUS} from "@/app/_lib/statusCodes";
+import {getRoundMatchups} from "@/app/_lib/service/round/getRoundMatchups";
 
 export async function GET(request: NextRequest, {params}: {params: {roundNumber: string}}) {
   try {

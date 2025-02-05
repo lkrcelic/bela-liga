@@ -1,12 +1,12 @@
 // src/app/api/teams/route.ts
 
-import {prisma} from "@/app/lib/prisma";
-import {TeamRequestValidation, TeamsResponseValidation} from "@/app/interfaces/team";
+import {prisma} from "@/app/_lib/prisma";
+import {TeamRequestValidation, TeamsResponseValidation} from "@/app/_interfaces/team";
 import {z} from "zod";
 import {NextRequest, NextResponse} from "next/server";
-import {STATUS} from "@/app/lib/statusCodes";
-import {getAuthorizedUser} from "@/app/lib/auth";
-import {createTeam} from "@/app/lib/service/team/create";
+import {STATUS} from "@/app/_lib/statusCodes";
+import {getAuthorizedUser} from "@/app/_lib/auth";
+import {createTeam} from "@/app/_lib/service/team/create";
 
 export async function GET() {
   try {

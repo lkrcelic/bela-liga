@@ -1,12 +1,12 @@
 import React from 'react';
 import {ButtonBase, Typography} from '@mui/material';
 import {Grid} from "@mui/system";
-import useOngoingMatchStore from "@/app/store/ongoingMatchStore";
+import useOngoingMatchStore from "@/app/_store/ongoingMatchStore";
 import {usePathname, useRouter} from "next/navigation";
-import {getOngoingBelaResultAPI} from "@/app/fetchers/ongoingBelaResult/getOne";
-import useResultStore from "@/app/store/bela/resultStore";
-import useAnnouncementStore from "@/app/store/bela/announcementStore";
-import {BelaPlayerAnnouncementResponse} from "@/app/interfaces/belaPlayerAnnouncement";
+import {getOngoingBelaResultAPI} from "@/app/_fetchers/ongoingBelaResult/getOne";
+import useResultStore from "@/app/_store/bela/resultStore";
+import useAnnouncementStore from "@/app/_store/bela/announcementStore";
+import {BelaPlayerAnnouncementResponse} from "@/app/_interfaces/belaPlayerAnnouncement";
 
 export default function ResultsDisplay() {
     const router = useRouter();

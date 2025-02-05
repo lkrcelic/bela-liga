@@ -1,9 +1,9 @@
 "use client";
 
 import {useState} from "react";
-import styles from "@/app/styles/Form.modules.css";
-import {PlayerCreate, PlayerCreateInterface} from "@/app/interfaces/player";
-import {signUp} from "@/app/fetchers/authentication/signup";
+import styles from "@/app/_styles/Form.modules.css";
+import {PlayerCreate, PlayerCreateInterface} from "@/app/_interfaces/player";
+import {signUp} from "@/app/_fetchers/authentication/signup";
 
 type FormField = keyof typeof PlayerCreate.shape;
 type ErrorState = Partial<Record<FormField, string>>;

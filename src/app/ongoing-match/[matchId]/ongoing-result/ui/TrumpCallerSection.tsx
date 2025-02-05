@@ -1,10 +1,10 @@
 "use client";
 
 import React from "react";
-import useResultStore from "@/app/store/bela/resultStore";
+import useResultStore from "@/app/_store/bela/resultStore";
 import {Button, Typography} from "@mui/material";
 import PlayersContainer from "@/app/ongoing-match/[matchId]/ongoing-result/ui/PlayersContainer";
-import useOngoingMatchStore from "@/app/store/ongoingMatchStore";
+import useOngoingMatchStore from "@/app/_store/ongoingMatchStore";
 
 export default function TrumpCallerSection() {
   const {ongoingMatch: {playerPair1, playerPair2}} = useOngoingMatchStore();

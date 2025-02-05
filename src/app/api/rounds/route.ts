@@ -1,10 +1,10 @@
 import {NextRequest, NextResponse} from "next/server";
-import {STATUS} from "@/app/lib/statusCodes";
-import {matchTeams} from "@/app/lib/matching/matching";
-import {getLeagueTeamsWithScores} from "@/app/lib/helpers/query/leagueScores";
-import {CreateRound} from "@/app/interfaces/round";
-import {checkCurrentUserIsAdmin} from "@/app/lib/auth";
-import {insertPairRounds} from "@/app/lib/service/round/insertPairRounds";
+import {STATUS} from "@/app/_lib/statusCodes";
+import {matchTeams} from "@/app/_lib/matching/matching";
+import {getLeagueTeamsWithScores} from "@/app/_lib/helpers/query/leagueScores";
+import {CreateRound} from "@/app/_interfaces/round";
+import {checkCurrentUserIsAdmin} from "@/app/_lib/auth";
+import {insertPairRounds} from "@/app/_lib/service/round/insertPairRounds";
 
 export async function POST(request: Request) {
   try {

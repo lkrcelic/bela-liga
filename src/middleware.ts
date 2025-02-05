@@ -1,10 +1,10 @@
 import {NextResponse} from "next/server";
 import type {NextRequest} from "next/server";
-import {verifyCookie} from "@/app/lib/signCookie";
-import {handleLogin} from "@/app/lib/rateLimiting/loginLimiting";
+import {verifyCookie} from "@/app/_lib/signCookie";
+import {handleLogin} from "@/app/_lib/rateLimiting/loginLimiting";
 import {Cookie} from "lucia";
-import {STATUS} from "@/app/lib/statusCodes";
-import {isApiLimited} from "./app/lib/rateLimiting/requestLimiting";
+import {STATUS} from "@/app/_lib/statusCodes";
+import {isApiLimited} from "@/app/_lib/rateLimiting/requestLimiting";
 
 export async function middleware(req: NextRequest) {
   if (

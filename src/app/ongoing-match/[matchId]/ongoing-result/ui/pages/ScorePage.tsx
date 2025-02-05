@@ -3,13 +3,13 @@
 import React from "react";
 import {Box} from "@mui/material";
 import DigitGrid from "@/app/ongoing-match/[matchId]/ongoing-result/ui/DigitGrid";
-import useResultStore from "@/app/store/bela/resultStore";
-import useOngoingMatchStore from "@/app/store/ongoingMatchStore";
-import useAnnouncementStore from "@/app/store/bela/announcementStore";
+import useResultStore from "@/app/_store/bela/resultStore";
+import useOngoingMatchStore from "@/app/_store/ongoingMatchStore";
+import useAnnouncementStore from "@/app/_store/bela/announcementStore";
 import {useParams, useRouter} from "next/navigation";
-import DoubleActionButton from "@/app/ui/DoubleActionButton";
-import {updateOngoingBelaResultAPI} from "@/app/fetchers/ongoingBelaResult/updateOne";
-import {createOngoingBelaResultAPI} from "@/app/fetchers/ongoingBelaResult/create";
+import DoubleActionButton from "@/app/_ui/DoubleActionButton";
+import {updateOngoingBelaResultAPI} from "@/app/_fetchers/ongoingBelaResult/updateOne";
+import {createOngoingBelaResultAPI} from "@/app/_fetchers/ongoingBelaResult/create";
 import {ActionProps} from "@/app/ongoing-match/[matchId]/ongoing-result/ui/pages/TrumpCallerPage";
 
 export default function ScorePage({actionType}: ActionProps) {

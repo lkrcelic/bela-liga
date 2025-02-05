@@ -1,7 +1,7 @@
-import {OngoingMatchRequestValidation} from "@/app/interfaces/match";
+import {OngoingMatchRequestValidation} from "@/app/_interfaces/match";
 import {NextResponse} from "next/server";
-import {STATUS} from "@/app/lib/statusCodes";
-import {createOngoingMatch} from "@/app/lib/service/ongoingMatch/create";
+import {STATUS} from "@/app/_lib/statusCodes";
+import {createOngoingMatch} from "@/app/_lib/service/ongoingMatch/create";
 
 export async function POST(request: Request) {
     try {

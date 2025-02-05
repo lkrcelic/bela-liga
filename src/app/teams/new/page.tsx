@@ -1,36 +1,36 @@
 "use client"
 
-import React, {useState} from 'react';
+import React, {useCallback, useState} from 'react';
 import {Autocomplete, Box, Button, TextField} from '@mui/material';
 import Image from "next/image";
-import {createTeamAPI} from "@/app/fetchers/team/create";
+import {createTeamAPI} from "@/app/_fetchers/team/create";
+import {searchPlayersAPI} from "@/app/_fetchers/player/search";
 
 export default function CreateTeam() {
+  const [players, setPlayers] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     team_name: '',
     founder_1: null,
     founder_2: null,
   });
 
-  const players = [
-    {id: 7, name: 'Player One'},
-    {id: 8, name: 'Player Two'},
-    {id: 4, name: 'Player Three'},
-  ];
-
+  const fetchPlayers  = useCallback(async (value: string) => {
+    if (value.length >= 2) {
+      setLoading(true);
+      const data = await searchPlayersAPI(value);
+      setPlayers(Array.isArray(data) ? data : []);
+      setLoading(false);
+    }
+  }, []);
 
   const handleInputChange = (e) => {
     const {name, value} = e.target;
     setFormData({...formData, [name]: value});
-    console.log(formData)
-
   };
 
   const handleAutocompleteChange = (name, value) => {
-    console.log("Name: ", name)
-    console.log("value: ", value)
     setFormData({...formData, [name]: value});
-    console.log(formData)
   };
 
   const handleSubmit = async (e) => {
@@ -44,6 +44,9 @@ export default function CreateTeam() {
     });
   };
 
+  const getFilteredPlayers = (players, excludePlayerId) => {
+    return excludePlayerId ? players.filter(player => player.id !== excludePlayerId) : players;
+  };
 
   return (
     <>
@@ -52,7 +55,7 @@ export default function CreateTeam() {
                alt="Logo"
                width={300}
                height={300}
-               style={{width: '100%', height: 'auto', maxWidth: "600px"}}
+               style={{width: '80%', height: 'auto', maxWidth: "600px"}}
         />
       </Box>
       <Box
@@ -80,10 +83,11 @@ export default function CreateTeam() {
           required
         />
         <Autocomplete
-          //options={players.filter(player => player.id !== formData.founder_id2?.id)}
-          options={players}
-          getOptionLabel={(option) => option.name}
+          options={getFilteredPlayers(players, formData?.founder_2?.id)}
+          getOptionLabel={(option) => `${option.username} (${option.first_name} ${option.last_name})`}
           value={formData.founder_1}
+          loading={loading}
+          onInputChange={(e,value) => fetchPlayers(value)}
           onChange={(e, value) => handleAutocompleteChange('founder_1', value)}
           renderInput={(params) => (
             <TextField
@@ -110,10 +114,11 @@ export default function CreateTeam() {
           }}
         />
         <Autocomplete
-          //options={players.filter(player => player.id !== formData.founder_id1?.id)}
-          options={players}
-          getOptionLabel={(option) => option.name}
+          options={getFilteredPlayers(players, formData?.founder_1?.id)}
+          getOptionLabel={(option) => `${option.username} (${option.first_name} ${option.last_name})`}
           value={formData.founder_2}
+          loading={loading}
+          onInputChange={(e,value) => fetchPlayers(value)}
           onChange={(e, value) => handleAutocompleteChange('founder_2', value)}
           renderInput={(params) => (
             <TextField
@@ -142,7 +147,6 @@ export default function CreateTeam() {
       </Box>
       <Box sx={{gridArea: "actions"}}>
         <Button
-          type="submit"
           onClick={(e) => handleSubmit(e)}
           variant="contained"
           color="primary"

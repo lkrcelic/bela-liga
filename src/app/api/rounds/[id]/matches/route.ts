@@ -1,6 +1,6 @@
 import {NextResponse} from "next/server";
-import {STATUS} from "@/app/lib/statusCodes";
-import {getAllMatchesByRoundId} from "@/app/lib/service/match/getAllByRoundId";
+import {STATUS} from "@/app/_lib/statusCodes";
+import {getAllMatchesByRoundId} from "@/app/_lib/service/match/getAllByRoundId";
 
 export async function GET(request: Request, {params}: { params: { id: string } }) {
   const {id} = params;

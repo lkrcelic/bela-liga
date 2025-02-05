@@ -1,10 +1,10 @@
 "use client";
 
 import React from "react";
-import useAnnouncementStore from "@/app/store/bela/announcementStore";
+import useAnnouncementStore from "@/app/_store/bela/announcementStore";
 import {Button, Typography} from "@mui/material";
 import PlayersContainer from "@/app/ongoing-match/[matchId]/ongoing-result/ui/PlayersContainer";
-import useOngoingMatchStore from "@/app/store/ongoingMatchStore";
+import useOngoingMatchStore from "@/app/_store/ongoingMatchStore";
 
 export default function PlayersAnnouncementSection() {
     const {

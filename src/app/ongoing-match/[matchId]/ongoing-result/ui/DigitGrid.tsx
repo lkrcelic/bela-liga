@@ -1,7 +1,7 @@
 import React from "react";
 import {Button} from "@mui/material";
 import {Grid} from "@mui/system";
-import useResultStore from "@/app/store/bela/resultStore";
+import useResultStore from "@/app/_store/bela/resultStore";
 
 const DigitGrid = () => {
     const setGamePoints = useResultStore((state) => state.setGamePoints);
