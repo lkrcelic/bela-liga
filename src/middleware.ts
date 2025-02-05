@@ -1,5 +1,5 @@
-import {NextResponse} from "next/server";
 import type {NextRequest} from "next/server";
+import {NextResponse} from "next/server";
 import {verifyCookie} from "@/app/_lib/signCookie";
 import {handleLogin} from "@/app/_lib/rateLimiting/loginLimiting";
 import {Cookie} from "lucia";
@@ -11,7 +11,8 @@ export async function middleware(req: NextRequest) {
     !(
       req.nextUrl.pathname.startsWith("/api") ||
       req.nextUrl.pathname.startsWith("/login") ||
-      req.nextUrl.pathname.startsWith("/signup")
+      req.nextUrl.pathname.startsWith("/signup") ||
+      req.nextUrl.pathname.startsWith("/_next")
     )
   ) {
     const authorized = await authenticationMiddleware(req);
