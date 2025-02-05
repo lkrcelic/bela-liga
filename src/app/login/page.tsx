@@ -20,10 +20,10 @@ export default function LogIn() {
   return (
     <>
       <Box sx={{gridArea: "top", alignItems: "center", display: "flex", justifyContent: "center"}}>
-        <Image src="/TitleBackground.png"
+        <Image src="/TitleBackgroundSponsors.png"
                alt="Logo"
-               width={300}
-               height={300}
+               width={500}
+               height={500}
                style={{width: '80%', height: 'auto', maxWidth: "600px"}}
         />
       </Box>
