@@ -1,5 +1,4 @@
 import {NextRequest, NextResponse} from "next/server";
-import {getAuthorizedUser} from "@/app/_lib/auth";
 import {STATUS} from "@/app/_lib/statusCodes";
 import {getLeagueStandings} from "@/app/_lib/service/league/getStandings";
 
@@ -7,11 +6,6 @@ export async function GET(request: NextRequest, {params}: { params: { id: string
   const {id} = params;
 
   try {
-    const user = await getAuthorizedUser(request);
-    if (!user) {
-      return NextResponse.json({message: "You are not authorized for this action."}, {status: STATUS.NotAllowed});
-    }
-
     const teamScores = await getLeagueStandings(Number(id));
 
     return NextResponse.json(teamScores, {status: STATUS.OK});

@@ -51,7 +51,6 @@ export default function SignUpForm({onFormSubmit}: SignUpFormProperties) {
   const handleChange = (e: unknown) => {
     const {name, value} = e.target;
     setFormData({...formData, [name]: value});
-    console.log(formData)
     const fieldName = name as FormField;
     try {
       PlayerCreate.pick({[fieldName]: true} as Record<FormField, true>).parse({[name]: value});
@@ -104,18 +103,15 @@ export default function SignUpForm({onFormSubmit}: SignUpFormProperties) {
   async function handleSubmit(e: unknown) {
     e.preventDefault();
     if (!checkAllFieldsPopulated()) return;
-    console.log("proso 1")
 
     // check if password and confirm password match
     if (formData.password != confirm.password) {
       setConfirmPassword({...confirm, matching: false});
       return;
     }
-    console.log("proos 2")
 
     try {
       const parsedData = PlayerCreate.parse(formData);
-      console.log("proso 3")
       const res = await signUp(parsedData);
       if (onFormSubmit) onFormSubmit(res.success);
       if (res.success) {

@@ -12,6 +12,7 @@ export async function middleware(req: NextRequest) {
       req.nextUrl.pathname.startsWith("/api") ||
       req.nextUrl.pathname.startsWith("/login") ||
       req.nextUrl.pathname.startsWith("/signup") ||
+      req.nextUrl.pathname.startsWith("/league/1/standings") ||
       req.nextUrl.pathname.startsWith('/_next/') ||
       req.nextUrl.pathname.startsWith('/static/') ||
       req.nextUrl.pathname.match(/\.(png|jpg|jpeg|gif|svg)$/)
