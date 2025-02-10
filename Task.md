@@ -10,3 +10,7 @@
 ## TODOs
 - Treba refactorirati način kako rade anauncmentsi pametniji modeli korekcije
 - zabrani unos u isto vrijeme preko dva uređaja
+
+
+## DEPLOYMENT
+Zdenka madi datum rođenja i username 

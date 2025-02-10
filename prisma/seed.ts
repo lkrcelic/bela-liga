@@ -11,7 +11,7 @@ async function main() {
       // password is 'sifra'
       password_hash:
         "$argon2id$v=19$m=65536,t=3,p=4$pDs5fiTYGTo0XSEt/3Cf7w$x8wFo37pR763HFqVMKupfveO0dBebHhLweI15eac8EI",
-      email: "zblabelatronika@example.com",
+      email: "lovro.krcelic@gmail.com",
       player_role: "ADMIN",
       first_name: "Marko",
       last_name: "Blazevic",
@@ -27,8 +27,8 @@ async function main() {
         "$argon2id$v=19$m=65536,t=3,p=4$pDs5fiTYGTo0XSEt/3Cf7w$x8wFo37pR763HFqVMKupfveO0dBebHhLweI15eac8EI",
       email: "jane@example.com",
       player_role: "PLAYER",
-      first_name: "Jane",
-      last_name: "Smith",
+      first_name: "Player",
+      last_name: "playric",
       birth_date: "2000-01-15T00:00:00.000Z",
     },
   });
@@ -95,11 +95,11 @@ async function main() {
 
   const player7 = await prisma.player.create({
     data: {
-      username: "Mujo",
+      username: "Mujo123",
       password_hash: "securepassword",
       email: "huseineee1@example.com",
       player_role: "PLAYER",
-      first_name: "Muje",
+      first_name: "Mujo",
       last_name: "Mujic",
       birth_date: "2000-01-15T00:00:00.000Z",
     },
@@ -107,7 +107,7 @@ async function main() {
 
   const player8 = await prisma.player.create({
     data: {
-      username: "Haso",
+      username: "Haso123",
       password_hash: "securepassword",
       email: "huseineee2@example.com",
       player_role: "PLAYER",
@@ -125,8 +125,8 @@ async function main() {
         "$argon2id$v=19$m=65536,t=3,p=4$pDs5fiTYGTo0XSEt/3Cf7w$x8wFo37pR763HFqVMKupfveO0dBebHhLweI15eac8EI",
       email: "jan3e@example.com",
       player_role: "PLAYER",
-      first_name: "Jane",
-      last_name: "Smith",
+      first_name: "Matej Magud Četvrti",
+      last_name: "Magud Magijević",
       birth_date: "2000-01-15T00:00:00.000Z",
     },
   });
@@ -139,92 +139,92 @@ async function main() {
         "$argon2id$v=19$m=65536,t=3,p=4$pDs5fiTYGTo0XSEt/3Cf7w$x8wFo37pR763HFqVMKupfveO0dBebHhLweI15eac8EI",
       email: "jan4e@example.com",
       player_role: "PLAYER",
-      first_name: "Jane",
-      last_name: "Smith",
+      first_name: "Nera",
+      last_name: "Nerikovic Petričević",
       birth_date: "2000-01-15T00:00:00.000Z",
     },
   });
 
   const player11 = await prisma.player.create({
     data: {
-      username: "Marić",
+      username: "Marić123",
       // password is 'sifra'
       password_hash:
         "$argon2id$v=19$m=65536,t=3,p=4$pDs5fiTYGTo0XSEt/3Cf7w$x8wFo37pR763HFqVMKupfveO0dBebHhLweI15eac8EI",
       email: "jan5@example.com",
       player_role: "PLAYER",
-      first_name: "Jane",
-      last_name: "Smith",
+      first_name: "Noa Petar Ivo",
+      last_name: "Marić",
       birth_date: "2000-01-15T00:00:00.000Z",
     },
   });
 
   const player12 = await prisma.player.create({
     data: {
-      username: "Josipović",
+      username: "Josipović123",
       // password is 'sifra'
       password_hash:
         "$argon2id$v=19$m=65536,t=3,p=4$pDs5fiTYGTo0XSEt/3Cf7w$x8wFo37pR763HFqVMKupfveO0dBebHhLweI15eac8EI",
       email: "jan6e@example.com",
       player_role: "PLAYER",
-      first_name: "Jane",
-      last_name: "Smith",
+      first_name: "Bruno",
+      last_name: "Josipović",
       birth_date: "2000-01-15T00:00:00.000Z",
     },
   });
 
   const player13 = await prisma.player.create({
     data: {
-      username: "Raguz",
+      username: "Raguz123",
       // password is 'sifra'
       password_hash:
         "$argon2id$v=19$m=65536,t=3,p=4$pDs5fiTYGTo0XSEt/3Cf7w$x8wFo37pR763HFqVMKupfveO0dBebHhLweI15eac8EI",
       email: "jane7@example.com",
       player_role: "PLAYER",
-      first_name: "Jane",
-      last_name: "Smith",
+      first_name: "Jakov",
+      last_name: "Raguž",
       birth_date: "2000-01-15T00:00:00.000Z",
     },
   });
 
   const player14 = await prisma.player.create({
     data: {
-      username: "Curic",
+      username: "Curic123",
       // password is 'sifra'
       password_hash:
         "$argon2id$v=19$m=65536,t=3,p=4$pDs5fiTYGTo0XSEt/3Cf7w$x8wFo37pR763HFqVMKupfveO0dBebHhLweI15eac8EI",
       email: "jane8@example.com",
       player_role: "PLAYER",
-      first_name: "Jane",
-      last_name: "Smith",
+      first_name: "Fran",
+      last_name: "Curic",
       birth_date: "2000-01-15T00:00:00.000Z",
     },
   });
 
   const player15 = await prisma.player.create({
     data: {
-      username: "Vid",
+      username: "Vid123",
       // password is 'sifra'
       password_hash:
         "$argon2id$v=19$m=65536,t=3,p=4$pDs5fiTYGTo0XSEt/3Cf7w$x8wFo37pR763HFqVMKupfveO0dBebHhLweI15eac8EI",
       email: "jane9@example.com",
       player_role: "PLAYER",
-      first_name: "Jane",
-      last_name: "Smith",
+      first_name: "Vid",
+      last_name: "Mihovilović",
       birth_date: "2000-01-15T00:00:00.000Z",
     },
   });
 
   const player16 = await prisma.player.create({
     data: {
-      username: "Roko",
+      username: "Roko123",
       // password is 'sifra'
       password_hash:
         "$argon2id$v=19$m=65536,t=3,p=4$pDs5fiTYGTo0XSEt/3Cf7w$x8wFo37pR763HFqVMKupfveO0dBebHhLweI15eac8EI",
       email: "jane10@example.com",
       player_role: "PLAYER",
-      first_name: "Jane",
-      last_name: "Smith",
+      first_name: "Roko",
+      last_name: "Šučević",
       birth_date: "2000-01-15T00:00:00.000Z",
     },
   });

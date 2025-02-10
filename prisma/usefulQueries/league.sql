@@ -1,4 +1,4 @@
--- Insert all teams that are not in the league with id ? to the league
+-- Insert all teams that are not in the league with "league_id" to the league
 INSERT INTO "LeagueTeam" (league_id, team_id)
 SELECT 1, t.team_id
 FROM "Team" t

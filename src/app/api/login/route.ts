@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
     if (currentUser) {
       return alreadyLoggedIn;
     }
-    const existingUser = await prisma.player.findUnique({where: {username: user.username}});
+    const existingUser = await prisma.player.findFirst({where: {OR: [{username: user.username}, {email: user.username}]}});
     if (!existingUser) {
       return notFoundResponse;
     }

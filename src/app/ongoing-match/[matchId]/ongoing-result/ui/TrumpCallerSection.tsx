@@ -5,6 +5,8 @@ import useResultStore from "@/app/_store/bela/resultStore";
 import {Button, Typography} from "@mui/material";
 import PlayersContainer from "@/app/ongoing-match/[matchId]/ongoing-result/ui/PlayersContainer";
 import useOngoingMatchStore from "@/app/_store/ongoingMatchStore";
+import {PlayerPartialResponse} from "@/app/_interfaces/player";
+import PlayerName from "@/app/_ui/PlayerName";
 
 export default function TrumpCallerSection() {
   const {ongoingMatch: {playerPair1, playerPair2}} = useOngoingMatchStore();
@@ -15,7 +17,7 @@ export default function TrumpCallerSection() {
       {(player) => (
         <TrumpCallerButton
           key={player?.id}
-          playerName={player?.username}
+          player={player}
           color={[playerPair1?.player_id1, playerPair1?.player_id2].includes(player?.id) ? "team1" : "team2"}
           onClick={() => setTrumpCallerId(player?.id)}
           isTrumpCaller={player?.id === trump_caller_id}
@@ -26,13 +28,13 @@ export default function TrumpCallerSection() {
 }
 
 type PlayerBoxProps = {
-  playerName?: string;
+  player: PlayerPartialResponse;
   color: string;
   isTrumpCaller: boolean;
   onClick?: () => void;
 };
 
-function TrumpCallerButton({playerName, color, isTrumpCaller, onClick}: PlayerBoxProps) {
+function TrumpCallerButton({player, color, isTrumpCaller, onClick}: PlayerBoxProps) {
   return (
     <Button
       onClick={onClick}
@@ -49,7 +51,9 @@ function TrumpCallerButton({playerName, color, isTrumpCaller, onClick}: PlayerBo
         textAlign: "center",
       }}
     >
-      <Typography variant="subtitle2">{playerName}</Typography>
+      <Typography variant="subtitle2">
+        <PlayerName firstName={player.first_name} lastName={player.last_name} />
+      </Typography>
     </Button>
   );
 }

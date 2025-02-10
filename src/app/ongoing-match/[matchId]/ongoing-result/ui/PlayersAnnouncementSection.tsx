@@ -5,6 +5,8 @@ import useAnnouncementStore from "@/app/_store/bela/announcementStore";
 import {Button, Typography} from "@mui/material";
 import PlayersContainer from "@/app/ongoing-match/[matchId]/ongoing-result/ui/PlayersContainer";
 import useOngoingMatchStore from "@/app/_store/ongoingMatchStore";
+import {PlayerPartialResponse} from "@/app/_interfaces/player";
+import PlayerName from "@/app/_ui/PlayerName";
 
 export default function PlayersAnnouncementSection() {
     const {
@@ -19,7 +21,7 @@ export default function PlayersAnnouncementSection() {
             {(player) => (
                 <PlayerAnnouncementBox
                     key={player?.id}
-                    playerName={player?.username}
+                    player={player}
                     announcementValue={
                         playersAnnouncements[player?.id].totalAnnouncements || 0
                     }
@@ -33,7 +35,7 @@ export default function PlayersAnnouncementSection() {
 }
 
 type AnnouncementBoxProps = {
-    playerName: string | undefined;
+    player: PlayerPartialResponse;
     announcementValue: number | string;
     teamColor: string;
     isActive: boolean;
@@ -41,7 +43,7 @@ type AnnouncementBoxProps = {
 };
 
 function PlayerAnnouncementBox({
-                                   playerName,
+                                   player,
                                    announcementValue,
                                    teamColor,
                                    onClick,
@@ -62,9 +64,12 @@ function PlayerAnnouncementBox({
                 alignItems: "center",
                 textAlign: "center",
                 cursor: "pointer",
+                paddingX: "5px",
             }}
         >
-            <Typography variant="subtitle2">{playerName}</Typography>
+            <Typography variant="subtitle2">
+              <PlayerName firstName={player.first_name} lastName={player.last_name} />
+            </Typography>
             <Typography variant="h6">{announcementValue}</Typography>
         </Button>
     );

@@ -60,7 +60,7 @@ export default function PlayersSeating() {
         }}
       >
         <Box
-          sx={{display: "inline-block", width: "100%", minWidth: "550px", maxWidth: "1200px", overflow: "auto"}}
+          sx={{display: "inline-block", width: "100%", minWidth: "550px", overflow: "auto"}}
         >
           <Grid
             container

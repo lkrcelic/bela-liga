@@ -9,7 +9,7 @@ export default function RootLayout({children,}: Readonly<{ children: React.React
   return (
     <html lang="en">
     <ThemeProvider theme={theme}>
-      <body style={{backgroundColor: '#F5F5F5'}}>
+      <body style={{margin: "auto", maxWidth: '1100px', backgroundColor: '#F5F5F5'}}>
       <Box
         sx={{
           display: "grid",

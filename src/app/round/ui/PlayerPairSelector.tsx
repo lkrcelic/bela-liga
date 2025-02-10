@@ -5,6 +5,7 @@ import useRoundStore from "@/app/_store/RoundStore";
 import {PlayerPartialResponse} from "@/app/_interfaces/player";
 import {TeamResponse} from "@/app/_interfaces/team";
 import useOngoingMatchStore from "@/app/_store/ongoingMatchStore";
+import PlayerName from "@/app/_ui/PlayerName";
 
 export default function PlayerPairSelector() {
   const {roundData: {team1, team2}} = useRoundStore();
@@ -118,7 +119,8 @@ function TeamPlayerSelector({
           borderRadius: '8px',
         }}
       >
-        {selectedPlayer ? selectedPlayer.username : "Izaberi igrača"}
+        {selectedPlayer ?
+          <PlayerName firstName={selectedPlayer.first_name} lastName={selectedPlayer.last_name}/> : "Izaberi igrača"}
       </Button>
       <Menu
         anchorEl={anchorEl}
@@ -143,7 +145,7 @@ function TeamPlayerSelector({
               key={p.player.id}
               onClick={() => handleMenuItemClick(p.player)}
             >
-              {p.player.username}
+              <PlayerName firstName={p.player.first_name} lastName={p.player.last_name} short={false}/>
             </MenuItem>
           ))}
       </Menu>

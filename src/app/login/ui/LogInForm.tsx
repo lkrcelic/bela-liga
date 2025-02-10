@@ -68,7 +68,7 @@ export default function LogInForm({onFormSubmit}: LogInFormProperties) {
 
   return (
     <form onSubmit={handleSubmit} className={styles.form}>
-      <label htmlFor="username">Username</label>
+      <label htmlFor="username">Username or Email</label>
       <input type="text" id="username" name="username" value={formData.username} onChange={handleChange} />
       {errors.username && <p className="error">{errors.username}</p>}
       <label htmlFor="password" className={styles.label}>

@@ -99,17 +99,17 @@ export default function CreateTeam() {
                 bgcolor: 'secondary.main',
                 borderRadius: '20px',
                 '& .MuiOutlinedInput-root': {
-                  borderRadius: '20px', // Ensures rounded corners for Autocomplete
-                  padding: '6px 12px', // Controls overall padding
+                  borderRadius: '20px',
+                  padding: '6px 12px',
                 },
                 '& .MuiInputBase-input': {
-                  padding: '6px 12px', // Ensures consistent input padding
+                  padding: '6px 12px',
                 },
               }}
             />
           )}
           sx={{
-            mt: 2, // Add spacing between fields
+            mt: 2,
             borderRadius: '20px',
           }}
         />
