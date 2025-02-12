@@ -100,7 +100,7 @@ export default function PlayersSeating() {
               }}
             >
               <Grid item size={{xs: 0.5}}>{index + 1}</Grid>
-              <Grid item textAlign={"left"} size={{xs: 3.4}}>{leagueStandings.team.team_name} + Lovro 12</Grid>
+              <Grid item textAlign={"left"} size={{xs: 3.4}}>{leagueStandings.team.team_name}</Grid>
               <Grid item size={{xs: 1.35}}>{leagueStandings.rounds_played}</Grid>
               <Grid item size={{xs: 1.35}}>{leagueStandings.wins}</Grid>
               <Grid item size={{xs: 1.35}}>{leagueStandings.draws}</Grid>
