@@ -1,6 +1,7 @@
 export interface Team {
   readonly id: number;
   readonly name: string;
+  readonly point_difference: number;
   readonly score: number;
   modified_score?: number | null | undefined;
   played_against: number[]; // ids of teams already played against!
@@ -28,14 +29,15 @@ function selectIndex(cumProb: number[]): number {
 
 export function matchTeams(teams: Team[]): TeamPair[] {
   const team_pairs: TeamPair[] = [];
+  const startingTeamsLength = teams.length;
 
   teams.sort((a, b) => b.score - a.score);
 
   // Count is odd? Assign last team to BYE for this round
   if (teams.length % 2) {
     team_pairs.push({
-      teamOne: teams.pop() ?? {id: -1, name: "", score: 0, played_against: []},
-      teamTwo: {id: parseInt(process.env.BYE_ID ?? "0"), name: "BYE", score: 0, played_against: []},
+      teamOne: teams.pop(),
+      teamTwo: {id: parseInt(process.env.BYE_ID ?? "0"), name: "bye", score: 0, played_against: []},
     });
   }
 
@@ -66,15 +68,21 @@ export function matchTeams(teams: Team[]): TeamPair[] {
         case 0:
           break;
         case 1:
-          team.modified_score *= 0.9;
+          team.modified_score *= 0.5;
           break;
         case 2:
-          team.modified_score *= 0.8;
+          team.modified_score *= 0.4;
           break;
         case 3:
-          team.modified_score *= 0.7;
+          team.modified_score *= 0.3;
           break;
         case 4:
+          team.modified_score = 0.2;
+          break;
+        case 5:
+          team.modified_score = 0.1;
+          break;
+        case 6:
           team.modified_score = 0;
           break;
         default:
@@ -82,27 +90,43 @@ export function matchTeams(teams: Team[]): TeamPair[] {
       }
     });
 
-    // for each team calculate the probability for selection
-    const probs: number[] = Array<number>(teams.length).fill(0);
-    const scores_sum = teams.reduce((sum, t) => sum + (t.modified_score ?? 0), 0);
+    const sortedTeams = teams.slice().sort((a, b) => (b.modified_score ?? 0) - (a.modified_score ?? 0));
 
-    if (scores_sum == 0) {
-      // first iteration (unless scores can be negative) -̣> return random opponent
-      const idx = Math.ceil(Math.random() * teams.length) - 1;
-      opponentTeam = teams.splice(idx, 1)[0];
+    // Limit the selection to only the top 1/4 of teams or 4 teams (or remaining teams if fewer exist)
+    const selectionPool = sortedTeams.slice(0, Math.max(4, startingTeamsLength / 4));
+
+    // Calculate cumulative probability only for these top 5 teams
+    const scores_sum = selectionPool.reduce((sum, t) => sum + (t.modified_score ?? 0), 0);
+    const probs: number[] = new Array(selectionPool.length).fill(0);
+
+    if (scores_sum === 0) {
+      // If all scores are 0, pick a random team from the selection pool
+      const idx = Math.floor(Math.random() * selectionPool.length);
+      opponentTeam = selectionPool.splice(idx, 1)[0];
     } else {
-      /*
-       * Probability calculation based on score function
-       */
-      probs[0] = (teams[0].modified_score ?? 0) / scores_sum;
-      for (let i = 1; i < probs.length; i++) {
-        probs[i] = probs[i - 1] + (teams[i].modified_score ?? 0) / scores_sum;
+      // Compute cumulative probability for the top teams
+      probs[0] = (selectionPool[0].modified_score ?? 0) / scores_sum;
+      for (let i = 1; i < selectionPool.length; i++) {
+        probs[i] = probs[i - 1] + (selectionPool[i].modified_score ?? 0) / scores_sum;
       }
 
+      // Select opponent from the top using weighted random selection
       const idx = selectIndex(probs);
-      opponentTeam = teams.splice(idx, 1)[0];
+      opponentTeam = selectionPool.splice(idx, 1)[0];
     }
+
+    // Remove the selected opponent from the original team list
+    const removeIndex = teams.findIndex(t => t.id === opponentTeam.id);
+    teams.splice(removeIndex, 1);
+
     team_pairs.push({teamOne: currentTeam, teamTwo: opponentTeam});
+  }
+
+  if (team_pairs.length > 0 && team_pairs[0].teamTwo.name.toLowerCase() === 'bye') {
+    const firstPair = team_pairs.shift();
+    if (firstPair) { // shift returns undefined if the array is empty
+      team_pairs.push(firstPair);
+    }
   }
 
   return team_pairs;

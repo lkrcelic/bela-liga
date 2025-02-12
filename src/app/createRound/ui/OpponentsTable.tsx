@@ -38,20 +38,21 @@ export default function OpponentsTable({roundNumber}: MatchupTableProperties) {
         <TableHead>
           <TableRow>
             <TableCell align="center" sx={{borderBottom: "1px solid black"}}>
-              Team 1
+              Stol
             </TableCell>
             <TableCell align="center" sx={{borderBottom: "1px solid black"}}>
-              Team 2
+              Ime ekipe
             </TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
-          {entries.map((entry) => (
+          {entries.map((entry, i) => (
             <TableRow key={entry.id}>
               <TableCell align="center" sx={{borderBottom: "1px solid lightgray"}}>
-                {entry.team1}
+                {i+1}
               </TableCell>
               <TableCell align="center" sx={{borderBottom: "1px solid lightgray"}}>
+                {entry.team1} <br/>
                 {entry.team2}
               </TableCell>
             </TableRow>

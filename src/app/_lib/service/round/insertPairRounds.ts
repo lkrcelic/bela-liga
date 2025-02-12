@@ -41,5 +41,7 @@ function setRoundWinsForBYE(rounds: Round[]): void {
 
   if (!byeRound) return;
 
+
+
   byeRound.team1_id === bye_id ? (byeRound.team2_wins = 2) : (byeRound.team1_wins = 2);
 }

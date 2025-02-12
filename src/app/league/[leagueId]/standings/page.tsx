@@ -76,13 +76,13 @@ export default function PlayersSeating() {
             }}
           >
             <Grid item size={{xs: 0.5}}>#</Grid>
-            <Grid item textAlign={"left"} size={{xs: 3.1}}>Ime ekipe</Grid>
+            <Grid item textAlign={"left"} size={{xs: 3.4}}>Ime ekipe</Grid>
             <Grid item size={{xs: 1.35}}>OK</Grid>
             <Grid item size={{xs: 1.35}}>POB</Grid>
             <Grid item size={{xs: 1.35}}>NER</Grid>
             <Grid item size={{xs: 1.35}}>IZG</Grid>
-            <Grid item size={{xs: 1.7}}>RAZ</Grid>
-            <Grid item size={{xs: 1.3}}>BOD</Grid>
+            <Grid item size={{xs: 1.45}}>RAZ</Grid>
+            <Grid item size={{xs: 1.25}}>BOD</Grid>
           </Grid>
 
           {leagueStandings.map((leagueStandings, index) => (
@@ -100,13 +100,13 @@ export default function PlayersSeating() {
               }}
             >
               <Grid item size={{xs: 0.5}}>{index + 1}</Grid>
-              <Grid item textAlign={"left"} size={{xs: 3.1}}>{leagueStandings.team.team_name}</Grid>
+              <Grid item textAlign={"left"} size={{xs: 3.4}}>{leagueStandings.team.team_name} + Lovro 12</Grid>
               <Grid item size={{xs: 1.35}}>{leagueStandings.rounds_played}</Grid>
               <Grid item size={{xs: 1.35}}>{leagueStandings.wins}</Grid>
               <Grid item size={{xs: 1.35}}>{leagueStandings.draws}</Grid>
               <Grid item size={{xs: 1.35}}>{leagueStandings.losses}</Grid>
-              <Grid item size={{xs: 1.7}}>{leagueStandings.point_difference}</Grid>
-              <Grid item size={{xs: 1.3}}>{leagueStandings.score}</Grid>
+              <Grid item size={{xs: 1.45}}>{leagueStandings.point_difference}</Grid>
+              <Grid item size={{xs: 1.25}}>{leagueStandings.score}</Grid>
             </Grid>
           ))}
         </Box>
