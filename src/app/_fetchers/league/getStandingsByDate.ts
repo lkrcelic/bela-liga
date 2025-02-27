@@ -1,4 +1,4 @@
-export async function getLeagueStandingsAPI(leagueId: number): Promise<unknown> {
+export async function getLeagueStandingsByDateAPI(leagueId: number): Promise<unknown> {
   const response = await fetch(`/api/leagues/${leagueId}/daily-standings`);
 
   if (!response.ok) {

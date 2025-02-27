@@ -1,18 +1,24 @@
 "use client";
 
-import React from "react";
-import {Grid} from "@mui/system";
-import {Box, CircularProgress, Typography} from "@mui/material";
-import {getLeagueStandingsAPI} from "@/app/_fetchers/league/getStandings";
+import React, {useState} from "react";
+import {Accordion, AccordionDetails, AccordionSummary, Box, IconButton, Typography} from "@mui/material";
 import SingleActionButton from "@/app/_ui/SingleActionButton";
+import StandingsTable, {LeagueStandingsItem} from "@/app/_ui/StandingsTable";
+import {getLeagueStandingsByDateAPI} from "@/app/_fetchers/league/getStandingsByDate";
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 
 export default function PlayersSeating() {
-  const [leagueStandings, setLeagueStandings] = React.useState(null);
-  const [loading, setLoading] = React.useState(true);
+  const [leagueStandings, setLeagueStandings] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  const [expandedStandings, setExpandedStandings] = useState(false);
+  const [expandedRound1, setExpandedRound1] = useState(false);
+  const [expandedRound2, setExpandedRound2] = useState(false);
+  const [expandedRound3, setExpandedRound3] = useState(false);
 
   const fetchLeagueStandings = async () => {
     try {
-      const data = await getLeagueStandingsAPI(1); //TODO remove hardcoded
+      const data = await getLeagueStandingsByDateAPI(1); //TODO remove hardcoded
 
       setLeagueStandings(data);
     } catch (error) {
@@ -23,93 +29,116 @@ export default function PlayersSeating() {
   };
 
   React.useEffect(() => {
-    fetchLeagueStandings();
-  }, []);
+    if (expandedStandings && !leagueStandings) {
+      fetchLeagueStandings();
+    }
+  }, [expandedStandings]);
 
+  /*
+    if (loading) {
+      return (
+        <Box sx={{display: "flex", justifyContent: "center", alignItems: "center", height: "100vh"}}>
+          <CircularProgress/>
+        </Box>
+      );
+    }
 
-  if (loading) {
-    return (
-      <Box sx={{display: "flex", justifyContent: "center", alignItems: "center", height: "100vh"}}>
-        <CircularProgress/>
-      </Box>
-    );
-  }
+    if (!leagueStandings) {
+      return <p>No data available</p>;
+    }
+  */
+  const handleChange = (setter) => () => {
+    setter((prevExpanded) => !prevExpanded);
+  };
 
-  if (!leagueStandings) {
-    return <p>No data available</p>;
-  }
 
   return (
     <>
       <Box sx={{gridArea: "top", alignSelf: "center"}}>
-        <Typography variant="h4" align="center" fontWeight="bold">Tablica</Typography>
+        <Typography variant="h4" align="center" fontWeight="bold">Okupljanje 17.02.2025</Typography>
       </Box>
-      <Box
-        sx={{
-          gridArea: "body",
-          alignSelf: "start",
-          justifyContent: {
-            xs: "flex-start",
-            sm: "center",
-          },
-          display: "flex",
-          overflow: "auto",
-          maxHeight: "100%",
-          width: "100%",
-          fontFamily: "Roboto, sans-serif",
-        }}
-      >
-        <Box
-          sx={{display: "inline-block", width: "100%", minWidth: "550px", overflow: "auto"}}
-        >
-          <Grid
-            container
-            spacing={2}
-            paddingY={1}
-            paddingLeft={1}
-            sx={{
-              textAlign: "center",
-              fontWeight: "bold",
-              position: "sticky",
-              top: 0,
-              backgroundColor: "secondary.main",
-            }}
+      <Box sx={{gridArea: "body"}}>
+        <Accordion sx={{width: "100%"}} expanded={expandedStandings} onChange={handleChange(setExpandedStandings)}>
+          <AccordionSummary
+            expandIcon={
+              <IconButton>
+                <ExpandMoreIcon/>
+              </IconButton>
+            }
+            aria-controls="panel-content"
+            id="panel-header"
           >
-            <Grid item size={{xs: 0.5}}>#</Grid>
-            <Grid item textAlign={"left"} size={{xs: 3.4}}>Ime ekipe</Grid>
-            <Grid item size={{xs: 1.35}}>OK</Grid>
-            <Grid item size={{xs: 1.35}}>POB</Grid>
-            <Grid item size={{xs: 1.35}}>NER</Grid>
-            <Grid item size={{xs: 1.35}}>IZG</Grid>
-            <Grid item size={{xs: 1.45}}>RAZ</Grid>
-            <Grid item size={{xs: 1.25}}>BOD</Grid>
-          </Grid>
+            <Typography variant="h6">{"Tablica okupljanja"}</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Box   sx={{
+              alignSelf: "start",
+              justifyContent: {
+                xs: "flex-start",
+                sm: "center",
+              },
+              display: "flex",
+              overflow: "auto",
+              maxHeight: "100%",
+              width: "100%",
+              fontFamily: "Roboto, sans-serif",
+            }}>
+              <StandingsTable standings={(leagueStandings as LeagueStandingsItem[]) || []}/>
+            </Box>
+          </AccordionDetails>
+        </Accordion>
 
-          {leagueStandings.map((leagueStandings, index) => (
-            <Grid
-              container
-              spacing={2}
-              key={leagueStandings.id}
-              paddingY={1}
-              paddingLeft={1}
-              sx={{
-                textAlign: "center",
-                borderBottom: "1px solid #eee",
-                backgroundColor: index % 2 ? "background.default" : "",
+        <Accordion expanded={expandedRound1} onChange={handleChange(setExpandedRound1)}>
+          <AccordionSummary
+            expandIcon={
+              <IconButton>
+                <ExpandMoreIcon/>
+              </IconButton>
+            }
+            aria-controls="panel-content"
+            id="panel-header"
+          >
+            <Typography variant="h6">{"Round 12"}</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <span>Sadržaj</span>
+          </AccordionDetails>
+        </Accordion>
 
-              }}
-            >
-              <Grid item size={{xs: 0.5}}>{index + 1}</Grid>
-              <Grid item textAlign={"left"} size={{xs: 3.4}}>{leagueStandings.team.team_name}</Grid>
-              <Grid item size={{xs: 1.35}}>{leagueStandings.rounds_played}</Grid>
-              <Grid item size={{xs: 1.35}}>{leagueStandings.wins}</Grid>
-              <Grid item size={{xs: 1.35}}>{leagueStandings.draws}</Grid>
-              <Grid item size={{xs: 1.35}}>{leagueStandings.losses}</Grid>
-              <Grid item size={{xs: 1.45}}>{leagueStandings.point_difference}</Grid>
-              <Grid item size={{xs: 1.25}}>{leagueStandings.score}</Grid>
-            </Grid>
-          ))}
-        </Box>
+        <Accordion expanded={expandedRound2} onChange={handleChange(setExpandedRound2)}>
+          <AccordionSummary
+            expandIcon={
+              <IconButton>
+                <ExpandMoreIcon/>
+              </IconButton>
+            }
+            aria-controls="panel-content"
+            id="panel-header"
+          >
+            <Typography variant="h6">{"Round 13"}</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <span>Sadržaj</span>
+          </AccordionDetails>
+        </Accordion>
+
+        <Accordion expanded={expandedRound3} onChange={handleChange(setExpandedRound3)}>
+          <AccordionSummary
+            expandIcon={
+              <IconButton>
+                <ExpandMoreIcon/>
+              </IconButton>
+            }
+            aria-controls="panel-content"
+            id="panel-header"
+          >
+            <Typography variant="h6">{"Round 14"}</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <span>Sadržaj</span>
+          </AccordionDetails>
+        </Accordion>
+
       </Box>
       <Box sx={{gridArea: "actions"}}>
         <SingleActionButton label={"Nazad"} onClick={() => window.history.back()}/>

@@ -7,6 +7,10 @@ export default function CardDealer() {
   const {seating_order, current_shuffler_index} = useOngoingMatchStore(state => state.ongoingMatch);
   const currentDealer = seating_order![current_shuffler_index];
 
+  if(!currentDealer) {
+    return <></>;
+  }
+
   return (
     <Box sx={{display: 'flex', justifyContent: 'center', alignItems: 'center', paddingTop: 1}}>
       <Box component="img" src="/card.png" alt="Card dealer"

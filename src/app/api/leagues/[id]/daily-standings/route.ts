@@ -1,12 +1,12 @@
 import {NextRequest, NextResponse} from "next/server";
 import {STATUS} from "@/app/_lib/statusCodes";
-import {getLeagueStandings} from "@/app/_lib/service/league/getStandings";
+import {getLeagueStandingsByDate} from "@/app/_lib/service/league/getStandingsByDate";
 
 export async function GET(request: NextRequest, {params}: { params: { id: string } }) {
   const {id} = params;
 
   try {
-    const teamScores = await getLeagueStandings(Number(id));
+    const teamScores = await getLeagueStandingsByDate(Number(id), "2025-02-23");
 
     return NextResponse.json(teamScores, {status: STATUS.OK});
   } catch (error) {

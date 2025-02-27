@@ -4,7 +4,7 @@ OR REPLACE FUNCTION update_shuffler_index_on_new_result()
 RETURNS TRIGGER AS $$
 BEGIN
 UPDATE "OngoingMatch"
-SET current_shuffler_index = (current_shuffler_index + 1) % 4
+SET current_shuffler_index = (current_shuffler_index + 3) % 4
 WHERE id = NEW.match_id;
 
 RETURN NEW;

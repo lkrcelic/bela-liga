@@ -6,6 +6,7 @@ import useOngoingMatchStore from "@/app/_store/ongoingMatchStore";
 import {createOngoingMatchAPI} from "@/app/_fetchers/ongoingMatch/create";
 import {createMatchAPI} from "@/app/_fetchers/match/create";
 import useRoundStore from "@/app/_store/RoundStore";
+import {finishRoundAPI} from "@/app/_fetchers/round/finish";
 
 export default function Action() {
   const {
@@ -15,7 +16,8 @@ export default function Action() {
       seating_order,
       current_shuffler_index
     },
-    softResetOngoingMatch
+    softResetOngoingMatch,
+    hardResetOngoingMatch
   } = useOngoingMatchStore();
   const {roundData: {id, team1_wins, team2_wins}} = useRoundStore();
   const {setMatchId} = useResultStore();
@@ -45,8 +47,10 @@ export default function Action() {
           }
 
           if (team1_wins + team2_wins >= 1) {
-            softResetOngoingMatch();
+            await finishRoundAPI(Number(id));
             router.push(`/round/${id}/result`);
+            hardResetOngoingMatch();
+            localStorage.clear();
           }
         },
       }

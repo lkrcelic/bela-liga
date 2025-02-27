@@ -7,16 +7,13 @@ import {getRoundDataAPI} from "@/app/_fetchers/round/getOne";
 import useRoundStore from "@/app/_store/RoundStore";
 import {Grid} from "@mui/system";
 import SingleActionButton from "@/app/_ui/SingleActionButton";
-import {finishRoundAPI} from "@/app/_fetchers/round/finish";
 import {getAllMatchesByRoundIdAPI} from "@/app/_fetchers/match/getAllByRoundId";
-import useOngoingMatchStore from "@/app/_store/ongoingMatchStore";
 
 const MobileScoreBoard = () => {
   const router = useRouter();
   const {roundId} = useParams();
 
   const {roundData: {team1_wins, team2_wins, team1, team2}, setRoundData} = useRoundStore();
-  const {hardResetOngoingMatch} = useOngoingMatchStore()
   const [matches, setMatches] = useState();
 
   const fetchRoundData = async () => {
@@ -42,12 +39,6 @@ const MobileScoreBoard = () => {
     fetchRoundMatches();
   }, [roundId]);
 
-  const onClick = async () => {
-    await finishRoundAPI(Number(roundId));
-    hardResetOngoingMatch();
-    localStorage.clear();
-    router.push(`/`);
-  };
 
   return (
     <>
@@ -121,7 +112,7 @@ const MobileScoreBoard = () => {
         </Grid>
       </Box>
       <Box sx={{gridArea: "actions", alignSelf: "start"}}>
-        <SingleActionButton label={"Završi rundu"} onClick={onClick}/>
+        <SingleActionButton label={"Početni zaslon"} onClick={() => router.push(`/`)}/>
       </Box>
     </>
   );

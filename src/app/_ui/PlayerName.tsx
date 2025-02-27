@@ -5,8 +5,6 @@ type PlayerNameProps = {
 };
 
 export default function PlayerName({firstName, lastName, short = true}: PlayerNameProps) {
-  console.log("firstName", firstName)
-  console.log("LastName", lastName)
   const threshold = short ? 0 : 15;
   if (!lastName) {
     if (firstName.length > threshold) {

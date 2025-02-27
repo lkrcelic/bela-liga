@@ -43,6 +43,10 @@ export default function Home() {
     router.push("/createRound");
   }
 
+  async function dailyTable() {
+    router.push("/league/1/daily-standings");
+  }
+
   async function table() {
     router.push("/league/1/standings");
   }
@@ -59,12 +63,14 @@ export default function Home() {
       </Box>
       <Box
         sx={{
+          flexGrow: 1,
           gridArea: "body",
           display: "flex",
           flexDirection: "column",
           gap: 2,
           width: "100%",
           boxSizing: "border-box",
+          overflowY: "auto",
         }}
       >
         {isAdmin &&
@@ -74,15 +80,27 @@ export default function Home() {
         }
         {isAdmin &&
           <Button variant="contained" color="primary" onClick={createTeam}>
-          Create team
-        </Button>
+            Create team
+          </Button>
         }
         <Button variant="contained" color="primary" onClick={startGame}>
           Start game
         </Button>
+        <Button variant="contained" color="primary" onClick={dailyTable}>
+          Daily Standings
+        </Button>
         <Button variant="contained" color="primary" onClick={table}>
           League Standings
         </Button>
+      </Box>
+      <Box sx={{
+        gridArea: "actions",
+        display: "flex",
+        flexDirection: "column",
+        width: "100%",
+        boxSizing: "border-box",
+        overflow: "hidden",
+      }}>
         <Button variant="contained" color="secondary" onClick={logOut}>
           Log out
         </Button>

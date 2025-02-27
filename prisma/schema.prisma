@@ -173,7 +173,7 @@ model LeagueTeam {
 model Round {
   id           Int       @id @default(autoincrement())
   round_number Int?
-  round_date   DateTime?
+  round_date   DateTime? @default(now()) @db.Date
   team1_id     Int
   team2_id     Int
   team1_wins   Int       @default(0)
@@ -233,7 +233,7 @@ model Match {
   score_threshold    Int?
   start_time         DateTime?
   end_time           DateTime?
-  match_date         DateTime? @default(now())
+  match_date         DateTime? @default(now()) @db.Date
 
   round          Round?          @relation(fields: [round_id], references: [id], onDelete: SetNull)
   playerPair1    PlayerPair?     @relation("MatchPair1", fields: [player_pair_id1], references: [id], onDelete: Cascade)

@@ -16,7 +16,6 @@ export async function POST(request: Request) {
     const parsedRequest = CreateRound.parse(req_data);
 
     const teamData = await getLeagueTeamsWithScores(parsedRequest.league_id);
-    console.log("Team data: ",teamData);
     if (!teamData || teamData.length === 0) return NextResponse.json("Invalid league id.", {status: STATUS.BadRequest});
 
     // filter out teams that are not present

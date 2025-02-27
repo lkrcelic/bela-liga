@@ -1,23 +1,16 @@
 import {prisma} from "@/app/_lib/prisma";
-import {TeamScore} from "@prisma/client";
 
-export async function getLeagueDailyStandings(league_id: number): Promise<TeamScore> {
-  const standings = await prisma.teamScore.findMany({
-    include: {
-      team: {
-        select: {
-          team_name: true,
-        },
-      },
-    },
-    where: {
-      league_id: league_id,
-    },
-    orderBy: [
-      {score: 'desc'},
-      {point_difference: 'desc'},
-    ],
-  });
+export async function getLeagueStandingsByDate(
+  league_id: number,
+  round_date: string
+): Promise<unknown> {
+  const roundDateFormatted = new Date(round_date).toISOString().split('T')[0];
 
-  return standings;
+  return prisma.$queryRaw`
+      SELECT standings.*,
+             json_build_object('team_name', t.team_name) AS team
+      FROM get_league_standings_by_date(${league_id}, ${roundDateFormatted}::DATE) standings
+               JOIN "Team" t ON standings.team_id = t.team_id
+      ORDER BY standings.score DESC, standings.point_difference DESC
+  `;
 }
