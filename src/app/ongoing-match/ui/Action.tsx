@@ -7,6 +7,11 @@ import {createOngoingMatchAPI} from "@/app/_fetchers/ongoingMatch/create";
 import {createMatchAPI} from "@/app/_fetchers/match/create";
 import useRoundStore from "@/app/_store/RoundStore";
 import {finishRoundAPI} from "@/app/_fetchers/round/finish";
+import {useMediaQuery} from "@mui/material";
+import theme from "@/app/_styles/theme";
+import AddCircleIcon from '@mui/icons-material/AddCircle';
+import DoneIcon from '@mui/icons-material/Done';
+
 
 export default function Action() {
   const {
@@ -21,6 +26,7 @@ export default function Action() {
   } = useOngoingMatchStore();
   const {roundData: {id, team1_wins, team2_wins}} = useRoundStore();
   const {setMatchId} = useResultStore();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const router = useRouter();
   const {matchId} = useParams();
@@ -31,6 +37,7 @@ export default function Action() {
     if ((player_pair1_score >= 1001 || player_pair2_score >= 1001) && player_pair1_score !== player_pair2_score) {
       return {
         label: "Završi meč",
+        icon: <DoneIcon />,
         onClick: async () => {
           await createMatchAPI(Number(matchId));
 
@@ -57,6 +64,7 @@ export default function Action() {
     } else {
       return {
         label: "Upiši igru",
+        icon: <AddCircleIcon/>,
         onClick: () => {
           setMatchId(Number(matchId));
           router.push(`${pathname}/ongoing-result/new/trump-caller`);
@@ -67,5 +75,6 @@ export default function Action() {
 
   const props = getProps();
 
-  return <SingleActionButton label={props.label} onClick={props.onClick}/>
+  return <SingleActionButton fullWidth={isMobile} label={props.label} onClick={props.onClick} icon={props.icon}
+  />
 }

@@ -6,7 +6,7 @@ export async function GET(request: NextRequest, {params}: { params: { id: string
   const {id} = params;
 
   try {
-    const teamScores = await getLeagueStandingsByDate(Number(id), "2025-02-23");
+    const teamScores = await getLeagueStandingsByDate(Number(id), "2025-03-02");
 
     return NextResponse.json(teamScores, {status: STATUS.OK});
   } catch (error) {

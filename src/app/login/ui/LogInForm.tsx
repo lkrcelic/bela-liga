@@ -1,10 +1,11 @@
 "use client";
 
 import {useState} from "react";
-import styles from "@/app/_styles/Form.modules.css";
 import {PlayerCreate} from "@/app/_interfaces/player";
 import {LoginUser, LoginUserInterface} from "@/app/_interfaces/login";
 import {loginUser} from "@/app/_fetchers/authentication/login";
+import {Box, TextField, Button, InputAdornment, IconButton} from "@mui/material";
+import {Visibility, VisibilityOff} from "@mui/icons-material";
 
 type FormField = keyof typeof LoginUser.shape;
 type ErrorState = Partial<Record<FormField, string>>;
@@ -20,8 +21,13 @@ export default function LogInForm({onFormSubmit}: LogInFormProperties) {
   } as LoginUserInterface;
   const [formData, setFormData] = useState(initialState);
   const [errors, setErrors] = useState<ErrorState>({});
+  const [showPassword, setShowPassword] = useState(false);
 
-  const handleChange = (e: unknown) => {
+  const handleClickShowPassword = () => {
+    setShowPassword(!showPassword);
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const {name, value} = e.target;
     setFormData({...formData, [name]: value});
 
@@ -29,7 +35,7 @@ export default function LogInForm({onFormSubmit}: LogInFormProperties) {
     try {
       PlayerCreate.pick({[fieldName]: true} as Record<FormField, true>).parse({[name]: value});
       setErrors((prevErrors) => ({...prevErrors, [fieldName]: undefined}));
-    } catch (error: unknown) {
+    } catch (error: any) {
       if (error.errors && error.errors[0]) {
         setErrors((prevErrors) => ({
           ...prevErrors,
@@ -39,7 +45,7 @@ export default function LogInForm({onFormSubmit}: LogInFormProperties) {
     }
   };
 
-  async function handleSubmit(e: unknown) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     try {
       const isAllFieldsFilled = Object.values(formData).every((value) => (value as string).trim() !== "");
@@ -48,7 +54,7 @@ export default function LogInForm({onFormSubmit}: LogInFormProperties) {
       const keys = Object.keys(formData) as FormField[];
       keys.forEach((key) => {
         if ((formData[key] as string).trim() === "") {
-          errors[key] = key + " is a required property!";
+          errors[key] = key + " je obavezno polje!";
         }
       });
       setErrors((prevErrors) => ({
@@ -67,18 +73,87 @@ export default function LogInForm({onFormSubmit}: LogInFormProperties) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className={styles.form}>
-      <label htmlFor="username">Username or Email</label>
-      <input type="text" id="username" name="username" value={formData.username} onChange={handleChange} />
-      {errors.username && <p className="error">{errors.username}</p>}
-      <label htmlFor="password" className={styles.label}>
-        Password
-      </label>
-      <input type="password" id="password" name="password" value={formData.password} onChange={handleChange} />
-      {errors.password && <p className="error">{errors.password}</p>}
-      <button type="submit" className={styles.button}>
-        Log in
-      </button>
-    </form>
+    <Box component="form" onSubmit={handleSubmit} noValidate>
+      <TextField
+        required
+        fullWidth
+        id="username"
+        label="Korisničko ime ili Email"
+        name="username"
+        autoComplete="username"
+        autoFocus
+        value={formData.username}
+        onChange={handleChange}
+        error={!!errors.username}
+        helperText={errors.username}
+        variant="outlined"
+        size="medium"
+        sx={{ 
+          mb: 2.5,
+          '& .MuiOutlinedInput-root': {
+            borderRadius: 1.5,
+            '&.Mui-focused fieldset': {
+              borderWidth: 2
+            }
+          }
+        }}
+      />
+      
+      <TextField
+        required
+        fullWidth
+        name="password"
+        label="Lozinka"
+        type={showPassword ? 'text' : 'password'}
+        id="password"
+        autoComplete="current-password"
+        value={formData.password}
+        onChange={handleChange}
+        error={!!errors.password}
+        helperText={errors.password}
+        variant="outlined"
+        size="medium"
+        InputProps={{
+          endAdornment: (
+            <InputAdornment position="end">
+              <IconButton
+                aria-label="toggle password visibility"
+                onClick={handleClickShowPassword}
+                edge="end"
+              >
+                {showPassword ? <VisibilityOff /> : <Visibility />}
+              </IconButton>
+            </InputAdornment>
+          ),
+        }}
+        sx={{ 
+          mb: 3,
+          '& .MuiOutlinedInput-root': {
+            borderRadius: 1.5,
+            '&.Mui-focused fieldset': {
+              borderWidth: 2
+            }
+          }
+        }}
+      />
+      
+      <Button
+        type="submit"
+        fullWidth
+        variant="contained"
+        color="primary"
+        size="large"
+        sx={{ 
+          py: 1.5,
+          borderRadius: 1.5,
+          textTransform: 'none',
+          fontSize: '1rem',
+          fontWeight: 'bold',
+          boxShadow: 2
+        }}
+      >
+        Prijavi se
+      </Button>
+    </Box>
   );
 }

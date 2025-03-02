@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import {Box, CircularProgress} from '@mui/material';
+import {Box, CircularProgress, Divider} from '@mui/material';
 import TotalScoreSection from "@/app/ongoing-match/ui/TotalScoreSection";
 import ResultsDisplay from "@/app/ongoing-match/ui/ResultsDisplay";
 import Action from "@/app/ongoing-match/ui/Action";
@@ -19,7 +19,6 @@ const MobileScoreBoard = () => {
     const setRoundData = useRoundStore(state => state.setRoundData)
     const initializePlayerAnnouncements = useAnnouncementStore(state => state.initializePlayersAnnouncements);
     const [loading, setLoading] = React.useState(true);
-
 
     const fetchOngoingMatchAndRoundData = async () => {
       try {
@@ -57,9 +56,11 @@ const MobileScoreBoard = () => {
           <CardDealer/>
         </Box>
         <Box sx={{gridArea: "body", overflowY: 'auto',}}>
+          <Divider sx={{mb: 2}}/>
           <ResultsDisplay/>
         </Box>
         <Box sx={{gridArea: "actions", alignSelf: "start"}}>
+          <Divider sx={{mb: 2}}/>
           <Action/>
         </Box>
       </>

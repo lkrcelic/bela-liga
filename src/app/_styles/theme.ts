@@ -1,6 +1,28 @@
-import {createTheme} from '@mui/material/styles';
+import { createTheme, ThemeOptions } from '@mui/material/styles';
+import { PaletteColorOptions } from '@mui/material/styles/createPalette';
 
-const theme = createTheme({
+// Extend the palette to include custom colors
+declare module '@mui/material/styles' {
+  interface Palette {
+    team1: Palette['primary'];
+    team2: Palette['primary'];
+  }
+
+  interface PaletteOptions {
+    team1?: PaletteColorOptions;
+    team2?: PaletteColorOptions;
+  }
+}
+
+// Extend the components to allow for team1 and team2 colors
+declare module '@mui/material/Button' {
+  interface ButtonPropsColorOverrides {
+    team1: true;
+    team2: true;
+  }
+}
+
+const themeOptions: ThemeOptions = {
   palette: {
     primary: {
       main: '#3C4A67',
@@ -54,7 +76,7 @@ const theme = createTheme({
       fontSize: '1.1rem',
       fontWeight: 500,
       color: '#212121',
-    },
+    } as any, // Using 'as any' since h7 is not a standard variant
     body1: {
       fontSize: '1rem',
       color: '#212121',
@@ -112,6 +134,8 @@ const theme = createTheme({
       },
     },
   },
-});
+};
+
+const theme = createTheme(themeOptions);
 
 export default theme;

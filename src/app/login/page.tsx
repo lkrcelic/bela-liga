@@ -3,8 +3,7 @@
 import LogInForm from "@/app/login/ui/LogInForm";
 import {useRouter} from "next/navigation";
 import {useState} from "react";
-import Image from "next/image";
-import {Box, Button} from "@mui/material";
+import {Alert, Box, Button, Divider, Paper, Typography} from "@mui/material";
 
 export default function LogIn() {
   const [success, setSuccess] = useState<boolean | undefined>(undefined);
@@ -18,40 +17,83 @@ export default function LogIn() {
   };
 
   return (
-    <>
-      <Box sx={{gridArea: "top", alignItems: "center", display: "flex", justifyContent: "center"}}>
-        <Image src="/TitleBackgroundSponsors.png"
-               alt="Logo"
-               width={500}
-               height={500}
-               style={{width: '80%', height: 'auto', maxWidth: "600px"}}
-        />
+    <Box sx={{
+      display: 'flex',
+      flexDirection: 'column',
+      minHeight: 'calc(100vh - 90px)',
+      width: '100%',
+      alignItems: 'center',
+      justifyContent: 'center',
+      px: 2,
+      py: 4
+    }}>
+      <Box sx={{
+        width: "100%",
+        backgroundColor: 'none',
+        pb: 4,
+        position: 'sticky',
+        zIndex: 10
+      }}>
+        <Typography variant="h4" component="h1" sx={{
+          fontWeight: 'bold',
+          textAlign: 'center',
+          color: 'primary.main',
+          pb: 1,
+        }}>
+          Piatnik Bela Liga
+        </Typography>
+      <Divider/>
       </Box>
-      <Box sx={{gridArea: "body"}}>
-        <LogInForm onFormSubmit={handleFormSubmit}/>
-        {success === true && <p className="success">Login successfull!</p>}
-        {success === false && <p className="error-button">Username or password are incorrect.</p>}
-      </Box>
-      <Box
+      <Paper
+        elevation={3}
         sx={{
-          gridArea: "actions",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
+          width: '100%',
+          maxWidth: 400,
+          p: 3,
+          borderRadius: 2,
         }}
       >
-        <Button
-          onClick={() => router.push('/signup')}
-          variant="text"
-          color="primary"
+        <Typography
+          variant="h5"
+          component="h1"
           sx={{
-            textTransform: "none",
-            fontSize: "16px",
+            mb: 3,
+            fontWeight: 'bold',
+            textAlign: 'center',
+            color: 'primary.main'
           }}
         >
-          Nemaš profil? Registriraj se
-        </Button>
-      </Box>
-    </>
+          Prijava
+        </Typography>
+
+        <LogInForm onFormSubmit={handleFormSubmit}/>
+
+        {success === true && (
+          <Alert severity="success" sx={{mt: 2}}>
+            Prijava uspješna!
+          </Alert>
+        )}
+
+        {success === false && (
+          <Alert severity="error" sx={{mt: 2}}>
+            Korisničko ime ili lozinka su netočni.
+          </Alert>
+        )}
+      </Paper>
+
+      <Button
+        onClick={() => router.push('/signup')}
+        variant="text"
+        color="primary"
+        sx={{
+          textTransform: "none",
+          fontSize: "16px",
+          fontWeight: "medium",
+          mt: 3
+        }}
+      >
+        Nemaš profil? Registriraj se
+      </Button>
+    </Box>
   );
 }

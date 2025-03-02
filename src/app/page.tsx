@@ -1,22 +1,56 @@
 "use client";
 
-import {logoutUser} from "@/app/_fetchers/authentication/logout";
-import {Box, Button} from "@mui/material";
-import {useRouter} from "next/navigation";
-import {getActiveRoundByPlayerIdAPI} from "@/app/_fetchers/round/getActiveByPlayerId";
-import Image from "next/image";
 import {useEffect, useState} from "react";
+import {useRouter} from "next/navigation";
+import {Box, Button, Container, Paper, Stack, Typography} from "@mui/material";
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
+import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
+import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
+import GroupAddIcon from '@mui/icons-material/GroupAdd';
+import LogoutIcon from '@mui/icons-material/Logout';
+
+// API fetchers
+import {logoutUser} from "@/app/_fetchers/authentication/logout";
+import {getActiveRoundByPlayerIdAPI} from "@/app/_fetchers/round/getActiveByPlayerId";
+
+const ActionButton = ({onClick, label, color = "primary", fullWidth = true, icon = null}) => (
+  <Button
+    variant="contained"
+    color={color}
+    onClick={onClick}
+    fullWidth={fullWidth}
+    sx={{
+      py: 1.8,
+      px: 3,
+      borderRadius: 2.5,
+      textTransform: 'none',
+      fontSize: '1.05rem',
+      fontWeight: 'medium',
+      display: 'flex',
+      gap: 1.5,
+      justifyContent: 'center',
+      alignItems: 'center',
+      minHeight: '54px',
+      boxShadow: 2,
+      '&:active': {
+        transform: 'scale(0.98)',
+        boxShadow: 1,
+      },
+      transition: 'transform 0.1s, box-shadow 0.1s'
+    }}
+  >
+    {icon}
+    {label}
+  </Button>
+);
 
 export default function Home() {
   const router = useRouter();
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  async function logOut(): Promise<void> {
-    await logoutUser();
-    window.location.reload();
-  }
-
-
+  // Check if user is admin
   useEffect(() => {
     fetch('/api/session/is-admin')
       .then((res) => res.json())
@@ -24,87 +58,173 @@ export default function Home() {
       .catch((err) => console.error('Failed to fetch session', err));
   }, []);
 
+  // Navigation handlers
+  const handleStartGame = async () => {
+    try {
+      setIsLoading(true);
+      const {roundId, ongoingMatchId} = await getActiveRoundByPlayerIdAPI();
 
-  async function startGame(): Promise<void> {
-    const {roundId, ongoingMatchId} = await getActiveRoundByPlayerIdAPI()
-    if (ongoingMatchId) {
-      router.push(`/ongoing-match/${ongoingMatchId}`);
-    } else {
-      router.push(`/round/${roundId}/players-seating`);
+      if (ongoingMatchId) {
+        router.push(`/ongoing-match/${ongoingMatchId}`);
+      } else {
+        router.push(`/round/${roundId}/players-seating`);
+      }
+    } catch (error) {
+      console.error('Error starting game:', error);
+    } finally {
+      setIsLoading(false);
     }
-  }
+  };
 
-  async function createTeam() {
-    router.push("/teams/new");
-  }
+  const handleLogout = async () => {
+    try {
+      setIsLoading(true);
+      await logoutUser();
+      window.location.reload();
+    } catch (error) {
+      console.error('Error logging out:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-
-  async function createRound() {
-    router.push("/createRound");
-  }
-
-  async function dailyTable() {
-    router.push("/league/1/daily-standings");
-  }
-
-  async function table() {
-    router.push("/league/1/standings");
-  }
+  const navigateTo = (path) => () => {
+    router.push(path);
+  };
 
   return (
-    <>
-      <Box sx={{gridArea: "top", alignItems: "center", display: "flex", justifyContent: "center"}}>
-        <Image src="/TitleBackgroundSponsors.png"
-               alt="Logo"
-               width={1000}
-               height={1000}
-               style={{width: '100%', height: 'auto', maxWidth: "600px"}}
-        />
+    <Box sx={{
+      display: 'flex',
+      flexDirection: 'column',
+      minHeight: 'calc(100vh - 90px)',
+      width: '100%',
+      position: 'relative',
+      overflowY: 'hidden',
+    }}>
+      {/* Fixed Header - Top Grid Area */}
+      <Box sx={{
+        gridArea: "top",
+        width: "100%",
+        backgroundColor: 'none',
+        borderBottom: '1px solid rgba(0,0,0,0.1)',
+        pb: 2,
+        position: 'sticky',
+        zIndex: 10
+      }}>
+        <Typography variant="h5" component="h1" sx={{
+          fontWeight: 'bold',
+          textAlign: 'center',
+          color: 'primary.main'
+        }}>
+          Piatnik Bela Liga
+        </Typography>
       </Box>
-      <Box
-        sx={{
-          flexGrow: 1,
-          gridArea: "body",
-          display: "flex",
-          flexDirection: "column",
-          gap: 2,
-          width: "100%",
-          boxSizing: "border-box",
-          overflowY: "auto",
-        }}
-      >
-        {isAdmin &&
-          <Button variant="contained" color="primary" onClick={createRound}>
-            Create round
-          </Button>
-        }
-        {isAdmin &&
-          <Button variant="contained" color="primary" onClick={createTeam}>
-            Create team
-          </Button>
-        }
-        <Button variant="contained" color="primary" onClick={startGame}>
-          Start game
-        </Button>
-        <Button variant="contained" color="primary" onClick={dailyTable}>
-          Daily Standings
-        </Button>
-        <Button variant="contained" color="primary" onClick={table}>
-          League Standings
-        </Button>
+
+      <Box sx={{
+        gridArea: "body",
+        flex: 1,
+        overflowY: 'auto',
+        overflowX: 'hidden',
+        py: 2,
+      }}>
+        <Container maxWidth="sm" sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 3,
+          p: 1,
+          width: '100%'
+        }}>
+          {/* Main Actions Section */}
+          <Paper elevation={3} sx={{
+            p: 3,
+            borderRadius: 4,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 2.5,
+            boxShadow: '0 4px 20px rgba(0,0,0,0.08)'
+          }}>
+            <Typography variant="h6" component="h2" sx={{mb: 1, fontWeight: 'bold'}}>
+              Tournament Actions
+            </Typography>
+
+            <ActionButton
+              onClick={handleStartGame}
+              label="Start Game"
+              color="primary"
+              icon={<PlayArrowIcon/>}
+            />
+
+            <ActionButton
+              onClick={navigateTo("/league/1/daily-standings")}
+              label="Daily Standings"
+              color="primary"
+              icon={<CalendarMonthIcon/>}
+            />
+
+            <ActionButton
+              onClick={navigateTo("/league/1/standings")}
+              label="League Standings"
+              color="primary"
+              icon={<EmojiEventsIcon/>}
+            />
+          </Paper>
+
+          {/* Admin Section - Only visible to admins */}
+          {isAdmin && (
+            <Paper elevation={3} sx={{
+              p: 2,
+              borderRadius: 4,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 2.5,
+              boxShadow: '0 4px 20px rgba(0,0,0,0.08)'
+            }}>
+              <Typography variant="h6" component="h2" sx={{mb: 1, fontWeight: 'bold'}}>
+                Admin Controls
+              </Typography>
+
+              <Stack direction="row" spacing={2}>
+                <ActionButton
+                  onClick={navigateTo("/createRound")}
+                  label="Create Round"
+                  color="secondary"
+                  fullWidth
+                  icon={<AddCircleOutlineIcon/>}
+                />
+
+                <ActionButton
+                  onClick={navigateTo("/teams/new")}
+                  label="Create Team"
+                  color="secondary"
+                  fullWidth
+                  icon={<GroupAddIcon/>}
+                />
+              </Stack>
+            </Paper>
+          )}
+        </Container>
       </Box>
+
+      {/* Fixed Footer - Actions Grid Area */}
       <Box sx={{
         gridArea: "actions",
-        display: "flex",
-        flexDirection: "column",
         width: "100%",
-        boxSizing: "border-box",
-        overflow: "hidden",
+        backgroundColor: 'none',
+        borderTop: '1px solid rgba(0,0,0,0.1)',
+        py: 2,
+        position: 'sticky',
+        bottom: 0,
+        zIndex: 10
       }}>
-        <Button variant="contained" color="secondary" onClick={logOut}>
-          Log out
-        </Button>
+        <Container maxWidth="sm" sx={{display: 'flex', justifyContent: 'center', p: 1}}>
+          <ActionButton
+            onClick={handleLogout}
+            label="Log Out"
+            color="secondary"
+            icon={<LogoutIcon/>}
+          />
+        </Container>
       </Box>
-    </>
+    </Box>
   );
 }

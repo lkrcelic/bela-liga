@@ -1,148 +1,345 @@
 "use client";
 
-import React, {useState} from "react";
-import {Accordion, AccordionDetails, AccordionSummary, Box, IconButton, Typography} from "@mui/material";
+import React, {useEffect, useState} from "react";
+import {Box, CircularProgress, Divider, Paper, Tab, Tabs, Typography, useMediaQuery, useTheme,} from "@mui/material";
+import {Grid} from "@mui/system";
 import SingleActionButton from "@/app/_ui/SingleActionButton";
 import StandingsTable, {LeagueStandingsItem} from "@/app/_ui/StandingsTable";
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import {getLeagueStandingsByDateAPI} from "@/app/_fetchers/league/getStandingsByDate";
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 
-export default function PlayersSeating() {
+interface TabPanelProps {
+  children?: React.ReactNode;
+  index: number;
+  value: number;
+}
+
+function TabPanel(props: TabPanelProps) {
+  const {children, value, index, ...other} = props;
+
+  return (
+    <div
+      role="tabpanel"
+      hidden={value !== index}
+      id={`standings-tabpanel-${index}`}
+      aria-labelledby={`standings-tab-${index}`}
+      {...other}
+      style={{width: '100%', height: '100%'}}>
+      {value === index && (
+        <Box sx={{p: {xs: 1, sm: 2}, width: '100%', height: '100%'}}>
+          {children}
+        </Box>
+      )}
+    </div>
+  );
+}
+
+function a11yProps(index: number) {
+  return {
+    id: `standings-tab-${index}`,
+    'aria-controls': `standings-tabpanel-${index}`,
+  };
+}
+
+export default function DailyStandings() {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const [tabValue, setTabValue] = useState(0);
   const [leagueStandings, setLeagueStandings] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const [expandedStandings, setExpandedStandings] = useState(false);
-  const [expandedRound1, setExpandedRound1] = useState(false);
-  const [expandedRound2, setExpandedRound2] = useState(false);
-  const [expandedRound3, setExpandedRound3] = useState(false);
+  useEffect(() => {
+    const fetchStandings = async () => {
+      try {
+        setLoading(true);
+        const data = await getLeagueStandingsByDateAPI(1);
+        setLeagueStandings(data);
+      } catch (error) {
+        console.error("Error fetching standings:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const fetchLeagueStandings = async () => {
-    try {
-      const data = await getLeagueStandingsByDateAPI(1); //TODO remove hardcoded
+    fetchStandings();
+  }, []);
 
-      setLeagueStandings(data);
-    } catch (error) {
-      console.error("Error fetching league standings:", error);
-    } finally {
-      setLoading(false);
-    }
+  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+    setTabValue(newValue);
   };
-
-  React.useEffect(() => {
-    if (expandedStandings && !leagueStandings) {
-      fetchLeagueStandings();
-    }
-  }, [expandedStandings]);
-
-  /*
-    if (loading) {
-      return (
-        <Box sx={{display: "flex", justifyContent: "center", alignItems: "center", height: "100vh"}}>
-          <CircularProgress/>
-        </Box>
-      );
-    }
-
-    if (!leagueStandings) {
-      return <p>No data available</p>;
-    }
-  */
-  const handleChange = (setter) => () => {
-    setter((prevExpanded) => !prevExpanded);
-  };
-
 
   return (
-    <>
-      <Box sx={{gridArea: "top", alignSelf: "center"}}>
-        <Typography variant="h4" align="center" fontWeight="bold">Okupljanje 17.02.2025</Typography>
+    <Box sx={{
+      display: 'flex',
+      flexDirection: 'column',
+      minHeight: 'calc(100vh - 120px)',
+      width: '100%',
+      position: 'relative',
+      overflow: 'hidden'
+    }}>
+      <Box sx={{
+        gridArea: "top",
+        width: "100%",
+        backgroundColor: 'none',
+        borderBottom: '1px solid rgba(0,0,0,0.1)',
+        pb: 2,
+        position: 'sticky',
+        zIndex: 10
+      }}>
+        <Typography variant="h5" component="h1" sx={{
+          fontWeight: 'bold',
+          textAlign: 'center',
+          color: 'primary.main',
+          pb: 1
+        }}>
+          Okupljanje 17.02.2025
+        </Typography>
+        <Divider/>
       </Box>
-      <Box sx={{gridArea: "body"}}>
-        <Accordion sx={{width: "100%"}} expanded={expandedStandings} onChange={handleChange(setExpandedStandings)}>
-          <AccordionSummary
-            expandIcon={
-              <IconButton>
-                <ExpandMoreIcon/>
-              </IconButton>
-            }
-            aria-controls="panel-content"
-            id="panel-header"
-          >
-            <Typography variant="h6">{"Tablica okupljanja"}</Typography>
-          </AccordionSummary>
-          <AccordionDetails>
-            <Box   sx={{
-              alignSelf: "start",
-              justifyContent: {
-                xs: "flex-start",
-                sm: "center",
-              },
-              display: "flex",
-              overflow: "auto",
-              maxHeight: "100%",
-              width: "100%",
-              fontFamily: "Roboto, sans-serif",
-            }}>
-              <StandingsTable standings={(leagueStandings as LeagueStandingsItem[]) || []}/>
-            </Box>
-          </AccordionDetails>
-        </Accordion>
 
-        <Accordion expanded={expandedRound1} onChange={handleChange(setExpandedRound1)}>
-          <AccordionSummary
-            expandIcon={
-              <IconButton>
-                <ExpandMoreIcon/>
-              </IconButton>
-            }
-            aria-controls="panel-content"
-            id="panel-header"
-          >
-            <Typography variant="h6">{"Round 12"}</Typography>
-          </AccordionSummary>
-          <AccordionDetails>
-            <span>Sadržaj</span>
-          </AccordionDetails>
-        </Accordion>
+      {/* Main Content - Body Grid Area */}
+      <Box sx={{
+        gridArea: "body",
+        width: "100%",
+        height: '100%',
+        flexDirection: "column",
+        overflow: "hidden",
+      }}>
+        <Paper
+          elevation={2}
+          sx={{
+            borderRadius: 2,
+            overflow: 'hidden',
+            display: 'flex',
+            flexDirection: 'column',
+            height: '100%',
+            width: "100%",
+          }}
+        >
+          <Box sx={{borderBottom: 1, borderColor: 'divider'}}>
+            <Tabs
+              value={tabValue}
+              onChange={handleTabChange}
+              variant="scrollable"
+              scrollButtons="auto"
+              allowScrollButtonsMobile
+              sx={{
+                backgroundColor: theme.palette.primary.main,
+                overflowX: "auto",
+                width: "100%",
+                color: 'white',
+                '& .MuiTab-root': {
+                  color: 'rgba(255,255,255,0.7)',
+                  fontWeight: 'medium',
+                  fontSize: {xs: '0.85rem', sm: '0.95rem'},
+                  py: 2
+                },
+                '& .Mui-selected': {
+                  color: 'inherit !important',
+                  fontWeight: 'bold'
+                },
+                '& .MuiTabs-indicator': {
+                  backgroundColor: theme.palette.secondary.main,
+                  height: 3
+                }
+              }}
+            >
+              <Tab label="Tablica okupljanja" {...a11yProps(0)} />
+              <Tab label="Round 12" {...a11yProps(1)} />
+              <Tab label="Round 13" {...a11yProps(2)} />
+              <Tab label="Round 14" {...a11yProps(3)} />
+            </Tabs>
+          </Box>
 
-        <Accordion expanded={expandedRound2} onChange={handleChange(setExpandedRound2)}>
-          <AccordionSummary
-            expandIcon={
-              <IconButton>
-                <ExpandMoreIcon/>
-              </IconButton>
-            }
-            aria-controls="panel-content"
-            id="panel-header"
-          >
-            <Typography variant="h6">{"Round 13"}</Typography>
-          </AccordionSummary>
-          <AccordionDetails>
-            <span>Sadržaj</span>
-          </AccordionDetails>
-        </Accordion>
+          <Box sx={{
+            p: 1,
+            borderRadius: 2,
+            backgroundColor: 'background.paper',
+            display: 'flex',
+            flexDirection: 'column',
+            height: '100%',
+            pb: 8,
+          }}>
+            <TabPanel value={tabValue} index={0}>
+              {loading ? (
+                <Box sx={{display: 'flex', justifyContent: 'center', p: 4, flex: 1}}>
+                  <CircularProgress/>
+                </Box>
+              ) : (
+                <Box sx={{
+                  width: "100%",
+                  height: '100%',
+                  overflowX: 'auto',
+                  overflowY: 'hidden'
+                }}>
+                  <StandingsTable standings={(leagueStandings as LeagueStandingsItem[]) || []}/>
+                </Box>
+              )}
+            </TabPanel>
 
-        <Accordion expanded={expandedRound3} onChange={handleChange(setExpandedRound3)}>
-          <AccordionSummary
-            expandIcon={
-              <IconButton>
-                <ExpandMoreIcon/>
-              </IconButton>
-            }
-            aria-controls="panel-content"
-            id="panel-header"
-          >
-            <Typography variant="h6">{"Round 14"}</Typography>
-          </AccordionSummary>
-          <AccordionDetails>
-            <span>Sadržaj</span>
-          </AccordionDetails>
-        </Accordion>
+            <TabPanel value={tabValue} index={1}>
+              <Paper
+                elevation={0}
+                sx={{
+                  p: 0.5,
+                  borderRadius: 2,
+                  backgroundColor: 'background.paper',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  height: '100%',
+                }}
+              >
+                <Box sx={{position: 'sticky'}}>
+                  <Typography variant="h6" sx={{mb: 1, fontWeight: 'medium'}}>Round 12 Results</Typography>
+                  <Divider sx={{mb: 2}}/>
+                </Box>
+                <Box sx={{
+                  flex: 1,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 1,
+                  overflowY: 'auto',
+                  minHeight: 0,
+                }}>
+                  <Paper elevation={1} sx={{p: 2, borderRadius: 1, border: '1px solid rgba(0,0,0,0.08)'}}>
+                    <Typography variant="subtitle1" fontWeight="bold">Team A vs Team B</Typography>
+                    <Typography variant="body2" color="text.secondary">Score: 162 - 98</Typography>
+                  </Paper>
+                  <Paper elevation={1} sx={{p: 2, borderRadius: 1, border: '1px solid rgba(0,0,0,0.08)'}}>
+                    <Typography variant="subtitle1" fontWeight="bold">Team C vs Team D</Typography>
+                    <Typography variant="body2" color="text.secondary">Score: 120 - 142</Typography>
+                  </Paper>
+                  <Paper elevation={1} sx={{p: 2, borderRadius: 1, border: '1px solid rgba(0,0,0,0.08)'}}>
+                    <Typography variant="subtitle1" fontWeight="bold">Team E vs Team F</Typography>
+                    <Typography variant="body2" color="text.secondary">Score: 101 - 162</Typography>
+                  </Paper>
+                  <Paper elevation={1} sx={{p: 2, borderRadius: 1, border: '1px solid rgba(0,0,0,0.08)'}}>
+                    <Typography variant="subtitle1" fontWeight="bold">Team G vs Team H</Typography>
+                    <Typography variant="body2" color="text.secondary">Score: 95 - 108</Typography>
+                  </Paper>
+                  <Paper elevation={1} sx={{p: 2, borderRadius: 1, border: '1px solid rgba(0,0,0,0.08)'}}>
+                    <Typography variant="subtitle1" fontWeight="bold">Team G vs Team H</Typography>
+                    <Typography variant="body2" color="text.secondary">Score: 95 - 108</Typography>
+                  </Paper>
+                </Box>
+              </Paper>
+            </TabPanel>
 
+            <TabPanel value={tabValue} index={2}>
+              <Paper
+                elevation={0}
+                sx={{
+                  p: 1,
+                  borderRadius: 2,
+                  backgroundColor: 'background.paper',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  height: '100%',
+                }}
+              >
+                <Box sx={{position: 'sticky'}}>
+                  <Typography variant="h6" sx={{mb: 1, fontWeight: 'medium'}}>Round 13 Results</Typography>
+                  <Divider sx={{mb: 2}}/>
+                </Box>
+                <Box sx={{
+                  flex: 1,
+                  mb: 6,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 1,
+                  overflowY: 'auto',
+                  minHeight: 0,
+                }}>
+                  <Paper elevation={1} sx={{p: 2, borderRadius: 1, border: '1px solid rgba(0,0,0,0.08)'}}>
+                    <Typography variant="subtitle1" fontWeight="bold">Team A vs Team B</Typography>
+                    <Typography variant="body2" color="text.secondary">Score: 162 - 98</Typography>
+                  </Paper>
+                  <Paper elevation={1} sx={{p: 2, borderRadius: 1, border: '1px solid rgba(0,0,0,0.08)'}}>
+                    <Typography variant="subtitle1" fontWeight="bold">Team C vs Team D</Typography>
+                    <Typography variant="body2" color="text.secondary">Score: 120 - 142</Typography>
+                  </Paper>
+                  <Paper elevation={1} sx={{p: 2, borderRadius: 1, border: '1px solid rgba(0,0,0,0.08)'}}>
+                    <Typography variant="subtitle1" fontWeight="bold">Team E vs Team F</Typography>
+                    <Typography variant="body2" color="text.secondary">Score: 101 - 162</Typography>
+                  </Paper>
+                  <Paper elevation={1} sx={{p: 2, borderRadius: 1, border: '1px solid rgba(0,0,0,0.08)'}}>
+                    <Typography variant="subtitle1" fontWeight="bold">Team G vs Team H</Typography>
+                    <Typography variant="body2" color="text.secondary">Score: 95 - 108</Typography>
+                  </Paper>
+                  <Paper elevation={1} sx={{p: 2, borderRadius: 1, border: '1px solid rgba(0,0,0,0.08)'}}>
+                    <Typography variant="subtitle1" fontWeight="bold">Team G vs Team H</Typography>
+                    <Typography variant="body2" color="text.secondary">Score: 95 - 108</Typography>
+                  </Paper>
+                </Box>
+              </Paper>
+            </TabPanel>
+
+            <TabPanel value={tabValue} index={3}>
+              <Paper
+                elevation={0}
+                sx={{
+                  p: 1,
+                  borderRadius: 2,
+                  backgroundColor: 'background.paper',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  height: '100%',
+                }}
+              >
+                <Box sx={{position: 'sticky'}}>
+                  <Typography variant="h6" sx={{mb: 1, fontWeight: 'medium'}}>Round 14 Results</Typography>
+                  <Divider sx={{mb: 2}}/>
+                </Box>
+                <Box sx={{
+                  flex: 1,
+                  mb: 6,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 1,
+                  overflowY: 'auto',
+                  minHeight: 0,
+                }}>
+                  <Paper elevation={1} sx={{p: 2, borderRadius: 1, border: '1px solid rgba(0,0,0,0.08)'}}>
+                    <Typography variant="subtitle1" fontWeight="bold">Team A vs Team B</Typography>
+                    <Typography variant="body2" color="text.secondary">Score: 162 - 98</Typography>
+                  </Paper>
+                  <Paper elevation={1} sx={{p: 2, borderRadius: 1, border: '1px solid rgba(0,0,0,0.08)'}}>
+                    <Typography variant="subtitle1" fontWeight="bold">Team C vs Team D</Typography>
+                    <Typography variant="body2" color="text.secondary">Score: 120 - 142</Typography>
+                  </Paper>
+                  <Paper elevation={1} sx={{p: 2, borderRadius: 1, border: '1px solid rgba(0,0,0,0.08)'}}>
+                    <Typography variant="subtitle1" fontWeight="bold">Team E vs Team F</Typography>
+                    <Typography variant="body2" color="text.secondary">Score: 101 - 162</Typography>
+                  </Paper>
+                  <Paper elevation={1} sx={{p: 2, borderRadius: 1, border: '1px solid rgba(0,0,0,0.08)'}}>
+                    <Typography variant="subtitle1" fontWeight="bold">Team G vs Team H</Typography>
+                    <Typography variant="body2" color="text.secondary">Score: 95 - 108</Typography>
+                  </Paper>
+                  <Paper elevation={1} sx={{p: 2, borderRadius: 1, border: '1px solid rgba(0,0,0,0.08)'}}>
+                    <Typography variant="subtitle1" fontWeight="bold">Team G vs Team H</Typography>
+                    <Typography variant="body2" color="text.secondary">Score: 95 - 108</Typography>
+                  </Paper>
+                </Box>
+              </Paper>
+            </TabPanel>
+          </Box>
+        </Paper>
       </Box>
-      <Box sx={{gridArea: "actions"}}>
-        <SingleActionButton label={"Nazad"} onClick={() => window.history.back()}/>
-      </Box>
-    </>
+
+      <Grid item xs={12} sx={{
+        gridArea: "actions",
+        width: "100%",
+        display: 'flex',
+        justifyContent: 'center',
+        mt: 2
+      }}>
+        <SingleActionButton
+          fullWidth={isMobile}
+          label={"Nazad"}
+          onClick={() => window.history.back()}
+          icon={<ArrowBackIcon/>}
+        />
+      </Grid>
+    </Box>
   );
 }

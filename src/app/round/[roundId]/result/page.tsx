@@ -1,17 +1,21 @@
 "use client";
 
 import React, {useState} from 'react';
-import {Box, Typography} from '@mui/material';
+import {Box, Typography, useMediaQuery} from '@mui/material';
 import {useParams, useRouter} from "next/navigation";
 import {getRoundDataAPI} from "@/app/_fetchers/round/getOne";
 import useRoundStore from "@/app/_store/RoundStore";
 import {Grid} from "@mui/system";
 import SingleActionButton from "@/app/_ui/SingleActionButton";
 import {getAllMatchesByRoundIdAPI} from "@/app/_fetchers/match/getAllByRoundId";
+import theme from "@/app/_styles/theme";
+import Home from '@mui/icons-material/Home';
+
 
 const MobileScoreBoard = () => {
   const router = useRouter();
   const {roundId} = useParams();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const {roundData: {team1_wins, team2_wins, team1, team2}, setRoundData} = useRoundStore();
   const [matches, setMatches] = useState();
@@ -112,7 +116,7 @@ const MobileScoreBoard = () => {
         </Grid>
       </Box>
       <Box sx={{gridArea: "actions", alignSelf: "start"}}>
-        <SingleActionButton label={"Početni zaslon"} onClick={() => router.push(`/`)}/>
+        <SingleActionButton label={"Početni zaslon"} icon={<Home />} fullWidth={isMobile} onClick={() => router.push(`/`)}/>
       </Box>
     </>
   );
