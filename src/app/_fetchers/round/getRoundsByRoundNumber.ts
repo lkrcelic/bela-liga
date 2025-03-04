@@ -1,12 +1,27 @@
 import {RoundMatchup} from "@/app/_lib/service/round/getRoundMatchups";
 
 export async function getRoundsByRoundNumber(roundNumber: number): Promise<RoundMatchup[]> {
-  const response = await fetch("api/roundMatchups/" + roundNumber.toString(), {
-    method: "GET",
-    headers: {"Content-Type": "application/json"},
-  });
-  if (!response.ok) {
-    throw new Error(`Failed to fetch team data: ${response.statusText}`);
+  try {
+    if (roundNumber === undefined || roundNumber <= 0) {
+      console.log(`Invalid round number: ${roundNumber}`);
+      return [];
+    }
+
+    const url = `/api/roundMatchups/${roundNumber}`;
+
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {"Content-Type": "application/json"},
+    });
+    
+    if (!response.ok) {
+      console.error(`Failed to fetch team data: ${response.status} ${response.statusText}`);
+      return [];
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Error fetching round data:", error);
+    return [];
   }
-  return await response.json();
 }

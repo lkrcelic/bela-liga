@@ -1,7 +1,7 @@
 # Tasks
+- Dodati table u roundu, table se definira kod kreiranja runde, table pise na aktivnim rundama,
 - Kada sesija istekne ne brise se cooike ili nes pa login jebe
 - Kada se ide nazad i kada se klikne opet na kreiraj Rundu ona se doita kreira s istim timovima....
-- Dodati nekako runde koje su live?
 
 - Dodati user profile ekran
 - dodati pregled svih odigranih mečeva ekran

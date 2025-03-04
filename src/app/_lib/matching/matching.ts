@@ -14,11 +14,10 @@ export interface TeamPair {
 
 export function matchTeams(teams: Team[]): TeamPair[] {
   const team_pairs: TeamPair[] = [];
-  const poolSize = Math.max(teams.length / 8, 2);
+  const chosenPoolSize = Math.max(teams.length / 8, 2);
 
   teams.sort((a, b) => a.score === b.score ? b.point_difference - a.point_difference : b.score - a.score);
 
-  // Count is odd? Assign last team to BYE for this round
   if (teams.length % 2) {
     team_pairs.push({
       teamOne: teams.pop(),
@@ -37,7 +36,7 @@ export function matchTeams(teams: Team[]): TeamPair[] {
       times_played_against[num] = (times_played_against[num] || 0) + 1;
     });
 
-    const possibleTeams = teams.slice(0, poolSize)
+    const possibleTeams = teams.slice(0, chosenPoolSize)
       .sort((a, b) => {
         const aForbidden = forbiddenMatchups.includes(a.id) ? 1 : 0;
         const bForbidden = forbiddenMatchups.includes(b.id) ? 1 : 0;
@@ -63,7 +62,7 @@ export function matchTeams(teams: Team[]): TeamPair[] {
 
   if (team_pairs.length > 0 && team_pairs[0].teamTwo.name.toLowerCase() === 'bye') {
     const firstPair = team_pairs.shift();
-    if (firstPair) { // shift returns undefined if the array is empty
+    if (firstPair) {
       team_pairs.push(firstPair);
     }
   }

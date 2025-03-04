@@ -4,9 +4,17 @@ import {getLeagueStandingsByDate} from "@/app/_lib/service/league/getStandingsBy
 
 export async function GET(request: NextRequest, {params}: { params: { id: string } }) {
   const {id} = params;
+  const searchParams = request.nextUrl.searchParams;
+  const dateParam = searchParams.get('date');
+  
+  const formatDate = (date: Date): string => {
+    return date.toISOString().split('T')[0]; // Format as YYYY-MM-DD
+  };
+  
+  const currentDate = dateParam ? formatDate(new Date(dateParam)) : formatDate(new Date());
 
   try {
-    const teamScores = await getLeagueStandingsByDate(Number(id), "2025-03-02");
+    const teamScores = await getLeagueStandingsByDate(Number(id), currentDate);
 
     return NextResponse.json(teamScores, {status: STATUS.OK});
   } catch (error) {

@@ -6,7 +6,7 @@ import {useState} from "react";
 import SelectTable, {TableEntry} from "@/app/createRound/ui/SelectTable";
 import {Team} from "@prisma/client";
 import {createRoundsAPI} from "@/app/_fetchers/round/createRounds";
-import OpponentsTable from "./ui/OpponentsTable";
+import {useRouter} from "next/navigation";
 
 interface LeagueTeam {
   league_id: number;
@@ -19,8 +19,8 @@ interface League {
 }
 
 export default function CreateRound() {
+  const router = useRouter();
   const [selectedLeagueId, setSelectedLeagueId] = useState<number | null>(null);
-  const [roundNumber, setRoundNumber] = useState<number | null>(null);
 
   const handleSelect = (leagueId: number) => {
     setSelectedLeagueId(leagueId);
@@ -53,9 +53,12 @@ export default function CreateRound() {
   };
 
   const createRound = async (teamIds: number[]) => {
-    if (selectedLeagueId === null) return;
+    if (selectedLeagueId === null) {
+      return;
+    }
+
     const createdRoundNumber = await createRoundsAPI(selectedLeagueId, teamIds);
-    setRoundNumber(createdRoundNumber);
+    router.push(`/round/pairings/${createdRoundNumber}`);
   };
 
   return (
@@ -69,14 +72,13 @@ export default function CreateRound() {
           padding: 2,
           boxSizing: "border-box",
           textAlign: "center",
+          overflowY: 'auto'
         }}
       >
-        {roundNumber !== null ? (
-          <OpponentsTable roundNumber={roundNumber} />
-        ) : selectedLeagueId === null ? (
-          <Dropdown onSelect={handleSelect} getOptions={fetchLeagues} />
+        {selectedLeagueId === null ? (
+          <Dropdown onSelect={handleSelect} getOptions={fetchLeagues}/>
         ) : (
-          <SelectTable onLoad={fetchTeams} onCreate={createRound} />
+          <SelectTable onLoad={fetchTeams} onCreate={createRound}/>
         )}
       </Box>
     </>

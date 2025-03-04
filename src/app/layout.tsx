@@ -34,7 +34,8 @@ export default function RootLayout({
           paddingY: 2,
           paddingX: 2,
           position: "relative",
-          width: "100%"
+          width: "100%",
+          overflowY: 'hidden',
         }}
       >
         <Box

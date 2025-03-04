@@ -27,29 +27,50 @@ interface SelectTableProperties {
 export default function SelectTable({onLoad, onCreate}: SelectTableProperties) {
   const [entries, setEntries] = useState<TableEntry[]>([]);
   const [filteredEntries, setFilteredEntries] = useState<TableEntry[]>([]);
-  const [switchStates, setSwitchStates] = useState<boolean[]>([]);
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [selectAll, setSelectAll] = useState<boolean>(false);
   const [searchTerm, setSearchTerm] = useState<string>("");
 
   const handleToggleAll = (checked: boolean) => {
     setSelectAll(checked);
-    setSwitchStates(new Array(entries.length).fill(checked));
+    
+    // Update selectedIds based on all entries or filtered entries
+    const entriesToToggle = searchTerm === "" ? entries : filteredEntries;
+    
+    if (checked) {
+      // Add all IDs to the set
+      const newSelectedIds = new Set(selectedIds);
+      entriesToToggle.forEach(entry => newSelectedIds.add(entry.id));
+      setSelectedIds(newSelectedIds);
+    } else {
+      // Remove all filtered IDs from the set
+      const newSelectedIds = new Set(selectedIds);
+      entriesToToggle.forEach(entry => newSelectedIds.delete(entry.id));
+      setSelectedIds(newSelectedIds);
+    }
   };
 
-  const handleToggleSingle = (checked: boolean, index: number) => {
-    const updatedStates = [...switchStates];
-    updatedStates[index] = checked;
-    setSwitchStates(updatedStates);
+  const handleToggleSingle = (checked: boolean, entryId: number) => {
+    const newSelectedIds = new Set(selectedIds);
+    
+    if (checked) {
+      newSelectedIds.add(entryId);
+    } else {
+      newSelectedIds.delete(entryId);
+    }
+    
+    setSelectedIds(newSelectedIds);
 
-    // Update "Select All" based on individual toggles
-    if (searchTerm !== "") return;
-    const allSelected = updatedStates.every((state) => state);
-    setSelectAll(allSelected);
+    // Update "Select All" based on whether all visible entries are selected
+    if (searchTerm === "") {
+      setSelectAll(entries.every(entry => newSelectedIds.has(entry.id)));
+    } else {
+      setSelectAll(filteredEntries.every(entry => newSelectedIds.has(entry.id)));
+    }
   };
 
   const clickButton = () => {
-    const selectedIds = entries.filter((_, index) => switchStates[index]).map((ent) => ent.id);
-    onCreate(selectedIds);
+    onCreate(Array.from(selectedIds));
   };
 
   const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -59,6 +80,13 @@ export default function SelectTable({onLoad, onCreate}: SelectTableProperties) {
     // Filter entries based on search term
     const filtered = entries.filter((entry) => entry.name.toLowerCase().includes(term));
     setFilteredEntries(filtered);
+    
+    // Update selectAll state based on filtered entries
+    if (filtered.length > 0) {
+      setSelectAll(filtered.every(entry => selectedIds.has(entry.id)));
+    } else {
+      setSelectAll(false);
+    }
   };
 
   useEffect(() => {
@@ -66,7 +94,10 @@ export default function SelectTable({onLoad, onCreate}: SelectTableProperties) {
       const data = await onLoad();
       setEntries(data);
       setFilteredEntries(data);
-      setSwitchStates(new Array(data.length).fill(true));
+      
+      // Initially select all teams
+      const allIds = new Set(data.map(entry => entry.id));
+      setSelectedIds(allIds);
       setSelectAll(true);
     };
     fetchData();
@@ -91,26 +122,24 @@ export default function SelectTable({onLoad, onCreate}: SelectTableProperties) {
             </TableRow>
           </TableHead>
           <TableBody>
-            {searchTerm === "" ? (
+            {filteredEntries.length > 0 && (
               <TableRow>
                 <TableCell>
-                  <b>Select all</b>
+                  <b>Select all {searchTerm ? "filtered" : ""}</b>
                 </TableCell>
                 <TableCell align="right">
                   <Switch checked={selectAll} onChange={(event) => handleToggleAll(event.target.checked)}></Switch>
                 </TableCell>
               </TableRow>
-            ) : (
-              <></>
             )}
 
-            {filteredEntries.map((ent, index) => (
-              <TableRow key={ent.id}>
-                <TableCell>{ent.name}</TableCell>
+            {filteredEntries.map((entry) => (
+              <TableRow key={entry.id}>
+                <TableCell>{entry.name}</TableCell>
                 <TableCell align="right">
                   <Switch
-                    checked={switchStates[index]}
-                    onChange={(event) => handleToggleSingle(event.target.checked, index)}
+                    checked={selectedIds.has(entry.id)}
+                    onChange={(event) => handleToggleSingle(event.target.checked, entry.id)}
                   ></Switch>
                 </TableCell>
               </TableRow>

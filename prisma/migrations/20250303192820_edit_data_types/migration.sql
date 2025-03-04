@@ -1,0 +1,6 @@
+-- AlterTable
+ALTER TABLE "Match" ALTER COLUMN "match_date" SET DATA TYPE DATE;
+
+-- AlterTable
+ALTER TABLE "Round" ALTER COLUMN "round_date" SET DEFAULT CURRENT_TIMESTAMP,
+ALTER COLUMN "round_date" SET DATA TYPE DATE;

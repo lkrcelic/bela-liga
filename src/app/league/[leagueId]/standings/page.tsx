@@ -47,7 +47,7 @@ export default function PlayersSeating() {
           textAlign: 'center',
           color: 'primary.main',
           pb: 1
-        }}> Tablica
+        }}> Upkupni poredak
         </Typography>
         <Divider/>
       </Box>

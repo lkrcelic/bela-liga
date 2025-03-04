@@ -1,71 +1,113 @@
 "use client";
 
 import React, {useEffect, useState} from "react";
-import {Box, CircularProgress, Divider, Paper, Tab, Tabs, Typography, useMediaQuery, useTheme,} from "@mui/material";
+import {Box, Paper, Tab, Tabs, useMediaQuery, useTheme} from "@mui/material";
 import {Grid} from "@mui/system";
 import SingleActionButton from "@/app/_ui/SingleActionButton";
-import StandingsTable, {LeagueStandingsItem} from "@/app/_ui/StandingsTable";
+import {LeagueStandingsItem} from "@/app/_ui/StandingsTable";
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import {getLeagueStandingsByDateAPI} from "@/app/_fetchers/league/getStandingsByDate";
+import {a11yProps, PageHeader, RoundResultsPanel, StandingsTabContent, TabPanel} from "./ui";
+import {getRoundsAPI} from "@/app/_fetchers/round/getRounds";
+import {RoundType} from "@/app/_interfaces/round";
+import {useParams, useSearchParams} from "next/navigation";
 
-interface TabPanelProps {
-  children?: React.ReactNode;
-  index: number;
-  value: number;
-}
-
-function TabPanel(props: TabPanelProps) {
-  const {children, value, index, ...other} = props;
-
-  return (
-    <div
-      role="tabpanel"
-      hidden={value !== index}
-      id={`standings-tabpanel-${index}`}
-      aria-labelledby={`standings-tab-${index}`}
-      {...other}
-      style={{width: '100%', height: '100%'}}>
-      {value === index && (
-        <Box sx={{p: {xs: 1, sm: 2}, width: '100%', height: '100%'}}>
-          {children}
-        </Box>
-      )}
-    </div>
-  );
-}
-
-function a11yProps(index: number) {
-  return {
-    id: `standings-tab-${index}`,
-    'aria-controls': `standings-tabpanel-${index}`,
-  };
-}
+// Group rounds by round number
+type GroupedRounds = {
+  [key: number]: RoundType[];
+};
 
 export default function DailyStandings() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [tabValue, setTabValue] = useState(0);
-  const [leagueStandings, setLeagueStandings] = useState(null);
+  const [leagueStandings, setLeagueStandings] = useState<LeagueStandingsItem[] | null>(null);
   const [loading, setLoading] = useState(true);
+  const [roundsLoading, setRoundsLoading] = useState(true);
+  const [roundsByNumber, setRoundsByNumber] = useState<GroupedRounds>({});
+  const [roundNumbers, setRoundNumbers] = useState<number[]>([]);
+  const [selectedDate, setSelectedDate] = useState<string>("");
+  
+  const params = useParams<{ leagueId: string }>();
+  const searchParams = useSearchParams();
+  const dateParam = searchParams.get('date');
+  
+  // Format date for API query
+  const formatDate = (date: Date): string => {
+    return date.toISOString().split('T')[0]; // Format as YYYY-MM-DD
+  };
 
   useEffect(() => {
-    const fetchStandings = async () => {
+    // Set the selected date from URL parameter or default to current date
+    const currentDate = dateParam || formatDate(new Date());
+    setSelectedDate(currentDate);
+    
+    const fetchData = async () => {
       try {
         setLoading(true);
-        const data = await getLeagueStandingsByDateAPI(1);
-        setLeagueStandings(data);
+        setRoundsLoading(true);
+        
+        // Fetch standings
+        const leagueId = parseInt(params.leagueId);
+        const standingsData = await getLeagueStandingsByDateAPI(leagueId, currentDate);
+        setLeagueStandings(standingsData);
+        
+        // Fetch rounds for the selected date and league_id
+        const roundsData = await getRoundsAPI({
+          round_date: currentDate,
+          league_id: leagueId
+        });
+        
+        // Group rounds by round_number
+        const grouped: GroupedRounds = {};
+        roundsData.forEach(round => {
+          const roundNumber = round.round_number;
+          if (!grouped[roundNumber]) {
+            grouped[roundNumber] = [];
+          }
+          grouped[roundNumber].push(round);
+        });
+        
+        setRoundsByNumber(grouped);
+        
+        // Extract and sort round numbers for tabs
+        const numbers = Object.keys(grouped).map(Number).sort((a, b) => a - b);
+        setRoundNumbers(numbers);
       } catch (error) {
-        console.error("Error fetching standings:", error);
+        console.error("Error fetching data:", error);
       } finally {
         setLoading(false);
+        setRoundsLoading(false);
       }
     };
 
-    fetchStandings();
-  }, []);
+    fetchData();
+  }, [params.leagueId, dateParam]);
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
+  };
+  
+  // Convert round data to match result format
+  const mapRoundsToMatchResults = (rounds: RoundType[]) => {
+    return rounds.map(round => ({
+      team1Name: round.team1?.team_name || `Team ${round.team1_id}`,
+      team2Name: round.team2?.team_name || `Team ${round.team2_id}`,
+      team1Score: round.team1_wins,
+      team2Score: round.team2_wins,
+      active: round.active || false,
+      tableNumber: round.table_number || 0,
+    }));
+  };
+
+  // Format date for display (e.g., "17.02.2025")
+  const formatDisplayDate = (dateString: string): string => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('hr-HR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
   };
 
   return (
@@ -77,25 +119,7 @@ export default function DailyStandings() {
       position: 'relative',
       overflow: 'hidden'
     }}>
-      <Box sx={{
-        gridArea: "top",
-        width: "100%",
-        backgroundColor: 'none',
-        borderBottom: '1px solid rgba(0,0,0,0.1)',
-        pb: 2,
-        position: 'sticky',
-        zIndex: 10
-      }}>
-        <Typography variant="h5" component="h1" sx={{
-          fontWeight: 'bold',
-          textAlign: 'center',
-          color: 'primary.main',
-          pb: 1
-        }}>
-          Okupljanje 17.02.2025
-        </Typography>
-        <Divider/>
-      </Box>
+      <PageHeader title={`Okupljanje ${formatDisplayDate(selectedDate)}`}/>
 
       {/* Main Content - Body Grid Area */}
       <Box sx={{
@@ -145,9 +169,9 @@ export default function DailyStandings() {
               }}
             >
               <Tab label="Tablica okupljanja" {...a11yProps(0)} />
-              <Tab label="Round 12" {...a11yProps(1)} />
-              <Tab label="Round 13" {...a11yProps(2)} />
-              <Tab label="Round 14" {...a11yProps(3)} />
+              {roundNumbers.map((roundNumber, index) => (
+                <Tab key={roundNumber} label={`Round ${roundNumber}`} {...a11yProps(index + 1)} />
+              ))}
             </Tabs>
           </Box>
 
@@ -161,172 +185,23 @@ export default function DailyStandings() {
             pb: 8,
           }}>
             <TabPanel value={tabValue} index={0}>
-              {loading ? (
-                <Box sx={{display: 'flex', justifyContent: 'center', p: 4, flex: 1}}>
-                  <CircularProgress/>
-                </Box>
-              ) : (
-                <Box sx={{
-                  width: "100%",
-                  height: '100%',
-                  overflowX: 'auto',
-                  overflowY: 'hidden'
-                }}>
-                  <StandingsTable standings={(leagueStandings as LeagueStandingsItem[]) || []}/>
-                </Box>
-              )}
+              <StandingsTabContent loading={loading} leagueStandings={leagueStandings}/>
             </TabPanel>
 
-            <TabPanel value={tabValue} index={1}>
-              <Paper
-                elevation={0}
-                sx={{
-                  p: 0.5,
-                  borderRadius: 2,
-                  backgroundColor: 'background.paper',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  height: '100%',
-                }}
-              >
-                <Box sx={{position: 'sticky'}}>
-                  <Typography variant="h6" sx={{mb: 1, fontWeight: 'medium'}}>Round 12 Results</Typography>
-                  <Divider sx={{mb: 2}}/>
-                </Box>
-                <Box sx={{
-                  flex: 1,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: 1,
-                  overflowY: 'auto',
-                  minHeight: 0,
-                }}>
-                  <Paper elevation={1} sx={{p: 2, borderRadius: 1, border: '1px solid rgba(0,0,0,0.08)'}}>
-                    <Typography variant="subtitle1" fontWeight="bold">Team A vs Team B</Typography>
-                    <Typography variant="body2" color="text.secondary">Score: 162 - 98</Typography>
-                  </Paper>
-                  <Paper elevation={1} sx={{p: 2, borderRadius: 1, border: '1px solid rgba(0,0,0,0.08)'}}>
-                    <Typography variant="subtitle1" fontWeight="bold">Team C vs Team D</Typography>
-                    <Typography variant="body2" color="text.secondary">Score: 120 - 142</Typography>
-                  </Paper>
-                  <Paper elevation={1} sx={{p: 2, borderRadius: 1, border: '1px solid rgba(0,0,0,0.08)'}}>
-                    <Typography variant="subtitle1" fontWeight="bold">Team E vs Team F</Typography>
-                    <Typography variant="body2" color="text.secondary">Score: 101 - 162</Typography>
-                  </Paper>
-                  <Paper elevation={1} sx={{p: 2, borderRadius: 1, border: '1px solid rgba(0,0,0,0.08)'}}>
-                    <Typography variant="subtitle1" fontWeight="bold">Team G vs Team H</Typography>
-                    <Typography variant="body2" color="text.secondary">Score: 95 - 108</Typography>
-                  </Paper>
-                  <Paper elevation={1} sx={{p: 2, borderRadius: 1, border: '1px solid rgba(0,0,0,0.08)'}}>
-                    <Typography variant="subtitle1" fontWeight="bold">Team G vs Team H</Typography>
-                    <Typography variant="body2" color="text.secondary">Score: 95 - 108</Typography>
-                  </Paper>
-                </Box>
-              </Paper>
-            </TabPanel>
-
-            <TabPanel value={tabValue} index={2}>
-              <Paper
-                elevation={0}
-                sx={{
-                  p: 1,
-                  borderRadius: 2,
-                  backgroundColor: 'background.paper',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  height: '100%',
-                }}
-              >
-                <Box sx={{position: 'sticky'}}>
-                  <Typography variant="h6" sx={{mb: 1, fontWeight: 'medium'}}>Round 13 Results</Typography>
-                  <Divider sx={{mb: 2}}/>
-                </Box>
-                <Box sx={{
-                  flex: 1,
-                  mb: 6,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: 1,
-                  overflowY: 'auto',
-                  minHeight: 0,
-                }}>
-                  <Paper elevation={1} sx={{p: 2, borderRadius: 1, border: '1px solid rgba(0,0,0,0.08)'}}>
-                    <Typography variant="subtitle1" fontWeight="bold">Team A vs Team B</Typography>
-                    <Typography variant="body2" color="text.secondary">Score: 162 - 98</Typography>
-                  </Paper>
-                  <Paper elevation={1} sx={{p: 2, borderRadius: 1, border: '1px solid rgba(0,0,0,0.08)'}}>
-                    <Typography variant="subtitle1" fontWeight="bold">Team C vs Team D</Typography>
-                    <Typography variant="body2" color="text.secondary">Score: 120 - 142</Typography>
-                  </Paper>
-                  <Paper elevation={1} sx={{p: 2, borderRadius: 1, border: '1px solid rgba(0,0,0,0.08)'}}>
-                    <Typography variant="subtitle1" fontWeight="bold">Team E vs Team F</Typography>
-                    <Typography variant="body2" color="text.secondary">Score: 101 - 162</Typography>
-                  </Paper>
-                  <Paper elevation={1} sx={{p: 2, borderRadius: 1, border: '1px solid rgba(0,0,0,0.08)'}}>
-                    <Typography variant="subtitle1" fontWeight="bold">Team G vs Team H</Typography>
-                    <Typography variant="body2" color="text.secondary">Score: 95 - 108</Typography>
-                  </Paper>
-                  <Paper elevation={1} sx={{p: 2, borderRadius: 1, border: '1px solid rgba(0,0,0,0.08)'}}>
-                    <Typography variant="subtitle1" fontWeight="bold">Team G vs Team H</Typography>
-                    <Typography variant="body2" color="text.secondary">Score: 95 - 108</Typography>
-                  </Paper>
-                </Box>
-              </Paper>
-            </TabPanel>
-
-            <TabPanel value={tabValue} index={3}>
-              <Paper
-                elevation={0}
-                sx={{
-                  p: 1,
-                  borderRadius: 2,
-                  backgroundColor: 'background.paper',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  height: '100%',
-                }}
-              >
-                <Box sx={{position: 'sticky'}}>
-                  <Typography variant="h6" sx={{mb: 1, fontWeight: 'medium'}}>Round 14 Results</Typography>
-                  <Divider sx={{mb: 2}}/>
-                </Box>
-                <Box sx={{
-                  flex: 1,
-                  mb: 6,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: 1,
-                  overflowY: 'auto',
-                  minHeight: 0,
-                }}>
-                  <Paper elevation={1} sx={{p: 2, borderRadius: 1, border: '1px solid rgba(0,0,0,0.08)'}}>
-                    <Typography variant="subtitle1" fontWeight="bold">Team A vs Team B</Typography>
-                    <Typography variant="body2" color="text.secondary">Score: 162 - 98</Typography>
-                  </Paper>
-                  <Paper elevation={1} sx={{p: 2, borderRadius: 1, border: '1px solid rgba(0,0,0,0.08)'}}>
-                    <Typography variant="subtitle1" fontWeight="bold">Team C vs Team D</Typography>
-                    <Typography variant="body2" color="text.secondary">Score: 120 - 142</Typography>
-                  </Paper>
-                  <Paper elevation={1} sx={{p: 2, borderRadius: 1, border: '1px solid rgba(0,0,0,0.08)'}}>
-                    <Typography variant="subtitle1" fontWeight="bold">Team E vs Team F</Typography>
-                    <Typography variant="body2" color="text.secondary">Score: 101 - 162</Typography>
-                  </Paper>
-                  <Paper elevation={1} sx={{p: 2, borderRadius: 1, border: '1px solid rgba(0,0,0,0.08)'}}>
-                    <Typography variant="subtitle1" fontWeight="bold">Team G vs Team H</Typography>
-                    <Typography variant="body2" color="text.secondary">Score: 95 - 108</Typography>
-                  </Paper>
-                  <Paper elevation={1} sx={{p: 2, borderRadius: 1, border: '1px solid rgba(0,0,0,0.08)'}}>
-                    <Typography variant="subtitle1" fontWeight="bold">Team G vs Team H</Typography>
-                    <Typography variant="body2" color="text.secondary">Score: 95 - 108</Typography>
-                  </Paper>
-                </Box>
-              </Paper>
-            </TabPanel>
+            {roundNumbers.map((roundNumber, index) => (
+              <TabPanel key={roundNumber} value={tabValue} index={index + 1}>
+                <RoundResultsPanel
+                  roundNumber={roundNumber}
+                  matches={mapRoundsToMatchResults(roundsByNumber[roundNumber] || [])}
+                  activeRounds={roundsByNumber[roundNumber]?.filter(round => round.active).length || 0}
+                />
+              </TabPanel>
+            ))}
           </Box>
         </Paper>
       </Box>
 
-      <Grid item xs={12} sx={{
+      <Grid item size={{xs: 12}} sx={{
         gridArea: "actions",
         width: "100%",
         display: 'flex',

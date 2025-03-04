@@ -179,6 +179,7 @@ model Round {
   team1_wins   Int       @default(0)
   team2_wins   Int       @default(0)
   active       Boolean   @default(true)
+  table_number Int?
 
   team1            Team              @relation("RoundTeam1", fields: [team1_id], references: [team_id], onDelete: SetNull)
   team2            Team              @relation("RoundTeam2", fields: [team2_id], references: [team_id], onDelete: SetNull)
