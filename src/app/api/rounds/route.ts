@@ -6,7 +6,6 @@ import {CreateRound} from "@/app/_interfaces/round";
 import {checkCurrentUserIsAdmin} from "@/app/_lib/auth";
 import {insertPairRounds} from "@/app/_lib/service/round/insertPairRounds";
 import {prisma} from "@/app/_lib/prisma";
-import {log} from "node:util";
 
 export async function GET(request: NextRequest) {
   try {
@@ -18,7 +17,7 @@ export async function GET(request: NextRequest) {
     const teamId = searchParams.get('team_id');
     const leagueId = searchParams.get('league_id');
     
-    const whereClause: any = {};
+    const whereClause = {};
     
     if (roundDate) {
       const dateStr = new Date(roundDate).toISOString().split('T')[0];

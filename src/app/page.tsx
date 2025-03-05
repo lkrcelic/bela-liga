@@ -48,7 +48,6 @@ const ActionButton = ({onClick, label, color = "primary", fullWidth = true, icon
 export default function Home() {
   const router = useRouter();
   const [isAdmin, setIsAdmin] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
 
   // Check if user is admin
   useEffect(() => {
@@ -61,7 +60,6 @@ export default function Home() {
   // Navigation handlers
   const handleStartGame = async () => {
     try {
-      setIsLoading(true);
       const {roundId, ongoingMatchId} = await getActiveRoundByPlayerIdAPI();
 
       if (ongoingMatchId) {
@@ -71,20 +69,15 @@ export default function Home() {
       }
     } catch (error) {
       console.error('Error starting game:', error);
-    } finally {
-      setIsLoading(false);
     }
   };
 
   const handleLogout = async () => {
     try {
-      setIsLoading(true);
       await logoutUser();
       window.location.reload();
     } catch (error) {
       console.error('Error logging out:', error);
-    } finally {
-      setIsLoading(false);
     }
   };
 

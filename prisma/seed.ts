@@ -229,6 +229,7 @@ async function main() {
     },
   });
 
+/*
   const teamBYE = await prisma.team.create({
     data: {
       team_id: 0,
@@ -236,6 +237,7 @@ async function main() {
       creator_id: player0.id,
     },
   });
+*/
 
   const team1 = await prisma.team.create({
     data: {

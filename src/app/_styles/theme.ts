@@ -76,7 +76,7 @@ const themeOptions: ThemeOptions = {
       fontSize: '1.1rem',
       fontWeight: 500,
       color: '#212121',
-    } as any, // Using 'as any' since h7 is not a standard variant
+    },
     body1: {
       fontSize: '1rem',
       color: '#212121',

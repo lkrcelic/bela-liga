@@ -35,7 +35,7 @@ export default function LogInForm({onFormSubmit}: LogInFormProperties) {
     try {
       PlayerCreate.pick({[fieldName]: true} as Record<FormField, true>).parse({[name]: value});
       setErrors((prevErrors) => ({...prevErrors, [fieldName]: undefined}));
-    } catch (error: any) {
+    } catch (error) {
       if (error.errors && error.errors[0]) {
         setErrors((prevErrors) => ({
           ...prevErrors,

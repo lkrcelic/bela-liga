@@ -1,7 +1,9 @@
 "use client";
 
-import {useState, useEffect} from "react";
+import {useEffect, useState} from "react";
 import {
+  Button,
+  Paper,
   Switch,
   Table,
   TableBody,
@@ -9,8 +11,6 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  Paper,
-  Button,
   TextField,
 } from "@mui/material";
 
@@ -33,10 +33,10 @@ export default function SelectTable({onLoad, onCreate}: SelectTableProperties) {
 
   const handleToggleAll = (checked: boolean) => {
     setSelectAll(checked);
-    
+
     // Update selectedIds based on all entries or filtered entries
     const entriesToToggle = searchTerm === "" ? entries : filteredEntries;
-    
+
     if (checked) {
       // Add all IDs to the set
       const newSelectedIds = new Set(selectedIds);
@@ -52,13 +52,13 @@ export default function SelectTable({onLoad, onCreate}: SelectTableProperties) {
 
   const handleToggleSingle = (checked: boolean, entryId: number) => {
     const newSelectedIds = new Set(selectedIds);
-    
+
     if (checked) {
       newSelectedIds.add(entryId);
     } else {
       newSelectedIds.delete(entryId);
     }
-    
+
     setSelectedIds(newSelectedIds);
 
     // Update "Select All" based on whether all visible entries are selected
@@ -80,7 +80,7 @@ export default function SelectTable({onLoad, onCreate}: SelectTableProperties) {
     // Filter entries based on search term
     const filtered = entries.filter((entry) => entry.name.toLowerCase().includes(term));
     setFilteredEntries(filtered);
-    
+
     // Update selectAll state based on filtered entries
     if (filtered.length > 0) {
       setSelectAll(filtered.every(entry => selectedIds.has(entry.id)));
@@ -94,7 +94,7 @@ export default function SelectTable({onLoad, onCreate}: SelectTableProperties) {
       const data = await onLoad();
       setEntries(data);
       setFilteredEntries(data);
-      
+
       // Initially select all teams
       const allIds = new Set(data.map(entry => entry.id));
       setSelectedIds(allIds);

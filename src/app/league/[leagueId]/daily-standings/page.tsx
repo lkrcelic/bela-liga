@@ -23,15 +23,14 @@ export default function DailyStandings() {
   const [tabValue, setTabValue] = useState(0);
   const [leagueStandings, setLeagueStandings] = useState<LeagueStandingsItem[] | null>(null);
   const [loading, setLoading] = useState(true);
-  const [roundsLoading, setRoundsLoading] = useState(true);
   const [roundsByNumber, setRoundsByNumber] = useState<GroupedRounds>({});
   const [roundNumbers, setRoundNumbers] = useState<number[]>([]);
   const [selectedDate, setSelectedDate] = useState<string>("");
-  
+
   const params = useParams<{ leagueId: string }>();
   const searchParams = useSearchParams();
   const dateParam = searchParams.get('date');
-  
+
   // Format date for API query
   const formatDate = (date: Date): string => {
     return date.toISOString().split('T')[0]; // Format as YYYY-MM-DD
@@ -41,23 +40,22 @@ export default function DailyStandings() {
     // Set the selected date from URL parameter or default to current date
     const currentDate = dateParam || formatDate(new Date());
     setSelectedDate(currentDate);
-    
+
     const fetchData = async () => {
       try {
         setLoading(true);
-        setRoundsLoading(true);
-        
+
         // Fetch standings
         const leagueId = parseInt(params.leagueId);
         const standingsData = await getLeagueStandingsByDateAPI(leagueId, currentDate);
         setLeagueStandings(standingsData);
-        
+
         // Fetch rounds for the selected date and league_id
         const roundsData = await getRoundsAPI({
           round_date: currentDate,
           league_id: leagueId
         });
-        
+
         // Group rounds by round_number
         const grouped: GroupedRounds = {};
         roundsData.forEach(round => {
@@ -67,9 +65,9 @@ export default function DailyStandings() {
           }
           grouped[roundNumber].push(round);
         });
-        
+
         setRoundsByNumber(grouped);
-        
+
         // Extract and sort round numbers for tabs
         const numbers = Object.keys(grouped).map(Number).sort((a, b) => a - b);
         setRoundNumbers(numbers);
@@ -77,7 +75,6 @@ export default function DailyStandings() {
         console.error("Error fetching data:", error);
       } finally {
         setLoading(false);
-        setRoundsLoading(false);
       }
     };
 
@@ -87,7 +84,7 @@ export default function DailyStandings() {
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
   };
-  
+
   // Convert round data to match result format
   const mapRoundsToMatchResults = (rounds: RoundType[]) => {
     return rounds.map(round => ({
