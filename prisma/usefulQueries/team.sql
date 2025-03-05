@@ -42,5 +42,3 @@ FROM
     "Player" p ON tp.player_id = p.id
 ORDER BY
     t.team_name, player_rank;
-
--- Create bye team

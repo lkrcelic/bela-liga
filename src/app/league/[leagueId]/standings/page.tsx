@@ -69,6 +69,7 @@ export default function PlayersSeating() {
           elevation={2}
           sx={{
             borderRadius: 2,
+            width: '100% !important',
             m: 0,
             overflowY: 'hidden',
             overflowX: 'auto'

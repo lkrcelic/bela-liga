@@ -31,6 +31,7 @@ RETURN QUERY WITH round_results AS (
             JOIN "LeagueRound" lr ON r.id = lr.round_id
             WHERE lr.league_id = p_league_id
               AND r.round_date::DATE = p_round_date
+              AND r.team1_id NOT IN (50, 0)
             GROUP BY r.team1_id
 
             UNION ALL
@@ -44,6 +45,7 @@ RETURN QUERY WITH round_results AS (
             JOIN "LeagueRound" lr ON r.id = lr.round_id
             WHERE lr.league_id = p_league_id
               AND r.round_date::DATE = p_round_date
+              AND r.team2_id NOT IN (50, 0)
             GROUP BY r.team2_id
         ) AS sub
         GROUP BY sub.team_id
@@ -61,6 +63,7 @@ RETURN QUERY WITH round_results AS (
             JOIN "Match" m ON r.id = m.round_id
             WHERE lr.league_id = p_league_id
               AND r.round_date::DATE = p_round_date
+              AND r.team1_id NOT IN (50, 0)
             GROUP BY r.team1_id
 
             UNION ALL
@@ -73,6 +76,7 @@ RETURN QUERY WITH round_results AS (
             JOIN "Match" m ON r.id = m.round_id
             WHERE lr.league_id = p_league_id
               AND r.round_date::DATE = p_round_date
+              AND r.team2_id NOT IN (50, 0)
             GROUP BY r.team2_id
         ) AS mp
         GROUP BY mp.team_id

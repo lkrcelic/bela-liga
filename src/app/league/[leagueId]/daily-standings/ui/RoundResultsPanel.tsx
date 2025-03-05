@@ -2,13 +2,14 @@ import React from "react";
 import {Box, Chip, Divider, Paper, Typography} from "@mui/material";
 import {MatchResultCard} from "./MatchResultCard";
 import Circle from '@mui/icons-material/Circle';
+import {Grid} from '@mui/system'
 
 type MatchResult = {
   team1Name: string;
   team2Name: string;
   team1Score: number;
   team2Score: number;
-  active?: boolean;
+  active: boolean;
   tableNumber: number;
 };
 
@@ -24,7 +25,7 @@ export function RoundResultsPanel({roundNumber, matches, activeRounds = 0}: Roun
       elevation={0}
       sx={{
         p: 1,
-        pb: 0,
+        py: 0,
         borderRadius: 2,
         backgroundColor: 'background.paper',
         display: 'flex',
@@ -38,7 +39,7 @@ export function RoundResultsPanel({roundNumber, matches, activeRounds = 0}: Roun
           <Box
             sx={{
               position: 'relative',
-              mb: 1.5,
+              mb: 1,
               '&::before': {
                 content: '""',
                 position: 'absolute',
@@ -64,12 +65,12 @@ export function RoundResultsPanel({roundNumber, matches, activeRounds = 0}: Roun
             }}
           >
             <Chip
-              icon={<Circle sx={{fontSize: 12}}/>}
+              icon={<Circle sx={{fontSize: 11}}/>}
               label={`LIVE: ${activeRounds}`}
               color="error"
               sx={{
-                px: 1.5,
-                fontSize: 14,
+                px: 1,
+                fontSize: 13,
                 alignItems: 'center',
                 fontWeight: 'bold',
                 position: 'relative',
@@ -82,25 +83,25 @@ export function RoundResultsPanel({roundNumber, matches, activeRounds = 0}: Roun
       <Divider sx={{mb: 2}}/>
       <Box sx={{
         flex: 1,
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 1,
         overflowY: 'auto',
         height: '100%',
         minHeight: 0,
         pr: 1.5
       }}>
-        {matches.map((match, index) => (
-          <MatchResultCard
-            key={index}
-            team1Name={match.team1Name}
-            team2Name={match.team2Name}
-            team1Score={match.team1Score}
-            team2Score={match.team2Score}
-            active={match.active}
-            tableNumber={match.tableNumber}
-          />
-        ))}
+        <Grid container spacing={2} sx={{pb:1}}>
+          {matches.map((match, index) => (
+            <Grid item key={index} size={{xs: 12, md: 6, lg: 4}}>
+              <MatchResultCard
+                team1Name={match.team1Name}
+                team2Name={match.team2Name}
+                team1Score={match.team1Score}
+                team2Score={match.team2Score}
+                active={match.active}
+                tableNumber={match.tableNumber}
+              />
+            </Grid>
+          ))}
+        </Grid>
       </Box>
     </Paper>
   );
