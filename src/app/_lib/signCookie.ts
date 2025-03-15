@@ -2,7 +2,7 @@ import {createHmac} from "crypto";
 import {Cookie} from "lucia";
 import {RequestCookie} from "next/dist/compiled/@edge-runtime/cookies";
 
-const SECRET_KEY = process.env.SECRET_KEY ?? "zbla-ima-malu-kitu";
+const SECRET_KEY = process.env.SECRET_KEY ?? "zbla";
 
 export function signCookie(cookie: Cookie): void {
   const cookieData = JSON.stringify(cookie);
