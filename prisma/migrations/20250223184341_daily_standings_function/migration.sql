@@ -9,6 +9,7 @@ RETURNS TABLE (
     wins NUMERIC,
     draws NUMERIC,
     losses NUMERIC,
+    active_round_count NUMERIC,
     point_difference NUMERIC,
     score NUMERIC
 )
@@ -20,13 +21,15 @@ RETURN QUERY WITH round_results AS (
             SUM(sub.rounds_played) AS rounds_played,
             SUM(sub.wins) AS wins,
             SUM(sub.draws) AS draws,
-            SUM(sub.losses) AS losses
+            SUM(sub.losses) AS losses,
+            SUM(sub.active_round_count) AS active_round_count
         FROM (
             SELECT r.team1_id AS team_id,
-                   COUNT(*) AS rounds_played,
-                   COUNT(CASE WHEN r.team1_wins > r.team2_wins THEN 1 END) AS wins,
-                   COUNT(CASE WHEN r.team1_wins = r.team2_wins THEN 1 END) AS draws,
-                   COUNT(CASE WHEN r.team1_wins < r.team2_wins THEN 1 END) AS losses
+                   COUNT(CASE WHEN r.active = false THEN 1 END) AS rounds_played,
+                   COUNT(CASE WHEN r.team1_wins > r.team2_wins AND r.active = false THEN 1 END) AS wins,
+                   COUNT(CASE WHEN r.team1_wins = r.team2_wins AND r.active = false THEN 1 END) AS draws,
+                   COUNT(CASE WHEN r.team1_wins < r.team2_wins AND r.active = false THEN 1 END) AS losses,
+                   COUNT(CASE WHEN r.active THEN 1 END) AS active_round_count
             FROM "Round" r
             JOIN "LeagueRound" lr ON r.id = lr.round_id
             WHERE lr.league_id = p_league_id
@@ -37,10 +40,11 @@ RETURN QUERY WITH round_results AS (
             UNION ALL
 
             SELECT r.team2_id AS team_id,
-                   COUNT(*) AS rounds_played,
-                   COUNT(CASE WHEN r.team2_wins > r.team1_wins THEN 1 END) AS wins,
-                   COUNT(CASE WHEN r.team2_wins = r.team1_wins THEN 1 END) AS draws,
-                   COUNT(CASE WHEN r.team2_wins < r.team1_wins THEN 1 END) AS losses
+                   COUNT(CASE WHEN r.active = false THEN 1 END) AS rounds_played,
+                   COUNT(CASE WHEN r.team2_wins > r.team1_wins AND r.active = false THEN 1 END) AS wins,
+                   COUNT(CASE WHEN r.team2_wins = r.team1_wins AND r.active = false THEN 1 END) AS draws,
+                   COUNT(CASE WHEN r.team2_wins < r.team1_wins AND r.active = false THEN 1 END) AS losses,
+                   COUNT(CASE WHEN r.active THEN 1 END) AS active_round_count
             FROM "Round" r
             JOIN "LeagueRound" lr ON r.id = lr.round_id
             WHERE lr.league_id = p_league_id
@@ -87,7 +91,8 @@ SELECT rr.team_id,
        rr.wins,
        rr.draws,
        rr.losses,
-       mp.point_difference,
+       rr.active_round_count,
+       COALESCE(mp.point_difference, 0) AS point_difference,
        (rr.wins * 3 + rr.draws) AS score
 FROM round_results rr
          LEFT JOIN match_points mp ON rr.team_id = mp.team_id

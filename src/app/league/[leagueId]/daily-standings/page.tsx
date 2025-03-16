@@ -173,12 +173,12 @@ export default function DailyStandings() {
           </Box>
 
           <Box sx={{
-            p: 1,
             borderRadius: 2,
             backgroundColor: 'background.paper',
             display: 'flex',
             flexDirection: 'column',
             height: '100%',
+            pt:0.5,
             pb: 8,
           }}>
             <TabPanel value={tabValue} index={0}>

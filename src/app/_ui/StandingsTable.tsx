@@ -1,5 +1,5 @@
 import React from "react";
-import {Grid} from "@mui/system";
+import {Grid, keyframes} from "@mui/system";
 import {Box} from "@mui/material";
 
 export type LeagueStandingsItem = {
@@ -13,11 +13,27 @@ export type LeagueStandingsItem = {
   losses: number;
   point_difference: number;
   score: number;
+  active_round_count: number;
 }
 
 export interface LeagueStandingsProps {
   standings: LeagueStandingsItem[];
 }
+
+const pulse = keyframes`
+    0% {
+        filter: drop-shadow(0 0 1px rgba(211, 47, 47, 0.7));
+    }
+    25% {
+        filter: drop-shadow(0 0 2px rgba(211, 47, 47, 0.7));
+    }
+    50% {
+        filter: drop-shadow(0 0 3px rgba(211, 47, 47, 0.5));
+    }
+    100% {
+        filter: drop-shadow(0 0 0px rgba(211, 47, 47, 0));
+    }
+`;
 
 export default function StandingsTable({standings}: LeagueStandingsProps) {
   return (
@@ -61,14 +77,33 @@ export default function StandingsTable({standings}: LeagueStandingsProps) {
 
           }}
         >
-          <Grid item size={{xs: 0.5}}>{index + 1}</Grid>
+          <Grid
+            item
+            size={{xs: 0.5}}
+            sx={{
+              color: row.active_round_count > 0 ? 'error.main' : 'inherit',
+              fontWeight: row.active_round_count > 0 ? 'bold' : 'inherit',
+              // Conditionally add the animation and circle effect
+              ...(row.active_round_count > 0 && {
+                borderRadius: '50%',
+                animation: `${pulse} 1.5s infinite`,
+              }),
+            }}
+          >
+            {index + 1}
+          </Grid>
           <Grid item textAlign={"left"} size={{xs: 3.4}}>{row.team.team_name}</Grid>
           <Grid item size={{xs: 1.35}}>{row.rounds_played}</Grid>
           <Grid item size={{xs: 1.35}}>{row.wins}</Grid>
           <Grid item size={{xs: 1.35}}>{row.draws}</Grid>
           <Grid item size={{xs: 1.35}}>{row.losses}</Grid>
           <Grid item size={{xs: 1.45}}>{row.point_difference}</Grid>
-          <Grid item size={{xs: 1.25}}>{row.score}</Grid>
+          <Grid item size={{xs: 1.25}} style={{
+            color: row.active_round_count > 0 ? '#d32f2f' : 'inherit',
+            fontWeight: row.active_round_count > 0 ? 'bold' : 'inherit'
+          }}
+          >{row.score}
+          </Grid>
         </Grid>
       ))}
     </Box>
