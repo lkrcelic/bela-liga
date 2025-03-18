@@ -37,11 +37,11 @@ export default function Action() {
     if ((player_pair1_score >= 1001 || player_pair2_score >= 1001) && player_pair1_score !== player_pair2_score) {
       return {
         label: "Završi meč",
-        icon: <DoneIcon />,
+        icon: <DoneIcon/>,
         onClick: async () => {
           await createMatchAPI(Number(matchId));
 
-          if (team1_wins + team2_wins < 1) {
+          if (team1_wins + team2_wins == 0) {
             const response = await createOngoingMatchAPI({
               round_id: Number(id),
               seating_order_ids: seating_order?.map((player) => player.id),
@@ -53,9 +53,9 @@ export default function Action() {
             router.push(`/ongoing-match/${response.id}`);
           }
 
-          if (team1_wins + team2_wins >= 1) {
-            await finishRoundAPI(Number(id));
+          if (team1_wins + team2_wins > 0) {
             router.push(`/round/${id}/result`);
+            await finishRoundAPI(Number(id));
             hardResetOngoingMatch();
             localStorage.clear();
           }

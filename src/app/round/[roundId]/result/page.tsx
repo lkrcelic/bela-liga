@@ -10,7 +10,7 @@ import SingleActionButton from "@/app/_ui/SingleActionButton";
 import {getAllMatchesByRoundIdAPI} from "@/app/_fetchers/match/getAllByRoundId";
 import theme from "@/app/_styles/theme";
 import Home from '@mui/icons-material/Home';
-
+import LoadingScoreBoard from './LoadingScoreBoard';
 
 const MobileScoreBoard = () => {
   const router = useRouter();
@@ -19,13 +19,16 @@ const MobileScoreBoard = () => {
 
   const {roundData: {team1_wins, team2_wins, team1, team2}, setRoundData} = useRoundStore();
   const [matches, setMatches] = useState();
+  const [isLoading, setIsLoading] = useState(true);
 
   const fetchRoundData = async () => {
     try {
       const data = await getRoundDataAPI(Number(roundId));
       setRoundData(data);
+      return true;
     } catch (error) {
       console.error('Error fetching round data:', error);
+      return false;
     }
   };
 
@@ -33,16 +36,30 @@ const MobileScoreBoard = () => {
     try {
       const data = await getAllMatchesByRoundIdAPI(Number(roundId));
       setMatches(data);
+      return true;
     } catch (error) {
       console.error('Error fetching round matches:', error);
+      return false;
     }
   };
 
   React.useEffect(() => {
-    fetchRoundData();
-    fetchRoundMatches();
+    const loadData = async () => {
+      setIsLoading(true);
+     await Promise.all([
+        fetchRoundData(),
+        fetchRoundMatches()
+      ]);
+      setIsLoading(false);
+    };
+    
+    loadData();
   }, [roundId]);
 
+
+  if (isLoading) {
+    return <LoadingScoreBoard isMobile={isMobile} />;
+  }
 
   return (
     <>
