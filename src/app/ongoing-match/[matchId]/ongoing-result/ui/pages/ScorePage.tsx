@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, {useState} from "react";
 import {Box} from "@mui/material";
 import DigitGrid from "@/app/ongoing-match/[matchId]/ongoing-result/ui/DigitGrid";
 import useResultStore from "@/app/_store/bela/resultStore";
@@ -42,36 +42,42 @@ function ActionButtons({actionType}: ActionProps) {
     },
   } = useOngoingMatchStore();
   const {resetAnnouncements} = useAnnouncementStore();
+  const [isLoading, setIsLoading] = useState(false);
 
   const router = useRouter();
   const params = useParams();
 
   const handleSave = async () => {
-    setTotalPoints(playerPair1, playerPair2);
-    setCardShufflerIdAndTrumpCallerPosition(seating_order!, current_shuffler_index!);
-    const updatedResultData = useResultStore.getState?.().resultData;
-
+    if (isLoading) return; // Prevent double execution
+    
     try {
+      setIsLoading(true);
+      
+      setTotalPoints(playerPair1, playerPair2);
+      setCardShufflerIdAndTrumpCallerPosition(seating_order!, current_shuffler_index!);
+      const updatedResultData = useResultStore.getState?.().resultData;
+
       if (actionType === "CREATE") {
         await createOngoingBelaResultAPI({result: updatedResultData})
       }
       if (actionType === "UPDATE") {
         await updateOngoingBelaResultAPI({resultId: params.resultId, result: updatedResultData})
       }
+      
+      resetResult();
+      resetAnnouncements();
+
+      router.push(`/ongoing-match/${params.matchId}`);
     } catch (error) {
-      console.error(error);
+      console.error("Error saving result:", error);
+      setIsLoading(false); // Reset loading state on error
     }
-
-    resetResult();
-    resetAnnouncements();
-
-    router.push(`/ongoing-match/${params.matchId}`);
   };
 
   return <DoubleActionButton
-    secondButtonLabel={"Spremi"}
+    secondButtonLabel={isLoading ? "Spremanje..." : "Spremi"}
     secondButtonOnClick={handleSave}
-    secondButtonDisabled={resultData.player_pair1_game_points === 0 && resultData.player_pair2_game_points === 0}
+    secondButtonDisabled={isLoading || (resultData.player_pair1_game_points === 0 && resultData.player_pair2_game_points === 0)}
   />
 
 }

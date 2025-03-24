@@ -26,9 +26,9 @@ RETURN QUERY WITH round_results AS (
         FROM (
             SELECT r.team1_id AS team_id,
                    COUNT(CASE WHEN r.active = false THEN 1 END) AS rounds_played,
-                   COUNT(CASE WHEN r.team1_wins > r.team2_wins AND r.active = false THEN 1 END) AS wins,
-                   COUNT(CASE WHEN r.team1_wins = r.team2_wins AND r.active = false THEN 1 END) AS draws,
-                   COUNT(CASE WHEN r.team1_wins < r.team2_wins AND r.active = false THEN 1 END) AS losses,
+                   COUNT(CASE WHEN r.team1_wins > r.team2_wins AND r.open = false THEN 1 END) AS wins,
+                   COUNT(CASE WHEN r.team1_wins = r.team2_wins AND r.open = false THEN 1 END) AS draws,
+                   COUNT(CASE WHEN r.team1_wins < r.team2_wins AND r.open = false THEN 1 END) AS losses,
                    COUNT(CASE WHEN r.active THEN 1 END) AS active_round_count
             FROM "Round" r
             JOIN "LeagueRound" lr ON r.id = lr.round_id
@@ -41,9 +41,9 @@ RETURN QUERY WITH round_results AS (
 
             SELECT r.team2_id AS team_id,
                    COUNT(CASE WHEN r.active = false THEN 1 END) AS rounds_played,
-                   COUNT(CASE WHEN r.team2_wins > r.team1_wins AND r.active = false THEN 1 END) AS wins,
-                   COUNT(CASE WHEN r.team2_wins = r.team1_wins AND r.active = false THEN 1 END) AS draws,
-                   COUNT(CASE WHEN r.team2_wins < r.team1_wins AND r.active = false THEN 1 END) AS losses,
+                   COUNT(CASE WHEN r.team2_wins > r.team1_wins AND r.open = false THEN 1 END) AS wins,
+                   COUNT(CASE WHEN r.team2_wins = r.team1_wins AND r.open = false THEN 1 END) AS draws,
+                   COUNT(CASE WHEN r.team2_wins < r.team1_wins AND r.open = false THEN 1 END) AS losses,
                    COUNT(CASE WHEN r.active THEN 1 END) AS active_round_count
             FROM "Round" r
             JOIN "LeagueRound" lr ON r.id = lr.round_id

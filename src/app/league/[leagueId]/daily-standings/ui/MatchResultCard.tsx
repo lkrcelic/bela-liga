@@ -7,7 +7,7 @@ type MatchResultCardProps = {
   team2Name: string;
   team1Score: number;
   team2Score: number;
-  active?: boolean;
+  open?: boolean;
   tableNumber: number;
 };
 

@@ -47,7 +47,7 @@ export default function PlayersSeating() {
           textAlign: 'center',
           color: 'primary.main',
           pb: 1
-        }}> Upkupni poredak
+        }}> Ukupni poredak
         </Typography>
         <Divider/>
       </Box>

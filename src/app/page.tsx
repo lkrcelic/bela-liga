@@ -12,7 +12,7 @@ import LogoutIcon from '@mui/icons-material/Logout';
 
 // API fetchers
 import {logoutUser} from "@/app/_fetchers/authentication/logout";
-import {getActiveRoundByPlayerIdAPI} from "@/app/_fetchers/round/getActiveByPlayerId";
+import {getOpenRoundByPlayerIdAPI} from "@/app/_fetchers/round/getOpenByPlayerId";
 
 const ActionButton = ({onClick, label, color = "primary", fullWidth = true, icon = null}) => (
   <Button
@@ -60,7 +60,7 @@ export default function Home() {
   // Navigation handlers
   const handleStartGame = async () => {
     try {
-      const {roundId, ongoingMatchId} = await getActiveRoundByPlayerIdAPI();
+      const {roundId, ongoingMatchId} = await getOpenRoundByPlayerIdAPI();
 
       if (ongoingMatchId) {
         router.push(`/ongoing-match/${ongoingMatchId}`);

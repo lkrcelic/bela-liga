@@ -2,10 +2,10 @@ import {ExtendedRoundResponseValidation} from "@/app/_interfaces/round";
 import {prisma} from "@/app/_lib/prisma";
 import {Prisma} from "@prisma/client";
 
-export async function getActiveRoundByPlayerId(playerId: number): Promise<ExtendedRoundResponseValidation> {
+export async function getLastOpenRoundByPlayerId(playerId: number): Promise<typeof ExtendedRoundResponseValidation._type> {
   const dbRound = await prisma.round.findFirst({
     where: {
-      active: true,
+      open: true,
       OR: [
         {
           team1: {
@@ -70,11 +70,10 @@ export async function getActiveRoundByPlayerId(playerId: number): Promise<Extend
           }
         }
     },
-  } as Prisma.RoundFindUniqueArgs);
-
-  if (!dbRound) {
-    throw new Error("Round not found.");
-  }
+    orderBy: {
+      round_number: 'asc',
+    },
+  } as Prisma.RoundFindFirstArgs);
 
   return ExtendedRoundResponseValidation.parse(dbRound);
 }

@@ -16,5 +16,12 @@ export async function createOngoingMatch(createRequest: unknown): Promise<Ongoin
 
     //TODO
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return prisma.ongoingMatch.create({data: createRequest as any});
+    const ongoingMatch =  await prisma.ongoingMatch.create({data: createRequest as any});
+
+    await prisma.round.update({
+        where: { id: createRequest.round_id },
+        data: { active: true },
+    });
+
+    return ongoingMatch;
 }

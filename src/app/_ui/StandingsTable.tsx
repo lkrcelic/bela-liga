@@ -107,6 +107,5 @@ export default function StandingsTable({standings}: LeagueStandingsProps) {
         </Grid>
       ))}
     </Box>
-  )
-    ;
+  );
 }

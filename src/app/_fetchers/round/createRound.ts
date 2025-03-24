@@ -1,6 +1,6 @@
 import {CreateRoundType} from "@/app/_interfaces/round";
 
-export async function createRoundsAPI(selectedLeagueId: number, teamIds: number[]): Promise<number> {
+export async function createRoundAPI(selectedLeagueId: number, teamIds: number[]): Promise<number> {
   const response = await fetch("api/rounds", {
     method: "POST",
     headers: {"Content-Type": "application/json"},

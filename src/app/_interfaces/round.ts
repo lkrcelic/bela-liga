@@ -11,6 +11,7 @@ export const RoundResponseValidation = z.object({
   team2_id: z.number().int(),
   team1_wins: z.number().int(),
   team2_wins: z.number().int(),
+  open: z.boolean().optional(),
   active: z.boolean().optional(),
   table_number: z.number().int().optional(),
 });

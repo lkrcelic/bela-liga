@@ -1,5 +1,5 @@
 import {prisma} from "@/app/_lib/prisma";
-import {Team} from "../../matching/matching";
+import {Team} from "../../matching/multipleRoundMatching";
 
 export async function getLeagueTeamsWithScores(leagueId: number): Promise<Team[]> {
   const data = await prisma.$queryRaw<Team[]>`

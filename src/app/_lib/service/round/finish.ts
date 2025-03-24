@@ -6,6 +6,7 @@ export async function finishRound(round_id: number): Promise<void> {
       id: round_id,
     },
     data: {
+      open: false,
       active: false,
     },
   });

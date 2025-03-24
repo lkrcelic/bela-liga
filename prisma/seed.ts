@@ -36,7 +36,7 @@ async function main() {
   const player2 = await prisma.player.create({
     data: {
       username: "johnny",
-      password_hash: "securepassword",
+      password_hash: "$argon2id$v=19$m=65536,t=3,p=4$pDs5fiTYGTo0XSEt/3Cf7w$x8wFo37pR763HFqVMKupfveO0dBebHhLweI15eac8EI",
       email: "johnny@example.com",
       player_role: "PLAYER",
       first_name: "Johnny",
@@ -48,7 +48,7 @@ async function main() {
   const player3 = await prisma.player.create({
     data: {
       username: "friendzone123",
-      password_hash: "securepassword",
+      password_hash: "$argon2id$v=19$m=65536,t=3,p=4$pDs5fiTYGTo0XSEt/3Cf7w$x8wFo37pR763HFqVMKupfveO0dBebHhLweI15eac8EI",
       email: "dsmith@example.com",
       player_role: "PLAYER",
       first_name: "De'Shaun",
@@ -60,7 +60,7 @@ async function main() {
   const player4 = await prisma.player.create({
     data: {
       username: "mistersister",
-      password_hash: "securepassword",
+      password_hash: "$argon2id$v=19$m=65536,t=3,p=4$pDs5fiTYGTo0XSEt/3Cf7w$x8wFo37pR763HFqVMKupfveO0dBebHhLweI15eac8EI",
       email: "brock@example.com",
       player_role: "PLAYER",
       first_name: "Brock",
@@ -72,7 +72,7 @@ async function main() {
   const player5 = await prisma.player.create({
     data: {
       username: "Jusufoh",
-      password_hash: "securepassword",
+      password_hash: "$argon2id$v=19$m=65536,t=3,p=4$pDs5fiTYGTo0XSEt/3Cf7w$x8wFo37pR763HFqVMKupfveO0dBebHhLweI15eac8EI",
       email: "jusufoh@example.com",
       player_role: "PLAYER",
       first_name: "Jusuf",
@@ -84,7 +84,7 @@ async function main() {
   const player6 = await prisma.player.create({
     data: {
       username: "Huseinkapetangradasevic",
-      password_hash: "securepassword",
+      password_hash: "$argon2id$v=19$m=65536,t=3,p=4$pDs5fiTYGTo0XSEt/3Cf7w$x8wFo37pR763HFqVMKupfveO0dBebHhLweI15eac8EI",
       email: "huseineee@example.com",
       player_role: "PLAYER",
       first_name: "Husein",
@@ -96,7 +96,7 @@ async function main() {
   const player7 = await prisma.player.create({
     data: {
       username: "Mujo123",
-      password_hash: "securepassword",
+      password_hash: "$argon2id$v=19$m=65536,t=3,p=4$pDs5fiTYGTo0XSEt/3Cf7w$x8wFo37pR763HFqVMKupfveO0dBebHhLweI15eac8EI",
       email: "huseineee1@example.com",
       player_role: "PLAYER",
       first_name: "Mujo",
@@ -108,7 +108,7 @@ async function main() {
   const player8 = await prisma.player.create({
     data: {
       username: "Haso123",
-      password_hash: "securepassword",
+      password_hash: "$argon2id$v=19$m=65536,t=3,p=4$pDs5fiTYGTo0XSEt/3Cf7w$x8wFo37pR763HFqVMKupfveO0dBebHhLweI15eac8EI",
       email: "huseineee2@example.com",
       player_role: "PLAYER",
       first_name: "Haso",

@@ -5,8 +5,9 @@ import Dropdown, {DropdownOption} from "@/app/createRound/ui/Dropdown";
 import {useState} from "react";
 import SelectTable, {TableEntry} from "@/app/createRound/ui/SelectTable";
 import {Team} from "@prisma/client";
-import {createRoundsAPI} from "@/app/_fetchers/round/createRounds";
+import {createRoundAPI} from "@/app/_fetchers/round/createRound";
 import {useRouter} from "next/navigation";
+import {createMultipleRoundsAPI} from "@/app/_fetchers/round/createMultipleRounds";
 
 interface LeagueTeam {
   league_id: number;
@@ -57,7 +58,7 @@ export default function CreateRound() {
       return;
     }
 
-    const createdRoundNumber = await createRoundsAPI(selectedLeagueId, teamIds);
+    const createdRoundNumber = await createMultipleRoundsAPI(selectedLeagueId, teamIds);
     router.push(`/round/pairings/${createdRoundNumber}`);
   };
 
