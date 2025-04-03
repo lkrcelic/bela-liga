@@ -101,7 +101,7 @@ function calculateCostMatrix(teams: Team[], round: number): number[][] {
       if (havePlayed) {
         costMatrix[i][j] = 100000;
         costMatrix[j][i] = 100000;
-        break;
+        continue;
       }
       
       // Only consider historical matchups if teams haven't played in current round matching
