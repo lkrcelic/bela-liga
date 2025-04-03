@@ -69,44 +69,53 @@ function countMatchups(teamA: Team, teamB: Team): number {
 }
 
 /**
- * Checks if two teams have played against each other in the current execution
+ * Checks if teams have played together in the current round matching
+ * Returns true if teams have played, false otherwise
  */
-function haveTeamsPlayedInCurrentExecution(teamA: Team, teamB: Team): boolean {
-  return teamA.current_execution_played_against.includes(teamB.id) || 
-         teamB.current_execution_played_against.includes(teamA.id);
+function haveTeamsPlayedTogetherInThisRoundMatching(teamA: Team, teamB: Team, round: number): boolean {
+  // If we're in the first round, teams haven't played in this execution
+  if (round <= 1) return false;
+  
+  // Get the relevant portion of the played_against array for the current round
+  // We only want to look at matches from the current round-making process
+  // Slice from the end of the array since that's where new matches are pushed
+  const relevantMatches = teamA.current_execution_played_against.slice(-1 * (round - 1));
+
+  // Check if teamB's ID is in the relevant matches
+  return relevantMatches.includes(teamB.id);
 }
 
 /**
  * Calculates a cost matrix for all possible pairings in a window
  * Lower cost means better pairing (fewer previous matchups)
  */
-function calculateCostMatrix(teams: Team[]): number[][] {
+function calculateCostMatrix(teams: Team[], round: number): number[][] {
   const n = teams.length;
   const costMatrix: number[][] = Array(n).fill(0).map(() => Array(n).fill(0));
   
   for (let i = 0; i < n; i++) {
     for (let j = i + 1; j < n; j++) {
       // First check if teams have played in current execution
-      if (haveTeamsPlayedInCurrentExecution(teams[i], teams[j])) {
-        // Very high cost for teams that have already played in this execution
-        // But not Infinity, to allow for repeat matchups as a last resort
-        costMatrix[i][j] = 10000;
-        costMatrix[j][i] = 10000;
-        continue;
+      const havePlayed = haveTeamsPlayedTogetherInThisRoundMatching(teams[i], teams[j], round);
+      
+      if (havePlayed) {
+        costMatrix[i][j] = 100000;
+        costMatrix[j][i] = 100000;
+        break;
       }
       
+      // Only consider historical matchups if teams haven't played in current round matching
       // Count previous matchups between teams[i] and teams[j]
       const matchupCount = countMatchups(teams[i], teams[j]);
       
       // Set cost based on number of previous matchups (higher count = higher cost)
       // Use a high penalty for repeat matchups
-      const cost = matchupCount === 0 ? 1 : 100 * matchupCount;
+      const cost = matchupCount === 0 ? 0 : 10 * matchupCount;
       
-      costMatrix[i][j] = cost;
-      costMatrix[j][i] = cost; // Matrix is symmetric
+      costMatrix[i][j] += cost;
+      costMatrix[j][i] += cost; 
     }
   }
-  
   return costMatrix;
 }
 
@@ -170,7 +179,7 @@ function findOptimalPairings(teams: Team[], costMatrix: number[][]): TeamPair[] 
  * Creates pairings for a single window of teams for a specific round
  * using a global optimization approach
  */
-function createOptimalWindowPairings(windowTeams: Team[]): TeamPair[] {
+function createOptimalWindowPairings(windowTeams: Team[], round: number): TeamPair[] {
   const pairs: TeamPair[] = [];
   const availableTeams = [...windowTeams];
   
@@ -192,7 +201,7 @@ function createOptimalWindowPairings(windowTeams: Team[]): TeamPair[] {
   
   // Calculate cost matrix for remaining teams
   if (availableTeams.length > 0) {
-    const costMatrix = calculateCostMatrix(availableTeams);
+    const costMatrix = calculateCostMatrix(availableTeams, round);
     const optimalPairs = findOptimalPairings(availableTeams, costMatrix);
     pairs.push(...optimalPairs);
   }
@@ -259,11 +268,11 @@ export function generateMultipleRoundPairings(
   let currentTeams = initializeCurrentExecutionTracking([...teams]);
   const windows = divideTeamsIntoWindows(currentTeams, windowSize, numberOfRounds);
   
-  for (let round = 0; round < numberOfRounds; round++) {
+  for (let round = 1; round <= numberOfRounds; round++) {
     const roundPairings: TeamPair[] = [];
     
     for (const window of windows) {
-      const windowPairings = createOptimalWindowPairings(window);
+      const windowPairings = createOptimalWindowPairings(window, round);
       roundPairings.push(...windowPairings);
     }
     
