@@ -87,88 +87,121 @@ function haveTeamsPlayedTogetherInThisRoundMatching(teamA: Team, teamB: Team, ro
 
 /**
  * Calculates a cost matrix for all possible pairings in a window
- * Lower cost means better pairing (fewer previous matchups)
+ * Optimized to skip calculations for teams that have already played together
+ * Only calculates upper triangle of the matrix since it's symmetrical
  */
 function calculateCostMatrix(teams: Team[], round: number): number[][] {
   const n = teams.length;
-  const costMatrix: number[][] = Array(n).fill(0).map(() => Array(n).fill(0));
+  // Initialize all costs to Infinity (invalid by default)
+  const costMatrix: number[][] = Array(n).fill(0).map(() => Array(n).fill(Infinity));
   
+  // Only calculate costs for valid pairings (upper triangle only)
   for (let i = 0; i < n; i++) {
     for (let j = i + 1; j < n; j++) {
-      // First check if teams have played in current execution
+      // Skip teams that have already played together in this execution
       const havePlayed = haveTeamsPlayedTogetherInThisRoundMatching(teams[i], teams[j], round);
-      
       if (havePlayed) {
-        costMatrix[i][j] = 100000;
-        costMatrix[j][i] = 100000;
         continue;
       }
       
-      // Only consider historical matchups if teams haven't played in current round matching
-      // Count previous matchups between teams[i] and teams[j]
+      // Calculate cost based on historical matchups
       const matchupCount = countMatchups(teams[i], teams[j]);
-      
-      // Set cost based on number of previous matchups (higher count = higher cost)
-      // Use a high penalty for repeat matchups
-      const cost = matchupCount === 0 ? 0 : 10 * matchupCount;
-      
-      costMatrix[i][j] += cost;
-      costMatrix[j][i] += cost; 
+      // Only set the upper triangle
+      costMatrix[i][j] = matchupCount === 0 ? 0 : 10 * matchupCount;
     }
   }
+  
   return costMatrix;
 }
 
 /**
- * Find minimum weight perfect matching using a more global approach
- * This is an improved version that tries to minimize the total cost across all pairings
+ * Find a good matching using a greedy approach with retry mechanism
+ * This approach is much faster than the exhaustive search while still producing good results
  */
 function findOptimalPairings(teams: Team[], costMatrix: number[][]): TeamPair[] {
   const n = teams.length;
+  const MAX_RETRIES = 100; // Maximum number of retries to find a valid pairing
   
-  // Create a working copy of the cost matrix
-  const workingMatrix = costMatrix.map(row => [...row]);
-  const pairs: TeamPair[] = [];
-  const paired = new Set<number>();
-  
-  // Repeat until all teams are paired
-  while (paired.size < n) {
-    let minCost = Infinity;
-    let bestPair: [number, number] | null = null;
-    
-    // Find the global minimum cost pairing among all remaining teams
+  // Function to find a greedy matching
+  function findGreedyMatching(): number[][] | null {
+    // Create a copy of the cost matrix to modify during the algorithm
+    const workingCostMatrix = costMatrix.map(row => [...row]);
+    const available = new Set<number>();
     for (let i = 0; i < n; i++) {
-      if (paired.has(i)) continue;
-      
-      for (let j = i + 1; j < n; j++) {
-        if (paired.has(j)) continue;
-        
-        if (workingMatrix[i][j] < minCost) {
-          minCost = workingMatrix[i][j];
-          bestPair = [i, j];
-        }
-      }
+      available.add(i);
     }
     
-    // If we found a valid pair, add it
-    if (bestPair) {
-      const [i, j] = bestPair;
-      pairs.push({ teamOne: teams[i], teamTwo: teams[j] });
-      paired.add(i);
-      paired.add(j);
+    const matching: number[][] = [];
+    
+    // While there are still teams to match
+    while (available.size >= 2) {
+      let minCost = Infinity;
+      let bestPair: [number, number] | null = null;
       
-      // Mark these pairs as unavailable by setting their costs to Infinity
-      for (let k = 0; k < n; k++) {
-        workingMatrix[i][k] = Infinity;
-        workingMatrix[k][i] = Infinity;
-        workingMatrix[j][k] = Infinity;
-        workingMatrix[k][j] = Infinity;
+      // Find the pair with the lowest cost among available teams
+      const availableArray = Array.from(available);
+      for (let i = 0; i < availableArray.length; i++) {
+        for (let j = i + 1; j < availableArray.length; j++) {
+          const team1 = availableArray[i];
+          const team2 = availableArray[j];
+          
+          // Always use the upper triangle (i < j)
+          const a = Math.min(team1, team2);
+          const b = Math.max(team1, team2);
+          
+          const cost = workingCostMatrix[a][b];
+          if (isFinite(cost) && cost < minCost) {
+            minCost = cost;
+            bestPair = [team1, team2];
+          }
+        }
       }
-    } else {
-      // This should not happen if the algorithm is working correctly
-      // and there are an even number of teams
-      console.error("Could not find a valid pairing");
-      break;
+      
+      // If no valid pair found, the matching is invalid
+      if (!bestPair) {
+        return null;
+      }
+      
+      // Add the best pair to the matching and remove from available
+      matching.push(bestPair);
+      available.delete(bestPair[0]);
+      available.delete(bestPair[1]);
+    }
+    
+    // If there's one team left, it can't be matched
+    if (available.size === 1) {
+      return null;
+    }
+    
+    return matching;
+  }
+  
+  // Try to find a valid matching with retries
+  let matching: number[][] | null = null;
+  let retries = 0;
+  
+  while (!matching && retries < MAX_RETRIES) {
+    matching = findGreedyMatching();
+    
+    if (!matching) {
+      // If no valid matching found, slightly perturb the cost matrix and try again
+      for (let i = 0; i < n; i++) {
+        for (let j = i + 1; j < n; j++) {
+          if (isFinite(costMatrix[i][j])) {
+            // Add small random noise to break ties differently
+            costMatrix[i][j] += Math.random() * 0.1;
+          }
+        }
+      }
+      retries++;
+    }
+  }
+  
+  // Convert the matching to TeamPair objects
+  const pairs: TeamPair[] = [];
+  if (matching) {
+    for (const [i, j] of matching) {
+      pairs.push({ teamOne: teams[i], teamTwo: teams[j] });
     }
   }
   
