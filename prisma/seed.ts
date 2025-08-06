@@ -11,7 +11,7 @@ async function main() {
       // password is 'sifra'
       password_hash:
         "$argon2id$v=19$m=65536,t=3,p=4$pDs5fiTYGTo0XSEt/3Cf7w$x8wFo37pR763HFqVMKupfveO0dBebHhLweI15eac8EI",
-      email: "lovro.krcelic@gmail.com",
+      email: "lovro.krcelic2@gmail.com",
       player_role: "ADMIN",
       first_name: "Marko",
       last_name: "Blazevic",
@@ -133,15 +133,17 @@ async function main() {
 
   const player10 = await prisma.player.create({
     data: {
-      username: "Nera",
+      username: "lovric.marija23",
       // password is 'sifra'
       password_hash:
         "$argon2id$v=19$m=65536,t=3,p=4$pDs5fiTYGTo0XSEt/3Cf7w$x8wFo37pR763HFqVMKupfveO0dBebHhLweI15eac8EI",
-      email: "jan4e@example.com",
+      email: "lovric.marija23@gmail.com",
       player_role: "PLAYER",
-      first_name: "Nera",
-      last_name: "Nerikovic Petričević",
+      first_name: "Marija",
+      last_name: "Lovric",
       birth_date: "2000-01-15T00:00:00.000Z",
+      name: "Marija Lovric",
+      image: "https://lh3.googleusercontent.com/a/ACg8ocL_f7uUrv-jFR3qoJ3WFre0fHCSOcJfMKDKSzPZBngptbOSHg=s96-c"
     },
   });
 
@@ -391,6 +393,22 @@ async function main() {
       CALL update_team_score(${team_id}, ${league_id})
     `;
   }
+
+  await prisma.account.create({
+    data: {
+      id: 'cmdrzegxi000311xhgmsw1tcq',
+      userId: 11,
+      type: 'oidc',
+      provider: 'google',
+      providerAccountId: '103309863979689951098',
+      refresh_token: null,
+      access_token: 'ya29.A0AS3H6NzxkSXAvN7DMrZ5c991tPhra9Z3em6OcTBhcEwXJkWld3-19P8ZR_Z3mu0dE3wlr9jZn8vM7NTYxLTX8E1jxLXCm8dJ5wRAVKUFa_fePilJdiXDfCBqydpu46tYYIhiV9-tk7f7w1uJSCb44wpU6ItYxT8V8VytWrPXKfH3hikGvWXiunD9YxexXXKQObZh1KFfaCgYKAd4SARESFQHGX2Mii21e2mneeS1UbsgvM03HWA0207',
+      expires_at: 1754005426,
+      token_type: 'bearer',
+      scope: 'https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile openid',
+      id_token: 'eyJhbGciOiJSUzI1NiIsImtpZCI6ImRkNTMwMTIwNGZjMWQ2YTBkNjhjNzgzYTM1Y2M5YzEwYjI1ZTFmNGEiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL2FjY291bnRzLmdvb2dsZS5jb20iLCJhenAiOiI2MDg3NjE0Njk5NzYtcDdxOTYzbm5sMDA0dm0ybWxiNmh1ZnZvNGw1OTdyZzguYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJhdWQiOiI2MDg3NjE0Njk5NzYtcDdxOTYzbm5sMDA0dm0ybWxiNmh1ZnZvNGw1OTdyZzguYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJzdWIiOiIxMDMzMDk4NjM5Nzk2ODk5NTEwOTgiLCJlbWFpbCI6ImxvdnJpYy5tYXJpamEyM0BnbWFpbC5jb20iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwiYXRfaGFzaCI6ImdTUjlnVjA5MWNYbnVoNkZ5SFBUb1EiLCJuYW1lIjoiTWFyaWphIExvdnJpxIciLCJwaWN0dXJlIjoiaHR0cHM6Ly9saDMuZ29vZ2xldXNlcmNvbnRlbnQuY29tL2EvQUNnOG9jTF9mN3VVcnYtakZSM3FvSjNXRmJlMGZIQ1NPY0pmTUtES1N6UFpCbmdwdGJPU0hnPXM5Ni1jIiwiZ2l2ZW5fbmFtZSI6Ik1hcmlqYSIsImZhbWlseV9uYW1lIjoiTG92cmnEhyIsImlhdCI6MTc1NDAwMTgyOSwiZXhwIjoxNzU0MDA1NDI5fQ.e4UXwhGZQOhRLL79XmGqlzjY6Pen3UkVPCIy6Y5vgS3B41cVoMuwPy_leTaoKeWRgHAMgQF9QMBNEklWQUhF67X7VPof3wYkXwTXEMvO67iEZdo7ExSP-n-gP780cNqkga8BmwilMjJv24TkhgzvSGa0wTo9W5Da7RT5pr0RbCJoY-OcLtJ5gc9YICkqJi05G_q-fRBrlIxfi0_NkQjivBoa9lWdxr4aq3yagFfzzeAh0D7_v3cNJ94C3H3Pu60WkL3BbHu_4YQ-A1iCSmC7JtlC_gtOxo_UTflkliSa91mPE8UmTlHE9hnzaZhDtwtihfyTyHv6osOVmOjJ_Y7oOg',
+    },
+  })
 
 }
 

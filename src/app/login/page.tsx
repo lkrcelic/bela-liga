@@ -1,6 +1,7 @@
 "use client";
 
 import LogInForm from "@/app/login/ui/LogInForm";
+import GoogleLoginButton from "@/app/login/ui/GoogleLoginButton";
 import {useRouter} from "next/navigation";
 import {useState} from "react";
 import {Alert, Box, Button, Divider, Paper, Typography} from "@mui/material";
@@ -42,7 +43,7 @@ export default function LogIn() {
         }}>
           Piatnik Bela Liga
         </Typography>
-      <Divider/>
+        <Divider/>
       </Box>
       <Paper
         elevation={3}
@@ -65,6 +66,29 @@ export default function LogIn() {
         >
           Prijava
         </Typography>
+
+        <GoogleLoginButton
+          onLoginComplete={(success) => {
+            setSuccess(success);
+            if (success) {
+              router.push("/");
+            }
+          }}
+        />
+
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            my: 2
+          }}
+        >
+          <Divider sx={{flexGrow: 1}}/>
+          <Typography variant="body2" color="text.secondary" sx={{px: 2}}>
+            ili
+          </Typography>
+          <Divider sx={{flexGrow: 1}}/>
+        </Box>
 
         <LogInForm onFormSubmit={handleFormSubmit}/>
 

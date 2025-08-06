@@ -38,9 +38,16 @@ export async function middleware(req: NextRequest) {
 }
 
 async function authenticationMiddleware(req: NextRequest) {
-  const reqCookie = req.cookies.get(process.env.AUTH_COOKIE ?? "BelaTresetaSession");
-  const cookie = await verifyCookie(reqCookie as Cookie);
-  return cookie === null ? false : true;
+  const reqCookie = req.cookies.get(process.env.AUTH_COOKIE);
+  if (reqCookie) {
+    const cookie = await verifyCookie(reqCookie as Cookie);
+    if (cookie) return true;
+  }
+
+  const nextAuthCookie = req.cookies.get(process.env.GOOGLE_AUTH_COOKIE);
+  if (nextAuthCookie) return true;
+
+  return false
 }
 
 // TODO: Implement rate limiting per IP address.

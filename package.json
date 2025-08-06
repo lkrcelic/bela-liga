@@ -14,6 +14,7 @@
     "postinstall": "npm rebuild argon2 --build-from-source"
   },
   "dependencies": {
+    "@auth/prisma-adapter": "^2.7.2",
     "@emotion/react": "^11.13.3",
     "@emotion/styled": "^11.13.0",
     "@lucia-auth/adapter-prisma": "^4.0.1",
@@ -23,6 +24,7 @@
     "argon2": "^0.41.1",
     "lucia": "^3.2.0",
     "next": "14.2.13",
+    "next-auth": "^5.0.0-beta.29",
     "prisma": "^5.19.1",
     "react": "^18",
     "react-dom": "^18",

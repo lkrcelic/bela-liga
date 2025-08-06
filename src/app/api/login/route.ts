@@ -46,6 +46,7 @@ export async function POST(req: NextRequest) {
     });
     return response;
   } catch (error) {
+    console.error("Error: ", error);
     return NextResponse.json({message: "Login unsuccessful."}, {status: STATUS.ServerError});
   }
 }

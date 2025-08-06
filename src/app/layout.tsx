@@ -15,15 +15,15 @@ export default function RootLayout({
       <meta name="apple-mobile-web-app-capable" content="yes"/>
       <meta name="apple-mobile-web-app-status-bar-style" content="default"/>
     </head>
+    <body style={{
+      margin: 0,
+      padding: 0,
+      backgroundColor: theme.palette.background.default,
+      overflowX: 'hidden',
+      WebkitTapHighlightColor: 'transparent'
+    }}>
     <ThemeProvider theme={theme}>
       <CssBaseline/>
-      <body style={{
-        margin: 0,
-        padding: 0,
-        backgroundColor: theme.palette.background.default,
-        overflowX: 'hidden',
-        WebkitTapHighlightColor: 'transparent'
-      }}>
       <Box
         sx={{
           display: "flex",
@@ -44,10 +44,10 @@ export default function RootLayout({
             display: "grid",
             gridTemplateRows: "auto 1fr auto",
             gridTemplateAreas: `
-                  "top"
-                  "body"
-                  "actions"
-                `,
+                        "top"
+                        "body"
+                        "actions"
+                      `,
             flex: 1,
             paddingTop: 1,
             gap: {xs: 2, sm: 4},
@@ -58,8 +58,8 @@ export default function RootLayout({
           {children}
         </Box>
       </Box>
-      </body>
     </ThemeProvider>
+    </body>
     </html>
   );
 }

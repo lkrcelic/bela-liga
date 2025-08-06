@@ -1,11 +1,21 @@
 import {z} from "zod";
-import {playersOutput} from "./player";
+import {PlayerResponseValidation} from "./player";
 
-export const SessionOut = z.object({
+export const LuciaSessionOut = z.object({
   id: z.string(),
   expiresAt: z.date(),
   userId: z.number(),
-  player: playersOutput
+  player: PlayerResponseValidation
+
 });
 
-export const SessionsOut = z.array(SessionOut);
+export const GoogleSessionOut = z.object({
+  id: z.string(),
+  expires: z.date(),
+  sessionToken: z.string(),
+  userId: z.number(),
+  user: PlayerResponseValidation
+});
+
+export const LuciaSessionsOut = z.array(LuciaSessionOut);
+export const GoogleSessionsOut = z.array(GoogleSessionOut);

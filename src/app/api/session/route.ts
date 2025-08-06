@@ -1,5 +1,5 @@
 import {getAuthorizedUser} from "@/app/_lib/auth";
-import {SessionsOut} from "@/app/_interfaces/session";
+import {GoogleSessionsOut, LuciaSessionsOut} from "@/app/_interfaces/session";
 import {prisma} from "@/app/_lib/prisma";
 import {STATUS} from "@/app/_lib/statusCodes";
 import {NextRequest, NextResponse} from "next/server";
@@ -13,12 +13,18 @@ export async function GET(req: NextRequest) {
         {status: STATUS.NotAllowed});
     }
 
-    const sessions = SessionsOut.parse(await prisma.session.findMany({
+    const luciaSessions = LuciaSessionsOut.parse(await prisma.luciaSession.findMany({
       include: {
         player: true
       }
     }));
-    return NextResponse.json(sessions, {status: STATUS.OK});
+
+    const googleSessions = GoogleSessionsOut.parse(await prisma.session.findMany({
+      include: {
+        user: true
+      }
+    }));
+    return NextResponse.json({luciaSessions, googleSessions}, {status: STATUS.OK});
   } catch (error) {
     console.log(error);
     return NextResponse.json({error: "Error"}, {status: STATUS.ServerError});
