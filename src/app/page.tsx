@@ -9,17 +9,18 @@ import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import GroupAddIcon from '@mui/icons-material/GroupAdd';
 import LogoutIcon from '@mui/icons-material/Logout';
+import useLogout from "@/app/_hooks/useLogout";
 
 // API fetchers
-import {logoutUser} from "@/app/_fetchers/authentication/logout";
 import {getOpenRoundByPlayerIdAPI} from "@/app/_fetchers/round/getOpenByPlayerId";
 
-const ActionButton = ({onClick, label, color = "primary", fullWidth = true, icon = null}) => (
+const ActionButton = ({onClick, label, color = "primary", fullWidth = true, icon = null, disabled = false}) => (
   <Button
     variant="contained"
     color={color}
     onClick={onClick}
     fullWidth={fullWidth}
+    disabled={disabled}
     sx={{
       py: 1.8,
       px: 3,
@@ -48,6 +49,7 @@ const ActionButton = ({onClick, label, color = "primary", fullWidth = true, icon
 export default function Home() {
   const router = useRouter();
   const [isAdmin, setIsAdmin] = useState(false);
+  const { logout, loggingOut } = useLogout();
 
   // Check if user is admin
   useEffect(() => {
@@ -69,15 +71,6 @@ export default function Home() {
       }
     } catch (error) {
       console.error('Error starting game:', error);
-    }
-  };
-
-  const handleLogout = async () => {
-    try {
-      await logoutUser();
-      window.location.reload();
-    } catch (error) {
-      console.error('Error logging out:', error);
     }
   };
 
@@ -211,10 +204,11 @@ export default function Home() {
       }}>
         <Container maxWidth="sm" sx={{display: 'flex', justifyContent: 'center', p: 1}}>
           <ActionButton
-            onClick={handleLogout}
+            onClick={() => logout()} 
             label="Log Out"
             color="secondary"
             icon={<LogoutIcon/>}
+            disabled={loggingOut}
           />
         </Container>
       </Box>

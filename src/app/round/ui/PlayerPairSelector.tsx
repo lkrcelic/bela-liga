@@ -7,8 +7,7 @@ import {TeamResponse} from "@/app/_interfaces/team";
 import useOngoingMatchStore from "@/app/_store/ongoingMatchStore";
 import PlayerName from "@/app/_ui/PlayerName";
 
-export default function PlayerPairSelector() {
-  const {roundData: {team1, team2}} = useRoundStore();
+export default function PlayerPairSelector({team1, team2}: {team1: TeamResponse, team2: TeamResponse}) {
   const {ongoingMatch: {seating_order}, setSeatingOrder} = useOngoingMatchStore();
 
   const handlePlayerSelection = (seatIndex: number) =>

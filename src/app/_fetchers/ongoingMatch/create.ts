@@ -1,9 +1,6 @@
-export async function createOngoingMatchAPI(data: {
-    score_threshold: number;
-    round_id: number;
-    current_shuffler_index: number;
-    seating_order_ids: unknown[] | undefined
-}) {
+import { CreateOngoingMatchRequest } from "@/app/_interfaces/match";
+
+export async function createOngoingMatchAPI(data: CreateOngoingMatchRequest) {
     const response = await fetch('/api/ongoing-matches', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

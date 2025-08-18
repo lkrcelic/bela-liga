@@ -45,7 +45,16 @@ export const OngoingMatchResponseValidation = OngoingMatchRequestValidation.omit
     seating_order: z.array(PlayerPartialResponseValidation.nullable()).optional(),
 });
 
+export const CreateOngoingMatchRequestValidation = z.object({
+    score_threshold: z.number().int(),
+    round_id: z.number().int(),
+    current_shuffler_index: z.number().int(),
+    seating_order_ids: z.array(z.number().int()),
+    player_pair_id1: z.number().int().optional(),
+    player_pair_id2: z.number().int().optional(),
+});
 
+export type CreateOngoingMatchRequest = z.infer<typeof CreateOngoingMatchRequestValidation>;
 export type MatchResponse = z.infer<typeof MatchResponseValidation>;
 export type OngoingMatchResponse = z.infer<typeof OngoingMatchResponseValidation>;
 export type OngoingMatchRequest = z.infer<typeof OngoingMatchRequestValidation>;

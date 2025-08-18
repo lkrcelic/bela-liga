@@ -16,7 +16,7 @@ export type ResultState = {
   setTrumpCallerId: (playerId?: number) => void;
   setActiveTeam: (team: "team1" | "team2") => void;
   setTotalPoints: (playerPair1?: PlayerPairResponse, playerPair2?: PlayerPairResponse) => ResultState;
-  setGamePoints: (digit: number) => void;
+  setGamePoints: (digit: number) => void; 
   resetScore: () => void;
   setCompleteVictory: () => void;
   setMatchId: (id: number) => void;
@@ -53,7 +53,7 @@ const initialState = {
   }
 };
 
-const useResultStore = create<ResultState>(persist((set) => ({
+const useResultStore = create<ResultState>()(persist<ResultState>((set) => ({
     ...initialState,
 
     setResultData: (data: BelaResultResponse) => set((state) => ({
@@ -238,7 +238,7 @@ const useResultStore = create<ResultState>(persist((set) => ({
     }),
 
     updateAnnouncementPoints: (playerAnnouncements: PlayersAnnouncements) => {
-      const teamPoints: { [team: string]: number } = {ONE: 0, TWO: 0};
+      const teamPoints: { [team: string]: number } = {TEAM_ONE: 0, TEAM_TWO: 0};
       const announcements: BelaPlayerAnnouncementsRequest[] = [];
 
       Object.entries(playerAnnouncements).forEach(([playerIdStr, playerData]) => {
@@ -260,8 +260,8 @@ const useResultStore = create<ResultState>(persist((set) => ({
       });
 
       set((state) => {
-        const updatedPP1AnnouncementPoints = teamPoints['ONE'] || 0;
-        const updatedPP2AnnouncementPoints = teamPoints['TWO'] || 0;
+        const updatedPP1AnnouncementPoints = teamPoints['TEAM_ONE'] || 0;
+        const updatedPP2AnnouncementPoints = teamPoints['TEAM_TWO'] || 0;
 
         const updatedPP1TotalPoints =
           state.resultData.player_pair1_game_points + updatedPP1AnnouncementPoints;
@@ -283,7 +283,6 @@ const useResultStore = create<ResultState>(persist((set) => ({
   }), {
     name: 'result-store',
     storage: createJSONStorage(() => localStorage),
-  })
-);
+  }));
 
 export default useResultStore;

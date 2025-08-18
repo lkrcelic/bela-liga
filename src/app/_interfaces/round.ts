@@ -17,8 +17,8 @@ export const RoundResponseValidation = z.object({
 });
 
 export const ExtendedRoundResponseValidation = RoundResponseValidation.extend({
-  team1: TeamResponseValidation.optional(),
-  team2: TeamResponseValidation.optional(),
+  team1: TeamResponseValidation,
+  team2: TeamResponseValidation,
 });
 
 export const CreateRound = z.object({

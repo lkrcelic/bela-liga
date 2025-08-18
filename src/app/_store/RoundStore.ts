@@ -1,5 +1,7 @@
 import {create} from "zustand";
 import {RoundType} from "@/app/_interfaces/round";
+import { persist } from "zustand/middleware";
+import {createJSONStorage} from "zustand/middleware";
 
 export type RoundState = {
     roundData: RoundType;
@@ -7,21 +9,25 @@ export type RoundState = {
     setRoundData: (data: RoundType) => void;
 };
 
-const useRoundStore = create<RoundState>((set) => ({
+const useRoundStore = create<RoundState>()(persist(
+  (set) => ({
     roundData: {
-        round_number: 1, //TODO remove hard coded
-        round_date: new Date('2024-01-01'), //TODO remove hard coded
-        team1_id: null,
-        team2_id: null,
+      team1_id: null,
+      team2_id: null,
     },
 
     setRoundData: (data) => set((state) => ({roundData: {...state.roundData, ...data}})),
 
     resetRound: () => {
-        set({
+      set({
             roundData: null
-        });
-    }
-}));
+      });
+    },
+  }),
+  {
+    name: "round-store",
+    storage: createJSONStorage(() => localStorage),
+  }
+));
 
 export default useRoundStore;

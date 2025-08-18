@@ -1,9 +1,11 @@
 import React from "react";
-import {Grid} from "@mui/system";
+import {Box, Grid} from "@mui/system";
 import useResultStore from "@/app/_store/bela/resultStore";
 import {usePathname} from "next/navigation";
 import {TeamScoreBox} from "@/app/ongoing-match/[matchId]/ongoing-result/ui/TeamScoreBox";
 import useRoundStore from "@/app/_store/RoundStore";
+import useAuthStore from "@/app/_store/authStore";
+import { CircularProgress } from "@mui/material";
 
 type ScoreSectionType = {
     team1Color: string;
@@ -30,16 +32,25 @@ export default function TeamsScoreSection() {
         },
         setActiveTeam,
     } = useResultStore();
-    const {roundData: {team1, team2}} = useRoundStore();
     const pathname = usePathname();
+    const {roundData: {team1, team2}} = useRoundStore();
+    const {user} = useAuthStore();
+
+    // Decide orientation: show current user's team on the left
+    const userId = user?.id;
+    const team1PlayerIds = team1?.teamPlayers?.map(tp => tp.player.id) ?? [];
+    const team2PlayerIds = team2?.teamPlayers?.map(tp => tp.player.id) ?? [];
+    const isUserInTeam1 = userId != null && team1PlayerIds.includes(userId);
+    const isUserInTeam2 = userId != null && team2PlayerIds.includes(userId);
+    const showTeam1Left = isUserInTeam1 || (!isUserInTeam1 && !isUserInTeam2);
 
     const getScoreSectionType = (): ScoreSectionType => {
         if (pathname.endsWith("/trump-caller")) {
             return {
                 team1Color: "team1",
                 team2Color: "team2",
-                team1Value: team1?.team_name || "MI",
-                team2Value: team2?.team_name || "VI",
+                team1Value: (showTeam1Left ? team1?.team_name : team2?.team_name) || "MI",
+                team2Value: (showTeam1Left ? team2?.team_name : team1?.team_name) || "VI",
                 team1SecondValue: "",
                 team2SecondValue: "",
                 textVariant: "h6",
@@ -52,8 +63,8 @@ export default function TeamsScoreSection() {
             return {
                 team1Color: "team1",
                 team2Color: "team2",
-                team1Value: player_pair1_announcement_points,
-                team2Value: player_pair2_announcement_points,
+                team1Value: showTeam1Left ? player_pair1_announcement_points : player_pair2_announcement_points,
+                team2Value: showTeam1Left ? player_pair2_announcement_points : player_pair1_announcement_points,
                 team1SecondValue: "",
                 team2SecondValue: "",
                 textVariant: "h4",
@@ -66,13 +77,13 @@ export default function TeamsScoreSection() {
             return {
                 team1Color: "team1",
                 team2Color: "team2",
-                team1Value: player_pair1_game_points,
-                team2Value: player_pair2_game_points,
-                team1SecondValue: player_pair1_game_points + player_pair1_announcement_points,
-                team2SecondValue: player_pair2_game_points + player_pair2_announcement_points,
+                team1Value: showTeam1Left ? player_pair1_game_points : player_pair2_game_points,
+                team2Value: showTeam1Left ? player_pair2_game_points : player_pair1_game_points,
+                team1SecondValue: showTeam1Left ? (player_pair1_game_points + player_pair1_announcement_points) : (player_pair2_game_points + player_pair2_announcement_points),
+                team2SecondValue: showTeam1Left ? (player_pair2_game_points + player_pair2_announcement_points) : (player_pair1_game_points + player_pair1_announcement_points),
                 textVariant: "h4",
-                team1ButtonVariant: activeTeam === "team1" ? "contained" : "outlined",
-                team2ButtonVariant: activeTeam === "team2" ? "contained" : "outlined",
+                team1ButtonVariant: activeTeam === (showTeam1Left ? "team1" : "team2") ? "contained" : "outlined",
+                team2ButtonVariant: activeTeam === (showTeam1Left ? "team2" : "team1") ? "contained" : "outlined",
                 label: "Igra",
                 onClick: setActiveTeam,
             };
@@ -80,6 +91,12 @@ export default function TeamsScoreSection() {
     };
 
     const scoreSectionType = getScoreSectionType();
+
+    React.useEffect(() => {
+      if (pathname.endsWith("/score")) {
+        setActiveTeam(showTeam1Left ? "team1" : "team2");
+      }
+    }, [pathname, showTeam1Left, setActiveTeam]);
 
     return (
         <Grid
@@ -93,7 +110,7 @@ export default function TeamsScoreSection() {
                     label={scoreSectionType.label}
                     teamColor={scoreSectionType.team1Color}
                     value={String(scoreSectionType.team1Value)}
-                    onClick={() => scoreSectionType.onClick?.("team1")}
+                    onClick={() => scoreSectionType.onClick?.(showTeam1Left ? "team1" : "team2")}
                     textVariant={scoreSectionType.textVariant}
                     secondValue={String(scoreSectionType?.team1SecondValue)}
                     buttonVariant={scoreSectionType.team1ButtonVariant}
@@ -105,7 +122,7 @@ export default function TeamsScoreSection() {
                     label={scoreSectionType.label}
                     teamColor={scoreSectionType.team2Color}
                     value={String(scoreSectionType.team2Value)}
-                    onClick={() => scoreSectionType.onClick?.("team2")}
+                    onClick={() => scoreSectionType.onClick?.(showTeam1Left ? "team2" : "team1")}
                     textVariant={scoreSectionType.textVariant}
                     secondValue={String(scoreSectionType?.team2SecondValue)}
                     buttonVariant={scoreSectionType.team2ButtonVariant}

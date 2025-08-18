@@ -6,7 +6,7 @@ import {createJSONStorage, persist} from "zustand/middleware";
 
 type PlayerAnnouncements = {
   totalAnnouncements: number;
-  team: 'ONE' | 'TWO';
+  team: 'TEAM_ONE' | 'TEAM_TWO';
   cardCount: number,
   announcementCounts: { [key: number]: number };
 };
@@ -30,7 +30,7 @@ type AnnouncementState = {
 };
 
 const initialState = {
-  playersAnnouncements: {},
+  playersAnnouncements: {}, 
   activePlayerId: null,
   noAnnouncements: true,
 };
@@ -45,15 +45,15 @@ const PrismaAnnouncementEnumValueMap = {
 
 const PrismaAnnouncementCardCountMap = {20: 3, 50: 4, 100: 4, 150: 4, 200: 4,};
 
-const useAnnouncementStore = create<AnnouncementState>(persist((set) => ({
+const useAnnouncementStore = create<AnnouncementState>()(persist<AnnouncementState>((set) => ({
     ...initialState,
 
     initializePlayersAnnouncements: (playerPair1, playerPair2) => set(() => ({
       playersAnnouncements: {
-        [playerPair1!.player_id1]: {totalAnnouncements: 0, announcementCounts: {}, cardCount: 0, team: "ONE"},
-        [playerPair1!.player_id2]: {totalAnnouncements: 0, announcementCounts: {}, cardCount: 0, team: "ONE"},
-        [playerPair2!.player_id1]: {totalAnnouncements: 0, announcementCounts: {}, cardCount: 0, team: "TWO"},
-        [playerPair2!.player_id2]: {totalAnnouncements: 0, announcementCounts: {}, cardCount: 0, team: "TWO"},
+        [playerPair1!.player_id1]: {totalAnnouncements: 0, announcementCounts: {}, cardCount: 0, team: "TEAM_ONE"},
+        [playerPair1!.player_id2]: {totalAnnouncements: 0, announcementCounts: {}, cardCount: 0, team: "TEAM_ONE"},
+        [playerPair2!.player_id1]: {totalAnnouncements: 0, announcementCounts: {}, cardCount: 0, team: "TEAM_TWO"},
+        [playerPair2!.player_id2]: {totalAnnouncements: 0, announcementCounts: {}, cardCount: 0, team: "TEAM_TWO"},
       },
     })),
 
@@ -131,6 +131,7 @@ const useAnnouncementStore = create<AnnouncementState>(persist((set) => ({
           const hasAnnouncements = Object.values(updatedPlayersAnnouncements).some(
             (player) => player.totalAnnouncements > 0
           );
+
           return {
             playersAnnouncements: updatedPlayersAnnouncements,
             noAnnouncements: !hasAnnouncements,
@@ -165,7 +166,7 @@ const useAnnouncementStore = create<AnnouncementState>(persist((set) => ({
   }), {
     name: 'announcement-store',
     storage: createJSONStorage(() => localStorage),
-  })
-);
+  }
+));
 
 export default useAnnouncementStore;

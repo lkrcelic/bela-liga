@@ -7,13 +7,30 @@ import {getOngoingBelaResultAPI} from "@/app/_fetchers/ongoingBelaResult/getOne"
 import useResultStore from "@/app/_store/bela/resultStore";
 import useAnnouncementStore from "@/app/_store/bela/announcementStore";
 import {BelaPlayerAnnouncementResponse} from "@/app/_interfaces/belaPlayerAnnouncement";
+import useAuthStore from '@/app/_store/authStore';
+import useRoundStore from "@/app/_store/RoundStore";
 
 export default function ResultsDisplay() {
     const router = useRouter();
     const pathname = usePathname();
     const {ongoingMatch: {belaResults}} = useOngoingMatchStore();
+    const {roundData: {team1, team2}} = useRoundStore();
     const setResultData = useResultStore(state => state.setResultData)
     const setPlayersAnnouncements = useAnnouncementStore(state => state.setPlayersAnnouncements)
+    const {user} = useAuthStore();
+
+    // Determine orientation: show the current user's team on the left
+    const userId = user?.id;
+    const team1PlayerIds = team1?.teamPlayers?.map(tp => tp.player.id) ?? [];
+    const team2PlayerIds = team2?.teamPlayers?.map(tp => tp.player.id) ?? [];
+    const isUserInTeam1 = userId != null && team1PlayerIds.includes(userId);
+    const isUserInTeam2 = userId != null && team2PlayerIds.includes(userId);
+    const showTeam1Left = isUserInTeam1 || (!isUserInTeam1 && !isUserInTeam2);
+
+    // Avoid flicker/incorrect orientation while teams are not yet loaded
+    if (!team1 || !team2) {
+        return null;
+    }
 
     const handleOnClick = async (resultId: number | null) => {
         try {
@@ -30,6 +47,7 @@ export default function ResultsDisplay() {
         router.push(`${pathname}/ongoing-result/${resultId}/trump-caller`)
     };
 
+
     return (
         <Grid container spacing={1.5} justifyContent="center">
             {belaResults?.map((result, index) => (
@@ -42,7 +60,7 @@ export default function ResultsDisplay() {
                           sx={{backgroundColor: "secondary.main", borderRadius: "20px", paddingY: 0.5}}>
                         <Grid item size={{xs: 4}}>
                             <Typography variant="h4" textAlign="center" color={"default"} paddingRight={1}>
-                                {result.player_pair1_total_points}
+                                {showTeam1Left ? result.player_pair1_total_points : result.player_pair2_total_points}
                             </Typography>
                         </Grid>
 
@@ -54,7 +72,7 @@ export default function ResultsDisplay() {
 
                         <Grid item size={{xs: 4}}>
                             <Typography variant="h4" textAlign="center" color={"default"} paddingLeft={1}>
-                                {result.player_pair2_total_points}
+                                {showTeam1Left ? result.player_pair2_total_points : result.player_pair1_total_points}
                             </Typography>
                         </Grid>
                     </Grid>

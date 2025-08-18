@@ -3,6 +3,8 @@
 import React from "react";
 import theme from "@/app/_styles/theme";
 import {Box, CssBaseline, ThemeProvider} from "@mui/material";
+import { SessionProvider } from "next-auth/react";
+import UserBootstrapper from "@/app/_bootstrap/UserBootstrapper";
 
 export default function RootLayout({
                                      children,
@@ -24,6 +26,7 @@ export default function RootLayout({
     }}>
     <ThemeProvider theme={theme}>
       <CssBaseline/>
+      <UserBootstrapper />
       <Box
         sx={{
           display: "flex",
