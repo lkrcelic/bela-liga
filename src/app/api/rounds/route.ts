@@ -17,13 +17,25 @@ export async function GET(request: NextRequest) {
     const teamId = searchParams.get('team_id');
     const leagueId = searchParams.get('league_id');
 
-    const whereClause = {};
+    const whereClause: Record<string, unknown> = {};
+    const includeExtra: Record<string, unknown> = {};
 
     if (roundDate) {
       const dateStr = new Date(roundDate).toISOString().split('T')[0];
       whereClause.round_date = {
         equals: new Date(dateStr)
       };
+
+      const currentDateStr = new Date().toISOString().split('T')[0];
+      if (dateStr === currentDateStr) {
+        includeExtra.ongoingMatches = {
+          select: {
+            id: true,
+            player_pair1_score: true,
+            player_pair2_score: true,
+          },
+        };
+      }
     }
 
     if (open !== null) {
@@ -65,6 +77,7 @@ export async function GET(request: NextRequest) {
             team_name: true,
           },
         },
+        ...(includeExtra as object),
       },
       orderBy: [
         {round_number: 'asc'},

@@ -3,6 +3,7 @@ import {Box, Chip, Divider, Paper, Typography} from "@mui/material";
 import {MatchResultCard} from "./MatchResultCard";
 import Circle from '@mui/icons-material/Circle';
 import {Grid} from '@mui/system'
+import { OngoingMatchResponse } from "@/app/_interfaces/match";
 
 type MatchResult = {
   team1Name: string;
@@ -11,6 +12,7 @@ type MatchResult = {
   team2Score: number;
   active: boolean;
   tableNumber: number;
+  ongoingMatches: OngoingMatchResponse[];
 };
 
 type RoundResultsPanelProps = {
@@ -98,6 +100,7 @@ export function RoundResultsPanel({roundNumber, matches, activeRounds = 0}: Roun
                 team2Score={match.team2Score}
                 active={match.active}
                 tableNumber={match.tableNumber}
+                ongoingMatches={match.ongoingMatches}
               />
             </Grid>
           ))}

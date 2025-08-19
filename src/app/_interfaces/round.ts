@@ -1,5 +1,6 @@
 import {z} from "zod";
 import {TeamResponseValidation} from "@/app/_interfaces/team";
+import { OngoingMatchResponseValidation } from "./match";
 
 export const RoundResponseValidation = z.object({
   id: z.number().int().optional(),
@@ -19,6 +20,7 @@ export const RoundResponseValidation = z.object({
 export const ExtendedRoundResponseValidation = RoundResponseValidation.extend({
   team1: TeamResponseValidation,
   team2: TeamResponseValidation,
+  ongoingMatches : z.array(OngoingMatchResponseValidation).optional(),
 });
 
 export const CreateRound = z.object({

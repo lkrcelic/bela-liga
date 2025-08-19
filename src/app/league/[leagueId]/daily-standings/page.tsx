@@ -94,6 +94,7 @@ export default function DailyStandings() {
       team2Score: round.team2_wins,
       active: round.active || false,
       tableNumber: round.table_number || 0,
+      ongoingMatches: round.ongoingMatches || [],
     }));
   };
 
