@@ -4,13 +4,12 @@ import {useEffect} from "react";
 import useAuthStore from "@/app/_store/authStore";
 
 export default function UserBootstrapper() {
-  const {setUser, setLoading} = useAuthStore();
+  const {setUser} = useAuthStore();
 
   useEffect(() => {
     let cancelled = false;
     const run = async () => {
       try {
-        setLoading(true);
         const res = await fetch("/api/auth/me", {credentials: "include"});
         if (!res.ok) {
           if (!cancelled) setUser(null);
@@ -20,15 +19,13 @@ export default function UserBootstrapper() {
         if (!cancelled) setUser(json.user ?? null);
       } catch {
         if (!cancelled) setUser(null);
-      } finally {
-        if (!cancelled) setLoading(false);
       }
     };
     run();
     return () => {
       cancelled = true;
     };
-  }, [setUser, setLoading]);
+  }, [setUser]);
 
   return null;
 }
