@@ -1,23 +1,22 @@
 "use client";
 
-import React from "react";
-import {Box, Typography, CircularProgress} from "@mui/material";
-import {Grid} from "@mui/system";
-import PlayerPairSelector from "@/app/round/ui/PlayerPairSelector";
+import {PlayerPartialResponse} from "@/app/_interfaces/player";
+import {TeamResponse} from "@/app/_interfaces/team";
 import useRoundStore from "@/app/_store/RoundStore";
 import useAuthStore from "@/app/_store/authStore";
-import {TeamResponse} from "@/app/_interfaces/team";
-import {PlayerPartialResponse} from "@/app/_interfaces/player";
-
+import PlayerPairSelector from "@/app/round/ui/PlayerPairSelector";
+import {Box, Typography} from "@mui/material";
+import {Grid} from "@mui/system";
 
 export default function PlayersAroundTable() {
-  const {roundData: {team1, team2}} = useRoundStore();
-  const { user } = useAuthStore();
+  const {
+    roundData: {team1, team2},
+  } = useRoundStore();
+  const {user} = useAuthStore();
 
   const isUserInTeam = (team: TeamResponse | null | undefined) => {
     if (!user) return false;
-    return !!team?.teamPlayers?.some(
-      (tp: { player?: PlayerPartialResponse }) => tp?.player?.id === user.id);
+    return !!team?.teamPlayers?.some((tp: {player?: PlayerPartialResponse}) => tp?.player?.id === user.id);
   };
 
   // Derive display order so user's team is first
@@ -28,7 +27,7 @@ export default function PlayersAroundTable() {
 
   return (
     <Grid container spacing={2} sx={{position: "relative", width: "100%", height: "400px"}}>
-      <PlayerPairSelector team1={displayTeam1} team2={displayTeam2}/>
+      <PlayerPairSelector team1={displayTeam1} team2={displayTeam2} />
       <Grid
         item
         size={{xs: 12}}
@@ -56,9 +55,15 @@ export default function PlayersAroundTable() {
             alignItems: "center",
           }}
         >
-          <Typography variant="h7" color="team1">{displayTeam1?.team_name}</Typography>
-          <Typography variant="subtitle2" padding={1}>VS</Typography>
-          <Typography variant="h7" color="team2">{displayTeam2?.team_name}</Typography>
+          <Typography variant="h7" color="team1">
+            {displayTeam1?.team_name}
+          </Typography>
+          <Typography variant="subtitle2" padding={1}>
+            VS
+          </Typography>
+          <Typography variant="h7" color="team2">
+            {displayTeam2?.team_name}
+          </Typography>
         </Box>
       </Grid>
     </Grid>
