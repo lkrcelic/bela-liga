@@ -22,7 +22,6 @@ ADD COLUMN     "image" TEXT,
 ADD COLUMN     "name" VARCHAR(100);
 
 -- AlterTable
-TRUNCATE TABLE "Session";
 ALTER TABLE "Session" DROP COLUMN "expiresAt",
 ADD COLUMN     "expires" TIMESTAMP(3) NOT NULL,
 ADD COLUMN     "sessionToken" TEXT,
