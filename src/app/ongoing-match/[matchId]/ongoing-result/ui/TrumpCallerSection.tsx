@@ -1,18 +1,21 @@
 "use client";
 
-import React from "react";
-import useResultStore from "@/app/_store/bela/resultStore";
-import {Box, Button, CircularProgress, Typography} from "@mui/material";
-import PlayersContainer from "@/app/ongoing-match/[matchId]/ongoing-result/ui/PlayersContainer";
-import useOngoingMatchStore from "@/app/_store/ongoingMatchStore";
 import {PlayerPartialResponse} from "@/app/_interfaces/player";
-import PlayerName from "@/app/_ui/PlayerName";
 import useAuthStore from "@/app/_store/authStore";
-import useRoundStore from "@/app/_store/RoundStore";
+import useResultStore from "@/app/_store/bela/resultStore";
+import useOngoingMatchStore from "@/app/_store/ongoingMatchStore";
+import PlayerName from "@/app/_ui/PlayerName";
+import PlayersContainer from "@/app/ongoing-match/[matchId]/ongoing-result/ui/PlayersContainer";
+import {Button, Typography} from "@mui/material";
 
 export default function TrumpCallerSection() {
-  const {ongoingMatch: {playerPair1, playerPair2}} = useOngoingMatchStore();
-  const {resultData: {trump_caller_id}, setTrumpCallerId} = useResultStore();
+  const {
+    ongoingMatch: {playerPair1, playerPair2},
+  } = useOngoingMatchStore();
+  const {
+    resultData: {trump_caller_id},
+    setTrumpCallerId,
+  } = useResultStore();
   const {user} = useAuthStore();
 
   // Decide orientation: show current user's team on the left
@@ -52,7 +55,7 @@ function TrumpCallerButton({player, color, isTrumpCaller, onClick}: PlayerBoxPro
     <Button
       onClick={onClick}
       color={color}
-      variant={(isTrumpCaller ? 'contained' : 'outlined') as 'contained' | 'outlined'}
+      variant={(isTrumpCaller ? "contained" : "outlined") as "contained" | "outlined"}
       sx={{
         width: "100px",
         height: "100px",
