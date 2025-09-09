@@ -1,5 +1,5 @@
 import {prisma} from "@/app/_lib/prisma";
-import {OngoingMatchResponseValidation} from "@/app/_interfaces/match";
+import {OngoingMatchExtendedResponseValidation} from "@/app/_interfaces/match";
 import {Prisma} from "@prisma/client";
 
 export async function getOngoingMatchWithResultsAndPlayers(id: number): Promise<OngoingMatchResponseValidation> {

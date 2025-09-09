@@ -337,7 +337,6 @@ async function main() {
   const league = await prisma.league.create({
     data: {
       league_name: "Liga ljeta gospodnjeg 2024-2025",
-      game_type: "TRESETA",
     },
   });
   const teams = [team1, team2, team3, team4, team5, team6, team7, team8];

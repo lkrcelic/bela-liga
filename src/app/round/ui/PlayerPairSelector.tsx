@@ -1,12 +1,12 @@
 import {PlayerPartialResponse} from "@/app/_interfaces/player";
-import {TeamResponse} from "@/app/_interfaces/team";
+import {TeamExtendedResponse} from "@/app/_interfaces/team";
 import useOngoingMatchStore from "@/app/_store/ongoingMatchStore";
 import PlayerName from "@/app/_ui/PlayerName";
 import {Button, Menu, MenuItem} from "@mui/material";
 import {Grid} from "@mui/system";
 import React, {useState} from "react";
 
-export default function PlayerPairSelector({team1, team2}: {team1: TeamResponse; team2: TeamResponse}) {
+export default function PlayerPairSelector({team1, team2}: {team1: TeamExtendedResponse; team2: TeamExtendedResponse}) {
   const {
     ongoingMatch: {seating_order},
     setSeatingOrder,
@@ -25,7 +25,7 @@ export default function PlayerPairSelector({team1, team2}: {team1: TeamResponse;
           selectedPlayer={seating_order![0]}
           setSelectedPlayer={handlePlayerSelection(0)}
           selectedTeammate={seating_order![2]}
-          team={team1 as TeamResponse}
+          team={team1 as TeamExtendedResponse}
           color="team1"
         />
       </Grid>
@@ -34,7 +34,7 @@ export default function PlayerPairSelector({team1, team2}: {team1: TeamResponse;
           selectedPlayer={seating_order![1]}
           setSelectedPlayer={handlePlayerSelection(1)}
           selectedTeammate={seating_order![3]}
-          team={team2 as TeamResponse}
+          team={team2 as TeamExtendedResponse}
           color="team2"
         />
       </Grid>
@@ -43,7 +43,7 @@ export default function PlayerPairSelector({team1, team2}: {team1: TeamResponse;
           selectedPlayer={seating_order![3]}
           setSelectedPlayer={handlePlayerSelection(3)}
           selectedTeammate={seating_order![1]}
-          team={team2 as TeamResponse}
+          team={team2 as TeamExtendedResponse}
           color="team2"
         />
       </Grid>
@@ -52,7 +52,7 @@ export default function PlayerPairSelector({team1, team2}: {team1: TeamResponse;
           selectedPlayer={seating_order![2]}
           setSelectedPlayer={handlePlayerSelection(2)}
           selectedTeammate={seating_order![0]}
-          team={team1 as TeamResponse}
+          team={team1 as TeamExtendedResponse}
           color="team1"
         />
       </Grid>
@@ -65,7 +65,7 @@ type PlayerSelectorProps = {
   setSelectedPlayer: (player: PlayerPartialResponse | null) => void;
   selectedTeammate: PlayerPartialResponse | null;
   color: "team1" | "team2";
-  team: TeamResponse;
+  team: TeamExtendedResponse;
 };
 
 function TeamPlayerSelector({selectedPlayer, setSelectedPlayer, selectedTeammate, color, team}: PlayerSelectorProps) {

@@ -1,4 +1,4 @@
-import { RoundType } from "@/app/_interfaces/round";
+import { RoundExtendedResponse } from "@/app/_interfaces/round";
 
 type RoundsQueryParams = {
   round_date?: string;
@@ -8,7 +8,7 @@ type RoundsQueryParams = {
   league_id?: number;
 }
 
-export async function getRoundsAPI(params?: RoundsQueryParams): Promise<RoundType[]> {
+export async function getRoundsAPI(params?: RoundsQueryParams): Promise<RoundExtendedResponse[]> {
   const queryParams = new URLSearchParams();
   
   if (params) {

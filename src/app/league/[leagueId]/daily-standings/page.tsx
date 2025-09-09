@@ -12,12 +12,12 @@ import {Grid} from "@mui/system";
 import {useParams, useRouter, useSearchParams} from "next/navigation";
 import React, {useEffect, useState} from "react";
 import {a11yProps, PageHeader, RoundResultsPanel, StandingsTabContent, TabPanel} from "./ui";
-import {RoundType} from "@/app/_interfaces/round";
+import {RoundExtendedResponse} from "@/app/_interfaces/round";
 import { getRoundsAPI } from "@/app/_fetchers/round/getRounds";
 
 // Group rounds by round number
 type GroupedRounds = {
-  [key: number]: RoundType[];
+  [key: number]: RoundExtendedResponse[];
 };
 
 export default function DailyStandings() {

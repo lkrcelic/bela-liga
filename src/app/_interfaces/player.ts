@@ -12,7 +12,6 @@ export const PlayerCreate = z.object({
   last_updated_at: z.date().optional(),
 });
 
-
 export type PlayerCreateInterface = z.infer<typeof PlayerCreate>;
 
 export const PlayerCreateValidation = PlayerCreate.transform((o) => ({
@@ -45,4 +44,3 @@ export const playersOutput = PlayerResponses;
 export type PlayerResponse = z.infer<typeof PlayerResponseValidation>;
 export type PlayerPartialResponse = z.infer<typeof PlayerPartialResponseValidation>;
 export const PlayerPartialResponseArrayValidation = z.array(PlayerPartialResponseValidation);
-

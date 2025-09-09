@@ -1,7 +1,7 @@
 "use client";
 
 import {PlayerPartialResponse} from "@/app/_interfaces/player";
-import {TeamResponse} from "@/app/_interfaces/team";
+import {TeamExtendedResponse} from "@/app/_interfaces/team";
 import useRoundStore from "@/app/_store/RoundStore";
 import useAuthStore from "@/app/_store/authStore";
 import PlayerPairSelector from "@/app/round/ui/PlayerPairSelector";
@@ -14,7 +14,7 @@ export default function PlayersAroundTable() {
   } = useRoundStore();
   const {user} = useAuthStore();
 
-  const isUserInTeam = (team: TeamResponse | null | undefined) => {
+  const isUserInTeam = (team: TeamExtendedResponse | null | undefined) => {
     if (!user) return false;
     return !!team?.teamPlayers?.some((tp: {player?: PlayerPartialResponse}) => tp?.player?.id === user.id);
   };

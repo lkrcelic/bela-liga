@@ -10,7 +10,7 @@ export const TeamRequestValidation = z.object({
   last_updated_at: z.date().optional(),
 });
 
-export const TeamResponseValidation = z.object({
+export const TeamExtendedResponseValidation = z.object({
   team_id: z.number().int(),
   team_name: z.string(),
   teamPlayers: z.array(
@@ -20,6 +20,5 @@ export const TeamResponseValidation = z.object({
   ),
 });
 
-export const TeamsResponseValidation = z.array(TeamResponseValidation);
-
-export type TeamResponse = z.infer<typeof TeamResponseValidation>;
+export const TeamsResponseValidation = z.array(TeamExtendedResponseValidation);
+export type TeamExtendedResponse = z.infer<typeof TeamExtendedResponseValidation>;

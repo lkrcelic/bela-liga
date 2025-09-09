@@ -26,6 +26,19 @@ export const OngoingMatchRequestValidation = z.object({
     seating_order_ids: z.array(z.number().int()).optional().nullable(),
 });
 
+export const OngoingMatchResponseValidation = z.object({
+    round_id: z.number().int().nullable(),
+    player_pair1_score: z.number().int(),
+    player_pair2_score: z.number().int(),
+    player_pair_id1: z.number().int(),
+    player_pair_id2: z.number().int(),
+    score_threshold: z.number().int(),
+    start_time: parseDate.nullable(),
+    end_time: parseDate.nullable().optional(),
+    match_date: parseDate.optional(),
+    current_shuffler_index: z.number().int()   
+});
+
 export const MatchResponseValidation = OngoingMatchRequestValidation.omit({
     current_shuffler_index: true,
     seating_order_ids: true,
@@ -36,13 +49,11 @@ export const MatchResponseValidation = OngoingMatchRequestValidation.omit({
     seating_order: z.array(PlayerPartialResponseValidation).optional().nullable(),
 });
 
-export const OngoingMatchResponseValidation = OngoingMatchRequestValidation.omit({
-    seating_order_ids: true,
-}).extend({
+export const OngoingMatchExtendedResponseValidation = OngoingMatchResponseValidation.extend({
     belaResults: z.array(PartialBelaResultResponseValidation).optional(),
-    playerPair1: PlayerPairResponseValidation.optional(),
-    playerPair2: PlayerPairResponseValidation.optional(),
-    seating_order: z.array(PlayerPartialResponseValidation.nullable()).optional(),
+    playerPair1: PlayerPairResponseValidation,
+    playerPair2: PlayerPairResponseValidation,
+    seating_order: z.array(PlayerPartialResponseValidation),
 });
 
 export const CreateOngoingMatchRequestValidation = z.object({
@@ -54,8 +65,9 @@ export const CreateOngoingMatchRequestValidation = z.object({
     player_pair_id2: z.number().int().optional(),
 });
 
-export type CreateOngoingMatchRequest = z.infer<typeof CreateOngoingMatchRequestValidation>;
+export type OngoingMatchCreateRequest = z.infer<typeof CreateOngoingMatchRequestValidation>;
 export type MatchResponse = z.infer<typeof MatchResponseValidation>;
 export type OngoingMatchResponse = z.infer<typeof OngoingMatchResponseValidation>;
+export type OngoingMatchExtendedResponse = z.infer<typeof OngoingMatchExtendedResponseValidation>;
 export type OngoingMatchRequest = z.infer<typeof OngoingMatchRequestValidation>;
 export type MatchRequest = z.infer<typeof MatchRequestValidation>
