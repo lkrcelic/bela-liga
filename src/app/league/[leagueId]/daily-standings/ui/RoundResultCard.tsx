@@ -3,25 +3,25 @@ import {Box, Card, CardContent, Typography} from "@mui/material";
 import Circle from "@mui/icons-material/Circle";
 import { OngoingMatchResponse } from "@/app/_interfaces/match";
 
-type MatchResultCardProps = {
+type RoundResultCardProps = {
   team1Name: string;
   team2Name: string;
-  team1Score: number;
-  team2Score: number;
+  team1Wins: number;
+  team2Wins: number;
   active?: boolean;
   tableNumber: number;
   ongoingMatches: OngoingMatchResponse[];
 };
 
-export function MatchResultCard({
+export function RoundResultCard({
   team1Name,
   team2Name,
-  team1Score,
-  team2Score,
+  team1Wins,
+  team2Wins,
   active = false,
   tableNumber,
   ongoingMatches,
-}: MatchResultCardProps) {
+}: RoundResultCardProps) {
   return (
     <Box>
       <Card
@@ -73,22 +73,22 @@ export function MatchResultCard({
             <Typography variant="body1" sx={{fontWeight: "medium", flex: 1}}>
               {team1Name}
             </Typography>
-           {ongoingMatches.length > 0 && <Typography variant="body2" color="text.secondary" sx={{fontWeight: "medium", pr: 1}}>
-              ({ongoingMatches[0].player_pair1_score})
+           {active && ongoingMatches.length > 0 && <Typography variant="body2" color="text.secondary" sx={{fontWeight: "medium", pr: 1}}>
+              ({ongoingMatches[ongoingMatches.length - 1].player_pair1_score})
             </Typography>}
-            <Typography variant="body2" sx={{fontWeight: "bold"}}>
-              {team1Score}
+            <Typography variant="body1" sx={{fontWeight: "bold"}}>
+              {team1Wins}
             </Typography>
           </Box>  
           <Box sx={{display: "flex", justifyContent: "space-between", alignItems: "center"}}>
             <Typography variant="body1" sx={{fontWeight: "medium", flex: 1}}>
               {team2Name}
             </Typography>
-            {ongoingMatches.length > 0 && <Typography variant="body2" color="text.secondary" sx={{fontWeight: "medium", pr: 1}}>
-              ({ongoingMatches[0].player_pair2_score})
+            {active && ongoingMatches.length > 0 && <Typography variant="body2" color="text.secondary" sx={{fontWeight: "medium", pr: 1}}>
+              ({ongoingMatches[ongoingMatches.length - 1].player_pair2_score})
             </Typography>}
             <Typography variant="body1" sx={{fontWeight: "bold"}}>
-              {team2Score}
+              {team2Wins}
             </Typography>
           </Box>
         </CardContent>

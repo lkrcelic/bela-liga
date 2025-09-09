@@ -3,7 +3,6 @@ import {RoundMatchup} from "@/app/_lib/service/round/getRoundMatchups";
 export async function getRoundsByRoundNumber(roundNumber: number): Promise<RoundMatchup[]> {
   try {
     if (roundNumber === undefined || roundNumber <= 0) {
-      console.log(`Invalid round number: ${roundNumber}`);
       return [];
     }
 
