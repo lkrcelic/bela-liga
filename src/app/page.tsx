@@ -195,7 +195,7 @@ export default function Home() {
                 boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
               }}
             >
-              <Typography variant="h6" component="h2" sx={{mb: 1, fontWeight: "bold"}}>
+              <Typography variant="h6" component="h2" sx={{mb: 1, fontWeight: "bold", textAlign: "center"}}>
                 Admin Controls
               </Typography>
 
