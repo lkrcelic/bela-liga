@@ -1,21 +1,20 @@
 "use client";
 
-import {getRoundDatesByLeagueIdAPI} from "@/app/_fetchers/league/getRoundDates";
-import {getLeagueStandingsByDateAPI} from "@/app/_fetchers/league/getStandingsByDate";
+import { getRoundDatesByLeagueIdAPI } from "@/app/_fetchers/league/getRoundDates";
+import { getLeagueStandingsByDateAPI } from "@/app/_fetchers/league/getStandingsByDate";
+import { getRoundsAPI } from "@/app/_fetchers/round/getRounds";
+import { RoundExtendedResponse } from "@/app/_interfaces/round";
+import theme from "@/app/_styles/theme";
 import SingleActionButton from "@/app/_ui/SingleActionButton";
-import {LeagueStandingsItem} from "@/app/_ui/StandingsTable";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import { LeagueStandingsItem } from "@/app/_ui/StandingsTable";
+import { Home } from "@mui/icons-material";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
-import {Box, IconButton, Paper, Tab, Tabs, useMediaQuery} from "@mui/material";
-import {Grid} from "@mui/system";
-import {useParams, useRouter, useSearchParams} from "next/navigation";
-import React, {useEffect, useState} from "react";
-import {a11yProps, PageHeader, RoundResultsPanel, StandingsTabContent, TabPanel} from "./ui";
-import {RoundExtendedResponse} from "@/app/_interfaces/round";
-import {getRoundsAPI} from "@/app/_fetchers/round/getRounds";
-import theme from "@/app/_styles/theme";
-import { Home } from "@mui/icons-material";
+import { Box, IconButton, Paper, Tab, Tabs } from "@mui/material";
+import { Grid } from "@mui/system";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
+import React, { useEffect, useState } from "react";
+import { a11yProps, PageHeader, RoundResultsPanel, StandingsTabContent, TabPanel } from "./ui";
 
 // Group rounds by round number
 type GroupedRounds = {
@@ -23,8 +22,6 @@ type GroupedRounds = {
 };
 
 export default function DailyStandings() {
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-  const [tabValue, setTabValue] = useState(0);
   const [leagueStandings, setLeagueStandings] = useState<LeagueStandingsItem[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [roundsByNumber, setRoundsByNumber] = useState<GroupedRounds>({});

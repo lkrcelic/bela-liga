@@ -1,6 +1,6 @@
-import {RoundExtendedResponseValidation, RoundExtendedResponse, RoundResponseValidation} from "@/app/_interfaces/round";
-import {prisma} from "@/app/_lib/prisma";
-import {Prisma} from "@prisma/client";
+import { RoundExtendedResponse, RoundExtendedResponseValidation } from "@/app/_interfaces/round";
+import { prisma } from "@/app/_lib/prisma";
+import { Prisma } from "@prisma/client";
 
 export async function getLastOpenRoundByPlayerId(playerId: number): Promise<RoundExtendedResponse> {
   const dbRound = await prisma.round.findFirst({
@@ -32,5 +32,5 @@ export async function getLastOpenRoundByPlayerId(playerId: number): Promise<Roun
     },
   } as Prisma.RoundFindFirstArgs);
 
-  return RoundResponseValidation.parse(dbRound);
+  return RoundExtendedResponseValidation.parse(dbRound);
 }

@@ -1,18 +1,16 @@
 "use client";
 
 import {getLeagueStandingsAPI} from "@/app/_fetchers/league/getStandings";
+import theme from "@/app/_styles/theme";
 import SingleActionButton from "@/app/_ui/SingleActionButton";
 import StandingsTable, {LeagueStandingsItem} from "@/app/_ui/StandingsTable";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import {Box, CircularProgress, Divider, Paper, Typography} from "@mui/material";
-import { useRouter } from "next/navigation";
+import {Home} from "@mui/icons-material";
+import {Box, CircularProgress, Divider, Paper, Typography, useMediaQuery} from "@mui/material";
+import {useRouter} from "next/navigation";
 import React from "react";
-import theme from "@/app/_styles/theme";
-import {useMediaQuery} from "@mui/material";
-import { Home } from "@mui/icons-material";
 
 export default function PlayersSeating() {
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [leagueStandings, setLeagueStandings] = React.useState(null);
   const [loading, setLoading] = React.useState(true);
   const router = useRouter();

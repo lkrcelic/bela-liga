@@ -1,10 +1,9 @@
-import {RoundExtendedResponseValidation} from "@/app/_interfaces/round";
-import {prisma} from "@/app/_lib/prisma";
-import {MatchResponseValidation} from "@/app/_interfaces/match";
-import {z} from "zod";
+import { MatchResponse, MatchResponseValidation } from "@/app/_interfaces/match";
+import { prisma } from "@/app/_lib/prisma";
+import { z } from "zod";
 
 
-export async function getAllMatchesByRoundId(id: number): Promise<ExtendedRoundResponseValidation> {
+export async function getAllMatchesByRoundId(id: number): Promise<MatchResponse[]> {
   const matches = await prisma.match.findMany({
     where: {
       round_id: Number(id),
