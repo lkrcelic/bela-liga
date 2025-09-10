@@ -7,7 +7,7 @@ import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
 import GroupAddIcon from "@mui/icons-material/GroupAdd";
 import LogoutIcon from "@mui/icons-material/Logout";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
-import {Box, Button, CircularProgress, Container, Paper, Stack, Typography} from "@mui/material";
+import {Box, Button, CircularProgress, Container, Paper, Typography} from "@mui/material";
 import {useRouter} from "next/navigation";
 import {useEffect, useState} from "react";
 
@@ -81,7 +81,6 @@ export default function Home() {
         router.push(`/round/${roundId}/players-seating`);
       }
     } catch (error) {
-      console.error("Error starting game:", error);
       setStartingGame(false);
     }
   };
@@ -190,7 +189,7 @@ export default function Home() {
             <Paper
               elevation={3}
               sx={{
-                p: 2,
+                p: 3,
                 borderRadius: 4,
                 display: "flex",
                 flexDirection: "column",
@@ -202,23 +201,28 @@ export default function Home() {
                 Admin Controls
               </Typography>
 
-              <Stack direction="row" spacing={2}>
-                <ActionButton
-                  onClick={navigateTo("/createRound")}
-                  label="Create Round"
-                  color="secondary"
-                  fullWidth
-                  icon={<AddCircleOutlineIcon />}
-                />
+              <ActionButton
+                onClick={navigateTo("/createRound")}
+                label="Create Round"
+                color="secondary"
+                fullWidth
+                icon={<AddCircleOutlineIcon />}
+              />
 
-                <ActionButton
-                  onClick={navigateTo("/teams/new")}
-                  label="Create Team"
-                  color="secondary"
-                  fullWidth
-                  icon={<GroupAddIcon />}
-                />
-              </Stack>
+              <ActionButton
+                onClick={navigateTo("/teams/new")}
+                label="Create Team"
+                color="secondary"
+                fullWidth
+                icon={<GroupAddIcon />}
+              />
+              <ActionButton
+                onClick={navigateTo("/teams/add-teammate")}
+                label="Add Teammate"
+                color="secondary"
+                fullWidth
+                icon={<GroupAddIcon />}
+              />
             </Paper>
           )}
         </Container>

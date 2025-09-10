@@ -8,9 +8,19 @@ import {STATUS} from "@/app/_lib/statusCodes";
 import {getAuthorizedUser} from "@/app/_lib/auth";
 import {createTeam} from "@/app/_lib/service/team/create";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const {searchParams} = new URL(request.url);
+    const search = searchParams.get("search");
     const dbTeams = await prisma.team.findMany({
+      where: search
+        ? {
+            team_name: {
+              contains: search,
+              mode: "insensitive",
+            },
+          }
+        : undefined,
       include: {
         teamPlayers: {
           include: {player: true},

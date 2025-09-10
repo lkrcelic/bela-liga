@@ -10,6 +10,11 @@ export const TeamRequestValidation = z.object({
   last_updated_at: z.date().optional(),
 });
 
+export const AddTeammateRequestValidation = z.object({
+  team_id: z.number().int(),
+  player_id: z.number().int(),
+});
+
 export const TeamExtendedResponseValidation = z.object({
   team_id: z.number().int(),
   team_name: z.string(),
