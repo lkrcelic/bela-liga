@@ -22,6 +22,7 @@ type GroupedRounds = {
 };
 
 export default function DailyStandings() {
+  const [tabValue, setTabValue] = useState(0);
   const [leagueStandings, setLeagueStandings] = useState<LeagueStandingsItem[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [roundsByNumber, setRoundsByNumber] = useState<GroupedRounds>({});
