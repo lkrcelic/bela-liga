@@ -10,7 +10,7 @@ import { LeagueStandingsItem } from "@/app/_ui/StandingsTable";
 import { Home } from "@mui/icons-material";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
-import { Box, IconButton, Paper, Tab, Tabs } from "@mui/material";
+import { Box, IconButton, Paper, Tab, Tabs, useMediaQuery } from "@mui/material";
 import { Grid } from "@mui/system";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import React, { useEffect, useState } from "react";
@@ -22,6 +22,7 @@ type GroupedRounds = {
 };
 
 export default function DailyStandings() {
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [tabValue, setTabValue] = useState(0);
   const [leagueStandings, setLeagueStandings] = useState<LeagueStandingsItem[] | null>(null);
   const [loading, setLoading] = useState(true);
