@@ -1,18 +1,19 @@
 "use client";
 
 import useLogout from "@/app/_hooks/useLogout";
+import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
 import GroupAddIcon from "@mui/icons-material/GroupAdd";
 import LogoutIcon from "@mui/icons-material/Logout";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
-import {Box, Button, CircularProgress, Container, Paper, Typography} from "@mui/material";
-import {useRouter} from "next/navigation";
-import {useEffect, useState} from "react";
+import { Box, Button, CircularProgress, Container, IconButton, Paper, Typography } from "@mui/material";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 // API fetchers
-import {getOpenRoundByPlayerIdAPI} from "@/app/_fetchers/round/getOpenByPlayerId";
+import { getOpenRoundByPlayerIdAPI } from "@/app/_fetchers/round/getOpenByPlayerId";
 
 const ActionButton = ({
   onClick,
@@ -112,17 +113,14 @@ export default function Home() {
           zIndex: 10,
         }}
       >
-        <Typography
-          variant="h5"
-          component="h1"
-          sx={{
-            fontWeight: "bold",
-            textAlign: "center",
-            color: "primary.main",
-          }}
-        >
-          Piatnik Bela Liga
-        </Typography>
+        <Container maxWidth="sm" sx={{display: "flex", alignItems: "center", justifyContent: "space-between"}}>
+          <Typography variant="h5" component="h1" sx={{fontWeight: "bold", textAlign: "center", color: "primary.main"}}>
+            Piatnik Bela Liga
+          </Typography>
+          <IconButton color="primary" aria-label="My Profile" onClick={navigateTo("/profile")}>
+            <AccountCircleIcon />
+          </IconButton>
+        </Container>
       </Box>
 
       <Box
@@ -156,7 +154,7 @@ export default function Home() {
               boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
             }}
           >
-            <Typography variant="h6" component="h2" sx={{mb: 1, fontWeight: "bold"}}>
+            <Typography variant="h6" component="h2" sx={{mb: 1, fontWeight: "bold", textAlign: "center"}}>
               Tournament Actions
             </Typography>
 
