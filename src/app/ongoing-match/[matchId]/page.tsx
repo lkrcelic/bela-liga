@@ -12,7 +12,6 @@ import useAnnouncementStore from "@/app/_store/bela/announcementStore";
 import {getRoundDataAPI} from "@/app/_fetchers/round/getOne";
 import useRoundStore from "@/app/_store/RoundStore";
 import {getOngoingMatchAPI} from "@/app/_fetchers/ongoingMatch/getOne";
-import UserBootstrapper from '@/app/_bootstrap/UserBootstrapper';
 
 const MobileScoreBoard = () => {
     const {matchId} = useParams();
@@ -50,7 +49,6 @@ const MobileScoreBoard = () => {
 
     return (
       <>
-        <UserBootstrapper />
         <Box sx={{gridArea: "top", alignSelf: "end"}}>
           <TotalScoreSection/>
           <CardDealer/>

@@ -1,6 +1,5 @@
 "use client";
 
-import UserBootstrapper from "@/app/_bootstrap/UserBootstrapper";
 import {getRoundDataAPI} from "@/app/_fetchers/round/getOne";
 import useRoundStore from "@/app/_store/RoundStore";
 import ActionButtons from "@/app/round/ui/ActionButtons";
@@ -39,8 +38,6 @@ export default function PlayersSeating() {
 
   return (
     <>
-      <UserBootstrapper />
-
       <Box sx={{gridArea: "top", alignSelf: "center"}}>
         <Typography variant="h4" align="center" fontWeight="bold">
           Raspored sjedenja

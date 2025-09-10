@@ -1,6 +1,5 @@
 "use client";
 
-import UserBootstrapper from "@/app/_bootstrap/UserBootstrapper";
 import useAuthStore from "@/app/_store/authStore";
 import theme from "@/app/_styles/theme";
 import GroupsIcon from "@mui/icons-material/Groups";
@@ -97,8 +96,6 @@ export default function ProfilePage() {
 
   return (
     <>
-      <UserBootstrapper />
-
       <Box
         sx={{
           display: "flex",

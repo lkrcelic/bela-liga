@@ -1,6 +1,5 @@
 "use client";
 
-import UserBootstrapper from "@/app/_bootstrap/UserBootstrapper";
 import { getAllMatchesByRoundIdAPI } from "@/app/_fetchers/match/getAllByRoundId";
 import { getRoundDataAPI } from "@/app/_fetchers/round/getOne";
 import useRoundStore from "@/app/_store/RoundStore";
@@ -73,7 +72,6 @@ const MobileScoreBoard = () => {
 
   return (
     <>
-      <UserBootstrapper />
       <Box sx={{gridArea: "top", alignSelf: "end"}}>
         <Grid container justifyContent="space-between" alignItems="top" spacing={6}>
           <Grid item size={{xs: 6}}>
