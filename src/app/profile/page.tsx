@@ -29,12 +29,6 @@ type Team = {
   teamPlayers: TeamPlayer[];
 };
 
-function formatDate(value?: string | Date): string | undefined {
-  if (!value) return undefined;
-  const d = typeof value === "string" ? new Date(value) : value;
-  if (Number.isNaN(d.getTime())) return undefined;
-  return d.toLocaleDateString("hr-HR", {day: "2-digit", month: "2-digit", year: "numeric"});
-}
 
 function DetailRow({label, value}: {label: string; value?: string}) {
   return (
