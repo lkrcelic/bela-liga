@@ -1,33 +1,34 @@
-import {create} from "zustand";
-import {RoundExtendedResponse} from "@/app/_interfaces/round";
-import { persist } from "zustand/middleware";
-import {createJSONStorage} from "zustand/middleware";
+import { RoundExtendedResponse } from "@/app/_interfaces/round";
+import { create } from "zustand";
+import { createJSONStorage, persist } from "zustand/middleware";
 
 export type RoundState = {
-    roundData: RoundExtendedResponse;
-    resetRound: () => void;
-    setRoundData: (data: RoundExtendedResponse) => void;
+  roundData: RoundExtendedResponse;
+  resetRound: () => void;
+  setRoundData: (data: RoundExtendedResponse) => void;
 };
 
-const useRoundStore = create<RoundState>()(persist(
-  (set) => ({
-    roundData: {
-      team1_id: null,
-      team2_id: null,
-    },
+const useRoundStore = create<RoundState>()(
+  persist(
+    (set) => ({
+      roundData: {
+        team1_id: null,
+        team2_id: null,
+      },
 
-    setRoundData: (data) => set((state) => ({roundData: {...state.roundData, ...data}})),
+      setRoundData: (data) => set((state) => ({roundData: {...state.roundData, ...data}})),
 
-    resetRound: () => {
-      set({
-            roundData: null
-      });
-    },
-  }),
-  {
-    name: "round-store",
-    storage: createJSONStorage(() => localStorage),
-  }
-));
+      resetRound: () => {
+        set({
+          roundData: null,
+        });
+      },
+    }),
+    {
+      name: "round-store",
+      storage: createJSONStorage(() => localStorage),
+    }
+  )
+);
 
 export default useRoundStore;

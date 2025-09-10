@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
 
     const ongoingMatch = await getNewestOngoingMatchByRoundId(round.id)
 
-    return NextResponse.json({roundId: round.id, ongoingMatchId: ongoingMatch?.id}, {status: STATUS.OK});
+    return NextResponse.json({roundId: round.id, ongoingMatchId: ongoingMatch.id}, {status: STATUS.OK});
   } catch (error) {
     console.error(error);
     return NextResponse.json({error: "Failed to fetch round."}, {status: STATUS.BadRequest});

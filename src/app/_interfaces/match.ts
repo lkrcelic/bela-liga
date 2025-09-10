@@ -27,6 +27,7 @@ export const OngoingMatchRequestValidation = z.object({
 });
 
 export const OngoingMatchResponseValidation = z.object({
+    id: z.number().int(),
     round_id: z.number().int().nullable(),
     player_pair1_score: z.number().int(),
     player_pair2_score: z.number().int(),
@@ -36,7 +37,8 @@ export const OngoingMatchResponseValidation = z.object({
     start_time: parseDate.nullable(),
     end_time: parseDate.nullable().optional(),
     match_date: parseDate.optional(),
-    current_shuffler_index: z.number().int()   
+    current_shuffler_index: z.number().int(),
+    seating_order_ids: z.array(z.number().int()),
 });
 
 export const MatchResponseValidation = OngoingMatchRequestValidation.omit({
@@ -53,7 +55,7 @@ export const OngoingMatchExtendedResponseValidation = OngoingMatchResponseValida
     belaResults: z.array(PartialBelaResultResponseValidation).optional(),
     playerPair1: PlayerPairResponseValidation,
     playerPair2: PlayerPairResponseValidation,
-    seating_order: z.array(PlayerPartialResponseValidation),
+    seating_order: z.array(PlayerPartialResponseValidation).optional().nullable(),
 });
 
 export const CreateOngoingMatchRequestValidation = z.object({

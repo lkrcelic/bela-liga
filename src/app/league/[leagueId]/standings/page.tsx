@@ -1,15 +1,21 @@
 "use client";
 
-import React from "react";
-import {Box, CircularProgress, Divider, Paper, Typography} from "@mui/material";
 import {getLeagueStandingsAPI} from "@/app/_fetchers/league/getStandings";
 import SingleActionButton from "@/app/_ui/SingleActionButton";
 import StandingsTable, {LeagueStandingsItem} from "@/app/_ui/StandingsTable";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import {Box, CircularProgress, Divider, Paper, Typography} from "@mui/material";
+import { useRouter } from "next/navigation";
+import React from "react";
+import theme from "@/app/_styles/theme";
+import {useMediaQuery} from "@mui/material";
+import { Home } from "@mui/icons-material";
 
 export default function PlayersSeating() {
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [leagueStandings, setLeagueStandings] = React.useState(null);
   const [loading, setLoading] = React.useState(true);
+  const router = useRouter();
 
   const fetchLeagueStandings = async () => {
     try {
@@ -26,11 +32,10 @@ export default function PlayersSeating() {
     fetchLeagueStandings();
   }, []);
 
-
   if (loading) {
     return (
       <Box sx={{display: "flex", justifyContent: "center", alignItems: "center", height: "100vh"}}>
-        <CircularProgress/>
+        <CircularProgress />
       </Box>
     );
   }
@@ -42,14 +47,20 @@ export default function PlayersSeating() {
   return (
     <>
       <Box sx={{gridArea: "top", alignSelf: "center"}}>
-        <Typography variant="h5" component="h1" sx={{
-          fontWeight: 'bold',
-          textAlign: 'center',
-          color: 'primary.main',
-          pb: 1
-        }}> Ukupni poredak
+        <Typography
+          variant="h5"
+          component="h1"
+          sx={{
+            fontWeight: "bold",
+            textAlign: "center",
+            color: "primary.main",
+            pb: 1,
+          }}
+        >
+          {" "}
+          Ukupni poredak
         </Typography>
-        <Divider/>
+        <Divider />
       </Box>
       <Box
         sx={{
@@ -64,26 +75,29 @@ export default function PlayersSeating() {
           height: "100%",
           width: "100%",
           fontFamily: "Roboto, sans-serif",
-        }}>
+        }}
+      >
         <Paper
           elevation={2}
           sx={{
             borderRadius: 2,
-            width: '100% !important',
+            width: "100% !important",
             m: 0,
-            overflowY: 'hidden',
-            overflowX: 'auto'
-          }}>
-          <StandingsTable standings={leagueStandings as LeagueStandingsItem[]}/>
+            overflowY: "hidden",
+            overflowX: "auto",
+          }}
+        >
+          <StandingsTable standings={leagueStandings as LeagueStandingsItem[]} />
         </Paper>
       </Box>
       <Box sx={{gridArea: "actions"}}>
         <SingleActionButton
-          fullWidth={true}
-          label={"Nazad"}
-          onClick={() => window.history.back()}
-          icon={<ArrowBackIcon/>}
-        /> </Box>
+          label={"Početni zaslon"}
+          icon={<Home />}
+          fullWidth={isMobile}
+          onClick={() => router.push(`/`)}
+        />
+      </Box>
     </>
   );
 }

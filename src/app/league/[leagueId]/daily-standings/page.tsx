@@ -7,13 +7,15 @@ import {LeagueStandingsItem} from "@/app/_ui/StandingsTable";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
-import {Box, IconButton, Paper, Tab, Tabs, useMediaQuery, useTheme} from "@mui/material";
+import {Box, IconButton, Paper, Tab, Tabs, useMediaQuery} from "@mui/material";
 import {Grid} from "@mui/system";
 import {useParams, useRouter, useSearchParams} from "next/navigation";
 import React, {useEffect, useState} from "react";
 import {a11yProps, PageHeader, RoundResultsPanel, StandingsTabContent, TabPanel} from "./ui";
 import {RoundExtendedResponse} from "@/app/_interfaces/round";
-import { getRoundsAPI } from "@/app/_fetchers/round/getRounds";
+import {getRoundsAPI} from "@/app/_fetchers/round/getRounds";
+import theme from "@/app/_styles/theme";
+import { Home } from "@mui/icons-material";
 
 // Group rounds by round number
 type GroupedRounds = {
@@ -21,7 +23,6 @@ type GroupedRounds = {
 };
 
 export default function DailyStandings() {
-  const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [tabValue, setTabValue] = useState(0);
   const [leagueStandings, setLeagueStandings] = useState<LeagueStandingsItem[] | null>(null);
@@ -142,7 +143,7 @@ export default function DailyStandings() {
       team2Wins: round.team2_wins,
       active: round.active || false,
       tableNumber: round.table_number || 0,
-      matches: round.matches || [],
+      ongoingMatches: round.ongoingMatches || [],
     }));
   };
 
@@ -326,10 +327,10 @@ export default function DailyStandings() {
         }}
       >
         <SingleActionButton
+          label={"Početni zaslon"}
+          icon={<Home />}
           fullWidth={isMobile}
-          label={"Nazad"}
-          onClick={() => window.history.back()}
-          icon={<ArrowBackIcon />}
+          onClick={() => router.push(`/`)}
         />
       </Grid>
     </Box>

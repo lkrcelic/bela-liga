@@ -56,6 +56,7 @@ function ActionButtons({actionType}: ActionProps) {
       setTotalPoints(playerPair1, playerPair2);
       setCardShufflerIdAndTrumpCallerPosition(seating_order!, current_shuffler_index!);
       const updatedResultData = useResultStore.getState?.().resultData;
+      updatedResultData.match_id = Number(params.matchId);
 
       if (actionType === "CREATE") {
         await createOngoingBelaResultAPI({result: updatedResultData})

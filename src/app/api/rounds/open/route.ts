@@ -17,6 +17,7 @@ export async function GET(request: NextRequest) {
       ongoingMatchId: ongoingMatch?.id || null
     }, {status: STATUS.OK});
   } catch (error) {
-    return NextResponse.json({error: 'No open round found'}, {status: STATUS.NotFound});
+    console.error(error);
+    return NextResponse.json({error: 'Failed to get open round'}, {status: STATUS.ServerError});
   }
 }

@@ -17,8 +17,8 @@ export default function TotalScoreSection() {
   const userId = user?.id;
   const team1PlayerIds = team1?.teamPlayers?.map((tp) => tp.player.id) ?? [];
   const team2PlayerIds = team2?.teamPlayers?.map((tp) => tp.player.id) ?? [];
-  const isUserInTeam1 = userId != null && team1PlayerIds.includes(userId);
-  const isUserInTeam2 = userId != null && team2PlayerIds.includes(userId);
+  const isUserInTeam1 = team1PlayerIds.includes(userId);
+  const isUserInTeam2 = team2PlayerIds.includes(userId);
 
   // Fallback: if user not found in either team, default to team1 on the left
   const showTeam1Left = isUserInTeam1 || (!isUserInTeam1 && !isUserInTeam2);

@@ -9,10 +9,12 @@ import {Box, Typography} from "@mui/material";
 import {Grid} from "@mui/system";
 
 export default function PlayersAroundTable() {
-  const {
-    roundData: {team1, team2},
-  } = useRoundStore();
+  const { roundData } = useRoundStore();
   const {user} = useAuthStore();
+  
+  // Safely access team1 and team2 with null checks
+  const team1 = roundData?.team1;
+  const team2 = roundData?.team2;
 
   const isUserInTeam = (team: TeamExtendedResponse | null | undefined) => {
     if (!user) return false;

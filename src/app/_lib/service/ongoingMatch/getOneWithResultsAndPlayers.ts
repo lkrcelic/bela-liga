@@ -1,8 +1,8 @@
 import {prisma} from "@/app/_lib/prisma";
-import {OngoingMatchExtendedResponseValidation} from "@/app/_interfaces/match";
+import {OngoingMatchExtendedResponseValidation, OngoingMatchExtendedResponse} from "@/app/_interfaces/match";
 import {Prisma} from "@prisma/client";
 
-export async function getOngoingMatchWithResultsAndPlayers(id: number): Promise<OngoingMatchResponseValidation> {
+export async function getOngoingMatchWithResultsAndPlayers(id: number): Promise<OngoingMatchExtendedResponse> {
   const dbOngoingMatch = await prisma.ongoingMatch.findUnique({
     where: {
       id: id,
@@ -73,5 +73,5 @@ export async function getOngoingMatchWithResultsAndPlayers(id: number): Promise<
     throw new Error("Ongoing match not found.");
   }
 
-  return dbOngoingMatch;
+  return OngoingMatchExtendedResponseValidation.parse(dbOngoingMatch);
 }

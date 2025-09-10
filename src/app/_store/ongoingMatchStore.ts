@@ -1,11 +1,11 @@
 import {create} from "zustand";
-import {OngoingMatchResponse} from "@/app/_interfaces/match";
+import {OngoingMatchResponse, OngoingMatchExtendedResponse} from "@/app/_interfaces/match";
 import {PlayerPartialResponse} from "@/app/_interfaces/player";
 import {createJSONStorage, persist} from "zustand/middleware";
 
 export type OngoingMatchState = {
-  ongoingMatch: OngoingMatchResponse;
-  setOngoingMatch: (data: OngoingMatchResponse) => void;
+  ongoingMatch: OngoingMatchExtendedResponse;
+  setOngoingMatch: (data: OngoingMatchExtendedResponse) => void;
   softResetOngoingMatch: () => void;
   hardResetOngoingMatch: () => void;
   setSeatingOrder: (newOrder: (PlayerPartialResponse | null)[]) => void;

@@ -1,6 +1,6 @@
+import {TeamExtendedResponseValidation} from "@/app/_interfaces/team";
 import {z} from "zod";
-import {TeamResponseValidation} from "@/app/_interfaces/team";
-import { OngoingMatchExtendedResponseValidation } from "./match";
+import {OngoingMatchExtendedResponseValidation} from "./match";
 
 export const RoundResponseValidation = z.object({
   id: z.number().int(),
@@ -17,10 +17,10 @@ export const RoundResponseValidation = z.object({
   table_number: z.number().int().optional(),
 });
 
-export const ExtendedRoundResponseValidation = RoundResponseValidation.extend({
-  team1: TeamResponseValidation,
-  team2: TeamResponseValidation,
-  ongoingMatches : z.array(OngoingMatchExtendedResponseValidation).optional(),
+export const RoundExtendedResponseValidation = RoundResponseValidation.extend({
+  team1: TeamExtendedResponseValidation,
+  team2: TeamExtendedResponseValidation,
+  ongoingMatches: z.array(OngoingMatchExtendedResponseValidation).optional(),
 });
 
 export const RoundCreateRequestValidation = z.object({
@@ -30,4 +30,4 @@ export const RoundCreateRequestValidation = z.object({
 
 export type RoundCreateRequest = z.infer<typeof RoundCreateRequestValidation>;
 export type RoundResponse = z.infer<typeof RoundResponseValidation>;
-export type RoundExtendedResponse = z.infer<typeof ExtendedRoundResponseValidation>;
+export type RoundExtendedResponse = z.infer<typeof RoundExtendedResponseValidation>;

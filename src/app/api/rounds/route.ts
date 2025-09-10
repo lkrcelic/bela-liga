@@ -2,7 +2,7 @@ import {NextRequest, NextResponse} from "next/server";
 import {STATUS} from "@/app/_lib/statusCodes";
 import {matchTeams} from "@/app/_lib/matching/multipleRoundMatching";
 import {getLeagueTeamsWithScores} from "@/app/_lib/helpers/query/leagueScores";
-import {CreateRound} from "@/app/_interfaces/round";
+import {RoundCreateRequestValidation} from "@/app/_interfaces/round";
 import {checkCurrentUserIsAdmin} from "@/app/_lib/auth";
 import {insertPairRounds} from "@/app/_lib/service/round/insertPairRounds";
 import {prisma} from "@/app/_lib/prisma";
@@ -26,16 +26,13 @@ export async function GET(request: NextRequest) {
         equals: new Date(dateStr)
       };
 
-      const currentDateStr = new Date().toISOString().split('T')[0];
-      if (dateStr === currentDateStr) {
-        includeExtra.ongoingMatches = {
-          select: {
-            id: true,
-            player_pair1_score: true,
-            player_pair2_score: true,
+      includeExtra.ongoingMatches = {
+        select: {
+          id: true,
+          player_pair1_score: true,
+          player_pair2_score: true,
           },
         };
-      }
     }
 
     if (open !== null) {
@@ -100,7 +97,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const createRound = CreateRound.parse(body);
+    const createRound = RoundCreateRequestValidation.parse(body);
     const {league_id, present_teams} = createRound;
 
     const teamsWithScores = await getLeagueTeamsWithScores(league_id);

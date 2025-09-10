@@ -1,47 +1,55 @@
 "use client";
 
-import {useEffect, useState} from "react";
-import {useRouter} from "next/navigation";
-import {Box, Button, Container, Paper, Stack, Typography} from "@mui/material";
-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
-import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
-import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
-import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
-import GroupAddIcon from '@mui/icons-material/GroupAdd';
-import LogoutIcon from '@mui/icons-material/Logout';
 import useLogout from "@/app/_hooks/useLogout";
+import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
+import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
+import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
+import GroupAddIcon from "@mui/icons-material/GroupAdd";
+import LogoutIcon from "@mui/icons-material/Logout";
+import PlayArrowIcon from "@mui/icons-material/PlayArrow";
+import {Box, Button, CircularProgress, Container, Paper, Stack, Typography} from "@mui/material";
+import {useRouter} from "next/navigation";
+import {useEffect, useState} from "react";
 
 // API fetchers
 import {getOpenRoundByPlayerIdAPI} from "@/app/_fetchers/round/getOpenByPlayerId";
 
-const ActionButton = ({onClick, label, color = "primary", fullWidth = true, icon = null, disabled = false}) => (
+const ActionButton = ({
+  onClick,
+  label,
+  color = "primary",
+  fullWidth = true,
+  icon = null,
+  disabled = false,
+  loading = false,
+}) => (
   <Button
     variant="contained"
     color={color}
     onClick={onClick}
     fullWidth={fullWidth}
-    disabled={disabled}
+    disabled={disabled || loading}
     sx={{
       py: 1.8,
       px: 3,
       borderRadius: 2.5,
-      textTransform: 'none',
-      fontSize: '1.05rem',
-      fontWeight: 'medium',
-      display: 'flex',
+      textTransform: "none",
+      fontSize: "1.05rem",
+      fontWeight: "medium",
+      display: "flex",
       gap: 1.5,
-      justifyContent: 'center',
-      alignItems: 'center',
-      minHeight: '54px',
+      justifyContent: "center",
+      alignItems: "center",
+      minHeight: "54px",
       boxShadow: 2,
-      '&:active': {
-        transform: 'scale(0.98)',
+      "&:active": {
+        transform: "scale(0.98)",
         boxShadow: 1,
       },
-      transition: 'transform 0.1s, box-shadow 0.1s'
+      transition: "transform 0.1s, box-shadow 0.1s",
     }}
   >
-    {icon}
+    {loading ? <CircularProgress size={20} color="inherit" /> : icon}
     {label}
   </Button>
 );
@@ -49,19 +57,22 @@ const ActionButton = ({onClick, label, color = "primary", fullWidth = true, icon
 export default function Home() {
   const router = useRouter();
   const [isAdmin, setIsAdmin] = useState(false);
-  const { logout, loggingOut } = useLogout();
+  const {logout, loggingOut} = useLogout();
+  const [startingGame, setStartingGame] = useState(false);
 
   // Check if user is admin
   useEffect(() => {
-    fetch('/api/session/is-admin')
+    fetch("/api/session/is-admin")
       .then((res) => res.json())
       .then((data) => setIsAdmin(data))
-      .catch((err) => console.error('Failed to fetch session', err));
+      .catch((err) => console.error("Failed to fetch session", err));
   }, []);
 
   // Navigation handlers
   const handleStartGame = async () => {
     try {
+      setStartingGame(true);
+
       const {roundId, ongoingMatchId} = await getOpenRoundByPlayerIdAPI();
 
       if (ongoingMatchId) {
@@ -70,7 +81,8 @@ export default function Home() {
         router.push(`/round/${roundId}/players-seating`);
       }
     } catch (error) {
-      console.error('Error starting game:', error);
+      console.error("Error starting game:", error);
+      setStartingGame(false);
     }
   };
 
@@ -79,57 +91,73 @@ export default function Home() {
   };
 
   return (
-    <Box sx={{
-      display: 'flex',
-      flexDirection: 'column',
-      minHeight: 'calc(100vh - 90px)',
-      width: '100%',
-      position: 'relative',
-      overflowY: 'hidden',
-    }}>
-      {/* Fixed Header - Top Grid Area */}
-      <Box sx={{
-        gridArea: "top",
+    <Box
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        minHeight: "calc(100vh - 90px)",
         width: "100%",
-        backgroundColor: 'none',
-        borderBottom: '1px solid rgba(0,0,0,0.1)',
-        pb: 2,
-        position: 'sticky',
-        zIndex: 10
-      }}>
-        <Typography variant="h5" component="h1" sx={{
-          fontWeight: 'bold',
-          textAlign: 'center',
-          color: 'primary.main'
-        }}>
+        position: "relative",
+        overflowY: "hidden",
+      }}
+    >
+      {/* Fixed Header - Top Grid Area */}
+      <Box
+        sx={{
+          gridArea: "top",
+          width: "100%",
+          backgroundColor: "none",
+          borderBottom: "1px solid rgba(0,0,0,0.1)",
+          pb: 2,
+          position: "sticky",
+          zIndex: 10,
+        }}
+      >
+        <Typography
+          variant="h5"
+          component="h1"
+          sx={{
+            fontWeight: "bold",
+            textAlign: "center",
+            color: "primary.main",
+          }}
+        >
           Piatnik Bela Liga
         </Typography>
       </Box>
 
-      <Box sx={{
-        gridArea: "body",
-        flex: 1,
-        overflowY: 'auto',
-        overflowX: 'hidden',
-        py: 2,
-      }}>
-        <Container maxWidth="sm" sx={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 3,
-          p: 1,
-          width: '100%'
-        }}>
+      <Box
+        sx={{
+          gridArea: "body",
+          flex: 1,
+          overflowY: "auto",
+          overflowX: "hidden",
+          py: 2,
+        }}
+      >
+        <Container
+          maxWidth="sm"
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            gap: 3,
+            p: 1,
+            width: "100%",
+          }}
+        >
           {/* Main Actions Section */}
-          <Paper elevation={3} sx={{
-            p: 3,
-            borderRadius: 4,
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 2.5,
-            boxShadow: '0 4px 20px rgba(0,0,0,0.08)'
-          }}>
-            <Typography variant="h6" component="h2" sx={{mb: 1, fontWeight: 'bold'}}>
+          <Paper
+            elevation={3}
+            sx={{
+              p: 3,
+              borderRadius: 4,
+              display: "flex",
+              flexDirection: "column",
+              gap: 2.5,
+              boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
+            }}
+          >
+            <Typography variant="h6" component="h2" sx={{mb: 1, fontWeight: "bold"}}>
               Tournament Actions
             </Typography>
 
@@ -137,35 +165,40 @@ export default function Home() {
               onClick={handleStartGame}
               label="Start Game"
               color="primary"
-              icon={<PlayArrowIcon/>}
+              icon={<PlayArrowIcon />}
+              disabled={startingGame}
+              loading={startingGame}
             />
 
             <ActionButton
               onClick={navigateTo("/league/1/daily-standings")}
               label="Daily Standings"
               color="primary"
-              icon={<CalendarMonthIcon/>}
+              icon={<CalendarMonthIcon />}
             />
 
             <ActionButton
               onClick={navigateTo("/league/1/standings")}
               label="League Standings"
               color="primary"
-              icon={<EmojiEventsIcon/>}
+              icon={<EmojiEventsIcon />}
             />
           </Paper>
 
           {/* Admin Section - Only visible to admins */}
           {isAdmin && (
-            <Paper elevation={3} sx={{
-              p: 2,
-              borderRadius: 4,
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 2.5,
-              boxShadow: '0 4px 20px rgba(0,0,0,0.08)'
-            }}>
-              <Typography variant="h6" component="h2" sx={{mb: 1, fontWeight: 'bold'}}>
+            <Paper
+              elevation={3}
+              sx={{
+                p: 2,
+                borderRadius: 4,
+                display: "flex",
+                flexDirection: "column",
+                gap: 2.5,
+                boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
+              }}
+            >
+              <Typography variant="h6" component="h2" sx={{mb: 1, fontWeight: "bold"}}>
                 Admin Controls
               </Typography>
 
@@ -175,7 +208,7 @@ export default function Home() {
                   label="Create Round"
                   color="secondary"
                   fullWidth
-                  icon={<AddCircleOutlineIcon/>}
+                  icon={<AddCircleOutlineIcon />}
                 />
 
                 <ActionButton
@@ -183,7 +216,7 @@ export default function Home() {
                   label="Create Team"
                   color="secondary"
                   fullWidth
-                  icon={<GroupAddIcon/>}
+                  icon={<GroupAddIcon />}
                 />
               </Stack>
             </Paper>
@@ -192,22 +225,24 @@ export default function Home() {
       </Box>
 
       {/* Fixed Footer - Actions Grid Area */}
-      <Box sx={{
-        gridArea: "actions",
-        width: "100%",
-        backgroundColor: 'none',
-        borderTop: '1px solid rgba(0,0,0,0.1)',
-        py: 2,
-        position: 'sticky',
-        bottom: 0,
-        zIndex: 10
-      }}>
-        <Container maxWidth="sm" sx={{display: 'flex', justifyContent: 'center', p: 1}}>
+      <Box
+        sx={{
+          gridArea: "actions",
+          width: "100%",
+          backgroundColor: "none",
+          borderTop: "1px solid rgba(0,0,0,0.1)",
+          py: 2,
+          position: "sticky",
+          bottom: 0,
+          zIndex: 10,
+        }}
+      >
+        <Container maxWidth="sm" sx={{display: "flex", justifyContent: "center", p: 1}}>
           <ActionButton
-            onClick={() => logout()} 
+            onClick={() => logout()}
             label="Log Out"
             color="secondary"
-            icon={<LogoutIcon/>}
+            icon={<LogoutIcon />}
             disabled={loggingOut}
           />
         </Container>

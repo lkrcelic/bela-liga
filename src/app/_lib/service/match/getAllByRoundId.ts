@@ -1,4 +1,4 @@
-import {ExtendedRoundResponseValidation} from "@/app/_interfaces/round";
+import {RoundExtendedResponseValidation} from "@/app/_interfaces/round";
 import {prisma} from "@/app/_lib/prisma";
 import {MatchResponseValidation} from "@/app/_interfaces/match";
 import {z} from "zod";
