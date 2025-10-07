@@ -8,27 +8,8 @@ import {Avatar, Box, CircularProgress, Paper, Stack, Typography, useMediaQuery, 
 import {useRouter} from "next/navigation";
 import React from "react";
 import SingleActionButton from "../_ui/SingleActionButton";
-
-// Basic types derived from existing interfaces
-type Player = {
-  id: number;
-  username: string;
-  email?: string;
-  player_role?: string;
-  first_name?: string;
-  last_name?: string;
-  birth_date?: string | Date;
-  created_at?: string | Date;
-};
-
-type TeamPlayer = {player: Player};
-
-type Team = {
-  team_id: number;
-  team_name: string;
-  teamPlayers: TeamPlayer[];
-};
-
+import { PlayerResponse } from "../_interfaces/player";
+import { TeamExtendedResponse } from "../_interfaces/team";
 
 function DetailRow({label, value}: {label: string; value?: string}) {
   return (
@@ -49,12 +30,12 @@ export default function ProfilePage() {
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   const [loading, setLoading] = React.useState(true);
-  const [player, setPlayer] = React.useState<Player | null>(null);
-  const [teams, setTeams] = React.useState<Team[]>([]);
+  const [player, setPlayer] = React.useState<PlayerResponse | null>(null);
+  const [teams, setTeams] = React.useState<TeamExtendedResponse[]>([]);
 
   // Load player + teams
   React.useEffect(() => {
-    const load = async () => {
+    const load = async () => {      
       if (!user?.id) {
         setLoading(false);
         return;
@@ -63,7 +44,7 @@ export default function ProfilePage() {
         setLoading(true);
         const [playerRes, teamsRes] = await Promise.all([fetch(`/api/players/${user.id}`), fetch(`/api/teams`)]);
         const playerJson = playerRes.ok ? await playerRes.json() : null;
-        const teamsJson: Team[] = teamsRes.ok ? await teamsRes.json() : [];
+        const teamsJson: TeamExtendedResponse[] = teamsRes.ok ? await teamsRes.json() : [];
         const myTeams = (teamsJson || []).filter((t) => t.teamPlayers?.some((tp) => tp.player?.id === user.id));
         setPlayer(playerJson);
         setTeams(myTeams);
@@ -120,23 +101,28 @@ export default function ProfilePage() {
                 p: 2,
                 borderRadius: 4,
                 display: "flex",
+                justifyContent: "space-between",
                 alignItems: "center",
-                gap: 2,
                 backgroundColor: theme.palette.secondary.main,
                 color: theme.palette.secondary.contrastText,
               }}
             >
-              <Avatar sx={{bgcolor: theme.palette.primary.main, width: 56, height: 56}}>{initials}</Avatar>
-              <Box sx={{flex: 1}}>
-                <Typography variant="h6" sx={{fontWeight: "bold"}}>
-                  {player?.username || "My Profile"}
-                </Typography>
-                {player?.first_name || player?.last_name ? (
-                  <Typography variant="body2">
-                    {player?.first_name} {player?.last_name}
+              <Box sx={{display: "flex", alignItems: "center", gap: 2}}>
+                <Avatar sx={{bgcolor: theme.palette.primary.main, width: 56, height: 56}}>{initials}</Avatar>
+                <Box sx={{flex: 1}}>
+                  <Typography variant="h6" sx={{fontWeight: "bold"}}>
+                    {player?.username || "My Profile"}
                   </Typography>
-                ) : null}
+                  {player?.first_name || player?.last_name ? (
+                    <Typography variant="body2">
+                      {player?.first_name} {player?.last_name}
+                    </Typography>
+                  ) : null}
+                </Box>
               </Box>
+              <Typography variant="h6" sx={{fontWeight: "bold"}}>
+                {player?.rating}
+              </Typography>
             </Paper>
           </Container>
         </Box>
@@ -168,6 +154,7 @@ export default function ProfilePage() {
                   <DetailRow label="Email" value={player?.email} />
                   <DetailRow label="First name" value={player?.first_name} />
                   <DetailRow label="Last name" value={player?.last_name} />
+                  <DetailRow label="Rating" value={player?.rating} />
                 </Stack>
               </Paper>
 

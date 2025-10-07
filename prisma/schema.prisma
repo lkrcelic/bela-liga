@@ -40,6 +40,11 @@ model Player {
   created_at      DateTime  @default(now())
   last_updated_at DateTime? @updatedAt
 
+  // Glicko-2 Rating System fields
+  rating          Int       @default(1500)  // R - Player rating (mu)
+  rating_deviation Float    @default(350.0)   // RD - Rating uncertainty (phi)
+  volatility      Float     @default(0.06)    // Sigma - Rating volatility
+
   // NextAuth required fields
   emailVerified DateTime?
   image         String?   @db.Text

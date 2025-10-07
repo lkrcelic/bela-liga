@@ -36,6 +36,7 @@ export const PlayerPartialResponseValidation = z.object({
 export const PlayerResponseValidation = PlayerPartialResponseValidation.extend({
   email: z.string(),
   player_role: z.string(),
+  rating: z.number().optional(),
 });
 
 const PlayerResponses = z.array(PlayerResponseValidation);

@@ -1,4 +1,5 @@
 import {Button, Typography} from "@mui/material";
+import { grey } from "@mui/material/colors";
 
 type ScoreBoxProps = {
     label?: string;
@@ -39,7 +40,7 @@ export function TeamScoreBox({
                 {(label && <Typography variant="caption">{label}</Typography>)}
                 {(value && <Typography variant={textVariant}>{value}</Typography>)}
             </Button>
-            {(secondValue && <Typography variant="caption" paddingLeft={1}>{"Σ: " + secondValue}</Typography>)}
+            {(secondValue && <Typography color={grey[800]} paddingTop={0.5} paddingLeft={1}>{"Σ: " + secondValue}</Typography>)}
         </>
     );
 }

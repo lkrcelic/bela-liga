@@ -68,7 +68,7 @@ function TrumpCallerButton({player, color, isTrumpCaller, onClick}: PlayerBoxPro
       }}
     >
       <Typography variant="subtitle2">
-        <PlayerName firstName={player.first_name} lastName={player.last_name} />
+        <PlayerName firstName={player?.first_name} lastName={player?.last_name} />
       </Typography>
     </Button>
   );

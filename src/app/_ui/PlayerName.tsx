@@ -7,13 +7,13 @@ type PlayerNameProps = {
 export default function PlayerName({firstName, lastName, short = true}: PlayerNameProps) {
   const threshold = short ? 0 : 15;
   if (!lastName) {
-    if (firstName.length > threshold) {
+    if (firstName?.length > threshold) {
       return abbreviateFirstName(firstName);
     }
     return firstName;
-  } else if (firstName.length + lastName.length > threshold) {
+  } else if (firstName?.length + lastName?.length > threshold) {
     const formattedLastName = abbreviateLastName(lastName);
-    if (firstName.length + formattedLastName.length <= threshold) {
+    if (firstName?.length + formattedLastName.length <= threshold) {
       return `${firstName} ${formattedLastName}`;
 
     }

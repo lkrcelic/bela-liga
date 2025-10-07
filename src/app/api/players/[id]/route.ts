@@ -19,6 +19,7 @@ export async function GET(
 
     return NextResponse.json(player, {status: STATUS.OK});
   } catch (error) {
+    console.log(error);
     return NextResponse.json(
       {error: "Failed to fetch player."},
       {status: STATUS.ServerError}

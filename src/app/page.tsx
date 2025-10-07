@@ -14,6 +14,7 @@ import { useEffect, useState } from "react";
 
 // API fetchers
 import { getOpenRoundByPlayerIdAPI } from "@/app/_fetchers/round/getOpenByPlayerId";
+import UserBootstrapper from "./_bootstrap/UserBootstrapper";
 
 const ActionButton = ({
   onClick,
@@ -101,6 +102,7 @@ export default function Home() {
         overflowY: "hidden",
       }}
     >
+      <UserBootstrapper />
       {/* Fixed Header - Top Grid Area */}
       <Box
         sx={{
