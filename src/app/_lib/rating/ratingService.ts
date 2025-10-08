@@ -9,10 +9,11 @@ const prisma = new PrismaClient();
 // Glicko-2 Constants
 const MU0 = 1500;      // Starting rating
 const PHI0 = 350;      // Starting rating deviation
+const MIN_PHI = 100;   // Minimum rating deviation
 const SIGMA0 = 0.06;   // Starting volatility
 const TAU = 0.5;       // System constant
 const Q = Math.log(10) / 400;
-const SCALE = 2;       // Reduced from 16 to 2 for more stable ratings
+const SCALE = 16;
 
 // Helper function: RD impact
 function g(phi: number): number {
@@ -40,7 +41,7 @@ function fromGlicko2(mu: number, phi: number, sigma: number): [number, number, n
   ];
 }
 
-// Simplified Glicko-2 update (without full volatility iteration)
+// Simplified rating update - no time decay, fixed RD reduction
 function updateSingle(
   mu: number,
   phi: number,
@@ -51,11 +52,56 @@ function updateSingle(
 ): [number, number, number] {
   const gVal = g(phiOpp);
   const EVal = 1 / (1 + Math.exp(-gVal * (mu - muOpp)));
-  const v = 1 / (Q * Q * gVal * gVal * EVal * (1 - EVal));
-  const phiStar = Math.sqrt(phi * phi + sigma * sigma);
-  const phiPrime = 1 / Math.sqrt(1 / (phiStar * phiStar) + 1 / v);
-  const muPrime = mu + phiPrime * phiPrime * Q * gVal * (s - EVal);
-  return [muPrime, phiPrime, sigma];
+  
+  // Calculate rating change
+  const K = Q * phi * gVal;  // Simplified K-factor based on RD
+  const muPrime = mu + K * (s - EVal);
+  
+  // Fixed RD reduction per match (decreases by ~5% per match)
+  if (phi * 173.7178 > MIN_PHI) {
+    phi = phi * 0.98;
+  }
+  
+  return [muPrime, phi, sigma];
+}
+
+// 2v2 update: treat as team vs team, then apply to individuals
+function update2v2(
+  playersA: Array<{ rating: number; rd: number; vol: number }>,
+  playersB: Array<{ rating: number; rd: number; vol: number }>,
+  scoreA: number
+): { teamA: Array<{ rating: number; rd: number; vol: number }>; teamB: Array<{ rating: number; rd: number; vol: number }> } {
+  // Convert to Glicko-2 scale
+  const gA = playersA.map(p => toGlicko2(p.rating, p.rd, p.vol));
+  const gB = playersB.map(p => toGlicko2(p.rating, p.rd, p.vol));
+
+  // Calculate team averages
+  const muA = (gA[0][0] + gA[1][0]) / 2;
+  const phiA = (gA[0][1] + gA[1][1]) / 2;
+  const muB = (gB[0][0] + gB[1][0]) / 2;
+  const phiB = (gB[0][1] + gB[1][1]) / 2;
+
+  // Update team ratings
+  const [muAnew, phiAnew, sigmaA] = updateSingle(muA, phiA, SIGMA0, muB, phiB, scoreA);
+  const [muBnew, phiBnew, sigmaB] = updateSingle(muB, phiB, SIGMA0, muA, phiA, 1 - scoreA);
+
+  // Calculate rating changes
+  const dmuA = (muAnew - muA) * SCALE;
+  const dmuB = (muBnew - muB) * SCALE;
+
+  // Update team A players
+  const updA = gA.map(([mu, phi, sigma], i) => {
+    const [newRating, newRd, newSigma] = fromGlicko2(mu + dmuA, phiAnew, sigmaA);
+    return { rating: Math.round(newRating), rd: newRd, vol: newSigma };
+  });
+
+  // Update team B players
+  const updB = gB.map(([mu, phi, sigma], i) => {
+    const [newRating, newRd, newSigma] = fromGlicko2(mu + dmuB, phiBnew, sigmaB);
+    return { rating: Math.round(newRating), rd: newRd, vol: newSigma };
+  });
+
+  return { teamA: updA, teamB: updB };
 }
 
 /**
@@ -91,52 +137,47 @@ export async function updateRatingsAfterMatch(
   const teamAPlayers = players.filter(p => teamAPlayerIds.includes(p.id));
   const teamBPlayers = players.filter(p => teamBPlayerIds.includes(p.id));
 
-  // Convert to Glicko-2 scale
-  const gA = teamAPlayers.map(p => toGlicko2(p.rating, p.rating_deviation, p.volatility));
-  const gB = teamBPlayers.map(p => toGlicko2(p.rating, p.rating_deviation, p.volatility));
+  // Prepare player data for update2v2
+  const playersA = teamAPlayers.map(p => ({
+    rating: p.rating,
+    rd: p.rating_deviation,
+    vol: p.volatility
+  }));
+  const playersB = teamBPlayers.map(p => ({
+    rating: p.rating,
+    rd: p.rating_deviation,
+    vol: p.volatility
+  }));
 
-  // Calculate team averages
-  const muA = (gA[0][0] + gA[1][0]) / 2;
-  const phiA = (gA[0][1] + gA[1][1]) / 2;
-  const muB = (gB[0][0] + gB[1][0]) / 2;
-  const phiB = (gB[0][1] + gB[1][1]) / 2;
+  // Calculate new ratings using update2v2
+  const { teamA: updatedA, teamB: updatedB } = update2v2(playersA, playersB, scoreA);
 
-  // Update team ratings
-  const [muAnew, phiAnew, sigmaA] = updateSingle(muA, phiA, SIGMA0, muB, phiB, scoreA);
-  const [muBnew, phiBnew, sigmaB] = updateSingle(muB, phiB, SIGMA0, muA, phiA, 1 - scoreA);
-
-  // Calculate rating changes
-  const dmuA = (muAnew - muA) * SCALE;
-  const dmuB = (muBnew - muB) * SCALE;
-
-  // Update team A players
+  // Update team A players in database
   for (let i = 0; i < teamAPlayers.length; i++) {
     const player = teamAPlayers[i];
-    const [mu, phi, sigma] = gA[i];
-    const [newRating, newRd, newSigma] = fromGlicko2(mu + dmuA, phiAnew, sigmaA);
+    const updated = updatedA[i];
 
     await prisma.player.update({
       where: { id: player.id },
       data: {
-        rating: Math.round(newRating),
-        rating_deviation: newRd,
-        volatility: newSigma
+        rating: updated.rating,
+        rating_deviation: updated.rd,
+        volatility: updated.vol
       }
     });
   }
 
-  // Update team B players
+  // Update team B players in database
   for (let i = 0; i < teamBPlayers.length; i++) {
     const player = teamBPlayers[i];
-    const [mu, phi, sigma] = gB[i];
-    const [newRating, newRd, newSigma] = fromGlicko2(mu + dmuB, phiBnew, sigmaB);
+    const updated = updatedB[i];
 
     await prisma.player.update({
       where: { id: player.id },
       data: {
-        rating: Math.round(newRating),
-        rating_deviation: newRd,
-        volatility: newSigma
+        rating: updated.rating,
+        rating_deviation: updated.rd,
+        volatility: updated.vol
       }
     });
   }
