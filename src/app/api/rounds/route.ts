@@ -3,7 +3,7 @@ import {STATUS} from "@/app/_lib/statusCodes";
 import {matchTeams} from "@/app/_lib/matching/multipleRoundMatching";
 import {getLeagueTeamsWithScores} from "@/app/_lib/helpers/query/leagueScores";
 import {RoundCreateRequestValidation} from "@/app/_interfaces/round";
-import {checkCurrentUserIsAdmin} from "@/app/_lib/auth";
+import {checkCurrentUserIsAdmin} from "@/app/_lib/luciaAuth";
 import {insertPairRounds} from "@/app/_lib/service/round/insertPairRounds";
 import {prisma} from "@/app/_lib/prisma";
 

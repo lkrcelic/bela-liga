@@ -3,23 +3,24 @@
 import {signIn} from "next-auth/react";
 import {Button} from "@mui/material";
 import {Google as GoogleIcon} from "@mui/icons-material";
+import { useSearchParams } from "next/navigation";
 
 interface GoogleLoginButtonProps {
   onLoginStart?: () => void;
   onLoginComplete?: (success: boolean) => void;
 }
 
-export default function GoogleLoginButton({
-                                            onLoginStart,
-                                            onLoginComplete,
-                                          }: GoogleLoginButtonProps) {
+export default function GoogleLoginButton({onLoginStart, onLoginComplete}: GoogleLoginButtonProps) {
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get("callbackUrl");
+
   const handleGoogleLogin = async () => {
     if (onLoginStart) onLoginStart();
 
     try {
       // Using NextAuth client-side signIn with callbackUrl
       await signIn("google", {
-        callbackUrl: "/"
+        callbackUrl: callbackUrl || "/"
       });
 
       // Note: The code below won't execute immediately as we're redirecting

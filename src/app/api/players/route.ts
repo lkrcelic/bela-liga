@@ -1,7 +1,7 @@
 // src/app/api/players/route.ts
 
 import {NextRequest, NextResponse} from "next/server";
-import {getAuthorizedUser} from "@/app/_lib/auth";
+import {getAuthorizedUser} from "@/app/_lib/service/auth/getAuthorizedUser";
 import {STATUS} from "@/app/_lib/statusCodes";
 import {getAllPlayers} from "@/app/_lib/service/players/getAll";
 import {searchPlayers} from "@/app/_lib/service/players/search";

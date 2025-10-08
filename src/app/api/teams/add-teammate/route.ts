@@ -1,5 +1,5 @@
 import { AddTeammateRequestValidation } from "@/app/_interfaces/team";
-import { checkCurrentUserIsAdmin } from "@/app/_lib/auth";
+import { checkCurrentUserIsAdmin } from "@/app/_lib/luciaAuth";
 import { addPlayerToTeam } from "@/app/_lib/service/team/addPlayer";
 import { STATUS } from "@/app/_lib/statusCodes";
 import { NextRequest, NextResponse } from "next/server";

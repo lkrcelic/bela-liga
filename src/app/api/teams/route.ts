@@ -5,7 +5,7 @@ import {TeamRequestValidation, TeamsResponseValidation} from "@/app/_interfaces/
 import {z} from "zod";
 import {NextRequest, NextResponse} from "next/server";
 import {STATUS} from "@/app/_lib/statusCodes";
-import {getAuthorizedUser} from "@/app/_lib/auth";
+import {getAuthorizedUser} from "@/app/_lib/service/auth/getAuthorizedUser";
 import {createTeam} from "@/app/_lib/service/team/create";
 
 export async function GET(request: NextRequest) {

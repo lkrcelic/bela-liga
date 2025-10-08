@@ -11,7 +11,7 @@ const MU0 = 1500;      // Starting rating
 const PHI0 = 350;      // Starting rating deviation
 const MIN_PHI = 100;   // Minimum rating deviation
 const SIGMA0 = 0.06;   // Starting volatility
-const TAU = 0.5;       // System constant
+// const TAU = 0.5;       // System constant (reserved for future use)
 const Q = Math.log(10) / 400;
 const SCALE = 16;
 
@@ -20,10 +20,10 @@ function g(phi: number): number {
   return 1 / Math.sqrt(1 + (3 * Q * Q * phi * phi) / (Math.PI * Math.PI));
 }
 
-// Helper function: Expected score
-function E(mu: number, mu_j: number, phi_j: number): number {
-  return 1 / (1 + Math.exp(-g(phi_j) * (mu - mu_j)));
-}
+// Helper function: Expected score (reserved for future use)
+// function E(mu: number, mu_j: number, phi_j: number): number {
+//   return 1 / (1 + Math.exp(-g(phi_j) * (mu - mu_j)));
+// }
 
 // Convert from Glicko to Glicko-2 scale
 function toGlicko2(rating: number, rd: number, sigma: number): [number, number, number] {
@@ -90,13 +90,13 @@ function update2v2(
   const dmuB = (muBnew - muB) * SCALE;
 
   // Update team A players
-  const updA = gA.map(([mu, phi, sigma], i) => {
+  const updA = gA.map(([mu]) => {
     const [newRating, newRd, newSigma] = fromGlicko2(mu + dmuA, phiAnew, sigmaA);
     return { rating: Math.round(newRating), rd: newRd, vol: newSigma };
   });
 
   // Update team B players
-  const updB = gB.map(([mu, phi, sigma], i) => {
+  const updB = gB.map(([mu]) => {
     const [newRating, newRd, newSigma] = fromGlicko2(mu + dmuB, phiBnew, sigmaB);
     return { rating: Math.round(newRating), rd: newRd, vol: newSigma };
   });

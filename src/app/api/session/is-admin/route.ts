@@ -1,4 +1,4 @@
-import {getAuthorizedUser} from "@/app/_lib/auth";
+import {getAuthorizedUser} from "@/app/_lib/service/auth/getAuthorizedUser";
 import {STATUS} from "@/app/_lib/statusCodes";
 import {NextRequest, NextResponse} from "next/server";
 

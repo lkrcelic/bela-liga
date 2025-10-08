@@ -1,7 +1,7 @@
 import {NextRequest, NextResponse} from "next/server";
 import {STATUS} from "@/app/_lib/statusCodes";
 import {prisma} from "@/app/_lib/prisma";
-import {checkCurrentUserIsAdmin} from "@/app/_lib/auth";
+import {checkCurrentUserIsAdmin} from "@/app/_lib/luciaAuth";
 
 export async function GET(request: NextRequest, {params}: {params: {id: string}}) {
   const {id} = params;

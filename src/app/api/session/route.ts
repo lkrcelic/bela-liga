@@ -1,4 +1,4 @@
-import {getAuthorizedUser} from "@/app/_lib/auth";
+import {getAuthorizedUser} from "@/app/_lib/service/auth/getAuthorizedUser";
 import {GoogleSessionsOut, LuciaSessionsOut} from "@/app/_interfaces/session";
 import {prisma} from "@/app/_lib/prisma";
 import {STATUS} from "@/app/_lib/statusCodes";
