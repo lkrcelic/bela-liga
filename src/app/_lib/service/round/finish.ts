@@ -43,7 +43,6 @@ export async function finishRound(round_id: number): Promise<void> {
   await prisma.$queryRaw`CALL update_team_score(${team2_id}, ${league_id})`;
 
   const team1Won = team1_wins > team2_wins;
-  const team2Won = team2_wins > team1_wins;
   const isDraw = team1_wins === team2_wins;
 
   const scoreTeam1 = team1Won ? 1 : isDraw ? 0.5 : 0;
