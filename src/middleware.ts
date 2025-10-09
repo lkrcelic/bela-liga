@@ -10,6 +10,7 @@ export { auth } from "@/app/_lib/googleAuth";
 export async function middleware(req: NextRequest) {
   if (
     !(
+      req.nextUrl.pathname.startsWith("/api/auth") ||
       req.nextUrl.pathname.startsWith("/api") ||
       req.nextUrl.pathname.startsWith("/login") ||
       req.nextUrl.pathname.startsWith("/signup") ||
@@ -46,7 +47,9 @@ async function authenticationMiddleware(req: NextRequest) {
   }
 
   const nextAuthCookie = req.cookies.get(process.env.GOOGLE_AUTH_COOKIE);
-  if (nextAuthCookie) return true;
+  if (nextAuthCookie){
+    return true;
+  } 
 
   return false
 }

@@ -1,9 +1,8 @@
 "use client";
 
-import {signIn} from "next-auth/react";
-import {Button} from "@mui/material";
-import {Google as GoogleIcon} from "@mui/icons-material";
-import { useSearchParams } from "next/navigation";
+import { Google as GoogleIcon } from "@mui/icons-material";
+import { Button } from "@mui/material";
+import { signIn } from "next-auth/react";
 
 interface GoogleLoginButtonProps {
   onLoginStart?: () => void;
@@ -11,17 +10,12 @@ interface GoogleLoginButtonProps {
 }
 
 export default function GoogleLoginButton({onLoginStart, onLoginComplete}: GoogleLoginButtonProps) {
-  const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get("callbackUrl");
-
-  const handleGoogleLogin = async () => {
+  const handleGoogleLogin = () => {
     if (onLoginStart) onLoginStart();
 
     try {
       // Using NextAuth client-side signIn with callbackUrl
-      await signIn("google", {
-        callbackUrl: callbackUrl || "/"
-      });
+       signIn("google", {callbackUrl: "/"});
 
       // Note: The code below won't execute immediately as we're redirecting
       if (onLoginComplete) {

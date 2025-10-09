@@ -141,6 +141,22 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     clientId: process.env.GOOGLE_CLIENT_ID,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
   })],
+  session: {
+    strategy: "database",
+    maxAge: 4 * 60 * 60, // 4 hours in seconds
+  },
+  cookies: {
+    sessionToken: {
+      name: process.env.GOOGLE_AUTH_COOKIE,
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: process.env.NODE_ENV === "production",
+      },
+    },
+  },
+  //debug: true,
 })
 
 // export const {handlers: {GET, POST}, auth, signIn, signOut} = NextAuth({
