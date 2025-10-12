@@ -16,9 +16,16 @@ export async function getRoundDatesByLeagueId(league_id: number): Promise<string
     distinct: ["round_date"],
   });
 
-  // Normalize to YYYY-MM-DD strings
+  // Normalize to YYYY-MM-DD strings, filter out invalid/epoch
   const dates = rounds
-    .map((r) => new Date(r.round_date as unknown as string).toISOString().split("T")[0])
+    .map((r) => {
+      const raw = r.round_date as unknown as Date | string | number;
+      const d = raw instanceof Date ? raw : new Date(raw as any);
+      const time = d.getTime();
+      if (!isFinite(time) || time === 0) return null; // exclude invalid or epoch
+      return new Date(time).toISOString().slice(0, 10); // YYYY-MM-DD (UTC)
+    })
+    .filter((v): v is string => !!v && v !== "1970-01-01")
     .filter((v, i, arr) => arr.indexOf(v) === i);
 
   return dates;

@@ -1,11 +1,11 @@
 import { AddTeammateRequestValidation } from "@/app/_interfaces/team";
-import { checkCurrentUserIsAdmin } from "@/app/_lib/luciaAuth";
+import { checkCurrentUserIsAdmin } from "@/app/_lib/service/auth/checkCurrentUserIsAdmin";
 import { addPlayerToTeam } from "@/app/_lib/service/team/addPlayer";
 import { STATUS } from "@/app/_lib/statusCodes";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
-export async function POST(request: NextRequest) {
+export async function POST(request: NextRequest) {Ł
   try {
     await checkCurrentUserIsAdmin(request);
 

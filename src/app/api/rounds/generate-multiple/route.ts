@@ -3,7 +3,7 @@ import {STATUS} from "@/app/_lib/statusCodes";
 import {generateMultipleRoundPairings} from "@/app/_lib/matching/multipleRoundMatching";
 import {getLeagueTeamsWithScores} from "@/app/_lib/helpers/query/leagueScores";
 import {RoundCreateRequestValidation} from "@/app/_interfaces/round";
-import {checkCurrentUserIsAdmin} from "@/app/_lib/luciaAuth";
+import {checkCurrentUserIsAdmin} from "@/app/_lib/service/auth/checkCurrentUserIsAdmin";
 import {insertPairRounds} from "@/app/_lib/service/round/insertPairRounds";
 
 export async function POST(request: NextRequest) {
