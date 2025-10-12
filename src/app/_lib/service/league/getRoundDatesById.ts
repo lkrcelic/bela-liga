@@ -20,7 +20,14 @@ export async function getRoundDatesByLeagueId(league_id: number): Promise<string
   const dates = rounds
     .map((r) => {
       const raw = r.round_date as unknown as Date | string | number;
-      const d = raw instanceof Date ? raw : new Date(raw as any);
+      let d: Date;
+      if (raw instanceof Date) {
+        d = raw;
+      } else if (typeof raw === "string" || typeof raw === "number") {
+        d = new Date(raw);
+      } else {
+        return null;
+      }
       const time = d.getTime();
       if (!isFinite(time) || time === 0) return null; // exclude invalid or epoch
       return new Date(time).toISOString().slice(0, 10); // YYYY-MM-DD (UTC)
