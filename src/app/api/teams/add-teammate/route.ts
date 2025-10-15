@@ -5,7 +5,7 @@ import { STATUS } from "@/app/_lib/statusCodes";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
-export async function POST(request: NextRequest) {Ł
+export async function POST(request: NextRequest) {
   try {
     await checkCurrentUserIsAdmin(request);
 
