@@ -127,13 +127,11 @@ function generateRoundRobinRounds(teams: Team[]): TeamPair[][] {
 /**
  * Calculates the total cost of a round based on the cost matrix
  */
-function calculateRoundCost(round: TeamPair[], teams: Team[], costMatrix: number[][]): number {
+function calculateRoundCost(round: TeamPair[], costMatrix: number[][], teamIdToIndex: Map<number, number>): number {
   let totalCost = 0;
-  
   for (const pair of round) {
-    const team1Index = teams.findIndex(t => t.id === pair.teamOne.id);
-    const team2Index = teams.findIndex(t => t.id === pair.teamTwo.id);
-    
+    const team1Index = teamIdToIndex.get(pair.teamOne.id)!;
+    const team2Index = teamIdToIndex.get(pair.teamTwo.id)!;
     totalCost += costMatrix[team1Index][team2Index];
   }
   
@@ -168,10 +166,14 @@ export function generateMultipleRoundPairings(
   for (const window of windows) {
     const allRounds = generateRoundRobinRounds(window);
     const costMatrix = calculateCostMatrix(window);
+    const teamIdToIndex = new Map<number, number>();
+    for (let i = 0; i < teams.length; i++) {
+      teamIdToIndex.set(teams[i].id, i);
+    }
     
     const roundsWithCosts = allRounds.map(round => ({
       round,
-      cost: calculateRoundCost(round, window, costMatrix)
+      cost: calculateRoundCost(round, costMatrix, teamIdToIndex)
     }));
     
     roundsWithCosts.sort((a, b) => a.cost - b.cost);
