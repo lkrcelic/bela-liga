@@ -24,7 +24,7 @@ export interface MultiRoundMatchingOptions {
 function createByeTeam(): Team {
   return {
     id: parseInt(process.env.BYE_ID ?? "0"), 
-    name: "bye", 
+    name: "Bye", 
     score: 0, 
     point_difference: 0,
     played_against: []
@@ -45,16 +45,14 @@ function divideTeamsIntoWindows(teams: Team[], windowSize: number, numberOfRound
   }
   
   // Add a bye team to the last window if it has an odd size
-  if (windows.length > 0 && windows[windows.length - 1].length % 2 !== 0) {
+  if (windows[windows.length - 1].length % 2 === 1) {
     windows[windows.length - 1].push(createByeTeam());
   }
   
-  // Handle the last window if it's smaller than the window size
-  if (windows.length > 1 && windows[windows.length - 1].length < Math.max(windowSize / 2, numberOfRounds)) {
+  // Handle the last window if it's smaller than or equal round number
+  if (numberOfRounds >= windows[windows.length - 1].length) {
     const lastWindow = windows.pop();
-    if (lastWindow) {
-      windows[windows.length - 1] = [...windows[windows.length - 1], ...lastWindow];
-    }
+    windows[windows.length - 1] = [...windows[windows.length - 1], ...lastWindow];
   }
   
   return windows;
@@ -157,8 +155,16 @@ export function generateMultipleRoundPairings(
     return [];
   }
 
+  if (windowSize % 2 === 1) {
+    throw new Error("Invalid arguments, window size must be even!");
+  }
+
   if (numberOfRounds >= windowSize) {
     throw new Error("Invalid arguments, number of rounds can't be bigger or equal than window size!")
+  }
+
+   if (numberOfRounds <= teams.length) {
+    throw new Error("Invalid arguments, number of rounds can't be bigger than number of teams!")
   }
   
   const windows = divideTeamsIntoWindows(teams, windowSize, numberOfRounds);
