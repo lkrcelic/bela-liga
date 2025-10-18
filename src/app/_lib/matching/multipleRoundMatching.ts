@@ -150,11 +150,6 @@ export function generateMultipleRoundPairings(
   const { windowSize, numberOfRounds } = options;
   const allRoundPairings: TeamPair[][] = [];
 
-  // Validate inputs
-  if (teams.length === 0) {
-    return [];
-  }
-
   if (windowSize % 2 === 1) {
     throw new Error("Invalid arguments, window size must be even!");
   }
@@ -163,7 +158,7 @@ export function generateMultipleRoundPairings(
     throw new Error("Invalid arguments, number of rounds can't be bigger or equal than window size!")
   }
 
-   if (numberOfRounds <= teams.length) {
+   if (numberOfRounds >= teams.length) {
     throw new Error("Invalid arguments, number of rounds can't be bigger than number of teams!")
   }
   
@@ -194,7 +189,7 @@ export function generateMultipleRoundPairings(
     
     // Move bye pair to the end
     const byeIndex = roundPairings.findIndex(pair => 
-      pair.teamOne.name.toLowerCase() === 'bye' || pair.teamTwo.name.toLowerCase() === 'bye'
+      pair.teamOne.id === parseInt(process.env.BYE_ID)|| pair.teamTwo.id === parseInt(process.env.BYE_ID)
     );
     if (byeIndex !== -1) {
       const byePair = roundPairings.splice(byeIndex, 1)[0];
