@@ -167,8 +167,8 @@ export function generateMultipleRoundPairings(
     const allRounds = generateRoundRobinRounds(window);
     const costMatrix = calculateCostMatrix(window);
     const teamIdToIndex = new Map<number, number>();
-    for (let i = 0; i < teams.length; i++) {
-      teamIdToIndex.set(teams[i].id, i);
+    for (let i = 0; i < window.length; i++) {
+      teamIdToIndex.set(window[i].id, i);
     }
     
     const roundsWithCosts = allRounds.map(round => ({
