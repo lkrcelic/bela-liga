@@ -13,7 +13,7 @@ export async function getLeagueStandings(league_id: number): Promise<TeamScore> 
     where: {
       league_id: league_id,
       team_id: {
-        not: Number(process.env.BYE_TEAM_ID),
+        not: Number(process.env.BYE_ID),
       },
     },
     orderBy: [
