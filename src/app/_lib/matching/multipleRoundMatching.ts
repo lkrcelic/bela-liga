@@ -160,6 +160,7 @@ export function generateMultipleRoundPairings(
   }
   
   const windows = divideTeamsIntoWindows(teams, windowSize, numberOfRounds);
+  console.log("Windows: ", windows);
   const windowRoundsWithCosts: { window: Team[], roundsWithCosts: {round: TeamPair[], cost: number}[] }[] = [];
   
   for (const window of windows) {
