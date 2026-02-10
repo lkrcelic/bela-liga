@@ -17,7 +17,7 @@ export default function PlayersSeating() {
 
   const fetchLeagueStandings = async () => {
     try {
-      const data = await getLeagueStandingsAPI(1); //TODO remove hardcoded
+      const data = await getLeagueStandingsAPI(2); //TODO remove hardcoded
       setLeagueStandings(data);
     } catch (error) {
       console.error("Error fetching league standings:", error);
