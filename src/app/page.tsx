@@ -8,12 +8,12 @@ import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
 import GroupAddIcon from "@mui/icons-material/GroupAdd";
 import LogoutIcon from "@mui/icons-material/Logout";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
-import { Box, Button, CircularProgress, Container, IconButton, Paper, Typography } from "@mui/material";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import {Box, Button, CircularProgress, Container, IconButton, Paper, Typography} from "@mui/material";
+import {useRouter} from "next/navigation";
+import {useEffect, useState} from "react";
 
 // API fetchers
-import { getOpenRoundByPlayerIdAPI } from "@/app/_fetchers/round/getOpenByPlayerId";
+import {getOpenRoundByPlayerIdAPI} from "@/app/_fetchers/round/getOpenByPlayerId";
 import UserBootstrapper from "./_bootstrap/UserBootstrapper";
 
 const ActionButton = ({
@@ -170,14 +170,14 @@ export default function Home() {
             />
 
             <ActionButton
-              onClick={navigateTo("/league/1/daily-standings")}
+              onClick={navigateTo("/league/2/daily-standings")}
               label="Daily Standings"
               color="primary"
               icon={<CalendarMonthIcon />}
             />
 
             <ActionButton
-              onClick={navigateTo("/league/1/standings")}
+              onClick={navigateTo("/league/2/standings")}
               label="League Standings"
               color="primary"
               icon={<EmojiEventsIcon />}

@@ -6,8 +6,8 @@ BEGIN
 FOR rec IN
 SELECT team_id
 FROM "LeagueTeam"
-WHERE league_id = 1
+WHERE league_id = 2
     LOOP
-        EXECUTE format('CALL update_team_score(%s, 1)', rec.team_id);
+        EXECUTE format('CALL update_team_score(%s, 2)', rec.team_id);
 END LOOP;
 END $$;

@@ -1,11 +1,11 @@
-import { handleLogin } from "@/app/_lib/rateLimiting/loginLimiting";
-import { isApiLimited } from "@/app/_lib/rateLimiting/requestLimiting";
-import { verifyCookie } from "@/app/_lib/service/auth/signCookie";
-import { STATUS } from "@/app/_lib/statusCodes";
-import { Cookie } from "lucia";
-import type { NextRequest } from "next/server";
-import { NextResponse } from "next/server";
-export { auth } from "@/app/_lib/googleAuth";
+import {handleLogin} from "@/app/_lib/rateLimiting/loginLimiting";
+import {isApiLimited} from "@/app/_lib/rateLimiting/requestLimiting";
+import {verifyCookie} from "@/app/_lib/service/auth/signCookie";
+import {STATUS} from "@/app/_lib/statusCodes";
+import {Cookie} from "lucia";
+import type {NextRequest} from "next/server";
+import {NextResponse} from "next/server";
+export {auth} from "@/app/_lib/googleAuth";
 
 export async function middleware(req: NextRequest) {
   if (
@@ -14,9 +14,9 @@ export async function middleware(req: NextRequest) {
       req.nextUrl.pathname.startsWith("/api") ||
       req.nextUrl.pathname.startsWith("/login") ||
       req.nextUrl.pathname.startsWith("/signup") ||
-      req.nextUrl.pathname.startsWith("/league/1/standings") ||
-      req.nextUrl.pathname.startsWith('/_next/') ||
-      req.nextUrl.pathname.startsWith('/static/') ||
+      req.nextUrl.pathname.startsWith("/league/2/standings") ||
+      req.nextUrl.pathname.startsWith("/_next/") ||
+      req.nextUrl.pathname.startsWith("/static/") ||
       req.nextUrl.pathname.match(/\.(png|jpg|jpeg|gif|svg)$/)
     )
   ) {
@@ -47,11 +47,11 @@ async function authenticationMiddleware(req: NextRequest) {
   }
 
   const nextAuthCookie = req.cookies.get(process.env.GOOGLE_AUTH_COOKIE);
-  if (nextAuthCookie){
+  if (nextAuthCookie) {
     return true;
-  } 
+  }
 
-  return false
+  return false;
 }
 
 // TODO: Implement rate limiting per IP address.

@@ -7,7 +7,7 @@ WITH new_round AS (
   RETURNING id
 )
 INSERT INTO "LeagueRound" (league_id, round_id)
-SELECT 1, id
+SELECT 2, id
 FROM new_round;
 
 -- insert round (round_number, team1_id, team2_id)
