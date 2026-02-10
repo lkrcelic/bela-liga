@@ -57,9 +57,16 @@ export async function insertPairRounds(pairs: TeamPair[], leagueId: number): Pro
   });
 
   // Query back the created rounds to get their IDs
+  // Filter by round_number, round_date, and both team IDs to avoid picking up rounds from other leagues
+  const team1Ids = insertData.map((d) => d.team1_id);
+  const team2Ids = insertData.map((d) => d.team2_id);
   const createdRounds = await prisma.round.findMany({
     where: {
       round_number: roundNum,
+      round_date: now,
+      team1_id: {in: team1Ids},
+      team2_id: {in: team2Ids},
+      leagueRounds: {none: {}},
     },
     select: {
       id: true,
