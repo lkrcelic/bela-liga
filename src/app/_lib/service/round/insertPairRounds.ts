@@ -14,7 +14,16 @@ type RoundData = {
 };
 
 export async function insertPairRounds(pairs: TeamPair[], leagueId: number): Promise<number> {
-  const maxRound = await prisma.round.aggregate({_max: {round_number: true}}); //TODO
+  const maxRound = await prisma.round.aggregate({
+    _max: {round_number: true},
+    where: {
+      leagueRounds: {
+        some: {
+          league_id: leagueId,
+        },
+      },
+    },
+  });
 
   const now = new Date();
   const roundNum = (maxRound._max.round_number ?? 0) + 1;
@@ -66,8 +75,16 @@ export async function insertPairRounds(pairs: TeamPair[], leagueId: number): Pro
   });
 
   if (byeRoundIndex !== -1) {
-    await createByeMatches(createdRounds[byeRoundIndex].id, insertData[byeRoundIndex].team1_id, insertData[byeRoundIndex].team2_id, bye_id);
-    const nonByeTeamId = insertData[byeRoundIndex].team1_id === bye_id ? insertData[byeRoundIndex].team2_id : insertData[byeRoundIndex].team1_id;
+    await createByeMatches(
+      createdRounds[byeRoundIndex].id,
+      insertData[byeRoundIndex].team1_id,
+      insertData[byeRoundIndex].team2_id,
+      bye_id,
+    );
+    const nonByeTeamId =
+      insertData[byeRoundIndex].team1_id === bye_id
+        ? insertData[byeRoundIndex].team2_id
+        : insertData[byeRoundIndex].team1_id;
     await prisma.$queryRaw`
       CALL update_team_score(${nonByeTeamId}, ${leagueId})
     `;
@@ -97,7 +114,7 @@ export async function createByeMatches(
   roundId: number,
   team1Id: number,
   team2Id: number,
-  bye_id: number = parseInt(process.env.BYE_ID ?? "0")
+  bye_id: number = parseInt(process.env.BYE_ID ?? "0"),
 ): Promise<void> {
   const now = new Date();
 
@@ -110,8 +127,8 @@ export async function createByeMatches(
         player_pair1_score: isByeTeam1 ? 0 : 301, // If bye is team1, team2 (real team) gets points
         player_pair2_score: isByeTeam1 ? 301 : 0, // If bye is team2, team1 (real team) gets points
         score_threshold: 1001,
-        match_date: now
-      }
+        match_date: now,
+      },
     });
   }
 }
