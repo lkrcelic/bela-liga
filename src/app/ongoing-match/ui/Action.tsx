@@ -41,10 +41,13 @@ export default function Action() {
             await createMatchAPI(Number(matchId));
 
             if (team1_wins + team2_wins == 0) {
+              const winningTeamIndices = player_pair1_score > player_pair2_score ? [0, 2] : [1, 3];
+              const newShufflerIndex = winningTeamIndices[Math.floor(Math.random() * 2)];
+
               const response = await createOngoingMatchAPI({
                 round_id: Number(id),
                 seating_order_ids: seating_order?.map((player) => player.id),
-                current_shuffler_index: current_shuffler_index | Math.floor(Math.random() * 4),
+                current_shuffler_index: newShufflerIndex,
                 score_threshold: 1001,
               });
 

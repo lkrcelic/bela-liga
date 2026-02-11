@@ -40,7 +40,7 @@ const useOngoingMatchStore = create<OngoingMatchState>()(
             player_pair1_score: 0,
             player_pair2_score: 0,
             belaResults: [],
-            current_shuffler_index: state.current_shuffler_index || 0,
+            current_shuffler_index: state.ongoingMatch.current_shuffler_index || 0,
           },
         })),
 
@@ -58,8 +58,8 @@ const useOngoingMatchStore = create<OngoingMatchState>()(
     {
       name: "ongoing-match-store",
       storage: createJSONStorage(() => localStorage),
-    }
-  )
+    },
+  ),
 );
 
 export default useOngoingMatchStore;
