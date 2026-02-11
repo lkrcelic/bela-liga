@@ -14,7 +14,7 @@ import {useState} from "react";
 
 export default function Action() {
   const {
-    ongoingMatch: {player_pair1_score, player_pair2_score, seating_order, current_shuffler_index},
+    ongoingMatch: {player_pair1_score, player_pair2_score, seating_order},
     softResetOngoingMatch,
     hardResetOngoingMatch,
   } = useOngoingMatchStore();
