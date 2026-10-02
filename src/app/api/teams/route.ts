@@ -2,7 +2,8 @@
 
 import {prisma} from "@/app/_lib/prisma";
 import {TeamRequestValidation, TeamsResponseValidation} from "@/app/_interfaces/team";
-import {z} from "zod";
+import {Prisma} from "@prisma/client";
+import {errorResponse} from "@/app/_lib/apiErrors";
 import {NextRequest, NextResponse} from "next/server";
 import {STATUS} from "@/app/_lib/statusCodes";
 import {requireAdmin, requireUser} from "@/app/_lib/service/auth/requireUser";
@@ -50,9 +51,9 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(createdTeam, {status: STATUS.OK});
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json({error: error.issues}, {status: STATUS.BadRequest});
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      return NextResponse.json({error: "A team with this name already exists."}, {status: STATUS.BadRequest});
     }
-    return NextResponse.json({error: error}, {status: STATUS.ServerError});
+    return errorResponse(error, "Failed to create the team.");
   }
 }

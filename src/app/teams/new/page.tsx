@@ -1,7 +1,7 @@
 "use client"
 
 import React, {useCallback, useState} from 'react';
-import {Autocomplete, Box, Button, TextField} from '@mui/material';
+import {Alert, Autocomplete, Box, Button, TextField} from '@mui/material';
 import Image from "next/image";
 import {createTeamAPI} from "@/app/_fetchers/team/create";
 import {searchPlayersAPI} from "@/app/_fetchers/player/search";
@@ -9,6 +9,8 @@ import {searchPlayersAPI} from "@/app/_fetchers/player/search";
 export default function CreateTeam() {
   const [players, setPlayers] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [message, setMessage] = useState<{severity: "success" | "error", text: string} | null>(null);
   const [formData, setFormData] = useState({
     team_name: '',
     founder_1: null,
@@ -35,13 +37,27 @@ export default function CreateTeam() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    await createTeamAPI(formData.team_name, formData.founder_1.id, formData.founder_2.id);
+    if (submitting) return;
+    if (!formData.team_name.trim() || !formData.founder_1 || !formData.founder_2) {
+      setMessage({severity: "error", text: "Enter a team name and pick both players."});
+      return;
+    }
 
-    setFormData({
-      team_name: '',
-      founder_1: null,
-      founder_2: null,
-    });
+    setSubmitting(true);
+    setMessage(null);
+    try {
+      await createTeamAPI(formData.team_name.trim(), formData.founder_1.id, formData.founder_2.id);
+      setMessage({severity: "success", text: `Team ${formData.team_name.trim()} created.`});
+      setFormData({
+        team_name: '',
+        founder_1: null,
+        founder_2: null,
+      });
+    } catch (error) {
+      setMessage({severity: "error", text: error instanceof Error ? error.message : "Failed to create team."});
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const getFilteredPlayers = (players, excludePlayerId) => {
@@ -146,11 +162,13 @@ export default function CreateTeam() {
         />
       </Box>
       <Box sx={{gridArea: "actions"}}>
+        {message && <Alert severity={message.severity}>{message.text}</Alert>}
         <Button
           onClick={(e) => handleSubmit(e)}
           variant="contained"
           color="primary"
           fullWidth
+          disabled={submitting}
           sx={{mt: 2}}
         >
           Submit

@@ -14,6 +14,7 @@ export type RoundMatchup = {
 export async function getRoundMatchups(roundNumber: number): Promise<RoundMatchup[] | null> {
   const rounds = await prisma.round.findMany({
     where: {round_number: roundNumber},
+    orderBy: [{table_number: "asc"}, {id: "asc"}],
     include: {
       team1: {
         select: {

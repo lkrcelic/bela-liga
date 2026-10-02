@@ -1,3 +1,5 @@
+import {responseErrorMessage} from "@/app/_fetchers/errorMessage";
+
 export async function createTeamAPI(team_name: string, founder_id1: number, founder_id2: number): Promise<number> {
   const response = await fetch("/api/teams", {
     method: "POST",
@@ -6,7 +8,7 @@ export async function createTeamAPI(team_name: string, founder_id1: number, foun
   });
 
   if (!response.ok) {
-    throw new Error(`Failed to create team: ${response.statusText}`);
+    throw new Error(await responseErrorMessage(response, "Failed to create team"));
   }
 
   const data = await response.json();

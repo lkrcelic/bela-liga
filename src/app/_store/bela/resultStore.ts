@@ -12,6 +12,8 @@ type BelaResultTypeExtended = BelaResultResponse & {
 
 export type ResultState = {
   resultData: BelaResultTypeExtended;
+  // the next digit starts a new number instead of being appended (after switching team or opening a saved hand)
+  startNewNumber: boolean;
   setTrumpCallerTeam: (team: TeamSide) => void;
   setActiveTeam: (team: "team1" | "team2") => void;
   setTotalPoints: () => void;
@@ -50,19 +52,22 @@ const initialState = {
 
 const useResultStore = create<ResultState>()(persist<ResultState>((set) => ({
     ...initialState,
+    startNewNumber: false,
 
     setResultData: (data: BelaResultResponse) => set((state) => ({
-      resultData: {...state.resultData, ...data}
+      resultData: {...state.resultData, ...data},
+      startNewNumber: true,
     })),
 
-    resetResult: () => set({resultData: {...initialState.resultData}}),
+    resetResult: () => set({resultData: {...initialState.resultData}, startNewNumber: false}),
 
     setTrumpCallerTeam: (team) => set((state) => ({
       resultData: {...state.resultData, trump_caller_team: team}
     })),
 
     setActiveTeam: (team) => set((state) => ({
-      resultData: {...state.resultData, activeTeam: team}
+      resultData: {...state.resultData, activeTeam: team},
+      startNewNumber: true,
     })),
 
     setMatchId: (id) => set((state) => ({
@@ -75,12 +80,13 @@ const useResultStore = create<ResultState>()(persist<ResultState>((set) => ({
           activeTeam,
           player_pair1_game_points,
           player_pair2_game_points,
-        }
+        },
+        startNewNumber,
       } = state;
       let newScore, pp1UpdatedGamePoints, pp2UpdatedGamePoints;
 
       if (activeTeam === "team1") {
-        newScore = player_pair1_game_points * 10 + digit;
+        newScore = (startNewNumber ? 0 : player_pair1_game_points) * 10 + digit;
         if (newScore > MAX_SCORE) {
           return state;
         }
@@ -89,7 +95,7 @@ const useResultStore = create<ResultState>()(persist<ResultState>((set) => ({
       }
 
       if (activeTeam === "team2") {
-        newScore = player_pair2_game_points * 10 + digit;
+        newScore = (startNewNumber ? 0 : player_pair2_game_points) * 10 + digit;
         if (newScore > MAX_SCORE) {
           return state;
         }
@@ -102,7 +108,8 @@ const useResultStore = create<ResultState>()(persist<ResultState>((set) => ({
           ...state.resultData,
           player_pair1_game_points: pp1UpdatedGamePoints,
           player_pair2_game_points: pp2UpdatedGamePoints,
-        }
+        },
+        startNewNumber: false,
       };
     }),
 
