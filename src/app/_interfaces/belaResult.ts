@@ -1,7 +1,8 @@
 import {z} from "zod";
 import {
     BelaPlayerAnnouncementRequestValidation,
-    BelaPlayerAnnouncementResponseValidation
+    BelaPlayerAnnouncementResponseValidation,
+    TeamSideValidation
 } from "./belaPlayerAnnouncement";
 
 export const BelaResultCreateRequestValidation = z.object({
@@ -12,15 +13,7 @@ export const BelaResultCreateRequestValidation = z.object({
     player_pair2_announcement_points: z.number().int(),
     player_pair1_total_points: z.number().int(),
     player_pair2_total_points: z.number().int(),
-    card_shuffler_id: z.number().int().optional(),
-    trump_caller_id: z.number().int().optional(),
-    trump_caller_position: z.union([
-        z.literal("FIRST"),
-        z.literal("SECOND"),
-        z.literal("THIRD"),
-        z.literal("FOURTH"),
-    ])
-        .default("FIRST"),
+    trump_caller_team: TeamSideValidation,
     pass: z.boolean(),
     complete_victory: z.boolean(),
     announcements: z.array(BelaPlayerAnnouncementRequestValidation).optional().nullable(),
@@ -29,6 +22,7 @@ export const BelaResultCreateRequestValidation = z.object({
 export const BelaResultResponseValidation = BelaResultCreateRequestValidation.omit({
     announcements: true
 }).extend({
+    trump_caller_team: TeamSideValidation.nullable(),
     result_id: z.number().int().nullable(),
     belaPlayerAnnouncements:  z.array(BelaPlayerAnnouncementResponseValidation).optional().nullable()
 

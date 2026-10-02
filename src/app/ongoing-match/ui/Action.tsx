@@ -2,6 +2,7 @@ import {createMatchAPI} from "@/app/_fetchers/match/create";
 import {createOngoingMatchAPI} from "@/app/_fetchers/ongoingMatch/create";
 import {finishRoundAPI} from "@/app/_fetchers/round/finish";
 import useResultStore from "@/app/_store/bela/resultStore";
+import useAnnouncementStore from "@/app/_store/bela/announcementStore";
 import useOngoingMatchStore from "@/app/_store/ongoingMatchStore";
 import useRoundStore from "@/app/_store/RoundStore";
 import theme from "@/app/_styles/theme";
@@ -14,14 +15,14 @@ import {useState} from "react";
 
 export default function Action() {
   const {
-    ongoingMatch: {player_pair1_score, player_pair2_score, seating_order},
-    softResetOngoingMatch,
-    hardResetOngoingMatch,
+    ongoingMatch: {player_pair1_score, player_pair2_score},
+    resetOngoingMatch,
   } = useOngoingMatchStore();
   const {
     roundData: {id, team1_wins, team2_wins},
   } = useRoundStore();
-  const {setMatchId} = useResultStore();
+  const {setMatchId, resetResult} = useResultStore();
+  const {resetAnnouncements} = useAnnouncementStore();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [isLoading, setIsLoading] = useState(false);
 
@@ -41,24 +42,19 @@ export default function Action() {
             await createMatchAPI(Number(matchId));
 
             if (team1_wins + team2_wins == 0) {
-              const winningTeamIndices = player_pair1_score > player_pair2_score ? [0, 2] : [1, 3];
-              const newShufflerIndex = winningTeamIndices[Math.floor(Math.random() * 2)];
-
               const response = await createOngoingMatchAPI({
                 round_id: Number(id),
-                seating_order_ids: seating_order?.map((player) => player.id),
-                current_shuffler_index: newShufflerIndex,
                 score_threshold: 1001,
               });
 
-              softResetOngoingMatch();
+              resetOngoingMatch();
               router.push(`/ongoing-match/${response.id}`);
             }
 
             if (team1_wins + team2_wins > 0) {
               router.push(`/round/${id}/result`);
               await finishRoundAPI(Number(id));
-              hardResetOngoingMatch();
+              resetOngoingMatch();
               localStorage.clear();
             }
           } finally {
@@ -71,6 +67,8 @@ export default function Action() {
         label: "Upiši igru",
         icon: <AddCircleIcon />,
         onClick: () => {
+          resetResult();
+          resetAnnouncements();
           setMatchId(Number(matchId));
           router.push(`${pathname}/ongoing-result/new/trump-caller`);
         },

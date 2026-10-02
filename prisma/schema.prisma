@@ -21,13 +21,6 @@ enum BelaAnnouncementEnum {
   TWO_HUNDRED
 }
 
-enum TrumpCallerPositionEnum {
-  FIRST
-  SECOND
-  THIRD
-  FOURTH
-}
-
 model Player {
   id              Int       @id @default(autoincrement())
   username        String    @unique @db.VarChar(100)
@@ -55,14 +48,6 @@ model Player {
   founder2Teams                  Team[]                          @relation("PlayerFounder2")
   creatorTeams                   Team[]                          @relation("PlayerCreator")
   teamPlayers                    TeamPlayer[]
-  playerPairs1                   PlayerPair[]                    @relation("Player1Pair")
-  playerPairs2                   PlayerPair[]                    @relation("Player2Pair")
-  cardShufflerBelaResults        BelaResult[]                    @relation("PlayerCardShuffler")
-  trumpCallerBelaResults         BelaResult[]                    @relation("PlayerTrumpCaller")
-  ongoingCardShufflerBelaResults OngoingBelaResult[]             @relation("OngoingCardShuffler")
-  ongoingTrumpCallerBelaResults  OngoingBelaResult[]             @relation("OngoingTrumpCaller")
-  belaPlayerAnnouncements        BelaPlayerAnnouncement[]
-  ongoingBelaPlayerAnnouncements OngoingBelaPlayerAnnouncement[]
   sessions                       Session[]
   luciaSessions                  LuciaSession[]
   accounts                       Account[]
@@ -244,36 +229,17 @@ model LeagueRound {
   @@id([league_id, round_id])
 }
 
-model PlayerPair {
-  id         Int @id @default(autoincrement())
-  player_id1 Int
-  player_id2 Int
-
-  player1          Player         @relation("Player1Pair", fields: [player_id1], references: [id], onDelete: Cascade)
-  player2          Player         @relation("Player2Pair", fields: [player_id2], references: [id], onDelete: Cascade)
-  matchesAsPair1   Match[]        @relation("MatchPair1")
-  matchesAsPair2   Match[]        @relation("MatchPair2")
-  ongoingMatchesp1 OngoingMatch[] @relation("MatchPair1")
-  ongoingMatchesp2 OngoingMatch[] @relation("MatchPair2")
-
-  @@unique([player_id1, player_id2])
-}
-
 model Match {
   id                 Int       @id @default(autoincrement())
   round_id           Int?
   player_pair1_score Int       @default(0)
   player_pair2_score Int       @default(0)
-  player_pair_id1    Int?
-  player_pair_id2    Int?
   score_threshold    Int?
   start_time         DateTime?
   end_time           DateTime?
   match_date         DateTime? @default(now()) @db.Date
 
   round          Round?          @relation(fields: [round_id], references: [id], onDelete: SetNull)
-  playerPair1    PlayerPair?     @relation("MatchPair1", fields: [player_pair_id1], references: [id], onDelete: Cascade)
-  playerPair2    PlayerPair?     @relation("MatchPair2", fields: [player_pair_id2], references: [id], onDelete: Cascade)
   belaResults    BelaResult[]
 }
 
@@ -282,18 +248,12 @@ model OngoingMatch {
   round_id               Int?
   player_pair1_score     Int       @default(0)
   player_pair2_score     Int       @default(0)
-  player_pair_id1        Int?
-  player_pair_id2        Int?
   score_threshold        Int?
   start_time             DateTime? @default(dbgenerated("CURRENT_TIME")) @db.Time()
   end_time               DateTime? @db.Time()
   match_date             DateTime? @default(now()) @db.Date
-  seating_order_ids      Int[]
-  current_shuffler_index Int       @default(0)
 
   round       Round?              @relation(fields: [round_id], references: [id], onDelete: SetNull)
-  playerPair1 PlayerPair?         @relation("MatchPair1", fields: [player_pair_id1], references: [id], onDelete: Cascade)
-  playerPair2 PlayerPair?         @relation("MatchPair2", fields: [player_pair_id2], references: [id], onDelete: Cascade)
   belaResults OngoingBelaResult[]
 }
 
@@ -306,15 +266,12 @@ model BelaResult {
   player_pair2_announcement_points Int                     @default(0)
   player_pair1_total_points        Int                     @default(0)
   player_pair2_total_points        Int                     @default(0)
-  card_shuffler_id                 Int?
-  trump_caller_id                  Int?
-  trump_caller_position            TrumpCallerPositionEnum
+  // 1 = team1 (round.team1), 2 = team2 (round.team2); CHECK constraint added in the migration script
+  trump_caller_team                Int?
   pass                             Boolean                 @default(false)
   complete_victory                 Boolean                 @default(false)
 
   match                   Match                    @relation(fields: [match_id], references: [id], onDelete: Cascade)
-  cardShuffler            Player?                  @relation("PlayerCardShuffler", fields: [card_shuffler_id], references: [id], onDelete: SetNull)
-  trumpCaller             Player?                  @relation("PlayerTrumpCaller", fields: [trump_caller_id], references: [id], onDelete: SetNull)
   belaPlayerAnnouncements BelaPlayerAnnouncement[]
 }
 
@@ -327,34 +284,31 @@ model OngoingBelaResult {
   player_pair2_announcement_points Int                     @default(0)
   player_pair1_total_points        Int                     @default(0)
   player_pair2_total_points        Int                     @default(0)
-  card_shuffler_id                 Int?
-  trump_caller_id                  Int?
-  trump_caller_position            TrumpCallerPositionEnum
+  // 1 = team1 (round.team1), 2 = team2 (round.team2); CHECK constraint added in the migration script
+  trump_caller_team                Int?
   pass                             Boolean                 @default(false)
   complete_victory                 Boolean                 @default(false)
 
   match                   OngoingMatch                    @relation(fields: [match_id], references: [id], onDelete: Cascade)
-  ongoingCardShuffler     Player?                         @relation("OngoingCardShuffler", fields: [card_shuffler_id], references: [id], onDelete: SetNull)
-  ongoingTrumpCaller      Player?                         @relation("OngoingTrumpCaller", fields: [trump_caller_id], references: [id], onDelete: SetNull)
   belaPlayerAnnouncements OngoingBelaPlayerAnnouncement[]
 }
 
 model BelaPlayerAnnouncement {
   announcement_id   Int                  @id @default(autoincrement())
   result_id         Int
-  player_id         Int
+  // 1 = team1 (round.team1), 2 = team2 (round.team2); CHECK constraint added in the migration script
+  team              Int
   announcement_type BelaAnnouncementEnum
 
   result BelaResult @relation(fields: [result_id], references: [result_id], onDelete: Cascade)
-  player Player     @relation(fields: [player_id], references: [id], onDelete: Cascade)
 }
 
 model OngoingBelaPlayerAnnouncement {
   announcement_id   Int                  @id @default(autoincrement())
   result_id         Int
-  player_id         Int
+  // 1 = team1 (round.team1), 2 = team2 (round.team2); CHECK constraint added in the migration script
+  team              Int
   announcement_type BelaAnnouncementEnum
 
   result OngoingBelaResult @relation(fields: [result_id], references: [result_id], onDelete: Cascade)
-  player Player            @relation(fields: [player_id], references: [id], onDelete: Cascade)
 }

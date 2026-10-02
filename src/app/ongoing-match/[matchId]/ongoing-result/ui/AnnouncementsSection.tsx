@@ -6,16 +6,16 @@ import useResultStore from "@/app/_store/bela/resultStore";
 
 export default function AnnouncementSection() {
     const {
-        playersAnnouncements,
+        teamsAnnouncements,
         setAnnouncement,
-        resetPlayerAnnouncements,
-        activePlayerId,
+        resetTeamAnnouncements,
     } = useAnnouncementStore();
-    const {updateAnnouncementPoints} = useResultStore();
+    const {resultData: {activeTeam}, updateAnnouncementPoints} = useResultStore();
+    const team = activeTeam === "team2" ? 2 : 1;
 
     React.useEffect(() => {
-        updateAnnouncementPoints(playersAnnouncements);
-    }, [playersAnnouncements, updateAnnouncementPoints]);
+        updateAnnouncementPoints(teamsAnnouncements);
+    }, [teamsAnnouncements, updateAnnouncementPoints]);
 
     return (
         <Box
@@ -34,7 +34,7 @@ export default function AnnouncementSection() {
                 {[20, 50, 100, 150, 200].map((points) => (
                     <Grid item key={points}>
                         <Badge
-                            badgeContent={activePlayerId && playersAnnouncements[activePlayerId]?.announcementCounts[points]}
+                            badgeContent={teamsAnnouncements[team]?.announcementCounts[points]}
                             color="primary"
                             anchorOrigin={{
                                 vertical: "top",
@@ -45,8 +45,7 @@ export default function AnnouncementSection() {
                                 color="secondary"
                                 variant="contained"
                                 sx={{fontSize: "16px", minWidth: "60px", height: "60px"}}
-                                disabled={!Boolean(activePlayerId)}
-                                onClick={() => setAnnouncement(activePlayerId, points)}
+                                onClick={() => setAnnouncement(team, points)}
                             >
                                 {points}
                             </Button>
@@ -58,8 +57,7 @@ export default function AnnouncementSection() {
                         color="error"
                         variant="outlined"
                         sx={{fontSize: "16px", minWidth: "60px", height: "60px"}}
-                        disabled={!Boolean(activePlayerId)}
-                        onClick={() => resetPlayerAnnouncements(activePlayerId)}
+                        onClick={() => resetTeamAnnouncements(team)}
                     >
                         Obriši zvanja
                     </Button>

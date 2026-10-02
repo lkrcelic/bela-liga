@@ -16,7 +16,7 @@ export default function ResultsDisplay() {
     const {ongoingMatch: {belaResults}} = useOngoingMatchStore();
     const {roundData: {team1, team2}} = useRoundStore();
     const setResultData = useResultStore(state => state.setResultData)
-    const setPlayersAnnouncements = useAnnouncementStore(state => state.setPlayersAnnouncements)
+    const setTeamsAnnouncements = useAnnouncementStore(state => state.setTeamsAnnouncements)
     const {user} = useAuthStore();
 
     // Determine orientation: show the current user's team on the left
@@ -34,12 +34,12 @@ export default function ResultsDisplay() {
             }
             const ongoingResult = await getOngoingBelaResultAPI(Number(resultId))
             setResultData(ongoingResult);
-            setPlayersAnnouncements(ongoingResult.belaPlayerAnnouncements as BelaPlayerAnnouncementResponse[])
+            setTeamsAnnouncements(ongoingResult.belaPlayerAnnouncements as BelaPlayerAnnouncementResponse[])
+
+            router.push(`${pathname}/ongoing-result/${resultId}/trump-caller`)
         } catch (error) {
             console.error(error);
         }
-
-        router.push(`${pathname}/ongoing-result/${resultId}/trump-caller`)
     };
 
 

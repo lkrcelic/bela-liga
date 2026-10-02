@@ -14,18 +14,14 @@ export async function updateOngoingBelaResult({result_id, resultData}: UpdateOng
 
     // TODO: Validate one of the 4 players playing the game is entering the result?
     delete resultData.match_id
-    delete resultData.card_shuffler_id
 
-    const {trump_caller_id, announcements,...nonRelationalData} = resultData;
+    const {announcements, ...nonRelationalData} = resultData;
 
     try {
         await prisma.$transaction(async (tx) => {
             await tx.ongoingBelaResult.update({
                 where: {result_id: result_id},
-                data: {
-                    ...nonRelationalData,
-                    ...(trump_caller_id && {ongoingTrumpCaller: {connect: {id: trump_caller_id}}}),
-                }
+                data: nonRelationalData,
             });
 
             await tx.ongoingBelaPlayerAnnouncement.deleteMany({
@@ -38,7 +34,7 @@ export async function updateOngoingBelaResult({result_id, resultData}: UpdateOng
                 await tx.ongoingBelaPlayerAnnouncement.createMany({
                     data: announcements.map(a => ({
                         result_id: result_id,
-                        player_id: a.player_id,
+                        team: a.team,
                         announcement_type: a.announcement_type,
                     })),
                 });

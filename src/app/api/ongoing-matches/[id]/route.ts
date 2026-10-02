@@ -1,18 +1,12 @@
 import {NextResponse} from "next/server";
 import {STATUS} from "@/app/_lib/statusCodes";
-import {extractPlayersSeatingOrder} from "@/app/_lib/service/ongoingMatch/extractPlayersSeatingOrder";
-import {OngoingMatchExtendedResponseValidation} from "@/app/_interfaces/match";
-import {getOngoingMatchWithResultsAndPlayers} from "@/app/_lib/service/ongoingMatch/getOneWithResultsAndPlayers";
+import {getOngoingMatchWithResults} from "@/app/_lib/service/ongoingMatch/getOneWithResults";
 
 export async function GET(request: Request, {params}: { params: { id: string } }) {
     const {id} = params;
 
     try {
-        const dbOngoingMatch = await getOngoingMatchWithResultsAndPlayers(Number(id));
-        const seatingOrder = await extractPlayersSeatingOrder(dbOngoingMatch);
-
-        const ongoingMatch = OngoingMatchExtendedResponseValidation.parse(dbOngoingMatch);
-        ongoingMatch.seating_order = seatingOrder;
+        const ongoingMatch = await getOngoingMatchWithResults(Number(id));
 
         return NextResponse.json(ongoingMatch, {status: STATUS.OK});
     } catch (error) {

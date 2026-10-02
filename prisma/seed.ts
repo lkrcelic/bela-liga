@@ -334,11 +334,14 @@ async function main() {
   await prisma.teamPlayer.createMany({data: teamPlayers});
 
 
+  // The current league in production has id 2 and the home page links to /league/2/..., so mirror that locally
   const league = await prisma.league.create({
     data: {
+      league_id: 2,
       league_name: "Liga ljeta gospodnjeg 2024-2025",
     },
   });
+  await prisma.$executeRaw`SELECT setval(pg_get_serial_sequence('"League"', 'league_id'), (SELECT MAX(league_id) FROM "League"))`;
   const teams = [team1, team2, team3, team4, team5, team6, team7, team8];
   await prisma.leagueTeam.createMany({
     data: teams.map((team) => ({league_id: league.league_id, team_id: team.team_id})),
