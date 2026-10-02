@@ -113,9 +113,13 @@ export default function CreateRound() {
                 <TextField
                   label="Window size"
                   type="number"
-                  inputProps={{min: 2, max: 200}}
+                  inputProps={{min: 2, max: 200, step: 2}}
                   value={windowSize}
-                  onChange={(e) => setWindowSize(Math.max(2, Math.min(200, Number(e.target.value))))}
+                  // the pairing needs an even window, so odd values are rounded up
+                  onChange={(e) => {
+                    const size = Math.max(2, Math.min(200, Number(e.target.value)));
+                    setWindowSize(size % 2 === 0 ? size : size + 1);
+                  }}
                   size="small"
                 />
               </Stack>

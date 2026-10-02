@@ -1,5 +1,5 @@
 import {createMatchAPI, MatchAlreadyFinishedError} from "@/app/_fetchers/match/create";
-import {getOpenRoundByPlayerIdAPI} from "@/app/_fetchers/round/getOpenByPlayerId";
+import {currentRoundPath} from "@/app/ongoing-match/ui/currentRoundPath";
 import {matchWinner} from "@/app/_lib/bela/scoring";
 import useResultStore from "@/app/_store/bela/resultStore";
 import useAnnouncementStore from "@/app/_store/bela/announcementStore";
@@ -32,16 +32,7 @@ export default function Action() {
 
   const goToCurrentState = async () => {
     resetOngoingMatch();
-    try {
-      const {roundId, ongoingMatchId} = await getOpenRoundByPlayerIdAPI();
-      if (roundId === id && ongoingMatchId) {
-        router.replace(`/ongoing-match/${ongoingMatchId}`);
-        return;
-      }
-    } catch {
-      // no open round left for this player
-    }
-    router.replace(`/round/${id}/result`);
+    router.replace(await currentRoundPath(id));
   };
 
   const getProps = () => {
