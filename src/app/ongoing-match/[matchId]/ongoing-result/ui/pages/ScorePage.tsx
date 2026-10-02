@@ -1,7 +1,7 @@
 "use client";
 
 import React, {useState} from "react";
-import {Box} from "@mui/material";
+import {Alert, Box} from "@mui/material";
 import DigitGrid from "@/app/ongoing-match/[matchId]/ongoing-result/ui/DigitGrid";
 import useResultStore from "@/app/_store/bela/resultStore";
 import useAnnouncementStore from "@/app/_store/bela/announcementStore";
@@ -30,9 +30,11 @@ function ActionButtons({actionType}: ActionProps) {
     resultData,
     resetResult,
     setTotalPoints,
+    updateAnnouncementPoints,
   } = useResultStore();
   const {resetAnnouncements} = useAnnouncementStore();
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const router = useRouter();
   const params = useParams();
@@ -42,7 +44,10 @@ function ActionButtons({actionType}: ActionProps) {
     
     try {
       setIsLoading(true);
+      setErrorMessage(null);
       
+      // The announcements entered on the previous step, so the saved hand always matches them
+      updateAnnouncementPoints(useAnnouncementStore.getState().teamsAnnouncements);
       setTotalPoints();
       const updatedResultData = useResultStore.getState?.().resultData;
       updatedResultData.match_id = Number(params.matchId);
@@ -60,14 +65,18 @@ function ActionButtons({actionType}: ActionProps) {
       router.push(`/ongoing-match/${params.matchId}`);
     } catch (error) {
       console.error("Error saving result:", error);
+      setErrorMessage(error instanceof Error ? error.message : "Spremanje nije uspjelo.");
       setIsLoading(false); // Reset loading state on error
     }
   };
 
-  return <DoubleActionButton
+  return <>
+    {errorMessage && <Alert severity="error" sx={{mb: 1}}>{errorMessage}</Alert>}
+    <DoubleActionButton
     secondButtonLabel={isLoading ? "Spremanje..." : "Spremi"}
     secondButtonOnClick={handleSave}
     secondButtonDisabled={isLoading || (resultData.player_pair1_game_points === 0 && resultData.player_pair2_game_points === 0)}
-  />
+    />
+  </>
 
 }

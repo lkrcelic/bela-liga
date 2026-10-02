@@ -1,3 +1,4 @@
+import {responseErrorMessage} from "@/app/_fetchers/errorMessage";
 import { CreateOngoingMatchRequest } from "@/app/_interfaces/match";
 
 export async function createOngoingMatchAPI(data: CreateOngoingMatchRequest) {
@@ -8,7 +9,7 @@ export async function createOngoingMatchAPI(data: CreateOngoingMatchRequest) {
     });
 
     if (!response.ok) {
-        throw new Error(`Failed to create ongoing match: ${response.statusText}`);
+        throw new Error(await responseErrorMessage(response, "Failed to start the match"));
     }
 
     return response.json();

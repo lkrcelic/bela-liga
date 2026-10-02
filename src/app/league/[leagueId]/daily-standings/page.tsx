@@ -3,6 +3,7 @@
 import { getRoundDatesByLeagueIdAPI } from "@/app/_fetchers/league/getRoundDates";
 import { getLeagueStandingsByDateAPI } from "@/app/_fetchers/league/getStandingsByDate";
 import { getRoundsAPI } from "@/app/_fetchers/round/getRounds";
+import { leagueDateString } from "@/app/_lib/dates";
 import { RoundExtendedResponse } from "@/app/_interfaces/round";
 import theme from "@/app/_styles/theme";
 import SingleActionButton from "@/app/_ui/SingleActionButton";
@@ -36,11 +37,6 @@ export default function DailyStandings() {
   const searchParams = useSearchParams();
   const dateParam = searchParams.get("date");
 
-  // Format date for API query
-  const formatDate = (date: Date): string => {
-    return date.toISOString().split("T")[0]; // Format as YYYY-MM-DD
-  };
-
   // Load all available dates first, decide initial selected date
   useEffect(() => {
     const loadDates = async () => {
@@ -50,7 +46,7 @@ export default function DailyStandings() {
         setAvailableDates(dates);
 
         const mostRecent = dates[dates.length - 1];
-        const initial = dateParam && dates.includes(dateParam) ? dateParam : mostRecent || formatDate(new Date());
+        const initial = dateParam && dates.includes(dateParam) ? dateParam : mostRecent || leagueDateString();
         setSelectedDate(initial);
 
         // Keep URL in sync without stacking history if it differs

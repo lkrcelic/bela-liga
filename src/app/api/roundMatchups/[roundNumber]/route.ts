@@ -1,8 +1,11 @@
 import {NextRequest, NextResponse} from "next/server";
 import {STATUS} from "@/app/_lib/statusCodes";
 import {getRoundMatchups} from "@/app/_lib/service/round/getRoundMatchups";
+import {requireUser} from "@/app/_lib/service/auth/requireUser";
 
 export async function GET(request: NextRequest, {params}: {params: {roundNumber: string}}) {
+  const auth = await requireUser(request);
+  if (auth.response) return auth.response;
   try {
     const roundNumber = parseInt(params.roundNumber);
     const rounds = await getRoundMatchups(roundNumber);

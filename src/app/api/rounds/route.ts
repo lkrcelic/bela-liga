@@ -1,13 +1,16 @@
 import {NextRequest, NextResponse} from "next/server";
 import {STATUS} from "@/app/_lib/statusCodes";
-import {matchTeams} from "@/app/_lib/matching/multipleRoundMatching";
+import {matchTeams, TeamPair} from "@/app/_lib/matching/multipleRoundMatching";
 import {getLeagueTeamsWithScores} from "@/app/_lib/helpers/query/leagueScores";
 import {RoundCreateRequestValidation} from "@/app/_interfaces/round";
-import {checkCurrentUserIsAdmin} from "@/app/_lib/service/auth/checkCurrentUserIsAdmin";
-import {insertPairRounds} from "@/app/_lib/service/round/insertPairRounds";
+import {insertRoundBatch} from "@/app/_lib/service/round/insertPairRounds";
+import {errorResponse} from "@/app/_lib/apiErrors";
 import {prisma} from "@/app/_lib/prisma";
+import {requireAdmin, requireUser} from "@/app/_lib/service/auth/requireUser";
 
 export async function GET(request: NextRequest) {
+  const auth = await requireUser(request);
+  if (auth.response) return auth.response;
   try {
     const searchParams = request.nextUrl.searchParams;
 
@@ -53,7 +56,7 @@ export async function GET(request: NextRequest) {
 
     if (leagueId) {
       whereClause.leagueRounds = {
-        every: {
+        some: {
           league_id: parseInt(leagueId)
         }
       };
@@ -90,12 +93,10 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  try {
-    const isUserAdmin = await checkCurrentUserIsAdmin(request as NextRequest);
-    if (!isUserAdmin) {
-      return NextResponse.json("You are not authorized for this action.", {status: STATUS.Unauthorized});
-    }
+  const auth = await requireAdmin(request);
+  if (auth.response) return auth.response;
 
+  try {
     const body = await request.json();
     const createRound = RoundCreateRequestValidation.parse(body);
     const {league_id, present_teams} = createRound;
@@ -103,13 +104,20 @@ export async function POST(request: NextRequest) {
     const teamsWithScores = await getLeagueTeamsWithScores(league_id);
 
     const filteredTeams = teamsWithScores.filter((team) => present_teams.includes(team.id));
-    const matches = matchTeams(filteredTeams);
+    let matches: TeamPair[];
+    try {
+      matches = matchTeams(filteredTeams);
+    } catch (error) {
+      return NextResponse.json({error: (error as Error).message}, {status: STATUS.BadRequest});
+    }
 
-    const roundNumber = await insertPairRounds(matches, league_id);
+    const {firstRoundNumber, alreadyCreated} = await insertRoundBatch([matches], league_id);
 
-    return NextResponse.json({round_number: roundNumber}, {status: STATUS.Created});
+    return NextResponse.json(
+      {round_number: firstRoundNumber, already_created: alreadyCreated},
+      {status: alreadyCreated ? STATUS.OK : STATUS.Created}
+    );
   } catch (error) {
-    console.error("Error creating rounds:", error);
-    return NextResponse.json({error: "Failed to create rounds."}, {status: STATUS.ServerError});
+    return errorResponse(error, "Failed to create rounds.");
   }
 }

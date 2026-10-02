@@ -1,6 +1,6 @@
 "use client";
 
-import {Box, Stack, TextField, Typography, Button, Collapse} from "@mui/material";
+import {Alert, Box, Stack, TextField, Typography, Button, Collapse} from "@mui/material";
 import Dropdown, {DropdownOption} from "@/app/createRound/ui/Dropdown";
 import {useState} from "react";
 import SelectTable, {TableEntry} from "@/app/createRound/ui/SelectTable";
@@ -24,6 +24,8 @@ export default function CreateRound() {
   const [numberOfRounds, setNumberOfRounds] = useState<number>(4);
   const [windowSize, setWindowSize] = useState<number>(8);
   const [showOptions, setShowOptions] = useState<boolean>(false);
+  const [creating, setCreating] = useState<boolean>(false);
+  const [createError, setCreateError] = useState<string | null>(null);
 
   const handleSelect = (leagueId: number) => {
     setSelectedLeagueId(leagueId);
@@ -56,12 +58,20 @@ export default function CreateRound() {
   };
 
   const createRound = async (teamIds: number[]) => {
-    if (selectedLeagueId === null) {
+    if (selectedLeagueId === null || creating) {
       return;
     }
 
-    const createdRoundNumber = await createMultipleRoundsAPI(selectedLeagueId, teamIds, numberOfRounds, windowSize);
-    router.push(`/round/pairings/${createdRoundNumber}`);
+    setCreating(true);
+    setCreateError(null);
+    try {
+      const createdRoundNumber = await createMultipleRoundsAPI(selectedLeagueId, teamIds, numberOfRounds, windowSize);
+      // replace, so the back button doesn't lead to this form again
+      router.replace(`/round/pairings/${createdRoundNumber}`);
+    } catch (error) {
+      setCreateError(error instanceof Error ? error.message : "Failed to create rounds.");
+      setCreating(false);
+    }
   };
 
   return (
@@ -110,7 +120,8 @@ export default function CreateRound() {
                 />
               </Stack>
             </Collapse>
-            <SelectTable onLoad={fetchTeams} onCreate={createRound} />
+            {createError && <Alert severity="error">{createError}</Alert>}
+            <SelectTable onLoad={fetchTeams} onCreate={createRound} creating={creating} />
           </>
         )}
       </Box>

@@ -1,8 +1,11 @@
-import {NextResponse} from "next/server";
+import {NextRequest, NextResponse} from "next/server";
+import {requireUser} from "@/app/_lib/service/auth/requireUser";
 import {STATUS} from "@/app/_lib/statusCodes";
 import {getRoundById as getRoundbyId} from "@/app/_lib/service/round/getById";
 
-export async function GET(request: Request, {params}: { params: { id: string } }) {
+export async function GET(request: NextRequest, {params}: { params: { id: string } }) {
+  const auth = await requireUser(request);
+  if (auth.response) return auth.response;
     const {id} = params;
 
     try {

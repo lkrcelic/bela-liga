@@ -1,6 +1,6 @@
-import {createMatchAPI} from "@/app/_fetchers/match/create";
-import {createOngoingMatchAPI} from "@/app/_fetchers/ongoingMatch/create";
-import {finishRoundAPI} from "@/app/_fetchers/round/finish";
+import {createMatchAPI, MatchAlreadyFinishedError} from "@/app/_fetchers/match/create";
+import {getOpenRoundByPlayerIdAPI} from "@/app/_fetchers/round/getOpenByPlayerId";
+import {matchWinner} from "@/app/_lib/bela/scoring";
 import useResultStore from "@/app/_store/bela/resultStore";
 import useAnnouncementStore from "@/app/_store/bela/announcementStore";
 import useOngoingMatchStore from "@/app/_store/ongoingMatchStore";
@@ -15,11 +15,11 @@ import {useState} from "react";
 
 export default function Action() {
   const {
-    ongoingMatch: {player_pair1_score, player_pair2_score},
+    ongoingMatch: {player_pair1_score, player_pair2_score, score_threshold},
     resetOngoingMatch,
   } = useOngoingMatchStore();
   const {
-    roundData: {id, team1_wins, team2_wins},
+    roundData: {id},
   } = useRoundStore();
   const {setMatchId, resetResult} = useResultStore();
   const {resetAnnouncements} = useAnnouncementStore();
@@ -30,8 +30,22 @@ export default function Action() {
   const {matchId} = useParams();
   const pathname = usePathname();
 
+  const goToCurrentState = async () => {
+    resetOngoingMatch();
+    try {
+      const {roundId, ongoingMatchId} = await getOpenRoundByPlayerIdAPI();
+      if (roundId === id && ongoingMatchId) {
+        router.replace(`/ongoing-match/${ongoingMatchId}`);
+        return;
+      }
+    } catch {
+      // no open round left for this player
+    }
+    router.replace(`/round/${id}/result`);
+  };
+
   const getProps = () => {
-    if ((player_pair1_score >= 1001 || player_pair2_score >= 1001) && player_pair1_score !== player_pair2_score) {
+    if (matchWinner(player_pair1_score, player_pair2_score, score_threshold ?? 1001) !== null) {
       return {
         label: "Završi meč",
         icon: <DoneIcon />,
@@ -39,25 +53,22 @@ export default function Action() {
           if (isLoading) return;
           setIsLoading(true);
           try {
-            await createMatchAPI(Number(matchId));
+            const outcome = await createMatchAPI(Number(matchId));
+            resetOngoingMatch();
 
-            if (team1_wins + team2_wins == 0) {
-              const response = await createOngoingMatchAPI({
-                round_id: Number(id),
-                score_threshold: 1001,
-              });
-
-              resetOngoingMatch();
-              router.push(`/ongoing-match/${response.id}`);
+            // replace, so going back doesn't open the match that no longer exists
+            if (outcome.nextOngoingMatchId) {
+              router.replace(`/ongoing-match/${outcome.nextOngoingMatchId}`);
+            } else {
+              router.replace(`/round/${outcome.roundId ?? id}/result`);
             }
-
-            if (team1_wins + team2_wins > 0) {
-              router.push(`/round/${id}/result`);
-              await finishRoundAPI(Number(id));
-              resetOngoingMatch();
-              localStorage.clear();
+          } catch (error) {
+            if (error instanceof MatchAlreadyFinishedError) {
+              // Someone else finished it - follow them to the next match or to the round result
+              await goToCurrentState();
+              return;
             }
-          } finally {
+            console.error(error);
             setIsLoading(false);
           }
         },
@@ -78,5 +89,5 @@ export default function Action() {
 
   const props = getProps();
 
-  return <SingleActionButton fullWidth={isMobile} label={props.label} onClick={props.onClick} icon={props.icon} />;
+  return <SingleActionButton fullWidth={isMobile} label={props.label} onClick={props.onClick} icon={props.icon} disabled={isLoading} />;
 }

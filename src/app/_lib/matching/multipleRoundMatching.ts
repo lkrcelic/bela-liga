@@ -1,3 +1,5 @@
+import {BYE_TEAM_ID} from "@/app/_lib/bye";
+
 export interface Team {
   readonly id: number;
   readonly name: string;
@@ -21,7 +23,7 @@ export interface MultiRoundMatchingOptions {
  */
 function createByeTeam(): Team {
   return {
-    id: parseInt(process.env.BYE_ID ?? "0"), 
+    id: BYE_TEAM_ID,
     name: "Bye", 
     score: 0, 
     point_difference: 0,
@@ -190,7 +192,7 @@ export function generateMultipleRoundPairings(
     
     // Move bye pair to the end
     const byeIndex = roundPairings.findIndex(pair => 
-      pair.teamOne.id === parseInt(process.env.BYE_ID)|| pair.teamTwo.id === parseInt(process.env.BYE_ID)
+      pair.teamOne.id === BYE_TEAM_ID || pair.teamTwo.id === BYE_TEAM_ID
     );
     if (byeIndex !== -1) {
       const byePair = roundPairings.splice(byeIndex, 1)[0];
@@ -209,8 +211,10 @@ export function generateMultipleRoundPairings(
  */
 export function matchTeams(teams: Team[]): TeamPair[] {
   // Use the new system with default values
+  // The window size has to be even (24-31 teams used to give 3 and fail), so an odd size is rounded up
+  const windowSize = Math.max(Math.floor(teams.length / 8), 2);
   const options: MultiRoundMatchingOptions = {
-    windowSize: Math.max(Math.floor(teams.length / 8), 2),
+    windowSize: windowSize % 2 === 0 ? windowSize : windowSize + 1,
     numberOfRounds: 1
   };
   

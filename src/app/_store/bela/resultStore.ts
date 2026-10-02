@@ -4,6 +4,7 @@ import {BelaResultResponse} from "@/app/_interfaces/belaResult";
 import {TeamsAnnouncements} from "@/app/_store/bela/announcementStore";
 import {BelaPlayerAnnouncementsRequest, TeamSide} from "@/app/_interfaces/belaPlayerAnnouncement";
 import {createJSONStorage, persist} from "zustand/middleware";
+import {COMPLETE_VICTORY_POINTS, computeHandTotals, HAND_POINTS} from "@/app/_lib/bela/scoring";
 
 type BelaResultTypeExtended = BelaResultResponse & {
   activeTeam: "team1" | "team2";
@@ -23,8 +24,8 @@ export type ResultState = {
   setResultData: (data: BelaResultResponse) => void;
 };
 
-const MAX_SCORE = 162;
-const COMPLETE_VICTORY_SCORE = 252;
+const MAX_SCORE = HAND_POINTS;
+const COMPLETE_VICTORY_SCORE = COMPLETE_VICTORY_POINTS;
 const PrismaAnnouncementEnumValueMap = {
   20: "TWENTY",
   50: "FIFTY",
@@ -121,39 +122,21 @@ const useResultStore = create<ResultState>()(persist<ResultState>((set) => ({
         throw new Error("Trump caller team is not set");
       }
 
-      const playerPair1Called = trump_caller_team === 1;
-      const playerPair2Called = trump_caller_team === 2;
-
-      let PlayerPair1TotalPoints = player_pair1_game_points + player_pair1_announcement_points;
-      let PlayerPair2TotalPoints = player_pair2_game_points + player_pair2_announcement_points;
-
-      const allAnnouncements = player_pair2_announcement_points + player_pair1_announcement_points;
-      let pass = true;
-
-      if(complete_victory) {
-        if (player_pair1_game_points == COMPLETE_VICTORY_SCORE) {
-          PlayerPair1TotalPoints = COMPLETE_VICTORY_SCORE + allAnnouncements;
-          PlayerPair2TotalPoints = 0;
-        } else if (player_pair2_game_points == COMPLETE_VICTORY_SCORE) {
-          PlayerPair2TotalPoints = COMPLETE_VICTORY_SCORE + allAnnouncements;
-          PlayerPair1TotalPoints = 0;
-        }
-      } else if (playerPair1Called && PlayerPair1TotalPoints <= PlayerPair2TotalPoints) {
-          PlayerPair2TotalPoints = MAX_SCORE + allAnnouncements;
-          PlayerPair1TotalPoints = 0;
-          pass = false;
-      } else if (playerPair2Called &&PlayerPair2TotalPoints <= PlayerPair1TotalPoints) {
-          PlayerPair1TotalPoints = MAX_SCORE + allAnnouncements;
-          PlayerPair2TotalPoints = 0;
-          pass = false;
-      }
+      const totals = computeHandTotals({
+        gamePoints1: player_pair1_game_points,
+        gamePoints2: player_pair2_game_points,
+        announcementPoints1: player_pair1_announcement_points,
+        announcementPoints2: player_pair2_announcement_points,
+        trumpCaller: trump_caller_team,
+        completeVictory: complete_victory,
+      });
 
       return {
         resultData: {
           ...state.resultData,
-          player_pair1_total_points: PlayerPair1TotalPoints,
-          player_pair2_total_points: PlayerPair2TotalPoints,
-          pass: pass,
+          player_pair1_total_points: totals.totalPoints1,
+          player_pair2_total_points: totals.totalPoints2,
+          pass: totals.pass,
         }
       };
     }),

@@ -8,7 +8,7 @@ export async function getNewestOngoingMatchByRoundId(roundId: number): Promise<O
       round_id: roundId,
     },
     orderBy: {
-      start_time: "asc",
+      id: "desc",
     }
   } as Prisma.OngoingMatchFindFirstArgs);
 

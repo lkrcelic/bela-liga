@@ -19,8 +19,13 @@ export async function getLeagueTeamsWithScores(leagueId: number): Promise<Team[]
       FROM "Team" t
                LEFT JOIN "TeamScore" ts
                          ON t.team_id = ts.team_id AND ts.league_id = ${leagueId}
+               -- only this league's rounds count as already played against
                LEFT JOIN "Round" r
-                         ON r.team1_id = t.team_id OR r.team2_id = t.team_id
+                         ON (r.team1_id = t.team_id OR r.team2_id = t.team_id)
+                             AND EXISTS (SELECT 1
+                                         FROM "LeagueRound" lr
+                                         WHERE lr.round_id = r.id
+                                           AND lr.league_id = ${leagueId})
                JOIN "LeagueTeam" lt
                     ON lt.team_id = t.team_id
       WHERE lt.league_id = ${leagueId}

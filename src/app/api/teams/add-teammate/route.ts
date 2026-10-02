@@ -1,13 +1,15 @@
 import { AddTeammateRequestValidation } from "@/app/_interfaces/team";
-import { checkCurrentUserIsAdmin } from "@/app/_lib/service/auth/checkCurrentUserIsAdmin";
+import { requireAdmin } from "@/app/_lib/service/auth/requireUser";
 import { addPlayerToTeam } from "@/app/_lib/service/team/addPlayer";
 import { STATUS } from "@/app/_lib/statusCodes";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
 export async function POST(request: NextRequest) {
+  const auth = await requireAdmin(request);
+  if (auth.response) return auth.response;
+
   try {
-    await checkCurrentUserIsAdmin(request);
 
     const body = await request.json();
     const parsed = AddTeammateRequestValidation.parse(body);

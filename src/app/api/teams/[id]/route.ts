@@ -1,14 +1,14 @@
 // src/app/api/teams/[id]/route.ts
-import {NextResponse} from "next/server";
+import {NextRequest, NextResponse} from "next/server";
+import {requireUser} from "@/app/_lib/service/auth/requireUser";
 import {prisma} from "@/app/_lib/prisma";
 import {STATUS} from "@/app/_lib/statusCodes";
 import { TeamExtendedResponseValidation } from "@/app/_interfaces/team";
 
 // Handle GET request to fetch a single team by ID
-export async function GET(
-    request: Request,
-    {params}: { params: { id: string } }
-) {
+export async function GET(request: NextRequest, {params}: { params: { id: string } }) {
+  const auth = await requireUser(request);
+  if (auth.response) return auth.response;
     const {id} = params;
 
     try {
