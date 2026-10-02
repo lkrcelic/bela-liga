@@ -4,6 +4,20 @@ import {prisma} from "@/app/_lib/prisma";
 import {Adapter} from "@auth/core/adapters";
 import Google from "next-auth/providers/google";
  
+// Usernames are unique, so "ivan" from ivan@gmail.com becomes "ivan2" when "ivan" is already taken
+async function availableUsername(base: string): Promise<string> {
+  const taken = new Set(
+    (await prisma.player.findMany({
+      where: {username: {startsWith: base}},
+      select: {username: true},
+    })).map((p) => p.username)
+  );
+  if (!taken.has(base)) return base;
+  let suffix = 2;
+  while (taken.has(`${base}${suffix}`)) suffix++;
+  return `${base}${suffix}`;
+}
+
 function CustomPrismaAdapter() {
     const standardAdapter = PrismaAdapter(prisma);
   
@@ -21,7 +35,7 @@ function CustomPrismaAdapter() {
             image: data.image,
             emailVerified: data.emailVerified,
             // Set required fields with default values
-            username: data.email.split('@')[0], // Use part of email as username
+            username: await availableUsername(data.email.split('@')[0]), // Use part of email as username
             password_hash: "", // Empty password for OAuth users
             player_role: "PLAYER", // Default role - using an enum value from RoleEnum
             first_name: data.name?.split(' ')[0] || "",

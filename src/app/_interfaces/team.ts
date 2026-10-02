@@ -2,9 +2,11 @@ import {z} from "zod";
 import {PlayerPartialResponseValidation} from "@/app/_interfaces/player";
 
 export const TeamRequestValidation = z.object({
-  team_name: z.string().min(1),
-  founder_id1: z.number().int().optional(),
-  founder_id2: z.number().int().optional(),
+  team_name: z.string().trim().min(1),
+  founder_id1: z.number().int(),
+  founder_id2: z.number().int(),
+  // the league the team joins; defaults to the current league
+  league_id: z.number().int().optional(),
   creator_id: z.number().int().optional(),
   created_at: z.date().optional(),
   last_updated_at: z.date().optional(),

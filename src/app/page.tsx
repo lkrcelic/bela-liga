@@ -15,6 +15,7 @@ import {useEffect, useState} from "react";
 // API fetchers
 import {getOpenRoundByPlayerIdAPI} from "@/app/_fetchers/round/getOpenByPlayerId";
 import {createOngoingMatchAPI} from "@/app/_fetchers/ongoingMatch/create";
+import {CURRENT_LEAGUE_ID} from "@/app/_lib/league";
 import UserBootstrapper from "./_bootstrap/UserBootstrapper";
 
 const ActionButton = ({
@@ -176,14 +177,14 @@ export default function Home() {
             {startGameError && <Alert severity="warning">{startGameError}</Alert>}
 
             <ActionButton
-              onClick={navigateTo("/league/2/daily-standings")}
+              onClick={navigateTo(`/league/${CURRENT_LEAGUE_ID}/daily-standings`)}
               label="Daily Standings"
               color="primary"
               icon={<CalendarMonthIcon />}
             />
 
             <ActionButton
-              onClick={navigateTo("/league/2/standings")}
+              onClick={navigateTo(`/league/${CURRENT_LEAGUE_ID}/standings`)}
               label="League Standings"
               color="primary"
               icon={<EmojiEventsIcon />}

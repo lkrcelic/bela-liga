@@ -2,6 +2,7 @@ import {handleLogin} from "@/app/_lib/rateLimiting/loginLimiting";
 import {isApiLimited} from "@/app/_lib/rateLimiting/requestLimiting";
 import {verifyCookie} from "@/app/_lib/service/auth/signCookie";
 import {STATUS} from "@/app/_lib/statusCodes";
+import {CURRENT_LEAGUE_ID} from "@/app/_lib/league";
 import {Cookie} from "lucia";
 import type {NextRequest} from "next/server";
 import {NextResponse} from "next/server";
@@ -14,7 +15,7 @@ export async function middleware(req: NextRequest) {
       req.nextUrl.pathname.startsWith("/api") ||
       req.nextUrl.pathname.startsWith("/login") ||
       req.nextUrl.pathname.startsWith("/signup") ||
-      req.nextUrl.pathname.startsWith("/league/2/standings") ||
+      req.nextUrl.pathname.startsWith(`/league/${CURRENT_LEAGUE_ID}/standings`) ||
       req.nextUrl.pathname.startsWith("/_next/") ||
       req.nextUrl.pathname.startsWith("/static/") ||
       req.nextUrl.pathname.match(/\.(png|jpg|jpeg|gif|svg)$/)
