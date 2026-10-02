@@ -17,7 +17,19 @@ export async function POST(req: NextRequest) {
     const user = LoginUser.parse(body);
 
     // Logging in while a session cookie is still there (e.g. someone else used this phone) replaces that session
-    const existingUser = await prisma.player.findFirst({where: {OR: [{username: user.username}, {email: user.username}]}});
+    // An exact match first, then ignoring case (phone keyboards capitalize the first letter)
+    const login = user.username.trim();
+    const existingUser =
+      await prisma.player.findFirst({where: {OR: [{username: login}, {email: login}]}}) ??
+      await prisma.player.findFirst({
+        where: {
+          OR: [
+            {username: {equals: login, mode: "insensitive"}},
+            {email: {equals: login, mode: "insensitive"}},
+          ],
+        },
+        orderBy: {id: "asc"},
+      });
     // Google accounts have no password
     if (!existingUser || !existingUser.password_hash) {
       return notFoundResponse();
