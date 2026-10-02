@@ -4,7 +4,6 @@ import React, {useState} from "react";
 import {Box} from "@mui/material";
 import DigitGrid from "@/app/ongoing-match/[matchId]/ongoing-result/ui/DigitGrid";
 import useResultStore from "@/app/_store/bela/resultStore";
-import useOngoingMatchStore from "@/app/_store/ongoingMatchStore";
 import useAnnouncementStore from "@/app/_store/bela/announcementStore";
 import {useParams, useRouter} from "next/navigation";
 import DoubleActionButton from "@/app/_ui/DoubleActionButton";
@@ -31,16 +30,7 @@ function ActionButtons({actionType}: ActionProps) {
     resultData,
     resetResult,
     setTotalPoints,
-    setCardShufflerIdAndTrumpCallerPosition,
   } = useResultStore();
-  const {
-    ongoingMatch: {
-      playerPair1,
-      playerPair2,
-      seating_order,
-      current_shuffler_index,
-    },
-  } = useOngoingMatchStore();
   const {resetAnnouncements} = useAnnouncementStore();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -53,8 +43,7 @@ function ActionButtons({actionType}: ActionProps) {
     try {
       setIsLoading(true);
       
-      setTotalPoints(playerPair1, playerPair2);
-      setCardShufflerIdAndTrumpCallerPosition(seating_order!, current_shuffler_index!);
+      setTotalPoints();
       const updatedResultData = useResultStore.getState?.().resultData;
       updatedResultData.match_id = Number(params.matchId);
 

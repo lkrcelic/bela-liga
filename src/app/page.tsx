@@ -14,6 +14,7 @@ import {useEffect, useState} from "react";
 
 // API fetchers
 import {getOpenRoundByPlayerIdAPI} from "@/app/_fetchers/round/getOpenByPlayerId";
+import {createOngoingMatchAPI} from "@/app/_fetchers/ongoingMatch/create";
 import UserBootstrapper from "./_bootstrap/UserBootstrapper";
 
 const ActionButton = ({
@@ -80,7 +81,8 @@ export default function Home() {
       if (ongoingMatchId) {
         router.push(`/ongoing-match/${ongoingMatchId}`);
       } else {
-        router.push(`/round/${roundId}/players-seating`);
+        const ongoingMatch = await createOngoingMatchAPI({round_id: roundId, score_threshold: 1001});
+        router.push(`/ongoing-match/${ongoingMatch.id}`);
       }
     } catch (error) {
       setStartingGame(false);

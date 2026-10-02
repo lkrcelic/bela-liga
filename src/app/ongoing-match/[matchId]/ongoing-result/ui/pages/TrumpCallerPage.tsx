@@ -11,10 +11,12 @@ import useAnnouncementStore from "@/app/_store/bela/announcementStore";
 export default function TrumpCallerPage({actionType}: ActionProps) {
   return (
     <>
-      <Box sx={{gridArea: "body", alignSelf: "end"}}>
-        <Typography variant="h4" color="black" align="center" paddingBottom={12}>
+      <Box sx={{gridArea: "top", alignSelf: "end"}}>
+        <Typography variant="h4" color="black" align="center">
           Izaberi tko je zvao
         </Typography>
+      </Box>
+      <Box sx={{gridArea: "body", alignSelf: "center"}}>
         <TrumpCallerSection/>
       </Box>
       <Box sx={{gridArea: "actions", alignSelf: "start"}}>
@@ -28,7 +30,7 @@ export type ActionProps = {
 }
 
 function ActionButtons({actionType}: ActionProps) {
-  const {resultData: {trump_caller_id}, resetResult} = useResultStore();
+  const {resultData: {trump_caller_team}, resetResult} = useResultStore();
   const {resetAnnouncements} = useAnnouncementStore();
   const router = useRouter();
   const params = useParams();
@@ -51,6 +53,6 @@ function ActionButtons({actionType}: ActionProps) {
     firstButtonOnClick={firstButtonOnClick}
     secondButtonLabel={"Dalje"}
     secondButtonOnClick={() => router.push(href)}
-    secondButtonDisabled={trump_caller_id == undefined}
+    secondButtonDisabled={trump_caller_team == undefined}
   />
 }

@@ -1,15 +1,11 @@
 import {create} from "zustand";
 import {OngoingMatchResponse, OngoingMatchExtendedResponse} from "@/app/_interfaces/match";
-import {PlayerPartialResponse} from "@/app/_interfaces/player";
 import {createJSONStorage, persist} from "zustand/middleware";
 
 export type OngoingMatchState = {
   ongoingMatch: OngoingMatchExtendedResponse;
   setOngoingMatch: (data: OngoingMatchExtendedResponse) => void;
-  softResetOngoingMatch: () => void;
-  hardResetOngoingMatch: () => void;
-  setSeatingOrder: (newOrder: (PlayerPartialResponse | null)[]) => void;
-  createOngoingMatch: (round_id: number) => Promise<number>;
+  resetOngoingMatch: () => void;
 };
 
 const useOngoingMatchStore = create<OngoingMatchState>()(
@@ -18,40 +14,20 @@ const useOngoingMatchStore = create<OngoingMatchState>()(
       ongoingMatch: {
         player_pair1_score: 0,
         player_pair2_score: 0,
-        current_shuffler_index: 0,
         belaResults: [],
-        seating_order: [null, null, null, null],
       },
-
-      setSeatingOrder: (newOrder) =>
-        set((state) => ({
-          ongoingMatch: {...state.ongoingMatch, seating_order: newOrder},
-        })),
 
       setOngoingMatch: (data: OngoingMatchResponse) =>
         set((state) => ({
           ongoingMatch: {...state.ongoingMatch, ...data},
         })),
 
-      softResetOngoingMatch: () =>
-        set((state) => ({
-          ongoingMatch: {
-            seating_order: state.ongoingMatch.seating_order || [null, null, null, null],
-            player_pair1_score: 0,
-            player_pair2_score: 0,
-            belaResults: [],
-            current_shuffler_index: state.ongoingMatch.current_shuffler_index || 0,
-          },
-        })),
-
-      hardResetOngoingMatch: () =>
+      resetOngoingMatch: () =>
         set(() => ({
           ongoingMatch: {
-            seating_order: [null, null, null, null],
             player_pair1_score: 0,
             player_pair2_score: 0,
             belaResults: [],
-            current_shuffler_index: 0,
           },
         })),
     }),

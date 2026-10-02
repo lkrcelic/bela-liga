@@ -3,7 +3,6 @@
 import React from "react";
 import {Box} from "@mui/material";
 import AnnouncementSection from "@/app/ongoing-match/[matchId]/ongoing-result/ui/AnnouncementsSection";
-import PlayersAnnouncementSection from "@/app/ongoing-match/[matchId]/ongoing-result/ui/PlayersAnnouncementSection";
 import useAnnouncementStore from "@/app/_store/bela/announcementStore";
 import {useParams, useRouter} from "next/navigation";
 import DoubleActionButton from "@/app/_ui/DoubleActionButton";
@@ -14,7 +13,6 @@ export default function AnnouncementPage({actionType}: ActionProps) {
         <>
             <Box sx={{gridArea: "body", alignSelf: "end"}}>
                 <AnnouncementSection/>
-                <PlayersAnnouncementSection/>
             </Box>
             <Box sx={{gridArea: "actions", alignSelf: "start"}}>
                 <ActionButtons actionType={actionType}/>

@@ -1,10 +1,8 @@
 // src/store/scoreStore.ts
 import {create} from "zustand";
 import {BelaResultResponse} from "@/app/_interfaces/belaResult";
-import {PlayerPairResponse} from "@/app/_interfaces/playerPair";
-import {PlayerPartialResponse} from "@/app/_interfaces/player";
-import {PlayersAnnouncements} from "@/app/_store/bela/announcementStore";
-import {BelaPlayerAnnouncementsRequest} from "@/app/_interfaces/belaPlayerAnnouncement";
+import {TeamsAnnouncements} from "@/app/_store/bela/announcementStore";
+import {BelaPlayerAnnouncementsRequest, TeamSide} from "@/app/_interfaces/belaPlayerAnnouncement";
 import {createJSONStorage, persist} from "zustand/middleware";
 
 type BelaResultTypeExtended = BelaResultResponse & {
@@ -13,16 +11,14 @@ type BelaResultTypeExtended = BelaResultResponse & {
 
 export type ResultState = {
   resultData: BelaResultTypeExtended;
-  setTrumpCallerId: (playerId?: number) => void;
+  setTrumpCallerTeam: (team: TeamSide) => void;
   setActiveTeam: (team: "team1" | "team2") => void;
-  setTotalPoints: (playerPair1?: PlayerPairResponse, playerPair2?: PlayerPairResponse) => ResultState;
-  setGamePoints: (digit: number) => void; 
+  setTotalPoints: () => void;
+  setGamePoints: (digit: number) => void;
   resetScore: () => void;
   setCompleteVictory: () => void;
   setMatchId: (id: number) => void;
-  setCardShufflerIdAndTrumpCallerPosition:
-    (seatingOrder: (PlayerPartialResponse | null)[], currentShufflerIndex: number) => void;
-  updateAnnouncementPoints: (playerAnnouncements: PlayersAnnouncements) => void;
+  updateAnnouncementPoints: (teamsAnnouncements: TeamsAnnouncements) => void;
   resetResult: () => void;
   setResultData: (data: BelaResultResponse) => void;
 };
@@ -44,12 +40,10 @@ const initialState = {
     player_pair2_game_points: 0,
     player_pair1_announcement_points: 0,
     player_pair2_announcement_points: 0,
-    card_shuffler_id: null,
-    trumpCallerPosition: null,
     player_pair1_total_points: 0,
     player_pair2_total_points: 0,
-    trump_caller_id: null,
-    activeTeam: "team1",
+    trump_caller_team: null,
+    activeTeam: "team1" as "team1" | "team2",
   }
 };
 
@@ -62,8 +56,8 @@ const useResultStore = create<ResultState>()(persist<ResultState>((set) => ({
 
     resetResult: () => set({resultData: {...initialState.resultData}}),
 
-    setTrumpCallerId: (playerId) => set((state) => ({
-      resultData: {...state.resultData, trump_caller_id: playerId}
+    setTrumpCallerTeam: (team) => set((state) => ({
+      resultData: {...state.resultData, trump_caller_team: team}
     })),
 
     setActiveTeam: (team) => set((state) => ({
@@ -73,27 +67,6 @@ const useResultStore = create<ResultState>()(persist<ResultState>((set) => ({
     setMatchId: (id) => set((state) => ({
       resultData: {...state.resultData, match_id: id}
     })),
-
-    setCardShufflerIdAndTrumpCallerPosition: (seatingOrder, currentShufflerIndex) => set((state) => {
-      const {trump_caller_id} = state.resultData;
-      const cardShufflerId = seatingOrder[currentShufflerIndex]?.id;
-
-      const positionsMap = {0: "FIRST", 1: "SECOND", 2: "THIRD", 3: "FOURTH"};
-
-      const trumpCallerIndex = seatingOrder.findIndex(player => player.id === trump_caller_id);
-      const relativeDistance = trumpCallerIndex - currentShufflerIndex - 1;
-      const relativeIndex = (relativeDistance + seatingOrder.length) % seatingOrder.length
-      const trumpCallerPosition = positionsMap[relativeIndex];
-
-      return {
-        resultData: {
-          ...state.resultData,
-          card_shuffler_id: cardShufflerId,
-          trump_caller_position: trumpCallerPosition,
-        },
-      };
-    }),
-
 
     setGamePoints: (digit: number) => set((state) => {
       const {
@@ -132,30 +105,24 @@ const useResultStore = create<ResultState>()(persist<ResultState>((set) => ({
       };
     }),
 
-    setTotalPoints: (playerPair1, playerPair2) => set((state) => {
+    setTotalPoints: () => set((state) => {
       const {
         resultData: {
           player_pair1_game_points,
           player_pair2_game_points,
           player_pair1_announcement_points,
           player_pair2_announcement_points,
-          trump_caller_id,
+          trump_caller_team,
           complete_victory,
         }
       } = state;
 
-      const isCallerInPair = (pair) => [pair?.player_id1, pair?.player_id2].includes(trump_caller_id);
-
-      if (trump_caller_id === null) {
-        throw new Error("Trump caller ID is not set");
+      if (trump_caller_team !== 1 && trump_caller_team !== 2) {
+        throw new Error("Trump caller team is not set");
       }
 
-      const playerPair1Called = isCallerInPair(playerPair1);
-      const playerPair2Called = isCallerInPair(playerPair2);
-
-      if (!playerPair1Called && !playerPair2Called) {
-        throw new Error("Trump caller not from player pairs");
-      }
+      const playerPair1Called = trump_caller_team === 1;
+      const playerPair2Called = trump_caller_team === 2;
 
       let PlayerPair1TotalPoints = player_pair1_game_points + player_pair1_announcement_points;
       let PlayerPair2TotalPoints = player_pair2_game_points + player_pair2_announcement_points;
@@ -208,11 +175,11 @@ const useResultStore = create<ResultState>()(persist<ResultState>((set) => ({
       const {
         resultData: {
           activeTeam,
-          trump_caller_id,
+          trump_caller_team,
         }
       } = state;
-      if (trump_caller_id === null) {
-        throw new Error("Trump caller ID is not set");
+      if (trump_caller_team == null) {
+        throw new Error("Trump caller team is not set");
       }
 
       if (activeTeam === "team1") {
@@ -237,21 +204,16 @@ const useResultStore = create<ResultState>()(persist<ResultState>((set) => ({
       }
     }),
 
-    updateAnnouncementPoints: (playerAnnouncements: PlayersAnnouncements) => {
-      const teamPoints: { [team: string]: number } = {TEAM_ONE: 0, TEAM_TWO: 0};
+    updateAnnouncementPoints: (teamsAnnouncements: TeamsAnnouncements) => {
       const announcements: BelaPlayerAnnouncementsRequest[] = [];
 
-      Object.entries(playerAnnouncements).forEach(([playerIdStr, playerData]) => {
-        const playerId = Number(playerIdStr);
-
-        teamPoints[playerData.team] += playerData.totalAnnouncements;
-
-        Object.entries(playerData.announcementCounts).forEach(
+      ([1, 2] as TeamSide[]).forEach((team) => {
+        Object.entries(teamsAnnouncements[team]?.announcementCounts ?? {}).forEach(
           ([announcementTypeStr, count]) => {
             const announcementType = Number(announcementTypeStr);
             for (let i = 0; i < count; i++) {
               announcements.push({
-                player_id: playerId,
+                team: team,
                 announcement_type: PrismaAnnouncementEnumValueMap[announcementType],
               });
             }
@@ -260,8 +222,8 @@ const useResultStore = create<ResultState>()(persist<ResultState>((set) => ({
       });
 
       set((state) => {
-        const updatedPP1AnnouncementPoints = teamPoints['TEAM_ONE'] || 0;
-        const updatedPP2AnnouncementPoints = teamPoints['TEAM_TWO'] || 0;
+        const updatedPP1AnnouncementPoints = teamsAnnouncements[1]?.totalAnnouncements || 0;
+        const updatedPP2AnnouncementPoints = teamsAnnouncements[2]?.totalAnnouncements || 0;
 
         const updatedPP1TotalPoints =
           state.resultData.player_pair1_game_points + updatedPP1AnnouncementPoints;

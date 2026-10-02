@@ -1,74 +1,78 @@
 "use client";
 
-import {PlayerPartialResponse} from "@/app/_interfaces/player";
+import {TeamSide} from "@/app/_interfaces/belaPlayerAnnouncement";
 import useAuthStore from "@/app/_store/authStore";
 import useResultStore from "@/app/_store/bela/resultStore";
-import useOngoingMatchStore from "@/app/_store/ongoingMatchStore";
-import PlayerName from "@/app/_ui/PlayerName";
-import PlayersContainer from "@/app/ongoing-match/[matchId]/ongoing-result/ui/PlayersContainer";
-import {Button, Typography} from "@mui/material";
+import useRoundStore from "@/app/_store/RoundStore";
+import {Box, Button, Typography} from "@mui/material";
 
 export default function TrumpCallerSection() {
   const {
-    ongoingMatch: {playerPair1, playerPair2},
-  } = useOngoingMatchStore();
+    roundData: {team1, team2},
+  } = useRoundStore();
   const {
-    resultData: {trump_caller_id},
-    setTrumpCallerId,
+    resultData: {trump_caller_team},
+    setTrumpCallerTeam,
   } = useResultStore();
   const {user} = useAuthStore();
 
   // Decide orientation: show current user's team on the left
   const userId = user?.id;
-  const isUserInTeam1 = playerPair1?.player_id1 == userId || playerPair1?.player_id2 == userId;
-  const isUserInTeam2 = playerPair2?.player_id1 == userId || playerPair2?.player_id2 == userId;
+  const team1PlayerIds = team1?.teamPlayers?.map((tp) => tp.player.id) ?? [];
+  const team2PlayerIds = team2?.teamPlayers?.map((tp) => tp.player.id) ?? [];
+  const isUserInTeam1 = userId != null && team1PlayerIds.includes(userId);
+  const isUserInTeam2 = userId != null && team2PlayerIds.includes(userId);
   const showTeam1Left = isUserInTeam1 || (!isUserInTeam1 && !isUserInTeam2);
 
-  // Orient pairs for display depending on current user
-  const leftPair = showTeam1Left ? playerPair1 : playerPair2;
-  const rightPair = showTeam1Left ? playerPair2 : playerPair1;
+  const leftSide: TeamSide = showTeam1Left ? 1 : 2;
+  const rightSide: TeamSide = showTeam1Left ? 2 : 1;
+  const teamName = (side: TeamSide) => (side === 1 ? team1?.team_name : team2?.team_name);
 
   return (
-    <PlayersContainer playerPair1={leftPair} playerPair2={rightPair}>
-      {(player) => (
-        <TrumpCallerButton
-          key={player?.id}
-          player={player}
-          color={[leftPair?.player_id1, leftPair?.player_id2].includes(player?.id) ? "team1" : "team2"}
-          onClick={() => setTrumpCallerId(player?.id)}
-          isTrumpCaller={player?.id === trump_caller_id}
-        />
-      )}
-    </PlayersContainer>
+    <Box sx={{display: "flex", justifyContent: "space-evenly", alignItems: "center"}}>
+      <TrumpCallerButton
+        teamName={teamName(leftSide) || "MI"}
+        color="team1"
+        isTrumpCaller={trump_caller_team === leftSide}
+        onClick={() => setTrumpCallerTeam(leftSide)}
+      />
+      <TrumpCallerButton
+        teamName={teamName(rightSide) || "VI"}
+        color="team2"
+        isTrumpCaller={trump_caller_team === rightSide}
+        onClick={() => setTrumpCallerTeam(rightSide)}
+      />
+    </Box>
   );
 }
 
-type PlayerBoxProps = {
-  player: PlayerPartialResponse;
-  color: string;
+type TrumpCallerButtonProps = {
+  teamName: string;
+  color: "team1" | "team2";
   isTrumpCaller: boolean;
-  onClick?: () => void;
+  onClick: () => void;
 };
 
-function TrumpCallerButton({player, color, isTrumpCaller, onClick}: PlayerBoxProps) {
+function TrumpCallerButton({teamName, color, isTrumpCaller, onClick}: TrumpCallerButtonProps) {
   return (
     <Button
       onClick={onClick}
       color={color}
-      variant={(isTrumpCaller ? "contained" : "outlined") as "contained" | "outlined"}
+      variant={isTrumpCaller ? "contained" : "outlined"}
       sx={{
-        width: "100px",
-        height: "100px",
+        width: "140px",
+        height: "140px",
         borderRadius: "8px",
         display: "flex",
         flexDirection: "column",
         justifyContent: "center",
         alignItems: "center",
         textAlign: "center",
+        padding: 1,
       }}
     >
-      <Typography variant="subtitle2">
-        <PlayerName firstName={player?.first_name} lastName={player?.last_name} />
+      <Typography variant="h6" sx={{overflowWrap: "anywhere"}}>
+        {teamName}
       </Typography>
     </Button>
   );

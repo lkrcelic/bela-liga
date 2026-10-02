@@ -44,23 +44,11 @@ export default function TeamsScoreSection() {
   const isUserInTeam1 = userId != null && team1PlayerIds.includes(userId);
   const isUserInTeam2 = userId != null && team2PlayerIds.includes(userId);
   const showTeam1Left = isUserInTeam1 || (!isUserInTeam1 && !isUserInTeam2);
+  const leftTeam = showTeam1Left ? "team1" : "team2";
+  const rightTeam = showTeam1Left ? "team2" : "team1";
 
   const getScoreSectionType = (): ScoreSectionType => {
-    if (pathname.endsWith("/trump-caller")) {
-      return {
-        team1Color: "team1",
-        team2Color: "team2",
-        team1Value: (showTeam1Left ? team1?.team_name : team2?.team_name) || "MI",
-        team2Value: (showTeam1Left ? team2?.team_name : team1?.team_name) || "VI",
-        team1SecondValue: "",
-        team2SecondValue: "",
-        textVariant: "h6",
-        team1ButtonVariant: "contained",
-        team2ButtonVariant: "contained",
-        label: undefined,
-        onClick: null,
-      };
-    } else if (pathname.endsWith("/announcement")) {
+    if (pathname.endsWith("/announcement")) {
       return {
         team1Color: "team1",
         team2Color: "team2",
@@ -70,9 +58,9 @@ export default function TeamsScoreSection() {
         team2SecondValue: "",
         textVariant: "h4",
         label: "Zvanja",
-        team1ButtonVariant: "contained",
-        team2ButtonVariant: "contained",
-        onClick: null,
+        team1ButtonVariant: activeTeam === leftTeam ? "contained" : "outlined",
+        team2ButtonVariant: activeTeam === rightTeam ? "contained" : "outlined",
+        onClick: setActiveTeam,
       };
     } else if (pathname.endsWith("/score")) {
       return {
@@ -87,8 +75,8 @@ export default function TeamsScoreSection() {
           ? player_pair2_game_points + player_pair2_announcement_points
           : player_pair1_game_points + player_pair1_announcement_points,
         textVariant: "h4",
-        team1ButtonVariant: activeTeam === (showTeam1Left ? "team1" : "team2") ? "contained" : "outlined",
-        team2ButtonVariant: activeTeam === (showTeam1Left ? "team2" : "team1") ? "contained" : "outlined",
+        team1ButtonVariant: activeTeam === leftTeam ? "contained" : "outlined",
+        team2ButtonVariant: activeTeam === rightTeam ? "contained" : "outlined",
         label: "Igra",
         onClick: setActiveTeam,
       };
@@ -98,10 +86,10 @@ export default function TeamsScoreSection() {
   const scoreSectionType = getScoreSectionType();
 
   React.useEffect(() => {
-    if (pathname.endsWith("/score")) {
-      setActiveTeam(showTeam1Left ? "team1" : "team2");
+    if (pathname.endsWith("/score") || pathname.endsWith("/announcement")) {
+      setActiveTeam(leftTeam);
     }
-  }, [pathname, showTeam1Left, setActiveTeam]);
+  }, [pathname, leftTeam, setActiveTeam]);
 
   return (
     <Grid container spacing={6} alignItems="space-between" sx={{width: "100%"}}>
@@ -110,7 +98,7 @@ export default function TeamsScoreSection() {
           label={scoreSectionType.label}
           teamColor={scoreSectionType.team1Color}
           value={String(scoreSectionType.team1Value)}
-          onClick={() => scoreSectionType.onClick?.(showTeam1Left ? "team1" : "team2")}
+          onClick={() => scoreSectionType.onClick?.(leftTeam)}
           textVariant={scoreSectionType.textVariant}
           secondValue={String(scoreSectionType?.team1SecondValue)}
           buttonVariant={scoreSectionType.team1ButtonVariant}
@@ -122,7 +110,7 @@ export default function TeamsScoreSection() {
           label={scoreSectionType.label}
           teamColor={scoreSectionType.team2Color}
           value={String(scoreSectionType.team2Value)}
-          onClick={() => scoreSectionType.onClick?.(showTeam1Left ? "team2" : "team1")}
+          onClick={() => scoreSectionType.onClick?.(rightTeam)}
           textVariant={scoreSectionType.textVariant}
           secondValue={String(scoreSectionType?.team2SecondValue)}
           buttonVariant={scoreSectionType.team2ButtonVariant}

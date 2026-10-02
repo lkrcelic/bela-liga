@@ -7,7 +7,7 @@ import useRoundStore from "@/app/_store/RoundStore";
 export function resetAllStores() {
   useAuthStore.getState().reset();
 
-  useOngoingMatchStore.getState().hardResetOngoingMatch();
+  useOngoingMatchStore.getState().resetOngoingMatch();
 
   useAnnouncementStore.getState().resetAnnouncements();
 

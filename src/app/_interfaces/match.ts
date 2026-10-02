@@ -1,7 +1,5 @@
 import {z} from "zod";
 import {PartialBelaResultResponseValidation} from "@/app/_interfaces/belaResult";
-import {PlayerPairResponseValidation} from "@/app/_interfaces/playerPair";
-import {PlayerPartialResponseValidation} from "@/app/_interfaces/player";
 
 const parseDate = z.preprocess((arg) => {
     if (typeof arg === 'string' || arg instanceof Date) {
@@ -16,14 +14,10 @@ export const OngoingMatchRequestValidation = z.object({
     round_id: z.number().int().nullable().optional(),
     player_pair1_score: z.number().int().optional(),
     player_pair2_score: z.number().int().optional(),
-    player_pair_id1: z.number().int().optional(),
-    player_pair_id2: z.number().int().optional(),
     score_threshold: z.number().int().optional().nullable(), //TODO nema nullable
     start_time: parseDate.nullable().optional(),
     end_time: parseDate.nullable().optional(),
     match_date: parseDate.optional(),
-    current_shuffler_index: z.number().int().optional().nullable(),
-    seating_order_ids: z.array(z.number().int()).optional().nullable(),
 });
 
 export const OngoingMatchResponseValidation = z.object({
@@ -31,43 +25,26 @@ export const OngoingMatchResponseValidation = z.object({
     round_id: z.number().int().nullable(),
     player_pair1_score: z.number().int(),
     player_pair2_score: z.number().int(),
-    player_pair_id1: z.number().int(),
-    player_pair_id2: z.number().int(),
     score_threshold: z.number().int(),
     start_time: parseDate.nullable(),
     end_time: parseDate.nullable().optional(),
     match_date: parseDate.optional(),
-    current_shuffler_index: z.number().int(),
-    seating_order_ids: z.array(z.number().int()),
 });
 
-export const MatchResponseValidation = OngoingMatchRequestValidation.omit({
-    current_shuffler_index: true,
-    seating_order_ids: true,
-}).extend({
+export const MatchResponseValidation = OngoingMatchRequestValidation.extend({
     belaResults: z.array(PartialBelaResultResponseValidation).optional(),
-    playerPair1: PlayerPairResponseValidation.optional(),
-    playerPair2: PlayerPairResponseValidation.optional(),
-    seating_order: z.array(PlayerPartialResponseValidation).optional().nullable(),
 });
 
 export const OngoingMatchExtendedResponseValidation = OngoingMatchResponseValidation.extend({
     belaResults: z.array(PartialBelaResultResponseValidation).optional(),
-    playerPair1: PlayerPairResponseValidation,
-    playerPair2: PlayerPairResponseValidation,
-    seating_order: z.array(PlayerPartialResponseValidation).optional().nullable(),
 });
 
 export const CreateOngoingMatchRequestValidation = z.object({
     score_threshold: z.number().int(),
     round_id: z.number().int(),
-    current_shuffler_index: z.number().int(),
-    seating_order_ids: z.array(z.number().int()),
-    player_pair_id1: z.number().int().optional(),
-    player_pair_id2: z.number().int().optional(),
 });
 
-export type OngoingMatchCreateRequest = z.infer<typeof CreateOngoingMatchRequestValidation>;
+export type CreateOngoingMatchRequest = z.infer<typeof CreateOngoingMatchRequestValidation>;
 export type MatchResponse = z.infer<typeof MatchResponseValidation>;
 export type OngoingMatchResponse = z.infer<typeof OngoingMatchResponseValidation>;
 export type OngoingMatchExtendedResponse = z.infer<typeof OngoingMatchExtendedResponseValidation>;

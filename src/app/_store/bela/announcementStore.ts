@@ -1,39 +1,33 @@
 // src/store/announcementStore.ts
 import {create} from 'zustand';
-import {PlayerPairResponse} from "@/app/_interfaces/playerPair";
-import {BelaPlayerAnnouncementResponse} from "@/app/_interfaces/belaPlayerAnnouncement";
+import {BelaPlayerAnnouncementResponse, TeamSide} from "@/app/_interfaces/belaPlayerAnnouncement";
 import {createJSONStorage, persist} from "zustand/middleware";
 
-type PlayerAnnouncements = {
+type TeamAnnouncements = {
   totalAnnouncements: number;
-  team: 'TEAM_ONE' | 'TEAM_TWO';
   cardCount: number,
   announcementCounts: { [key: number]: number };
 };
 
-export type PlayersAnnouncements = { [key: number]: PlayerAnnouncements };
+export type TeamsAnnouncements = Record<TeamSide, TeamAnnouncements>;
 
 type AnnouncementState = {
-  playersAnnouncements: PlayersAnnouncements;
-  activePlayerId: number | null;
+  teamsAnnouncements: TeamsAnnouncements;
   noAnnouncements: boolean;
 
-  setActivePlayerId: (playerId: number | undefined) => void;
-  setAnnouncement: (playerId: number | null, points: number) => void;
-  resetPlayerAnnouncements: (playerId: number) => void;
+  setAnnouncement: (team: TeamSide, points: number) => void;
+  resetTeamAnnouncements: (team: TeamSide) => void;
   resetAnnouncements: () => void;
-  initializePlayersAnnouncements: (
-    playerPair1: PlayerPairResponse | null,
-    playerPair2: PlayerPairResponse | null
-  ) => void;
-  setPlayersAnnouncements: (data: BelaPlayerAnnouncementResponse[]) => void;
+  setTeamsAnnouncements: (data: BelaPlayerAnnouncementResponse[]) => void;
 };
 
-const initialState = {
-  playersAnnouncements: {}, 
-  activePlayerId: null,
-  noAnnouncements: true,
-};
+const emptyTeamsAnnouncements = (): TeamsAnnouncements => ({
+  1: {totalAnnouncements: 0, announcementCounts: {}, cardCount: 0},
+  2: {totalAnnouncements: 0, announcementCounts: {}, cardCount: 0},
+});
+
+const hasAnnouncements = (teamsAnnouncements: TeamsAnnouncements) =>
+  Object.values(teamsAnnouncements).some((team) => team.totalAnnouncements > 0);
 
 const PrismaAnnouncementEnumValueMap = {
   "TWENTY": 20,
@@ -45,122 +39,84 @@ const PrismaAnnouncementEnumValueMap = {
 
 const PrismaAnnouncementCardCountMap = {20: 3, 50: 4, 100: 4, 150: 4, 200: 4,};
 
+const MAX_TEAM_CARD_COUNT = 16; // 2 players x 8 cards
+
 const useAnnouncementStore = create<AnnouncementState>()(persist<AnnouncementState>((set) => ({
-    ...initialState,
+    teamsAnnouncements: emptyTeamsAnnouncements(),
+    noAnnouncements: true,
 
-    initializePlayersAnnouncements: (playerPair1, playerPair2) => set(() => ({
-      playersAnnouncements: {
-        [playerPair1!.player_id1]: {totalAnnouncements: 0, announcementCounts: {}, cardCount: 0, team: "TEAM_ONE"},
-        [playerPair1!.player_id2]: {totalAnnouncements: 0, announcementCounts: {}, cardCount: 0, team: "TEAM_ONE"},
-        [playerPair2!.player_id1]: {totalAnnouncements: 0, announcementCounts: {}, cardCount: 0, team: "TEAM_TWO"},
-        [playerPair2!.player_id2]: {totalAnnouncements: 0, announcementCounts: {}, cardCount: 0, team: "TEAM_TWO"},
-      },
-    })),
+    setTeamsAnnouncements: (data: BelaPlayerAnnouncementResponse[]) => set(() => {
+      const teamsAnnouncements = emptyTeamsAnnouncements();
 
-    setPlayersAnnouncements: (data: BelaPlayerAnnouncementResponse[]) => set((state) => {
-      const updatedPlayersAnnouncements: PlayersAnnouncements = {...state.playersAnnouncements};
-
-      data.forEach((announcement) => {
-        const {player_id, announcement_type} = announcement;
+      data.forEach(({team, announcement_type}) => {
         const announcementValue = PrismaAnnouncementEnumValueMap[announcement_type];
+        const teamAnn = teamsAnnouncements[team];
 
-        if (announcementValue !== undefined && updatedPlayersAnnouncements[player_id]) {
-          const playerAnn = updatedPlayersAnnouncements[player_id];
-          playerAnn.announcementCounts[announcementValue] = (playerAnn.announcementCounts[announcementValue] || 0) + 1;
-          playerAnn.totalAnnouncements = Object.entries(playerAnn.announcementCounts).reduce(
-            (total, [pointValue, count]) => total + Number(pointValue) * count, 0
-          );
+        if (announcementValue !== undefined && teamAnn) {
+          teamAnn.announcementCounts[announcementValue] = (teamAnn.announcementCounts[announcementValue] || 0) + 1;
+          teamAnn.totalAnnouncements += announcementValue;
+          teamAnn.cardCount += PrismaAnnouncementCardCountMap[announcementValue];
         }
       });
 
-      const hasAnnouncements = Object.values(updatedPlayersAnnouncements).some(
-        (player) => player.totalAnnouncements > 0
-      );
-
       return {
-        playersAnnouncements: updatedPlayersAnnouncements,
-        noAnnouncements: !hasAnnouncements,
+        teamsAnnouncements,
+        noAnnouncements: !hasAnnouncements(teamsAnnouncements),
       };
     }),
 
     resetAnnouncements:
-      () => set(() => ({...initialState})),
-
-    setActivePlayerId:
-      (playerId) => set({activePlayerId: playerId ?? null}),
+      () => set(() => ({teamsAnnouncements: emptyTeamsAnnouncements(), noAnnouncements: true})),
 
     setAnnouncement:
-      (playerId, points) =>
+      (team, points) =>
         set((state) => {
-
-          if (!playerId) {
+          const teamAnnouncements = state.teamsAnnouncements[team];
+          if (!teamAnnouncements) {
             return state;
           }
 
-          const playerAnnouncements = state.playersAnnouncements[playerId];
-          if (!playerAnnouncements) {
-            return state;
-          }
-
-          const updatedCardCount = playerAnnouncements.cardCount + PrismaAnnouncementCardCountMap[points];
-          if (updatedCardCount > 11) { // 9 for bela
+          const updatedCardCount = teamAnnouncements.cardCount + PrismaAnnouncementCardCountMap[points];
+          if (updatedCardCount > MAX_TEAM_CARD_COUNT) {
             return state;
           }
 
           const updatedAnnouncementCounts = {
-            ...playerAnnouncements.announcementCounts,
-            [points]: (playerAnnouncements.announcementCounts[points] || 0) + 1,
+            ...teamAnnouncements.announcementCounts,
+            [points]: (teamAnnouncements.announcementCounts[points] || 0) + 1,
           };
-
 
           const totalAnnouncements = Object.entries(updatedAnnouncementCounts).reduce(
             (total, [pointValue, count]) => total + Number(pointValue) * count,
             0
           );
 
-          const updatedPlayersAnnouncements = {
-            ...state.playersAnnouncements,
-            [playerId]: {
-              ...playerAnnouncements,
+          const updatedTeamsAnnouncements = {
+            ...state.teamsAnnouncements,
+            [team]: {
               totalAnnouncements,
               announcementCounts: updatedAnnouncementCounts,
               cardCount: updatedCardCount,
             },
           };
 
-          const hasAnnouncements = Object.values(updatedPlayersAnnouncements).some(
-            (player) => player.totalAnnouncements > 0
-          );
-
           return {
-            playersAnnouncements: updatedPlayersAnnouncements,
-            noAnnouncements: !hasAnnouncements,
+            teamsAnnouncements: updatedTeamsAnnouncements,
+            noAnnouncements: !hasAnnouncements(updatedTeamsAnnouncements),
           };
         }),
 
-    resetPlayerAnnouncements:
-      (playerId) =>
+    resetTeamAnnouncements:
+      (team) =>
         set((state) => {
-          const player = state.playersAnnouncements[playerId];
-          if (!player) {
-            return state;
-          }
-
-          const updatedPlayersAnnouncements = {
-            ...state.playersAnnouncements,
-            [playerId]: {
-              ...player,
-              totalAnnouncements: 0,
-              cardCount: 0,
-              announcementCounts: {},
-            },
+          const updatedTeamsAnnouncements = {
+            ...state.teamsAnnouncements,
+            [team]: {totalAnnouncements: 0, cardCount: 0, announcementCounts: {}},
           };
-          const hasAnnouncements = Object.values(updatedPlayersAnnouncements).some(
-            (player) => player.totalAnnouncements > 0
-          );
+
           return {
-            playersAnnouncements: updatedPlayersAnnouncements,
-            noAnnouncements: !hasAnnouncements,
+            teamsAnnouncements: updatedTeamsAnnouncements,
+            noAnnouncements: !hasAnnouncements(updatedTeamsAnnouncements),
           };
         }),
   }), {
