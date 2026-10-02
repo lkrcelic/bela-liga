@@ -22,9 +22,10 @@ export interface TableEntry {
 interface SelectTableProperties {
   onLoad: () => Promise<TableEntry[]>;
   onCreate: (teamIds: number[]) => void;
+  creating?: boolean;
 }
 
-export default function SelectTable({onLoad, onCreate}: SelectTableProperties) {
+export default function SelectTable({onLoad, onCreate, creating = false}: SelectTableProperties) {
   const [entries, setEntries] = useState<TableEntry[]>([]);
   const [filteredEntries, setFilteredEntries] = useState<TableEntry[]>([]);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
@@ -147,8 +148,8 @@ export default function SelectTable({onLoad, onCreate}: SelectTableProperties) {
           </TableBody>
         </Table>
       </TableContainer>
-      <Button variant="contained" color="primary" onClick={clickButton}>
-        Create round
+      <Button variant="contained" color="primary" onClick={clickButton} disabled={creating || selectedIds.size < 2}>
+        {creating ? "Creating..." : "Create round"}
       </Button>
     </>
   );

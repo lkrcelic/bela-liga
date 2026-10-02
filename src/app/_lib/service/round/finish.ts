@@ -1,54 +1,63 @@
+import {Prisma} from "@prisma/client";
 import {prisma} from "@/app/_lib/prisma";
-import { updateRatingsAfterMatch } from "../../rating/ratingService";
+import {updateRatingsAfterMatch} from "../../rating/ratingService";
+import {InvalidResultError} from "@/app/_lib/validation/validateResult";
 
+// A round between two teams is two matches.
+export const MATCHES_PER_ROUND = 2;
 
-export async function finishRound(round_id: number): Promise<void> {
-   await prisma.round.update({
-    where: {
-      id: round_id,
-    },
-    data: {
-      open: false,
-      active: false,
-    },
-  });
+export async function lockRound(tx: Prisma.TransactionClient, roundId: number) {
+  const [round] = await tx.$queryRaw<{id: number, open: boolean}[]>`
+      SELECT id, open FROM "Round" WHERE id = ${roundId} FOR UPDATE`;
+  return round;
+}
 
-  const round = await prisma.round.findUnique({
-    where: {
-      id: round_id,
-    },
+// Marks the round as played, recomputes both teams' standings and updates the players' ratings.
+// Call it inside a transaction that holds the round lock, so it runs once per round.
+export async function closeRound(tx: Prisma.TransactionClient, roundId: number): Promise<void> {
+  const round = await tx.round.update({
+    where: {id: roundId},
+    data: {open: false, active: false},
     include: {
-      leagueRounds: {
-        select: {
-          league_id: true,
-        },
-      },
-      team1: {
-        select: {
-          teamPlayers: true
-        }
-      },
-      team2: {
-        select: {
-          teamPlayers: true
-        }
-      }
+      leagueRounds: {select: {league_id: true}},
+      team1: {select: {teamPlayers: true}},
+      team2: {select: {teamPlayers: true}},
     },
   });
 
-  const {team1_id, team2_id, team1_wins, team2_wins, team1, team2, leagueRounds = []} = round;
-  const league_id = leagueRounds[0].league_id;
+  for (const {league_id} of round.leagueRounds) {
+    await tx.$executeRaw`CALL update_team_score(${round.team1_id}, ${league_id})`;
+    await tx.$executeRaw`CALL update_team_score(${round.team2_id}, ${league_id})`;
+  }
 
-  await prisma.$queryRaw`CALL update_team_score(${team1_id}, ${league_id})`;
-  await prisma.$queryRaw`CALL update_team_score(${team2_id}, ${league_id})`;
+  const teamAPlayerIds = round.team1.teamPlayers.map(player => player.player_id);
+  const teamBPlayerIds = round.team2.teamPlayers.map(player => player.player_id);
+  if (teamAPlayerIds.length === 0 || teamBPlayerIds.length === 0) {
+    console.warn(`Round ${roundId}: a team has no players, ratings not updated`);
+    return;
+  }
 
-  const team1Won = team1_wins > team2_wins;
-  const isDraw = team1_wins === team2_wins;
+  const scoreTeam1 = round.team1_wins > round.team2_wins ? 1 : round.team1_wins === round.team2_wins ? 0.5 : 0;
+  await updateRatingsAfterMatch(teamAPlayerIds, teamBPlayerIds, scoreTeam1, tx);
+}
 
-  const scoreTeam1 = team1Won ? 1 : isDraw ? 0.5 : 0;
+// Finishes a round by hand (admin). Does nothing if it is already finished, and refuses a round that wasn't played,
+// so a stray call can't count an unplayed round as a draw or update ratings twice.
+export async function finishRound(round_id: number): Promise<void> {
+  await prisma.$transaction(async (tx) => {
+    const round = await lockRound(tx, round_id);
+    if (!round) {
+      throw new InvalidResultError("Round not found.");
+    }
+    if (!round.open) {
+      return;
+    }
 
-  const teamAPlayerIds = team1.teamPlayers.map(player => player.player_id);
-  const teamBPlayerIds = team2.teamPlayers.map(player => player.player_id);
+    const playedMatches = await tx.match.count({where: {round_id: round_id}});
+    if (playedMatches < MATCHES_PER_ROUND) {
+      throw new InvalidResultError(`Only ${playedMatches} of ${MATCHES_PER_ROUND} matches of this round are played.`);
+    }
 
-  await updateRatingsAfterMatch(teamAPlayerIds, teamBPlayerIds, scoreTeam1);
+    await closeRound(tx, round_id);
+  }, {timeout: 20000});
 }

@@ -1,3 +1,4 @@
+import {responseErrorMessage} from "@/app/_fetchers/errorMessage";
 import {BelaResultResponse} from "@/app/_interfaces/belaResult";
 
 type CreateOngoingBelaResultAPIProps = {
@@ -14,7 +15,7 @@ export async function createOngoingBelaResultAPI({result}: CreateOngoingBelaResu
     });
 
     if (!response.ok) {
-        throw new Error(`Failed to create bela ongoing result: ${response.statusText}`);
+        throw new Error(await responseErrorMessage(response, "Failed to save the hand"));
     }
 
     return response.json();

@@ -8,7 +8,7 @@ import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
 import GroupAddIcon from "@mui/icons-material/GroupAdd";
 import LogoutIcon from "@mui/icons-material/Logout";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
-import {Box, Button, CircularProgress, Container, IconButton, Paper, Typography} from "@mui/material";
+import {Alert, Box, Button, CircularProgress, Container, IconButton, Paper, Typography} from "@mui/material";
 import {useRouter} from "next/navigation";
 import {useEffect, useState} from "react";
 
@@ -62,12 +62,13 @@ export default function Home() {
   const [isAdmin, setIsAdmin] = useState(false);
   const {logout, loggingOut} = useLogout();
   const [startingGame, setStartingGame] = useState(false);
+  const [startGameError, setStartGameError] = useState<string | null>(null);
 
   // Check if user is admin
   useEffect(() => {
     fetch("/api/session/is-admin")
-      .then((res) => res.json())
-      .then((data) => setIsAdmin(data))
+      .then((res) => (res.ok ? res.json() : false))
+      .then((data) => setIsAdmin(data === true))
       .catch((err) => console.error("Failed to fetch session", err));
   }, []);
 
@@ -75,6 +76,7 @@ export default function Home() {
   const handleStartGame = async () => {
     try {
       setStartingGame(true);
+      setStartGameError(null);
 
       const {roundId, ongoingMatchId} = await getOpenRoundByPlayerIdAPI();
 
@@ -85,6 +87,7 @@ export default function Home() {
         router.push(`/ongoing-match/${ongoingMatch.id}`);
       }
     } catch (error) {
+      setStartGameError(error instanceof Error ? error.message : "Igru nije moguće pokrenuti.");
       setStartingGame(false);
     }
   };
@@ -170,6 +173,7 @@ export default function Home() {
               disabled={startingGame}
               loading={startingGame}
             />
+            {startGameError && <Alert severity="warning">{startGameError}</Alert>}
 
             <ActionButton
               onClick={navigateTo("/league/2/daily-standings")}

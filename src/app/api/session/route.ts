@@ -6,7 +6,6 @@ import {NextRequest, NextResponse} from "next/server";
 
 export async function GET(req: NextRequest) {
   try {
-    // TODO: Enable so that only the admin can see running sessions!
     const user = await getAuthorizedUser(req);
     if (!user || user.player_role !== "ADMIN") {
       return NextResponse.json({message: "You are not authorized for this action."},

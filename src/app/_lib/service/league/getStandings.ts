@@ -1,5 +1,6 @@
 import {prisma} from "@/app/_lib/prisma";
 import {TeamScore} from "@prisma/client";
+import {BYE_TEAM_ID} from "@/app/_lib/bye";
 
 export async function getLeagueStandings(league_id: number): Promise<TeamScore> {
   const standings = await prisma.teamScore.findMany({
@@ -13,7 +14,7 @@ export async function getLeagueStandings(league_id: number): Promise<TeamScore> 
     where: {
       league_id: league_id,
       team_id: {
-        not: Number(process.env.BYE_ID),
+        not: BYE_TEAM_ID,
       },
     },
     orderBy: [

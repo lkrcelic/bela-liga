@@ -1,53 +1,41 @@
 import {NextRequest, NextResponse} from "next/server";
 import {STATUS} from "@/app/_lib/statusCodes";
-import {generateMultipleRoundPairings} from "@/app/_lib/matching/multipleRoundMatching";
+import {generateMultipleRoundPairings, TeamPair} from "@/app/_lib/matching/multipleRoundMatching";
 import {getLeagueTeamsWithScores} from "@/app/_lib/helpers/query/leagueScores";
 import {RoundCreateRequestValidation} from "@/app/_interfaces/round";
-import {checkCurrentUserIsAdmin} from "@/app/_lib/service/auth/checkCurrentUserIsAdmin";
-import {insertPairRounds} from "@/app/_lib/service/round/insertPairRounds";
+import {requireAdmin} from "@/app/_lib/service/auth/requireUser";
+import {insertRoundBatch} from "@/app/_lib/service/round/insertPairRounds";
+import {errorResponse} from "@/app/_lib/apiErrors";
 
 export async function POST(request: NextRequest) {
-  try {
-    const isUserAdmin = await checkCurrentUserIsAdmin(request as NextRequest);
-    if (!isUserAdmin) {
-      return NextResponse.json("You are not authorized for this action.", {status: STATUS.Unauthorized});
-    }
+  const auth = await requireAdmin(request);
+  if (auth.response) return auth.response;
 
+  try {
     const body = await request.json();
     const parsed = RoundCreateRequestValidation.parse(body);
     const {league_id, present_teams} = parsed;
     const numberOfRounds = parsed.numberOfRounds ?? 3;
     const windowSize = parsed.windowSize ?? 8;
 
-    if (numberOfRounds >= windowSize) {
-      return NextResponse.json(
-        {error: "Invalid arguments: numberOfRounds must be less than windowSize."},
-        {status: STATUS.BadRequest}
-      );
-    }
-
     const teamsWithScores = await getLeagueTeamsWithScores(league_id);
-
     const filteredTeams = teamsWithScores.filter((team) => present_teams.includes(team.id));
-    
-    // Generate multiple rounds with provided or default values
-    const allRoundPairings = generateMultipleRoundPairings(filteredTeams, {
-      windowSize,
-      numberOfRounds,
-    });
 
-    // Insert each round of pairings
-    let firstRoundNumber = 0;
-    for (let i = 0; i < allRoundPairings.length; i++) {
-      const roundNumber = await insertPairRounds(allRoundPairings[i], league_id);
-      if (i === 0) {
-        firstRoundNumber = roundNumber;
-      }
+    let allRoundPairings: TeamPair[][];
+    try {
+      allRoundPairings = generateMultipleRoundPairings(filteredTeams, {windowSize, numberOfRounds});
+    } catch (error) {
+      // the pairing rejects impossible settings (odd window, more rounds than teams, ...)
+      return NextResponse.json({error: (error as Error).message}, {status: STATUS.BadRequest});
     }
 
-    return NextResponse.json({round_number: firstRoundNumber}, {status: STATUS.Created});
+    const {firstRoundNumber, alreadyCreated} = await insertRoundBatch(allRoundPairings, league_id);
+
+    return NextResponse.json(
+      {round_number: firstRoundNumber, already_created: alreadyCreated},
+      {status: alreadyCreated ? STATUS.OK : STATUS.Created}
+    );
   } catch (error) {
-    console.error("Error creating rounds:", error);
-    return NextResponse.json({error: "Failed to create rounds."}, {status: STATUS.ServerError});
+    return errorResponse(error, "Failed to create rounds.");
   }
 }

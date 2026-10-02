@@ -1,10 +1,9 @@
 // ratingService.ts
-// Glicko-2 Rating System for Belot 2v2 matches
+// Glicko-2 based rating system for Bela team rounds
 // Integrated with Prisma database
 
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import { Prisma } from "@prisma/client";
+import { prisma } from "@/app/_lib/prisma";
 
 // Glicko-2 Constants
 const MU0 = 1500;      // Starting rating
@@ -65,58 +64,63 @@ function updateSingle(
   return [muPrime, phi, sigma];
 }
 
-// 2v2 update: treat as team vs team, then apply to individuals
-function update2v2(
-  playersA: Array<{ rating: number; rd: number; vol: number }>,
-  playersB: Array<{ rating: number; rd: number; vol: number }>,
+type PlayerRating = { rating: number; rd: number; vol: number };
+
+function average(values: number[]): number {
+  return values.reduce((sum, v) => sum + v, 0) / values.length;
+}
+
+// Team vs team update: each team plays as its average rating and RD, the team's rating change is applied to every
+// player, and each player keeps their own RD (shrunk a little per round) and volatility.
+// Works for any roster size, since teams can have substitutes.
+export function updateTeams(
+  playersA: PlayerRating[],
+  playersB: PlayerRating[],
   scoreA: number
-): { teamA: Array<{ rating: number; rd: number; vol: number }>; teamB: Array<{ rating: number; rd: number; vol: number }> } {
+): { teamA: PlayerRating[]; teamB: PlayerRating[] } {
   // Convert to Glicko-2 scale
   const gA = playersA.map(p => toGlicko2(p.rating, p.rd, p.vol));
   const gB = playersB.map(p => toGlicko2(p.rating, p.rd, p.vol));
 
   // Calculate team averages
-  const muA = (gA[0][0] + gA[1][0]) / 2;
-  const phiA = (gA[0][1] + gA[1][1]) / 2;
-  const muB = (gB[0][0] + gB[1][0]) / 2;
-  const phiB = (gB[0][1] + gB[1][1]) / 2;
+  const muA = average(gA.map(([mu]) => mu));
+  const phiA = average(gA.map(([, phi]) => phi));
+  const muB = average(gB.map(([mu]) => mu));
+  const phiB = average(gB.map(([, phi]) => phi));
 
   // Update team ratings
-  const [muAnew, phiAnew, sigmaA] = updateSingle(muA, phiA, SIGMA0, muB, phiB, scoreA);
-  const [muBnew, phiBnew, sigmaB] = updateSingle(muB, phiB, SIGMA0, muA, phiA, 1 - scoreA);
+  const [muAnew] = updateSingle(muA, phiA, SIGMA0, muB, phiB, scoreA);
+  const [muBnew] = updateSingle(muB, phiB, SIGMA0, muA, phiA, 1 - scoreA);
 
   // Calculate rating changes
   const dmuA = (muAnew - muA) * SCALE;
   const dmuB = (muBnew - muB) * SCALE;
 
-  // Update team A players
-  const updA = gA.map(([mu]) => {
-    const [newRating, newRd, newSigma] = fromGlicko2(mu + dmuA, phiAnew, sigmaA);
+  const applyChange = (dmu: number) => ([mu, phi, sigma]: [number, number, number]): PlayerRating => {
+    const newPhi = phi * 173.7178 > MIN_PHI ? phi * 0.98 : phi;
+    const [newRating, newRd, newSigma] = fromGlicko2(mu + dmu, newPhi, sigma);
+    // rating is stored as an integer
     return { rating: Math.round(newRating), rd: newRd, vol: newSigma };
-  });
+  };
 
-  // Update team B players
-  const updB = gB.map(([mu]) => {
-    const [newRating, newRd, newSigma] = fromGlicko2(mu + dmuB, phiBnew, sigmaB);
-    return { rating: Math.round(newRating), rd: newRd, vol: newSigma };
-  });
-
-  return { teamA: updA, teamB: updB };
+  return { teamA: gA.map(applyChange(dmuA)), teamB: gB.map(applyChange(dmuB)) };
 }
 
 /**
- * Update player ratings after a 2v2 match
- * @param teamAPlayerIds Array of 2 player IDs for team A
- * @param teamBPlayerIds Array of 2 player IDs for team B
+ * Update player ratings after a round between two teams
+ * @param teamAPlayerIds Player IDs of team A (its whole roster)
+ * @param teamBPlayerIds Player IDs of team B (its whole roster)
  * @param scoreA Result for team A (1 = win, 0.5 = draw, 0 = loss)
+ * @param db Prisma client or transaction to write with
  */
 export async function updateRatingsAfterMatch(
   teamAPlayerIds: number[],
   teamBPlayerIds: number[],
-  scoreA: number
+  scoreA: number,
+  db: Prisma.TransactionClient = prisma
 ): Promise<void> {
-  if (teamAPlayerIds.length !== 2 || teamBPlayerIds.length !== 2) {
-    throw new Error("Each team must have exactly 2 players");
+  if (teamAPlayerIds.length === 0 || teamBPlayerIds.length === 0) {
+    throw new Error("Each team needs at least one player");
   }
   if (scoreA < 0 || scoreA > 1) {
     throw new Error("Score must be between 0 and 1 (0=loss, 0.5=draw, 1=win)");
@@ -124,56 +128,33 @@ export async function updateRatingsAfterMatch(
 
   // Fetch all players
   const allPlayerIds = [...teamAPlayerIds, ...teamBPlayerIds];
-  const players = await prisma.player.findMany({
+  const players = await db.player.findMany({
     where: { id: { in: allPlayerIds } },
     select: { id: true, rating: true, rating_deviation: true, volatility: true }
   });
 
-  if (players.length !== 4) {
-    throw new Error("Could not find all players in database");
-  }
-
   // Map players to teams
   const teamAPlayers = players.filter(p => teamAPlayerIds.includes(p.id));
   const teamBPlayers = players.filter(p => teamBPlayerIds.includes(p.id));
-
-  // Prepare player data for update2v2
-  const playersA = teamAPlayers.map(p => ({
-    rating: p.rating,
-    rd: p.rating_deviation,
-    vol: p.volatility
-  }));
-  const playersB = teamBPlayers.map(p => ({
-    rating: p.rating,
-    rd: p.rating_deviation,
-    vol: p.volatility
-  }));
-
-  // Calculate new ratings using update2v2
-  const { teamA: updatedA, teamB: updatedB } = update2v2(playersA, playersB, scoreA);
-
-  // Update team A players in database
-  for (let i = 0; i < teamAPlayers.length; i++) {
-    const player = teamAPlayers[i];
-    const updated = updatedA[i];
-
-    await prisma.player.update({
-      where: { id: player.id },
-      data: {
-        rating: updated.rating,
-        rating_deviation: updated.rd,
-        volatility: updated.vol
-      }
-    });
+  if (teamAPlayers.length === 0 || teamBPlayers.length === 0) {
+    throw new Error("Could not find the players in database");
   }
 
-  // Update team B players in database
-  for (let i = 0; i < teamBPlayers.length; i++) {
-    const player = teamBPlayers[i];
-    const updated = updatedB[i];
+  const toRating = (p: typeof players[number]): PlayerRating => ({
+    rating: p.rating,
+    rd: p.rating_deviation,
+    vol: p.volatility
+  });
 
-    await prisma.player.update({
-      where: { id: player.id },
+  const { teamA: updatedA, teamB: updatedB } = updateTeams(teamAPlayers.map(toRating), teamBPlayers.map(toRating), scoreA);
+
+  const updates = [
+    ...teamAPlayers.map((player, i) => ({ id: player.id, updated: updatedA[i] })),
+    ...teamBPlayers.map((player, i) => ({ id: player.id, updated: updatedB[i] })),
+  ];
+  for (const { id, updated } of updates) {
+    await db.player.update({
+      where: { id },
       data: {
         rating: updated.rating,
         rating_deviation: updated.rd,

@@ -8,19 +8,22 @@ export type RoundState = {
   setRoundData: (data: RoundExtendedResponse) => void;
 };
 
+const initialRoundData = {
+  team1_id: null,
+  team2_id: null,
+} as RoundExtendedResponse;
+
 const useRoundStore = create<RoundState>()(
   persist(
     (set) => ({
-      roundData: {
-        team1_id: null,
-        team2_id: null,
-      },
+      roundData: initialRoundData,
 
       setRoundData: (data) => set((state) => ({roundData: {...state.roundData, ...data}})),
 
       resetRound: () => {
+        // components destructure roundData, so it is reset to the empty shape instead of null
         set({
-          roundData: null,
+          roundData: initialRoundData,
         });
       },
     }),

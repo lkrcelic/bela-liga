@@ -1,3 +1,4 @@
+import {responseErrorMessage} from "@/app/_fetchers/errorMessage";
 import {BelaResultResponse} from "@/app/_interfaces/belaResult";
 
 type UpdateOngoingBelaResultAPIProps = {
@@ -18,7 +19,7 @@ export async function updateOngoingBelaResultAPI({
     });
 
     if (!response.ok) {
-        throw new Error(`Failed to update bela ongoing result: ${response.statusText}`);
+        throw new Error(await responseErrorMessage(response, "Failed to update the hand"));
     }
 
     return response.json();
