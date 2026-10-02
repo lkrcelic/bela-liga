@@ -13,7 +13,8 @@ export async function GET(request: NextRequest, {params}: { params: { id: string
 
         return NextResponse.json(ongoingMatch, {status: STATUS.OK});
     } catch (error) {
-        console.error(error);
+        // a finished match is gone, which phones following it check for regularly, so that isn't logged
+        if (!(error instanceof Error && error.message === "Ongoing match not found.")) console.error(error);
         return NextResponse.json({error: "Failed to fetch ongoing match."}, {status: STATUS.NotFound});
     }
 }
