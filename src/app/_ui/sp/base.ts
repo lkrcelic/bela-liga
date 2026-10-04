@@ -11,7 +11,7 @@ export const buttonBase = {
   color: "inherit",
   font: "inherit",
   cursor: "pointer",
-  textAlign: "inherit",
+  textAlign: "center",
   WebkitTapHighlightColor: "transparent",
   "&:focus-visible": {outline: `3px solid ${color.navy}`, outlineOffset: "2px"},
   "&:disabled": {cursor: "default"},

@@ -14,13 +14,13 @@ type CardProps = {
 };
 
 // White rounded surface
-export function Card({children, sx, component = "div", ...rest}: CardProps) {
+export const Card = React.forwardRef<HTMLDivElement, CardProps>(function Card({children, sx, component = "div", ...rest}, ref) {
   return (
-    <Box component={component} sx={mergeSx(cardSx, sx)} {...rest}>
+    <Box component={component} ref={ref} sx={mergeSx(cardSx, sx)} {...rest}>
       {children}
     </Box>
   );
-}
+});
 
 // White card whose content scrolls inside it (lists that fill the rest of the screen)
 export function ScrollCard({children, sx, ...rest}: CardProps) {

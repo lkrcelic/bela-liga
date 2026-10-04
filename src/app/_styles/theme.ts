@@ -130,6 +130,7 @@ const themeOptions: ThemeOptions = {
         },
         "@keyframes spSpin": {to: {transform: "rotate(360deg)"}},
         "@keyframes spStepIn": {from: {transform: "translateX(28px)", opacity: 0}, to: {transform: "none", opacity: 1}},
+        "@keyframes spStepBack": {from: {transform: "translateX(-28px)", opacity: 0}, to: {transform: "none", opacity: 1}},
         "@keyframes spFadeUp": {from: {transform: "translateY(14px)", opacity: 0}, to: {transform: "none", opacity: 1}},
         "@media (prefers-reduced-motion: reduce)": {
           "*, *::before, *::after": {
