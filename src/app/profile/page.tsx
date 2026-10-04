@@ -1,12 +1,16 @@
 "use client";
 
-import {getPlayerByIdAPI} from "@/app/_fetchers/player/getById";
+import {getPlayerByIdAPI, PlayerById} from "@/app/_fetchers/player/getById";
+import {updateBirthDateAPI} from "@/app/_fetchers/player/updateBirthDate";
 import useIsDesktop from "@/app/_hooks/useIsDesktop";
 import useMyTeams from "@/app/_hooks/useMyTeams";
-import {PlayerResponse} from "@/app/_interfaces/player";
+import {leagueDateString} from "@/app/_lib/dates";
+import {displayDate} from "@/app/_lib/ui/text";
 import useAuthStore from "@/app/_store/authStore";
 import {color, font} from "@/app/_styles/tokens";
+import EditRoundedIcon from "@mui/icons-material/EditRounded";
 import {
+  buttonBase,
   Card,
   CenteredSpinner,
   DesktopShell,
@@ -30,8 +34,9 @@ export default function ProfilePage() {
   const router = useTransitionRouter();
   const isDesktop = useIsDesktop();
   const user = useAuthStore((s) => s.user);
+  const setUser = useAuthStore((s) => s.setUser);
   const {teams, loading: teamsLoading} = useMyTeams();
-  const [player, setPlayer] = useState<PlayerResponse | null>(null);
+  const [player, setPlayer] = useState<PlayerById | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(() => {
@@ -105,6 +110,18 @@ export default function ProfilePage() {
             </Box>
           </Box>
         ))}
+        {player && (
+          <BirthDateRow
+            value={player.birth_date ?? null}
+            desktop={desktop}
+            onSave={async (birthDate) => {
+              await updateBirthDateAPI(player.id, birthDate);
+              setPlayer({...player, birth_date: birthDate});
+              // a Google player who hadn't given it yet isn't asked again
+              if (user?.needs_birth_date) setUser({...user, needs_birth_date: false});
+            }}
+          />
+        )}
       </Card>
     </Box>
   );
@@ -168,5 +185,99 @@ export default function ProfilePage() {
         Početni zaslon
       </PrimaryButton>
     </Screen>
+  );
+}
+
+// The last Details row: the birth date with an edit button, opening a date field with Cancel and Save in place
+function BirthDateRow({value, desktop, onSave}: {value: string | null; desktop: boolean; onSave: (birthDate: string) => Promise<void>}) {
+  const [draft, setDraft] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const today = leagueDateString();
+  const px = desktop ? "18px" : "16px";
+
+  if (draft == null) {
+    return (
+      <Box sx={{height: desktop ? 56 : 52, display: "flex", alignItems: "center", gap: "8px", pl: px, pr: "6px", borderBottom: `1px solid ${color.line}`}}>
+        <Box component="dt" sx={{flex: "none", whiteSpace: "nowrap", fontSize: 15, color: color.muted}}>
+          Birth date
+        </Box>
+        <Box component="dd" sx={{m: 0, flex: 1, minWidth: 0, textAlign: "right", fontSize: 15, fontWeight: 600, whiteSpace: "nowrap", ...tabular}}>
+          {value ? `${displayDate(value)}.` : "—"}
+        </Box>
+        <Box
+          component="button"
+          type="button"
+          aria-label="Edit birth date"
+          onClick={() => {
+            setDraft(value ?? "");
+            setError(null);
+          }}
+          sx={{...buttonBase, width: 44, height: 44, flex: "none", borderRadius: "12px", color: color.navy, display: "flex", alignItems: "center", justifyContent: "center", "&:hover": {background: color.paper}, "& svg": {fontSize: 20}}}
+        >
+          <EditRoundedIcon />
+        </Box>
+      </Box>
+    );
+  }
+
+  const valid = /^\d{4}-\d{2}-\d{2}$/.test(draft) && draft >= "1900-01-01" && draft <= today;
+  const canSave = valid && draft !== value && !saving;
+  const save = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!canSave) return;
+    setSaving(true);
+    setError(null);
+    try {
+      await onSave(draft);
+      setDraft(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Datum rođenja nije spremljen.");
+    }
+    setSaving(false);
+  };
+
+  return (
+    <Box sx={{display: "flex", flexDirection: "column", gap: "10px", p: `12px ${px} 14px`, borderBottom: `1px solid ${color.line}`, background: color.creamSoft}}>
+      <Box component="dt" sx={{fontSize: 13, fontWeight: 600, color: color.inkSoft}}>
+        <label htmlFor="birth-date">Birth date</label>
+      </Box>
+      <Box component="dd" sx={{m: 0}}>
+        <Box component="form" onSubmit={save} noValidate sx={{display: "flex", flexDirection: "column", gap: "10px"}}>
+          <Box
+            component="input"
+            id="birth-date"
+            type="date"
+            autoComplete="bday"
+            autoFocus
+            min="1900-01-01"
+            max={today}
+            value={draft}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setDraft(e.target.value)}
+            sx={{height: 50, width: "100%", boxSizing: "border-box", borderRadius: "14px", border: `1.5px solid ${color.navy}`, background: color.card, px: "14px", font: "inherit", fontSize: 16, color: color.ink, outline: "none"}}
+          />
+          {error && <ErrorNote>{error}</ErrorNote>}
+          <Box sx={{display: "flex", gap: "8px"}}>
+            <Box
+              component="button"
+              type="button"
+              onClick={() => setDraft(null)}
+              sx={{...buttonBase, flex: 1, height: 46, borderRadius: "14px", border: "1.5px solid rgba(60,74,103,.25)", background: color.card, color: color.navy, fontSize: 15, fontWeight: 600}}
+            >
+              Cancel
+            </Box>
+            <Box
+              component="button"
+              type="submit"
+              disabled={!canSave}
+              aria-busy={saving || undefined}
+              sx={{...buttonBase, flex: 1, height: 46, borderRadius: "14px", background: color.navy, color: "#FFFFFF", fontSize: 15, fontWeight: 600, "&:disabled": {opacity: 0.4}}}
+            >
+              {saving ? "Spremam…" : "Save"}
+            </Box>
+          </Box>
+        </Box>
+      </Box>
+    </Box>
   );
 }

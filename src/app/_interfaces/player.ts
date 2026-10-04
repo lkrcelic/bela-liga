@@ -49,6 +49,16 @@ export const PlayerResponseValidation = PlayerPartialResponseValidation.extend({
   rating: z.number().optional(),
 });
 
+// One player as the player themselves (or an admin) sees them, with the birth date as YYYY-MM-DD (null when not given)
+export const PlayerSelfResponseValidation = PlayerResponseValidation.extend({
+  birth_date: z
+    .date()
+    .nullable()
+    .optional()
+    .transform((d) => (d ? d.toISOString().slice(0, 10) : null)),
+});
+export type PlayerSelfResponse = z.infer<typeof PlayerSelfResponseValidation>;
+
 const PlayerResponses = z.array(PlayerResponseValidation);
 
 export const playersOutput = PlayerResponses;

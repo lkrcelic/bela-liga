@@ -5,7 +5,7 @@ import useIsDesktop from "@/app/_hooks/useIsDesktop";
 import useLeagues, {LeagueOption} from "@/app/_hooks/useLeagues";
 import useLeagueTeams, {LeagueTeam} from "@/app/_hooks/useLeagueTeams";
 import {matchesQuery, plural} from "@/app/_lib/ui/text";
-import {color, shadow} from "@/app/_styles/tokens";
+import {color, font, shadow} from "@/app/_styles/tokens";
 import {
   buttonBase,
   Card,
@@ -163,6 +163,7 @@ export default function CreateRound() {
               <SectionLabel id="cr-options">Options</SectionLabel>
               {steppers}
             </Box>
+            {!teamState && teams && <NotInRound teams={teams} isOn={isOn} inactive={inactive} onAddBack={toggle} />}
             <Box sx={{mt: "auto", display: "flex", flexDirection: "column", gap: "10px"}}>
               {createError && <ErrorNote>{createError}</ErrorNote>}
               {createButton}
@@ -292,6 +293,98 @@ export default function CreateRound() {
       {createError && <ErrorNote>{createError}</ErrorNote>}
       {createButton}
     </Screen>
+  );
+}
+
+// Desktop: the teams that won't be paired tonight, so the admin sees who's missing without scanning the list.
+// "Inactive" teams are off because Manage League marks them inactive, "Off" ones were switched off here; a click
+// on either puts the team back in the round.
+function NotInRound({
+  teams,
+  isOn,
+  inactive,
+  onAddBack,
+}: {
+  teams: LeagueTeam[];
+  isOn: (t: LeagueTeam) => boolean;
+  inactive: Set<number>;
+  onAddBack: (id: number) => void;
+}) {
+  const out = teams.filter((t) => !isOn(t));
+  const inactiveOut = out.filter((t) => inactive.has(t.id)).length;
+  return (
+    <Box component="section" aria-labelledby="cr-out" sx={{display: "flex", flexDirection: "column", gap: "8px", minHeight: 0}}>
+      <Box sx={{px: "6px", display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: "8px"}}>
+        <SectionLabel id="cr-out" sx={{px: 0}}>
+          Not in this round
+        </SectionLabel>
+        <Box component="span" sx={{fontSize: 13, fontWeight: 700, color: color.muted, fontVariantNumeric: "tabular-nums"}}>
+          {teams.length - out.length} / {teams.length} playing
+        </Box>
+      </Box>
+      <Card sx={{borderRadius: "18px", p: "14px", display: "flex", flexDirection: "column", gap: "10px", minHeight: 0}}>
+        <Box role="status" sx={{display: "flex", alignItems: "baseline", gap: "10px", flexWrap: "wrap"}}>
+          <Box component="span" sx={{fontFamily: font.display, fontSize: 34, fontWeight: 800, lineHeight: 1, fontVariantNumeric: "tabular-nums"}}>
+            {out.length}
+          </Box>
+          <Box component="span" sx={{fontSize: 14, color: color.inkSoft}}>
+            {out.length === 1 ? "team will sit out" : "teams will sit out"}
+          </Box>
+          {out.length > 0 && (
+            <Box component="span" sx={{ml: "auto", fontSize: 12, fontWeight: 600, color: color.muted, whiteSpace: "nowrap"}}>
+              {inactiveOut} inactive · {out.length - inactiveOut} off
+            </Box>
+          )}
+        </Box>
+        {out.length > 0 ? (
+          <Box component="ul" aria-label="Ekipe koje ne igraju" sx={{listStyle: "none", m: 0, p: 0, display: "flex", flexWrap: "wrap", alignContent: "flex-start", gap: "6px", maxHeight: 228, overflowY: "auto", scrollbarGutter: "stable"}}>
+            {out.map((t) => {
+              const why = inactive.has(t.id) ? "Inactive" : "Off";
+              return (
+                <Box component="li" key={t.id} sx={{minWidth: 0, maxWidth: "100%"}}>
+                  <Box
+                    component="button"
+                    type="button"
+                    onClick={() => onAddBack(t.id)}
+                    title={why === "Inactive" ? "Inactive in Manage League · click to add for tonight" : "Click to add back"}
+                    aria-label={`${t.name}, ${why}. Dodaj u kolo`}
+                    sx={{
+                      ...buttonBase,
+                      maxWidth: "100%",
+                      height: 32,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      pl: "12px",
+                      pr: "6px",
+                      borderRadius: "16px",
+                      background: why === "Inactive" ? color.paper : "rgba(188,71,73,.1)",
+                      color: why === "Inactive" ? color.muted : color.red,
+                      fontSize: 13,
+                      fontWeight: 600,
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    <Box component="span" sx={{overflow: "hidden", textOverflow: "ellipsis"}}>
+                      {t.name}
+                    </Box>
+                    <Box
+                      component="span"
+                      aria-hidden
+                      sx={{height: 20, px: "6px", flex: "none", borderRadius: "10px", background: "rgba(255,255,255,.7)", fontSize: 10, fontWeight: 700, letterSpacing: ".06em", textTransform: "uppercase", display: "flex", alignItems: "center"}}
+                    >
+                      {why}
+                    </Box>
+                  </Box>
+                </Box>
+              );
+            })}
+          </Box>
+        ) : (
+          <Box sx={{fontSize: 14, fontWeight: 600, color: color.green}}>All teams are in this round.</Box>
+        )}
+      </Card>
+    </Box>
   );
 }
 
