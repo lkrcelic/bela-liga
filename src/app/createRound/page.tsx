@@ -1,6 +1,6 @@
 "use client";
 
-import {createMultipleRoundsAPI} from "@/app/_fetchers/round/createMultipleRounds";
+import {createMultipleRoundsAPI, RepeatMatchupsError} from "@/app/_fetchers/round/createMultipleRounds";
 import useIsDesktop from "@/app/_hooks/useIsDesktop";
 import useLeagues, {LeagueOption} from "@/app/_hooks/useLeagues";
 import useLeagueTeams, {LeagueTeam} from "@/app/_hooks/useLeagueTeams";
@@ -15,12 +15,14 @@ import {
   IconCircleButton,
   IconTile,
   LoadingRows,
+  OutlineButton,
   PrimaryButton,
   Screen,
   ScreenTitle,
   ScrollCard,
   SearchInput,
   SectionLabel,
+  SolidButton,
   Stepper,
   SwitchRow,
   SwitchTrack,
@@ -29,9 +31,10 @@ import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
 import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
 import EmojiEventsRoundedIcon from "@mui/icons-material/EmojiEventsRounded";
-import {Box} from "@mui/material";
+import WarningRoundedIcon from "@mui/icons-material/WarningRounded";
+import {Box, Dialog} from "@mui/material";
 import {useTransitionRouter} from "@/app/_lib/viewTransitions";
-import {useEffect, useMemo, useState} from "react";
+import {useEffect, useId, useMemo, useState} from "react";
 
 const MAX_ROUNDS = 5;
 const MAX_WINDOW = 200;
@@ -48,6 +51,8 @@ export default function CreateRound() {
   const [flipped, setFlipped] = useState<Set<number>>(new Set());
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
+  // the pairs that would meet twice today, while the admin decides whether to create the rounds anyway
+  const [repeats, setRepeats] = useState<[string, string][] | null>(null);
 
   // the desktop shows the league list and the teams together, so it starts on the league being played now
   const activeLeague = leagueId ?? (isDesktop ? leagues.find((l) => l.active)?.id ?? leagues[0]?.id ?? null : null);
@@ -85,19 +90,38 @@ export default function CreateRound() {
       return next;
     });
 
-  const create = async () => {
+  const create = async ({window = windowSize, allowRepeats = false}: {window?: number; allowRepeats?: boolean} = {}) => {
     if (activeLeague == null || count < 2 || creating) return;
     setCreating(true);
     setCreateError(null);
+    setRepeats(null);
     try {
-      const roundNumber = await createMultipleRoundsAPI(activeLeague, selected.map((t) => t.id), rounds, windowSize);
+      const roundNumber = await createMultipleRoundsAPI(activeLeague, selected.map((t) => t.id), rounds, window, allowRepeats);
       // replace, so the back button doesn't lead to this form again
       router.replace(`/round/pairings/${roundNumber}?league=${activeLeague}`);
     } catch (e) {
-      setCreateError(e instanceof Error ? e.message : "Kolo nije moguće napraviti.");
+      if (e instanceof RepeatMatchupsError) setRepeats(e.repeats);
+      else setCreateError(e instanceof Error ? e.message : "Kolo nije moguće napraviti.");
       setCreating(false);
     }
   };
+  // a bigger window gives every team more possible opponents; once one window holds every team it can't grow further
+  const expandedWindow = Math.min(MAX_WINDOW, windowSize + 2);
+  const canExpand = windowSize < count && windowSize < MAX_WINDOW;
+  const expandWindow = () => {
+    setWindowSize(expandedWindow);
+    create({window: expandedWindow});
+  };
+  const repeatsDialog = repeats && (
+    <RepeatsDialog
+      repeats={repeats}
+      windowSize={windowSize}
+      expandedWindow={canExpand ? expandedWindow : null}
+      onContinue={() => create({allowRepeats: true})}
+      onExpand={expandWindow}
+      onClose={() => setRepeats(null)}
+    />
+  );
 
   const steppers = (
     <Box sx={{display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,1fr)", gap: "10px"}}>
@@ -122,7 +146,7 @@ export default function CreateRound() {
   );
 
   const createButton = (
-    <PrimaryButton onClick={create} disabled={count < 2} loading={creating}>
+    <PrimaryButton onClick={() => create()} disabled={count < 2} loading={creating}>
       {creating ? "Stvaram kolo…" : `Create round · ${count} ${plural(count, "team", "teams", "teams")}`}
     </PrimaryButton>
   );
@@ -169,6 +193,7 @@ export default function CreateRound() {
               {createButton}
             </Box>
           </Box>
+          {repeatsDialog}
           <Card component="section" aria-label="Prisutne ekipe" sx={{minHeight: 0, display: "flex", flexDirection: "column", overflow: "hidden", borderRadius: "24px"}}>
             <Box sx={{display: "flex", alignItems: "center", gap: "12px", p: "14px", borderBottom: `1px solid rgba(60,74,103,.1)`}}>
               <SearchInput soft height={48} placeholder="Search" aria-label="Traži ekipu" value={query} onChange={(e) => setQuery(e.target.value)} sx={{flex: 1}} />
@@ -292,7 +317,77 @@ export default function CreateRound() {
       </ScrollCard>
       {createError && <ErrorNote>{createError}</ErrorNote>}
       {createButton}
+      {repeatsDialog}
     </Screen>
+  );
+}
+
+// The rounds can't be made without some teams meeting twice today (with each other earlier today, or in two of the
+// new rounds). The admin creates them anyway or tries again with a bigger window, which gives everyone more opponents.
+function RepeatsDialog({
+  repeats,
+  windowSize,
+  expandedWindow,
+  onContinue,
+  onExpand,
+  onClose,
+}: {
+  repeats: [string, string][];
+  windowSize: number;
+  // null when the window already holds every team
+  expandedWindow: number | null;
+  onContinue: () => void;
+  onExpand: () => void;
+  onClose: () => void;
+}) {
+  const titleId = useId();
+  return (
+    <Dialog
+      open
+      onClose={onClose}
+      aria-labelledby={titleId}
+      slotProps={{backdrop: {sx: {background: "rgba(21,24,31,.32)"}}}}
+      PaperProps={{sx: {width: 480, maxWidth: "calc(100% - 32px)", m: "16px", borderRadius: "24px", p: "24px", display: "flex", flexDirection: "column", gap: "16px", boxShadow: "0 30px 80px rgba(21,24,31,.3)"}}}
+    >
+      <Box sx={{display: "flex", alignItems: "center", gap: "12px"}}>
+        <Box aria-hidden sx={{width: 44, height: 44, flex: "none", borderRadius: "14px", background: "rgba(188,71,73,.1)", color: color.red, display: "flex", alignItems: "center", justifyContent: "center", "& svg": {fontSize: 26}}}>
+          <WarningRoundedIcon />
+        </Box>
+        <Box component="h2" id={titleId} sx={{m: 0, fontFamily: font.display, fontSize: 24, fontWeight: 800, lineHeight: 1.1}}>
+          Some teams will play twice today
+        </Box>
+      </Box>
+      <Box component="ul" aria-label="Ekipe koje se danas sastaju dvaput" sx={{listStyle: "none", m: 0, p: "4px 14px", borderRadius: "16px", background: color.paper, maxHeight: 220, overflowY: "auto"}}>
+        {repeats.map(([a, b], i) => (
+          <Box
+            component="li"
+            key={`${a}-${b}-${i}`}
+            sx={{minHeight: 40, display: "grid", gridTemplateColumns: "minmax(0,1fr) auto minmax(0,1fr)", alignItems: "center", gap: "8px", fontSize: 15, fontWeight: 600, borderBottom: i < repeats.length - 1 ? "1px solid rgba(60,74,103,.1)" : "none", "& > span:not([aria-hidden])": {overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap"}}}
+          >
+            <span>{a}</span>
+            <Box component="span" aria-hidden sx={{fontSize: 13, color: color.placeholder}}>
+              vs
+            </Box>
+            <Box component="span" sx={{textAlign: "right"}}>
+              {b}
+            </Box>
+          </Box>
+        ))}
+      </Box>
+      <Box sx={{fontSize: 14, lineHeight: 1.4, color: color.inkSoft}}>
+        {expandedWindow
+          ? `A bigger window gives every team more opponents to choose from (window ${windowSize} → ${expandedWindow}).`
+          : "The window already holds every team, so it can't be expanded."}
+      </Box>
+      <Box sx={{display: "flex", gap: "10px", flexWrap: "wrap"}}>
+        <OutlineButton height={52} onClick={onExpand} disabled={!expandedWindow} sx={{flex: "1 1 160px", fontSize: 16, border: `1.5px solid rgba(60,74,103,.25)`, "&:disabled": {opacity: 0.4}}}>
+          Expand the window
+        </OutlineButton>
+        <SolidButton height={52} onClick={onContinue} sx={{flex: "1 1 160px", fontSize: 16}}>
+          Continue
+        </SolidButton>
+      </Box>
+    </Dialog>
   );
 }
 
