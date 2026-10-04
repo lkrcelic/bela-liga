@@ -67,11 +67,11 @@ export function PlayerCard({detail, desktop = false}: {detail: PlayerRatingDetai
         </Box>
         <Box sx={{display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "6px", pb: "4px"}}>
           {player.rounds > 0 && (
-            <Box component="span" sx={{height: 30, display: "flex", alignItems: "center", px: "10px", borderRadius: "15px", background: color.card, color: changeInk(player.change), fontSize: desktop ? 15 : 16, fontWeight: 700, ...tabular}}>
+            <Box component="span" sx={{height: 30, display: "flex", alignItems: "center", px: "10px", borderRadius: "15px", background: color.card, color: changeInk(player.change), fontSize: desktop ? 15 : 16, fontWeight: 700, whiteSpace: "nowrap", ...tabular}}>
               {formatChange(player.change)} zadnja večer
             </Box>
           )}
-          <Box component="span" sx={{fontSize: 14, fontWeight: 600, color: color.navy}}>
+          <Box component="span" sx={{fontSize: 14, fontWeight: 600, color: color.navy, whiteSpace: "nowrap"}}>
             #{player.rank} od {total}
           </Box>
         </Box>
