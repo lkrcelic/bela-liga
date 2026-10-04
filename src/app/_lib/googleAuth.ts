@@ -38,8 +38,9 @@ function CustomPrismaAdapter() {
             username: await availableUsername(data.email.split('@')[0]), // Use part of email as username
             password_hash: "", // Empty password for OAuth users
             player_role: "PLAYER", // Default role - using an enum value from RoleEnum
-            first_name: data.name?.split(' ')[0] || "",
-            last_name: data.name?.split(' ')[1] || "",
+            // "Ana Marija Horvat" -> first name "Ana", last name "Marija Horvat"
+            first_name: data.name?.trim().split(/\s+/)[0] || "",
+            last_name: data.name?.trim().split(/\s+/).slice(1).join(" ") || "",
             birth_date: new Date(), // Default date
           },
         });

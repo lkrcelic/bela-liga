@@ -22,16 +22,12 @@ export async function getAuthorizedUser(req: NextRequest): Promise<Player | null
         },
       });
 
-      if (!session?.user) {
-        return null;
+      // an expired Google session doesn't end a valid password login, so fall through to the Lucia cookie
+      if (session?.user) {
+        return session.user;
       }
-
-      return prisma.player.findUnique({
-        where: {id: session.userId},
-      });
     } catch (error) {
       console.error("Error validating NextAuth session:", error);
-      return null;
     }
   }
 

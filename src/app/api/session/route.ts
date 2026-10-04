@@ -8,8 +8,8 @@ export async function GET(req: NextRequest) {
   try {
     const user = await getAuthorizedUser(req);
     if (!user || user.player_role !== "ADMIN") {
-      return NextResponse.json({message: "You are not authorized for this action."},
-        {status: STATUS.NotAllowed});
+      return NextResponse.json({error: "You are not authorized for this action."},
+        {status: user ? STATUS.Forbidden : STATUS.Unauthorized});
     }
 
     const luciaSessions = LuciaSessionsOut.parse(await prisma.luciaSession.findMany({
