@@ -85,3 +85,9 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
 
 20. **Player search matches first and last names too**; every word of the query must match one of username, first or
     last name, results sorted by username and capped at 20.
+
+21. **Logins last 30 days and slide**: renewed on every app load instead of ending after 4 hours (BACKEND_REVIEW.md, A).
+    Session checks stay optimistic in the middleware and authoritative in the API routes (I).
+
+22. **A Google login joins the password account with the same email (any case)**, and Google players are asked for
+    their birth date once (BACKEND_REVIEW.md, G).

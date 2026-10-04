@@ -7,6 +7,8 @@ No screen is blocked. Items resolved in the follow-up round:
 - ~~Player search matches usernames only~~ — now also first and last names (DECISIONS 20).
 - ~~Route transitions / card morph~~ — View Transitions API (DECISIONS 7).
 - ~~Old components left unused~~ — removed (DECISIONS 19).
+- ~~Middleware only checks the cookie signature~~ — kept as the optimistic check; dead cookies are now cleared by
+  `/api/auth/me` (BACKEND_REVIEW.md, I).
 
 Still open:
 
@@ -16,6 +18,4 @@ Still open:
    `table` element before and after, the update resolves when the new route is committed (5–600 ms in dev, before
    the 1.5 s safety timeout) and the CSS fallback is switched off while a transition runs. Worth a quick look in
    Chrome or Safari 18.
-3. **Server-side session check**: the middleware only verifies the cookie signature. The client now sends an
-   invalid session to the login page, but a proper fix is to validate the session in the middleware.
-4. **Nothing is pushed.** All work is committed on the local branch `feat/new-screens`; master is untouched.
+3. **Nothing is pushed.** All work is committed on the local branch `feat/new-screens`; master is untouched.
