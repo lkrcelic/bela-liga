@@ -6,10 +6,10 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "@/app/_lib/prisma";
 
 // Glicko-2 Constants
-const MU0 = 1500;      // Starting rating
-const PHI0 = 350;      // Starting rating deviation
+export const MU0 = 1500;      // Starting rating
+export const PHI0 = 350;      // Starting rating deviation
 const MIN_PHI = 100;   // Minimum rating deviation
-const SIGMA0 = 0.06;   // Starting volatility
+export const SIGMA0 = 0.06;   // Starting volatility
 // const TAU = 0.5;       // System constant (reserved for future use)
 const Q = Math.log(10) / 400;
 const SCALE = 16;

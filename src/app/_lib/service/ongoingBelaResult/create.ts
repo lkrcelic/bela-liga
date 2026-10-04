@@ -5,8 +5,12 @@ import {InvalidResultError, normalizeBelaResult} from "@/app/_lib/validation/val
 import {matchWinner} from "@/app/_lib/bela/scoring";
 
 // Saves a hand and adds it to the match score in one transaction, so the score can't drift from the hands.
-export async function createBelaResult(resultData: BelaResultCreateRequest): Promise<void> {
-    const result = normalizeBelaResult(resultData);
+// `normalize` checks the hand and recomputes its totals (an admin's manual hand uses its own rule).
+export async function createBelaResult(
+    resultData: BelaResultCreateRequest,
+    normalize: (r: BelaResultCreateRequest) => BelaResultCreateRequest = normalizeBelaResult,
+): Promise<void> {
+    const result = normalize(resultData);
 
     await prisma.$transaction(async (tx) => {
         // Lock the match row so two phones saving at the same time are applied one after the other

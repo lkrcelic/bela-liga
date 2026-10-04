@@ -5,12 +5,14 @@ import {prisma} from "@/app/_lib/prisma";
 type UpdateOngoingBelaResultType = {
     result_id: number,
     resultData: BelaResultCreateRequest,
+    // checks the hand and recomputes its totals (an admin's manual hand uses its own rule)
+    normalize?: (r: BelaResultCreateRequest) => BelaResultCreateRequest,
 }
 
 // Replaces a hand and moves the match score by the difference, all in one transaction.
 // The match is taken from the stored hand, never from the request body.
-export async function updateOngoingBelaResult({result_id, resultData}: UpdateOngoingBelaResultType): Promise<void> {
-    const {announcements, ...nonRelationalData} = normalizeBelaResult(resultData);
+export async function updateOngoingBelaResult({result_id, resultData, normalize = normalizeBelaResult}: UpdateOngoingBelaResultType): Promise<void> {
+    const {announcements, ...nonRelationalData} = normalize(resultData);
     delete nonRelationalData.match_id;
 
     await prisma.$transaction(async (tx) => {
