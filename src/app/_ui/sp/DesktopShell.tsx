@@ -83,7 +83,8 @@ export function DesktopShell({
         >
           <MenuRoundedIcon />
         </IconCircleButton>
-        <Box sx={{display: "flex", flexDirection: "column", gap: "6px", mr: "auto", minWidth: 0}}>
+        {/* the title keeps its width (up to half the header); crowded right-hand controls shrink and scroll instead */}
+        <Box sx={{display: "flex", flexDirection: "column", gap: "6px", mr: "auto", minWidth: 0, flexShrink: 0, maxWidth: "50%"}}>
           {eyebrow && <Eyebrow>{eyebrow}</Eyebrow>}
           <Box
             component="h1"
@@ -92,7 +93,7 @@ export function DesktopShell({
             {title}
           </Box>
         </Box>
-        {right && <Box sx={{display: "flex", alignItems: "center", gap: "12px", flex: "none"}}>{right}</Box>}
+        {right && <Box sx={{display: "flex", alignItems: "center", gap: "12px", flex: "0 1 auto", minWidth: 0}}>{right}</Box>}
       </Box>
       <Box component="main" sx={mergeSx({flex: 1, minHeight: 0, display: "flex", flexDirection: "column", gap: "20px"}, sx)}>
         {children}
