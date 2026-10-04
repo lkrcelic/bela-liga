@@ -28,9 +28,10 @@ export async function createOngoingMatch(createRequest: CreateOngoingMatchReques
             throw new InvalidResultError("Both matches of this round are already played.");
         }
 
-        // set here rather than by the column's CURRENT_TIME default, which uses the database's time zone
-        // while the time is read back as UTC
-        const ongoingMatch = await tx.ongoingMatch.create({data: {...createRequest, start_time: new Date()}});
+        // set here rather than by the columns' CURRENT_DATE / CURRENT_TIME defaults, which use the database's time
+        // zone while both are read back as UTC (after local midnight the date would be a day off)
+        const now = new Date();
+        const ongoingMatch = await tx.ongoingMatch.create({data: {...createRequest, match_date: now, start_time: now}});
 
         await tx.round.update({
             where: {id: createRequest.round_id},

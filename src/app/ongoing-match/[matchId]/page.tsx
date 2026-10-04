@@ -13,7 +13,7 @@ import {CenteredSpinner, DesktopShell, ErrorNote, Eyebrow, PrimaryButton, Screen
 import {currentRoundPath} from "@/app/ongoing-match/ui/currentRoundPath";
 import {HandList, HandRow, ScorePanel} from "@/app/ongoing-match/ui/BoardParts";
 import HandEntryPanel from "@/app/ongoing-match/ui/HandEntryPanel";
-import {openHandForEdit, previousTotals, rememberTotals, startNewHand, takeHandMark} from "@/app/ongoing-match/ui/handFlow";
+import {markWizardOpened, openHandForEdit, previousTotals, rememberTotals, startNewHand, takeHandMark} from "@/app/ongoing-match/ui/handFlow";
 import useMatchSides from "@/app/ongoing-match/ui/useMatchSides";
 import AddCircleRoundedIcon from "@mui/icons-material/AddCircleRounded";
 import DoneRoundedIcon from "@mui/icons-material/DoneRounded";
@@ -179,6 +179,7 @@ export default function ScoreBoardPage() {
     setOpening(resultId);
     try {
       await openHandForEdit(resultId);
+      markWizardOpened(matchId);
       router.push(`${pathname}/ongoing-result/${resultId}/trump-caller`);
     } catch {
       setOpening(null);
@@ -196,6 +197,7 @@ export default function ScoreBoardPage() {
 
   const newHand = () => {
     startNewHand(matchId);
+    markWizardOpened(matchId);
     router.push(`${pathname}/ongoing-result/new/trump-caller`);
   };
 

@@ -17,12 +17,14 @@ export default function useStartGame() {
     setError(null);
     try {
       const {roundId, ongoingMatchId} = await getOpenRoundByPlayerIdAPI();
-      if (ongoingMatchId) {
-        router.push(`/ongoing-match/${ongoingMatchId}`, "morph");
-      } else {
-        const ongoingMatch = await createOngoingMatchAPI({round_id: roundId, score_threshold: 1001});
-        router.push(`/ongoing-match/${ongoingMatch.id}`, "morph");
+      const id = ongoingMatchId ?? (await createOngoingMatchAPI({round_id: roundId, score_threshold: 1001})).id;
+      const target = `/ongoing-match/${id}`;
+      // already there (the desktop menu opened from the scoreboard): nothing will take over, so stop the spinner
+      if (window.location.pathname === target) {
+        setStarting(false);
+        return;
       }
+      router.push(target, "morph");
       // stays "starting" until the next page takes over
     } catch (e) {
       setError(e instanceof Error ? e.message : "Igru nije moguće pokrenuti.");
