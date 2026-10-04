@@ -1,6 +1,7 @@
 "use client";
 
 import {useActiveLeagueId} from "@/app/_hooks/useLeagues";
+import {useMyRating} from "@/app/_hooks/useRatings";
 import useLogout from "@/app/_hooks/useLogout";
 import {OpenTable} from "@/app/_hooks/useOpenTable";
 import useStartGame from "@/app/_hooks/useStartGame";
@@ -15,6 +16,7 @@ import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
 import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
 import EmojiEventsRoundedIcon from "@mui/icons-material/EmojiEventsRounded";
 import GroupAddRoundedIcon from "@mui/icons-material/GroupAddRounded";
+import LeaderboardRoundedIcon from "@mui/icons-material/LeaderboardRounded";
 import LibraryAddRoundedIcon from "@mui/icons-material/LibraryAddRounded";
 import LockRoundedIcon from "@mui/icons-material/LockRounded";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
@@ -65,6 +67,7 @@ export default function PhoneHome({
         <Tile href={currentLeagueHref("daily-standings", leagueId)} icon={<CalendarMonthRoundedIcon />} label="Daily Standings" />
         <Tile href={currentLeagueHref("standings", leagueId)} icon={<EmojiEventsRoundedIcon />} label="League Standings" />
       </Box>
+      <RatingTile />
 
       {isAdmin && (
         <Box component="section" aria-labelledby="admin-controls" sx={{display: "flex", flexDirection: "column", gap: "8px", mt: "6px"}}>
@@ -115,6 +118,50 @@ function Tile({href, icon, label}: {href: string; icon: React.ReactNode; label: 
       <Box component="span" sx={{fontSize: 17, fontWeight: 600, lineHeight: 1.15}}>
         {label}
       </Box>
+    </Box>
+  );
+}
+
+// Rejting: the player's own rating and place, opening the ratings list
+function RatingTile() {
+  const {me, total} = useMyRating();
+  return (
+    <Box
+      component={TransitionLink}
+      href="/ratings"
+      sx={{
+        ...buttonBase,
+        height: 76,
+        flex: "none",
+        borderRadius: "22px",
+        background: color.card,
+        color: color.ink,
+        px: "16px",
+        display: "flex",
+        alignItems: "center",
+        gap: "14px",
+        textDecoration: "none",
+        boxShadow: shadow.card,
+        transition: "transform 120ms ease",
+        "&:active": {transform: "scale(.98)"},
+        "& > svg:first-of-type": {fontSize: 28, color: color.navy},
+      }}
+    >
+      <LeaderboardRoundedIcon />
+      <Box component="span" sx={{flex: 1, fontSize: 17, fontWeight: 600}}>
+        Rejting
+      </Box>
+      {me && (
+        <Box component="span" sx={{display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "1px"}}>
+          <Box component="span" sx={{fontFamily: font.display, fontSize: 24, fontWeight: 800, lineHeight: 1, fontVariantNumeric: "tabular-nums"}}>
+            {me.rating}
+          </Box>
+          <Box component="span" sx={{fontSize: 12.5, color: color.muted}}>
+            #{me.rank} od {total}
+          </Box>
+        </Box>
+      )}
+      <ChevronRightRoundedIcon sx={{fontSize: 22, color: color.navy}} />
     </Box>
   );
 }
