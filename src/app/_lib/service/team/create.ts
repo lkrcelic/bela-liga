@@ -1,7 +1,7 @@
 import {prisma} from "@/app/_lib/prisma";
 import {Team} from "@prisma/client";
 import {TeamCreateRequest} from "@/app/_interfaces/team";
-import {CURRENT_LEAGUE_ID} from "@/app/_lib/league";
+import {activeLeagueId} from "@/app/_lib/service/league/leagues";
 import {InvalidResultError} from "@/app/_lib/validation/validateResult";
 import {teamNameTaken} from "./update";
 
@@ -17,6 +17,9 @@ export async function createTeam(request: TeamCreateRequest, creatorId: number):
     throw new InvalidResultError("Every player must be an existing player.");
   }
 
+  // a team created without a league joins the one being played now
+  const leagueId = request.league_id ?? (await activeLeagueId());
+
   return prisma.team.create({
     data: {
       team_name: request.team_name,
@@ -26,9 +29,7 @@ export async function createTeam(request: TeamCreateRequest, creatorId: number):
       teamPlayers: {
         create: request.players.map((player_id) => ({player_id})),
       },
-      leagueTeams: {
-        create: {league_id: request.league_id ?? CURRENT_LEAGUE_ID},
-      },
+      ...(leagueId != null && {leagueTeams: {create: {league_id: leagueId}}}),
     },
   });
 }

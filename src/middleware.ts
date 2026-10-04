@@ -14,7 +14,7 @@ export async function middleware(req: NextRequest) {
       req.nextUrl.pathname.startsWith("/login") ||
       req.nextUrl.pathname.startsWith("/signup") ||
       // the season table of any league is public; everything else needs a login
-      /^\/league\/\d+\/standings\/?$/.test(req.nextUrl.pathname) ||
+      /^\/league\/(\d+|current)\/standings\/?$/.test(req.nextUrl.pathname) ||
       req.nextUrl.pathname.startsWith("/_next/") ||
       req.nextUrl.pathname.startsWith("/static/") ||
       req.nextUrl.pathname.match(/\.(png|jpg|jpeg|gif|svg)$/)
