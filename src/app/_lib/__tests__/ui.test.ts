@@ -95,6 +95,11 @@ test("desktop round view uses 1, 2 or 3 columns by team count", () => {
   assert.equal(tableColumns(8), 1);
   assert.equal(tableColumns(30), 2);
   assert.equal(tableColumns(36), 3);
+  // with the height known: one column while everything fits, then as few as fit, at most three
+  assert.equal(tableColumns(14, 18), 1);
+  assert.equal(tableColumns(18, 18), 1);
+  assert.equal(tableColumns(19, 18), 2);
+  assert.equal(tableColumns(60, 10), 3);
   assert.deepEqual(splitColumns([1, 2, 3, 4, 5], 2), [[1, 2, 3], [4, 5]]);
   assert.deepEqual(splitColumns([], 3), [[], [], []]);
 });

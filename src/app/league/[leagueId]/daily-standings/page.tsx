@@ -1,6 +1,7 @@
 "use client";
 
 import useIsAdmin from "@/app/_hooks/useIsAdmin";
+import useElementHeight from "@/app/_hooks/useElementHeight";
 import useIsDesktop from "@/app/_hooks/useIsDesktop";
 import useLeagueTeams from "@/app/_hooks/useLeagueTeams";
 import {addTableAPI, removeTableAPI, setTablePairAPI} from "@/app/_fetchers/admin/daily";
@@ -34,7 +35,7 @@ import {
   StandingsRows,
   tabPanelProps,
 } from "@/app/_ui/sp";
-import {DesktopTableRow, PhoneRoundTables} from "@/app/league/[leagueId]/daily-standings/ui/RoundTables";
+import {DesktopTableRow, PhoneRoundTables, TABLE_ROW_HEIGHT} from "@/app/league/[leagueId]/daily-standings/ui/RoundTables";
 import {ConfirmRemove, EditToggle, NewTableButton, PairDialog, PairTarget, RowActions} from "@/app/league/[leagueId]/daily-standings/ui/RoundEditing";
 import ChevronLeftRoundedIcon from "@mui/icons-material/ChevronLeftRounded";
 import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
@@ -230,7 +231,8 @@ function DesktopNightTable({rows, date}: {rows: ReturnType<typeof toStandingsRow
   );
 }
 
-// Desktop round view: every table at once, in 1–3 columns, with status filters and a search
+// Desktop round view: every table at once, in 1–3 columns, with status filters and a search. One column while every
+// table fits the height on screen, so a short round reads straight down.
 type RoundAdmin = {leagueId: number; date: string; roundNumber: number; onChanged: () => void};
 
 // admin: edit mode (re-pair, remove and add tables), and every table opens its scorepad
@@ -244,7 +246,8 @@ function DesktopRound({title, rows, admin}: {title: string; rows: ReturnType<typ
   const [actionError, setActionError] = useState<string | null>(null);
   const {teams: leagueTeams} = useLeagueTeams(admin && editing ? admin.leagueId : null);
   const visible = filterTables(rows, filter, query);
-  const cols = tableColumns(rows.length);
+  const [areaRef, areaHeight] = useElementHeight<HTMLDivElement>();
+  const cols = tableColumns(rows.length, areaHeight == null ? undefined : Math.floor(areaHeight / TABLE_ROW_HEIGHT));
   const columns = splitColumns(visible, cols);
   const live = liveCount(rows);
   const filters = [
@@ -314,47 +317,49 @@ function DesktopRound({title, rows, admin}: {title: string; rows: ReturnType<typ
         </Box>
       </Box>
       {actionError && <ErrorNote>{actionError}</ErrorNote>}
-      {visible.length === 0 ? (
-        <Card>
-          <EmptyState>Nema stolova za ovaj filter.</EmptyState>
-        </Card>
-      ) : (
-        <Box sx={{flex: 1, minHeight: 0, display: "grid", gridTemplateColumns: `repeat(${cols}, minmax(0,1fr))`, gap: "16px", alignItems: "start"}}>
-          {columns.map((col, i) =>
-            col.length ? (
-              <Card key={i} component="ul" sx={{listStyle: "none", m: 0, p: 0, maxHeight: "100%", overflowY: "auto", scrollbarGutter: "stable"}}>
-                {col.map((t) => (
-                  <DesktopTableRow
-                    key={t.id}
-                    t={t}
-                    dense={cols >= 3}
-                    href={admin && !editing && !t.bye ? `/league/${admin.leagueId}/daily-standings/table/${t.id}` : undefined}
-                    actions={
-                      admin && editing ? (
-                        <RowActions
-                          t={t}
-                          onEdit={() => setPair({kind: "edit", row: t})}
-                          onRemove={() => {
-                            setConfirmId(t.id);
-                            setActionError(null);
-                          }}
-                        />
-                      ) : undefined
-                    }
-                    confirm={
-                      admin && editing && confirmId === t.id ? (
-                        <ConfirmRemove t={t} busy={removing} onCancel={() => setConfirmId(null)} onConfirm={() => remove(t.id)} />
-                      ) : undefined
-                    }
-                  />
-                ))}
-              </Card>
-            ) : (
-              <Box key={i} />
-            )
-          )}
-        </Box>
-      )}
+      <Box ref={areaRef} sx={{flex: 1, minHeight: 0, display: "flex", flexDirection: "column"}}>
+        {visible.length === 0 ? (
+          <Card>
+            <EmptyState>Nema stolova za ovaj filter.</EmptyState>
+          </Card>
+        ) : (
+          <Box sx={{flex: 1, minHeight: 0, display: "grid", gridTemplateColumns: `repeat(${cols}, minmax(0,1fr))`, gap: "16px", alignItems: "start"}}>
+            {columns.map((col, i) =>
+              col.length ? (
+                <Card key={i} component="ul" sx={{listStyle: "none", m: 0, p: 0, maxHeight: "100%", overflowY: "auto", scrollbarGutter: "stable"}}>
+                  {col.map((t) => (
+                    <DesktopTableRow
+                      key={t.id}
+                      t={t}
+                      dense={cols >= 3}
+                      href={admin && !editing && !t.bye ? `/league/${admin.leagueId}/daily-standings/table/${t.id}` : undefined}
+                      actions={
+                        admin && editing ? (
+                          <RowActions
+                            t={t}
+                            onEdit={() => setPair({kind: "edit", row: t})}
+                            onRemove={() => {
+                              setConfirmId(t.id);
+                              setActionError(null);
+                            }}
+                          />
+                        ) : undefined
+                      }
+                      confirm={
+                        admin && editing && confirmId === t.id ? (
+                          <ConfirmRemove t={t} busy={removing} onCancel={() => setConfirmId(null)} onConfirm={() => remove(t.id)} />
+                        ) : undefined
+                      }
+                    />
+                  ))}
+                </Card>
+              ) : (
+                <Box key={i} />
+              )
+            )}
+          </Box>
+        )}
+      </Box>
       {pair && admin && (
         <PairDialog target={pair} rows={rows} teams={leagueTeams ?? []} roundLabel={title} onClose={() => setPair(null)} onSave={savePair} />
       )}
