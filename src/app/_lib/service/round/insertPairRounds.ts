@@ -90,6 +90,21 @@ export async function createByeMatches(tx: Prisma.TransactionClient, roundId: nu
   }
 }
 
+// A batch for exactly these teams that was already created today and hasn't started (the admin submitted again)
+export async function findPendingBatch(leagueId: number, teamIds: number[]): Promise<number | null> {
+  return findUnstartedBatch(prisma, leagueId, new Set(teamIds));
+}
+
+// The pairs that already meet in today's rounds of the league (bye tables included), so tonight's new rounds can
+// keep them apart
+export async function pairsPlayedToday(leagueId: number): Promise<[number, number][]> {
+  const rounds = await prisma.round.findMany({
+    where: {leagueRounds: {some: {league_id: leagueId}}, round_date: leagueDate()},
+    select: {team1_id: true, team2_id: true},
+  });
+  return rounds.map((r) => [r.team1_id, r.team2_id]);
+}
+
 // The first of today's not-yet-started rounds in this league that is for exactly these teams (a resubmission of a
 // batch that was already created). Bye rounds are closed right away, so they don't count as started.
 async function findUnstartedBatch(tx: Prisma.TransactionClient, leagueId: number, teamIds: Set<number>): Promise<number | null> {

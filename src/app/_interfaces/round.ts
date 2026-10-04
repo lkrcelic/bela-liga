@@ -28,7 +28,12 @@ export const RoundCreateRequestValidation = z.object({
   present_teams: z.array(z.number().int()).min(1),
   numberOfRounds: z.number().int().min(1).max(5).optional(),
   windowSize: z.number().int().min(2).max(200).optional(),
+  // create the rounds even though some teams then meet twice today
+  allowRepeats: z.boolean().optional(),
 });
+
+// the error code of a round creation that would have some teams meet twice today
+export const REPEAT_MATCHUPS = "REPEAT_MATCHUPS";
 
 export type RoundCreateRequest = z.infer<typeof RoundCreateRequestValidation>;
 export type RoundResponse = z.infer<typeof RoundResponseValidation>;
