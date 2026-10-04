@@ -114,3 +114,13 @@ Desktop (≥1024 px): hamburger → overlay nav drawer, header with eyebrow + 44
   standings with live tables, league standings, profile, create round (search, filtered select-all, inactive),
   create team (real create), add teammate search, manage league (toggle inactive → reflected in create round),
   create league, pairings. No horizontal scroll at 360 px; focus ring visible on keyboard focus.
+
+## Follow-up round
+
+| Item | Status | Notes |
+|------|--------|-------|
+| Backend for Manage / Create League | ✅ | migration + 4 endpoints; verified create, validation (400), add, duplicate (400), PATCH, 404, persistence after reload |
+| Every player sees every league; logged-out users see season tables only | ✅ | public `GET /api/leagues`, public `/league/<id>/standings`; daily standings / round dates need login |
+| Player search by first/last name | ✅ | "smith" and "johnny smi" verified |
+| Route transitions (View Transitions API, card → scoreboard morph) | ✅ | see BLOCKERS 2 for how it was verified |
+| Remove unused components | ✅ | 22 files, nothing imported them |
