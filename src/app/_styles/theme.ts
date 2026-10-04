@@ -1,6 +1,6 @@
 import { createTheme, ThemeOptions } from '@mui/material/styles';
 import { PaletteColorOptions } from '@mui/material/styles/createPalette';
-import {color, font} from './tokens';
+import {color, ease, font} from './tokens';
 
 // Extend the palette to include custom colors
 declare module '@mui/material/styles' {
@@ -149,7 +149,29 @@ const themeOptions: ThemeOptions = {
         "@keyframes spStepIn": {from: {transform: "translateX(28px)", opacity: 0}, to: {transform: "none", opacity: 1}},
         "@keyframes spStepBack": {from: {transform: "translateX(-28px)", opacity: 0}, to: {transform: "none", opacity: 1}},
         "@keyframes spFadeUp": {from: {transform: "translateY(14px)", opacity: 0}, to: {transform: "none", opacity: 1}},
+        // Route transitions (see _lib/viewTransitions.tsx). forward: the new page slides in from the right over the
+        // old one, which drifts left and fades; back: the reverse; morph: named elements morph, the rest crossfades.
+        "@keyframes vtInRight": {from: {transform: "translateX(100%)"}},
+        "@keyframes vtOutLeft": {to: {transform: "translateX(-28%)", opacity: 0}},
+        "@keyframes vtInLeft": {from: {transform: "translateX(-28%)", opacity: 0}},
+        "@keyframes vtOutRight": {to: {transform: "translateX(100%)"}},
+        "@keyframes vtFadeOut": {to: {opacity: 0}},
+        "@keyframes vtFadeIn": {from: {opacity: 0}},
+        "::view-transition-old(root), ::view-transition-new(root)": {animationDuration: "280ms", animationTimingFunction: ease},
+        "html[data-nav=forward]::view-transition-old(root)": {animationName: "vtOutLeft"},
+        "html[data-nav=forward]::view-transition-new(root)": {animationName: "vtInRight"},
+        "html[data-nav=back]::view-transition-old(root)": {animationName: "vtOutRight", zIndex: 2},
+        "html[data-nav=back]::view-transition-new(root)": {animationName: "vtInLeft"},
+        "html[data-nav=morph]::view-transition-old(root)": {animationName: "vtFadeOut", animationDuration: "200ms"},
+        "html[data-nav=morph]::view-transition-new(root)": {animationName: "vtFadeIn", animationDuration: "200ms"},
+        // the Start Game card grows into the scoreboard; the navy card fades out as the board shows through
+        "::view-transition-group(table)": {animationDuration: "340ms", animationTimingFunction: ease},
+        "::view-transition-old(table)": {animation: `vtFadeOut 220ms ease 170ms both`, height: "100%", objectFit: "cover"},
+        "::view-transition-new(table)": {animation: "none", height: "100%"},
+        // the wizard's team header stays put and only crossfades its values
+        "::view-transition-group(team-header)": {animationDuration: "200ms"},
         "@media (prefers-reduced-motion: reduce)": {
+          "::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*)": {animation: "none !important"},
           "*, *::before, *::after": {
             animationDuration: "1ms !important",
             animationIterationCount: "1 !important",

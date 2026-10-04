@@ -2,12 +2,12 @@
 
 import {createOngoingMatchAPI} from "@/app/_fetchers/ongoingMatch/create";
 import {getOpenRoundByPlayerIdAPI} from "@/app/_fetchers/round/getOpenByPlayerId";
-import {useRouter} from "next/navigation";
+import {useTransitionRouter} from "@/app/_lib/viewTransitions";
 import {useCallback, useState} from "react";
 
 // "Start Game": opens the running match of the player's open round, or starts it
 export default function useStartGame() {
-  const router = useRouter();
+  const router = useTransitionRouter();
   const [starting, setStarting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -18,10 +18,10 @@ export default function useStartGame() {
     try {
       const {roundId, ongoingMatchId} = await getOpenRoundByPlayerIdAPI();
       if (ongoingMatchId) {
-        router.push(`/ongoing-match/${ongoingMatchId}`);
+        router.push(`/ongoing-match/${ongoingMatchId}`, "morph");
       } else {
         const ongoingMatch = await createOngoingMatchAPI({round_id: roundId, score_threshold: 1001});
-        router.push(`/ongoing-match/${ongoingMatch.id}`);
+        router.push(`/ongoing-match/${ongoingMatch.id}`, "morph");
       }
       // stays "starting" until the next page takes over
     } catch (e) {

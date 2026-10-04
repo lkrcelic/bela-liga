@@ -34,7 +34,8 @@ import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import GroupAddRoundedIcon from "@mui/icons-material/GroupAddRounded";
 import InfoRoundedIcon from "@mui/icons-material/InfoRounded";
 import {Box} from "@mui/material";
-import {useParams, useRouter} from "next/navigation";
+import {useParams} from "next/navigation";
+import {useTransitionRouter} from "@/app/_lib/viewTransitions";
 import {useEffect, useMemo, useState} from "react";
 
 type Filter = "all" | "active" | "inactive";
@@ -43,7 +44,7 @@ type Row = {id: number; name: string; players: string[]; played: number | null; 
 export default function ManageLeague() {
   const params = useParams<{leagueId: string}>();
   const leagueId = Number(params.leagueId);
-  const router = useRouter();
+  const router = useTransitionRouter();
   const isDesktop = useIsDesktop();
   const leagues = useLeagues(leagueId);
   const {teams, setTeams, error, loading, reload} = useLeagueTeams(leagueId);
@@ -164,7 +165,7 @@ export default function ManageLeague() {
         active="manageLeague"
         eyebrow="Admin"
         title="Manage League"
-        right={<LeagueMenuButton leagues={leagues} value={leagueId} onChange={(id) => router.push(`/league/${id}/manage`)} />}
+        right={<LeagueMenuButton leagues={leagues} value={leagueId} onChange={(id) => router.router.push(`/league/${id}/manage`)} />}
       >
         <Box sx={{flex: 1, minHeight: 0, display: "grid", gridTemplateColumns: "minmax(0,1fr) 380px", gap: "20px"}}>
           <Card component="section" aria-label={`Ekipe lige ${leagueName}`} sx={{minHeight: 0, display: "flex", flexDirection: "column", overflow: "hidden", borderRadius: "24px"}}>
@@ -227,11 +228,11 @@ export default function ManageLeague() {
   return (
     <Screen>
       <Box sx={{display: "flex", alignItems: "flex-start", gap: "12px"}}>
-        <IconCircleButton label="Nazad" onClick={() => router.push("/")}>
+        <IconCircleButton label="Nazad" onClick={() => router.push("/", "back")}>
           <ArrowBackRoundedIcon />
         </IconCircleButton>
         <Box sx={{display: "flex", flexDirection: "column", gap: "6px", minWidth: 0, pt: "2px"}}>
-          <LeagueEyebrowButton leagues={leagues} value={leagueId} onChange={(id) => router.push(`/league/${id}/manage`)} />
+          <LeagueEyebrowButton leagues={leagues} value={leagueId} onChange={(id) => router.router.push(`/league/${id}/manage`)} />
           <ScreenTitle title="Manage League" sx={{px: 0}} />
         </Box>
       </Box>

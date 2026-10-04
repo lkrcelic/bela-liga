@@ -17,12 +17,12 @@ import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import PersonAddRoundedIcon from "@mui/icons-material/PersonAddRounded";
 import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
 import {Box} from "@mui/material";
-import Link from "next/link";
-import {useRouter} from "next/navigation";
+import {TransitionLink} from "@/app/_lib/viewTransitions";
+import {useTransitionRouter} from "@/app/_lib/viewTransitions";
 import React from "react";
 
 export default function PhoneHome({isAdmin, openTable}: {isAdmin: boolean; openTable: OpenTable | null}) {
-  const router = useRouter();
+  const router = useTransitionRouter();
   const {logout, loggingOut} = useLogout();
   const {start, starting, error} = useStartGame();
 
@@ -59,6 +59,8 @@ export default function PhoneHome({isAdmin, openTable}: {isAdmin: boolean; openT
           alignItems: "stretch",
           textAlign: "left",
           boxShadow: shadow.hero,
+          // grows into the scoreboard on Start Game (the board's root has the same name)
+          viewTransitionName: "table",
           transition: "transform 120ms ease",
           "&:active:not(:disabled)": {transform: "scale(.98)"},
         }}
@@ -135,7 +137,7 @@ export default function PhoneHome({isAdmin, openTable}: {isAdmin: boolean; openT
 function Tile({href, icon, label}: {href: string; icon: React.ReactNode; label: string}) {
   return (
     <Box
-      component={Link}
+      component={TransitionLink}
       href={href}
       sx={{
         ...buttonBase,
@@ -179,7 +181,7 @@ function AdminRow({href, icon, label, divider = false}: {href: string; icon: Rea
   return (
     <Box component="li">
       <Box
-        component={Link}
+        component={TransitionLink}
         href={href}
         sx={{
           ...buttonBase,

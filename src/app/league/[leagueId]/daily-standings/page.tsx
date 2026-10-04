@@ -36,13 +36,14 @@ import ChevronLeftRoundedIcon from "@mui/icons-material/ChevronLeftRounded";
 import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
 import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
 import {Box} from "@mui/material";
-import {useParams, useRouter, useSearchParams} from "next/navigation";
+import {useParams, useSearchParams} from "next/navigation";
+import {useTransitionRouter} from "@/app/_lib/viewTransitions";
 import {useEffect, useMemo, useState} from "react";
 
 export default function DailyStandings() {
   const params = useParams<{leagueId: string}>();
   const leagueId = Number(params.leagueId);
-  const router = useRouter();
+  const router = useTransitionRouter();
   const searchParams = useSearchParams();
   const isDesktop = useIsDesktop();
   const leagues = useLeagues(leagueId);
@@ -56,7 +57,7 @@ export default function DailyStandings() {
   const index = date && dates ? dates.indexOf(date) : -1;
   const prevDate = index > 0 ? dates[index - 1] : null;
   const nextDate = dates && index >= 0 && index < dates.length - 1 ? dates[index + 1] : null;
-  const goDate = (d: string | null) => d && router.replace(`/league/${leagueId}/daily-standings?date=${d}`);
+  const goDate = (d: string | null) => d && router.router.replace(`/league/${leagueId}/daily-standings?date=${d}`);
 
   const daily = useDailyData(leagueId, date || null);
   const today = leagueDateString();
@@ -88,7 +89,7 @@ export default function DailyStandings() {
     [daily.data, tab, myTeamNames]
   );
 
-  const changeLeague = (id: number) => router.push(`/league/${id}/daily-standings`);
+  const changeLeague = (id: number) => router.router.push(`/league/${id}/daily-standings`);
   const dateTitle = date ? displayDate(date) : "—";
   const noNights = dates != null && dates.length === 0;
   const loadError = datesError ?? daily.error;
@@ -180,7 +181,7 @@ export default function DailyStandings() {
         )}
       </Box>
 
-      <PrimaryButton icon={<HomeRoundedIcon />} onClick={() => router.push("/")}>
+      <PrimaryButton icon={<HomeRoundedIcon />} onClick={() => router.push("/", "back")}>
         Početni zaslon
       </PrimaryButton>
     </Screen>

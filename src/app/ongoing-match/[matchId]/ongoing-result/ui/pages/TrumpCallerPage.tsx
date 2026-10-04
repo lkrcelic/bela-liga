@@ -8,7 +8,8 @@ import {discardHand} from "@/app/ongoing-match/ui/handFlow";
 import useMatchSides from "@/app/ongoing-match/ui/useMatchSides";
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
 import {Box} from "@mui/material";
-import {useParams, useRouter} from "next/navigation";
+import {useParams} from "next/navigation";
+import {useTransitionRouter} from "@/app/_lib/viewTransitions";
 
 export type ActionProps = {
   actionType: "CREATE" | "UPDATE";
@@ -16,7 +17,7 @@ export type ActionProps = {
 
 // Step 1: which team called trumps
 export default function TrumpCallerPage({actionType}: ActionProps) {
-  const router = useRouter();
+  const router = useTransitionRouter();
   const params = useParams<{matchId: string; resultId?: string}>();
   const sides = useMatchSides();
   const caller = useResultStore((s) => s.resultData.trump_caller_team);
@@ -29,7 +30,7 @@ export default function TrumpCallerPage({actionType}: ActionProps) {
     discardHand();
     // the wizard is opened from the scoreboard, so going back keeps the history tidy
     if (window.history.length > 1) router.back();
-    else router.push(`/ongoing-match/${params.matchId}`);
+    else router.push(`/ongoing-match/${params.matchId}`, "back");
   };
 
   return (

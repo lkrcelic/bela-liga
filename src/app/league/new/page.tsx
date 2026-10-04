@@ -29,7 +29,7 @@ import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
 import RemoveRoundedIcon from "@mui/icons-material/RemoveRounded";
 import {Box} from "@mui/material";
 import Link from "next/link";
-import {useRouter} from "next/navigation";
+import {useTransitionRouter} from "@/app/_lib/viewTransitions";
 import React, {useEffect, useMemo, useState} from "react";
 
 const DAYS = ["Pon", "Uto", "Sri", "Čet", "Pet", "Sub", "Ned"];
@@ -38,7 +38,7 @@ const DAY_NAMES = ["ponedjeljak", "utorak", "srijeda", "četvrtak", "petak", "su
 type TeamItem = {id: number; name: string; players: string};
 
 export default function CreateLeague() {
-  const router = useRouter();
+  const router = useTransitionRouter();
   const isDesktop = useIsDesktop();
 
   const [name, setName] = useState("");
@@ -304,7 +304,7 @@ export default function CreateLeague() {
   return (
     <Screen>
       <Box>
-        <IconCircleButton label="Nazad" onClick={() => router.push("/")}>
+        <IconCircleButton label="Nazad" onClick={() => router.push("/", "back")}>
           <ArrowBackRoundedIcon />
         </IconCircleButton>
       </Box>
