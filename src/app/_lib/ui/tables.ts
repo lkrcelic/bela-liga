@@ -81,8 +81,11 @@ export function filterTables(rows: TableRow[], filter: TableFilter, query = ""):
   });
 }
 
-// How many columns the desktop round view uses: one up to 16 teams, two up to 60, three above
-export function tableColumns(tableCount: number): number {
+// How many columns the desktop round view uses. With fitRows (how many rows fit the height on screen): one column
+// while every table fits, otherwise as few as fit, up to three. Before the height is known: one up to 16 teams, two
+// up to 60, three above.
+export function tableColumns(tableCount: number, fitRows?: number): number {
+  if (fitRows != null && fitRows > 0) return Math.min(3, Math.max(1, Math.ceil(tableCount / fitRows)));
   const teams = tableCount * 2;
   if (teams <= 16) return 1;
   if (teams <= 60) return 2;

@@ -67,6 +67,9 @@ export function PhoneRoundTables({title, rows}: {title: string; rows: TableRow[]
 }
 
 // Desktop: a dense row per table — number chip, team A, score (live points under it), team B, status.
+// height of one table row on the desktop round view (the confirmation strip is the same height)
+export const TABLE_ROW_HEIGHT = 44;
+
 // href: the whole row opens the table (admin scorepad). actions: edit-mode buttons instead of the status.
 // confirm: replaces the row with a confirmation strip.
 export function DesktopTableRow({
@@ -88,14 +91,14 @@ export function DesktopTableRow({
     return (
       <Box
         component="li"
-        sx={{height: 44, display: "flex", alignItems: "center", gap: "6px", pl: dense ? "12px" : "18px", pr: "8px", borderBottom: `1px solid rgba(60,74,103,.07)`, background: "rgba(188,71,73,.08)"}}
+        sx={{height: TABLE_ROW_HEIGHT, display: "flex", alignItems: "center", gap: "6px", pl: dense ? "12px" : "18px", pr: "8px", borderBottom: `1px solid rgba(60,74,103,.07)`, background: "rgba(188,71,73,.08)"}}
       >
         {confirm}
       </Box>
     );
   }
   const rowSx = {
-    height: 44,
+    height: TABLE_ROW_HEIGHT,
     display: "grid",
     gridTemplateColumns: dense
       ? `32px minmax(0,1fr) 66px minmax(0,1fr) ${actions ? "72px" : "40px"}`
