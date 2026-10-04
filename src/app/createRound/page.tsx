@@ -45,7 +45,8 @@ export default function CreateRound() {
   const [rounds, setRounds] = useState(4);
   const [windowSize, setWindowSize] = useState(8);
   const [query, setQuery] = useState("");
-  const [off, setOff] = useState<Set<number>>(new Set());
+  // teams switched away from their default (active teams start on, inactive teams start off)
+  const [flipped, setFlipped] = useState<Set<number>>(new Set());
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
 
@@ -57,30 +58,31 @@ export default function CreateRound() {
 
   // every active team starts as present, and Rounds starts at the league's rounds per night; switching league starts over
   useEffect(() => {
-    setOff(new Set());
+    setFlipped(new Set());
     setQuery("");
     setCreateError(null);
     if (defaultRounds) setRounds(Math.min(MAX_ROUNDS, defaultRounds));
   }, [activeLeague, defaultRounds]);
 
-  const isOn = (t: LeagueTeam) => !inactive.has(t.id) && !off.has(t.id);
+  // an inactive team (one that stopped coming) can still be switched on for tonight
+  const onByDefault = (id: number) => !inactive.has(id);
+  const isOn = (t: LeagueTeam) => onByDefault(t.id) !== flipped.has(t.id);
   const visible = useMemo(() => (teams ?? []).filter((t) => matchesQuery(t.name, query)), [teams, query]);
-  const visibleActive = visible.filter((t) => !inactive.has(t.id));
-  const allOn = visibleActive.length > 0 && visibleActive.every(isOn);
+  const allOn = visible.length > 0 && visible.every(isOn);
   const selected = (teams ?? []).filter(isOn);
   const count = selected.length;
 
   const toggle = (id: number) =>
-    setOff((prev) => {
+    setFlipped((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
       else next.add(id);
       return next;
     });
   const toggleAll = () =>
-    setOff((prev) => {
+    setFlipped((prev) => {
       const next = new Set(prev);
-      visibleActive.forEach((t) => (allOn ? next.add(t.id) : next.delete(t.id)));
+      visible.forEach((t) => (!allOn === onByDefault(t.id) ? next.delete(t.id) : next.add(t.id)));
       return next;
     });
 
@@ -176,7 +178,7 @@ export default function CreateRound() {
                 role="switch"
                 aria-checked={allOn}
                 onClick={toggleAll}
-                disabled={visibleActive.length === 0}
+                disabled={visible.length === 0}
                 sx={{...buttonBase, height: 48, display: "flex", alignItems: "center", gap: "12px", pl: "14px", pr: "8px", borderRadius: "14px", background: color.tableHead, fontSize: 15, fontWeight: 700, color: color.ink}}
               >
                 <span>{query ? "Select all filtered" : "Select all"}</span>
@@ -186,13 +188,7 @@ export default function CreateRound() {
             {teamState ?? (
               <Box sx={{flex: 1, minHeight: 0, overflowY: "auto", display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,1fr)", gridAutoRows: "56px", columnGap: "24px", p: "4px 14px"}}>
                 {visible.map((t) => (
-                  <SwitchRow
-                    key={t.id}
-                    checked={isOn(t)}
-                    disabled={inactive.has(t.id)}
-                    onChange={() => toggle(t.id)}
-                    sx={{px: "4px", minHeight: 56, "&:disabled": {cursor: "default"}}}
-                  >
+                  <SwitchRow key={t.id} checked={isOn(t)} onChange={() => toggle(t.id)} sx={{px: "4px", minHeight: 56}}>
                     <Box component="span" sx={{overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap"}}>
                       {t.name}
                     </Box>
@@ -278,13 +274,13 @@ export default function CreateRound() {
             <SwitchRow
               checked={allOn}
               onChange={toggleAll}
-              disabled={visibleActive.length === 0}
+              disabled={visible.length === 0}
               sx={{background: color.paperSoft, fontWeight: 700, color: color.ink, borderBottom: `1px solid rgba(60,74,103,.12)`}}
             >
               {query ? "Select all filtered" : "Select all"}
             </SwitchRow>
             {visible.map((t) => (
-              <SwitchRow key={t.id} checked={isOn(t)} disabled={inactive.has(t.id)} onChange={() => toggle(t.id)}>
+              <SwitchRow key={t.id} checked={isOn(t)} onChange={() => toggle(t.id)}>
                 <Box component="span" sx={{overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap"}}>
                   {t.name}
                 </Box>
