@@ -40,6 +40,9 @@ export async function middleware(req: NextRequest) {
   return NextResponse.next();
 }
 
+// An optimistic check only: the middleware runs on the edge runtime without the database, so it can't tell whether
+// the session behind a signed cookie still exists. The real check is in every API route (requireUser), and
+// /api/auth/me removes dead cookies and sends the browser to /login.
 async function authenticationMiddleware(req: NextRequest) {
   const reqCookie = req.cookies.get(process.env.AUTH_COOKIE);
   if (reqCookie) {

@@ -3,6 +3,7 @@ import {PrismaAdapter} from "@auth/prisma-adapter";
 import {prisma} from "@/app/_lib/prisma";
 import {Adapter} from "@auth/core/adapters";
 import Google from "next-auth/providers/google";
+import {googleSessionCookieOptions, SESSION_MAX_AGE_SECONDS} from "@/app/_lib/sessionConfig";
  
 // Usernames are unique, so "ivan" from ivan@gmail.com becomes "ivan2" when "ivan" is already taken
 async function availableUsername(base: string): Promise<string> {
@@ -158,17 +159,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   })],
   session: {
     strategy: "database",
-    maxAge: 4 * 60 * 60, // 4 hours in seconds
+    maxAge: SESSION_MAX_AGE_SECONDS,
   },
   cookies: {
     sessionToken: {
       name: process.env.GOOGLE_AUTH_COOKIE,
-      options: {
-        httpOnly: true,
-        sameSite: "lax",
-        path: "/",
-        secure: process.env.NODE_ENV === "production",
-      },
+      options: googleSessionCookieOptions,
     },
   },
   //debug: true,
