@@ -115,7 +115,17 @@ export default function DailyStandings() {
         right={
           <>
             <LeagueMenuButton leagues={leagues} value={leagueId} onChange={changeLeague} />
-            {tabs.length > 1 && <Segmented items={tabs} value={tab} onChange={pickTab} label="Prikaz" idPrefix="daily" />}
+            {/* a long night (many rounds) scrolls sideways instead of squeezing the date */}
+            {tabs.length > 1 && (
+              <Segmented
+                items={tabs}
+                value={tab}
+                onChange={pickTab}
+                label="Prikaz"
+                idPrefix="daily"
+                sx={{flex: "0 1 auto", minWidth: 0, overflowX: "auto", scrollbarWidth: "none"}}
+              />
+            )}
             {arrows}
           </>
         }
