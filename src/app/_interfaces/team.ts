@@ -37,7 +37,7 @@ export const AddTeammateRequestValidation = z.object({
 export const TeamExtendedResponseValidation = z.object({
   team_id: z.number().int(),
   team_name: z.string(),
-  // Manage Team marks the founders and lists the team's leagues
+  // Manage Teams marks the founders and lists the team's leagues
   founder_id1: z.number().int().nullable().optional(),
   founder_id2: z.number().int().nullable().optional(),
   teamPlayers: z.array(

@@ -132,7 +132,7 @@ export default function PhoneHome({
             <AdminRow href="/createRound" icon={<AddCircleRoundedIcon />} label="Create Round" divider />
             <AdminRow href={`/league/${CURRENT_LEAGUE_ID}/manage`} icon={<TuneRoundedIcon />} label="Manage League" divider />
             <AdminRow href="/league/new" icon={<LibraryAddRoundedIcon />} label="Create League" divider />
-            <AdminRow href="/teams" icon={<GroupAddRoundedIcon />} label="Manage Team" />
+            <AdminRow href="/teams" icon={<GroupAddRoundedIcon />} label="Manage Teams" />
           </Card>
         </Box>
       )}

@@ -55,7 +55,7 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
     Create Round starts with the league's rounds per night and leaves inactive teams out (the client still sends the
     explicit team list, as before).
 
-12. ~~Teams on desktop is one screen with Create Team and Add Teammate side by side~~ — replaced by Manage Team (23).
+12. ~~Teams on desktop is one screen with Create Team and Add Teammate side by side~~ — replaced by Manage Teams (23).
 
 13. **Root layout no longer imposes the old `top / body / actions` grid.** Every page is rebuilt on the new `Screen`
     primitive, so the grid areas are unused. The old `_ui/StandingsTable`, `DoubleActionButton` and
@@ -91,8 +91,8 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
 22. **A Google login joins the password account with the same email (any case)**, and Google players are asked for
     their birth date once (BACKEND_REVIEW.md, G).
 
-23. **Manage Team replaces Teams** (`/teams`, design "Manage Team · edit + new team"). The design is desktop only; on the
-    phone the same screen shows the team list first and opens one team at a time, and phone home has one "Manage Team"
+23. **Manage Teams replaces Teams** (`/teams`, design "Manage Teams · edit + new team"). The design is desktop only; on the
+    phone the same screen shows the team list first and opens one team at a time, and phone home has one "Manage Teams"
     row instead of "Create Team" and "Add Teammate". `/teams/new` opens a new team, `/teams/add-teammate` the list.
     - An existing team's teammates are added and removed at once (as in the design); its name is saved with
       "Save name". A new team is created with its name and players in one step.

@@ -18,7 +18,7 @@ const teams = [
   toMTTeam({team_id: 2, team_name: "Zagorci", teamPlayers: []}),
 ];
 
-test("api teams become Manage Team rows with founders and leagues", () => {
+test("api teams become Manage Teams rows with founders and leagues", () => {
   assert.deepEqual(teams[0].founders, [10, 11]);
   assert.deepEqual(teams[0].leagues, [{id: 2, name: "Zimska liga", active: false}]);
   assert.deepEqual(teams[1].founders, []);

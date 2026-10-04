@@ -39,7 +39,7 @@ Desktop (≥1024 px): hamburger → overlay nav drawer, header with eyebrow + 44
 | 12 | Create Round (`/createRound`) | ✔ league pick → teams | ✔ single view, inactive badges | loading, <2 teams disabled, create error |
 | 13 | Create Team (`/teams/new`) | ✔ | ✔ (Teams screen) | picker search, selected chip, success/error |
 | 14 | Add Teammate (`/teams/add-teammate`) | ✔ | ✔ (Teams screen) | search results, disabled until valid |
-| 15 | Teams (`/teams`, desktop nav target) | — | ✔ both forms side by side | as 13 + 14 — replaced by Manage Team (see Follow-up round) |
+| 15 | Teams (`/teams`, desktop nav target) | — | ✔ both forms side by side | as 13 + 14 — replaced by Manage Teams (see Follow-up round) |
 | 16 | Manage League (`/league/[id]/manage`) — **new** | — | ✔ | filters, search, active toggle, add team, no hits |
 | 17 | Create League (`/league/new`) — **new** | — | ✔ | name required, day picker, stepper, team select |
 | 18 | Round pairings (`/round/pairings/[n]`) | — (not in design) | — | restyled with the system for consistency |
@@ -124,5 +124,5 @@ Desktop (≥1024 px): hamburger → overlay nav drawer, header with eyebrow + 44
 | Player search by first/last name | ✅ | "smith" and "johnny smi" verified |
 | Route transitions (View Transitions API, card → scoreboard morph) | ✅ | see BLOCKERS 2 for how it was verified |
 | Remove unused components | ✅ | 22 files, nothing imported them |
-| Manage Team (replaces Teams; design "Manage Team · edit + new team") | ✅ | rename (duplicate name refused), add / remove teammates, new team with players, leagues per team; desktop as designed, phone list → team; bye team hidden |
+| Manage Teams (replaces Teams; design "Manage Teams · edit + new team") | ✅ | rename (duplicate name refused), add / remove teammates, new team with players, leagues per team; desktop as designed, phone list → team; bye team hidden |
 | Daily admin editing (design "Daily" admin screens) + Manage League · Rounds | ✅ | re-pair with swaps, remove/add tables, scorepad for live and finished matches with manual entry, finish match, results recounted with standings and rating replay, rounds list with delete + undo; verified in the browser and through the API |
