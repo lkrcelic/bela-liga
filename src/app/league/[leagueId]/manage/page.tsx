@@ -35,6 +35,9 @@ import GroupAddRoundedIcon from "@mui/icons-material/GroupAddRounded";
 import InfoRoundedIcon from "@mui/icons-material/InfoRounded";
 import {Box} from "@mui/material";
 import {useParams} from "next/navigation";
+import RoundsView, {useLeagueRounds} from "./RoundsView";
+import EventNoteRoundedIcon from "@mui/icons-material/EventNoteRounded";
+import GroupsRoundedIcon from "@mui/icons-material/GroupsRounded";
 import {useTransitionRouter} from "@/app/_lib/viewTransitions";
 import {useEffect, useMemo, useState} from "react";
 
@@ -53,6 +56,9 @@ export default function ManageLeague() {
   const [query, setQuery] = useState("");
   const [justAdded, setJustAdded] = useState<number | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  // desktop: the league's teams, or its rounds (delete a round)
+  const [view, setView] = useState<"teams" | "rounds">("teams");
+  const leagueRounds = useLeagueRounds(leagueId);
 
   const played = useMemo(() => new Map((standings ?? []).map((s) => [Number(s.team_id), s.rounds_played])), [standings]);
   const rows: Row[] = useMemo(() => {
@@ -167,60 +173,65 @@ export default function ManageLeague() {
         title="Manage League"
         right={<LeagueMenuButton leagues={leagues} value={leagueId} onChange={(id) => router.router.push(`/league/${id}/manage`)} />}
       >
-        <Box sx={{flex: 1, minHeight: 0, display: "grid", gridTemplateColumns: "minmax(0,1fr) 380px", gap: "20px"}}>
-          <Card component="section" aria-label={`Ekipe lige ${leagueName}`} sx={{minHeight: 0, display: "flex", flexDirection: "column", overflow: "hidden", borderRadius: "24px"}}>
-            {toolbar}
-            {actionError && <ErrorNote sx={{m: "12px 14px 0"}}>{actionError}</ErrorNote>}
-            <Box
-              aria-hidden
-              sx={{flex: "none", height: 40, display: "grid", gridTemplateColumns: "minmax(0,1.1fr) minmax(0,1.4fr) 80px 170px", gap: "12px", alignItems: "center", px: "20px", background: color.tableHead, borderBottom: `1px solid rgba(60,74,103,.1)`, fontSize: 12, fontWeight: 600, letterSpacing: ".08em", textTransform: "uppercase", color: color.muted}}
-            >
-              <span>Team</span>
-              <span>Players</span>
-              <Box component="span" sx={{textAlign: "center"}}>
-                Played
+        <ViewSwitch view={view} onChange={setView} teams={rows.length} rounds={leagueRounds.rounds?.length ?? null} />
+        {view === "rounds" ? (
+          <RoundsView leagueId={leagueId} data={leagueRounds} />
+        ) : (
+          <Box sx={{flex: 1, minHeight: 0, display: "grid", gridTemplateColumns: "minmax(0,1fr) 380px", gap: "20px"}}>
+            <Card component="section" aria-label={`Ekipe lige ${leagueName}`} sx={{minHeight: 0, display: "flex", flexDirection: "column", overflow: "hidden", borderRadius: "24px"}}>
+              {toolbar}
+              {actionError && <ErrorNote sx={{m: "12px 14px 0"}}>{actionError}</ErrorNote>}
+              <Box
+                aria-hidden
+                sx={{flex: "none", height: 40, display: "grid", gridTemplateColumns: "minmax(0,1.1fr) minmax(0,1.4fr) 80px 170px", gap: "12px", alignItems: "center", px: "20px", background: color.tableHead, borderBottom: `1px solid rgba(60,74,103,.1)`, fontSize: 12, fontWeight: 600, letterSpacing: ".08em", textTransform: "uppercase", color: color.muted}}
+              >
+                <span>Team</span>
+                <span>Players</span>
+                <Box component="span" sx={{textAlign: "center"}}>
+                  Played
+                </Box>
+                <Box component="span" sx={{textAlign: "right"}}>
+                  Status
+                </Box>
               </Box>
-              <Box component="span" sx={{textAlign: "right"}}>
-                Status
-              </Box>
-            </Box>
-            {listState ?? (
-              <Box component="ul" sx={{listStyle: "none", m: 0, p: 0, flex: 1, minHeight: 0, overflowY: "auto", scrollbarGutter: "stable"}}>
-                {visible.map((r) => (
-                  <Box
-                    component="li"
-                    key={r.id}
-                    sx={{
-                      minHeight: 60,
-                      display: "grid",
-                      gridTemplateColumns: "minmax(0,1.1fr) minmax(0,1.4fr) 80px 170px",
-                      gap: "12px",
-                      alignItems: "center",
-                      px: "20px",
-                      borderBottom: `1px solid rgba(60,74,103,.07)`,
-                      background: r.id === justAdded ? color.creamSoft : "transparent",
-                      animation: r.id === justAdded ? "spRowIn 420ms cubic-bezier(.2,.8,.2,1) both" : "none",
-                    }}
-                  >
-                    <Box component="span" sx={{fontSize: 16, fontWeight: 600, color: r.active ? color.ink : color.faint, ...ellipsis}}>
-                      {r.name}
+              {listState ?? (
+                <Box component="ul" sx={{listStyle: "none", m: 0, p: 0, flex: 1, minHeight: 0, overflowY: "auto", scrollbarGutter: "stable"}}>
+                  {visible.map((r) => (
+                    <Box
+                      component="li"
+                      key={r.id}
+                      sx={{
+                        minHeight: 60,
+                        display: "grid",
+                        gridTemplateColumns: "minmax(0,1.1fr) minmax(0,1.4fr) 80px 170px",
+                        gap: "12px",
+                        alignItems: "center",
+                        px: "20px",
+                        borderBottom: `1px solid rgba(60,74,103,.07)`,
+                        background: r.id === justAdded ? color.creamSoft : "transparent",
+                        animation: r.id === justAdded ? "spRowIn 420ms cubic-bezier(.2,.8,.2,1) both" : "none",
+                      }}
+                    >
+                      <Box component="span" sx={{fontSize: 16, fontWeight: 600, color: r.active ? color.ink : color.faint, ...ellipsis}}>
+                        {r.name}
+                      </Box>
+                      <Box component="span" sx={{display: "flex", gap: "6px", minWidth: 0, overflow: "hidden", opacity: r.active ? 1 : 0.55}}>
+                        {r.players.map((p) => (
+                          <PlayerChip key={p} name={p} size="sm" />
+                        ))}
+                      </Box>
+                      <Box component="span" sx={{textAlign: "center", fontSize: 15, color: color.inkSoft, fontVariantNumeric: "tabular-nums"}}>
+                        {r.played ?? "—"}
+                      </Box>
+                      {statusToggle(r)}
                     </Box>
-                    <Box component="span" sx={{display: "flex", gap: "6px", minWidth: 0, overflow: "hidden", opacity: r.active ? 1 : 0.55}}>
-                      {r.players.map((p) => (
-                        <PlayerChip key={p} name={p} size="sm" />
-                      ))}
-                    </Box>
-                    <Box component="span" sx={{textAlign: "center", fontSize: 15, color: color.inkSoft, fontVariantNumeric: "tabular-nums"}}>
-                      {r.played ?? "—"}
-                    </Box>
-                    {statusToggle(r)}
-                  </Box>
-                ))}
-              </Box>
-            )}
-          </Card>
-          {sidePanel}
-        </Box>
+                  ))}
+                </Box>
+              )}
+            </Card>
+            {sidePanel}
+          </Box>
+        )}
       </DesktopShell>
     );
   }
@@ -357,5 +368,62 @@ function AddTeamCard({exclude, onAdd, onCreate}: {exclude: number[]; onAdd: (t: 
         Create new team
       </OutlineButton>
     </Card>
+  );
+}
+
+function ViewSwitch({
+  view,
+  onChange,
+  teams,
+  rounds,
+}: {
+  view: "teams" | "rounds";
+  onChange: (v: "teams" | "rounds") => void;
+  teams: number;
+  rounds: number | null;
+}) {
+  const items = [
+    {key: "teams" as const, label: "Teams", icon: <GroupsRoundedIcon />, count: teams},
+    {key: "rounds" as const, label: "Rounds", icon: <EventNoteRoundedIcon />, count: rounds},
+  ];
+  return (
+    <Box role="tablist" aria-label="Prikaz" sx={{flex: "none", alignSelf: "flex-start", display: "flex", gap: "4px", p: "4px", borderRadius: "16px", background: color.card, boxShadow: "0 1px 3px rgba(31,36,51,.06)"}}>
+      {items.map((it) => {
+        const on = it.key === view;
+        return (
+          <Box
+            key={it.key}
+            component="button"
+            type="button"
+            role="tab"
+            aria-selected={on}
+            onClick={() => onChange(it.key)}
+            sx={{
+              ...buttonBase,
+              height: 42,
+              px: "18px",
+              borderRadius: "12px",
+              background: on ? color.navy : "transparent",
+              color: on ? "#FFFFFF" : color.ink,
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              fontSize: 15,
+              fontWeight: 600,
+              transition: "background 160ms ease",
+              "& svg": {fontSize: 20},
+            }}
+          >
+            {it.icon}
+            {it.label}
+            {it.count != null && (
+              <Box component="span" sx={{fontSize: 12, fontWeight: 700, color: on ? color.cream : color.placeholder}}>
+                {it.count}
+              </Box>
+            )}
+          </Box>
+        );
+      })}
+    </Box>
   );
 }
