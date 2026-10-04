@@ -3,6 +3,7 @@ import {BelaMatchAllIncluded, transformBelaMatch} from "@/app/_lib/helpers/datab
 import {matchWinner} from "@/app/_lib/bela/scoring";
 import {InvalidResultError} from "@/app/_lib/validation/validateResult";
 import {closeRound, lockRound, MATCHES_PER_ROUND} from "@/app/_lib/service/round/finish";
+import {combineDateAndTime} from "@/app/_lib/dates";
 
 export class MatchAlreadyFinishedError extends Error {
   constructor() {
@@ -40,7 +41,12 @@ export async function finishOngoingMatch(ongoingMatchId: number): Promise<Finish
     }
 
     await tx.match.create({
-      data: {...transformBelaMatch(ongoingMatch as BelaMatchAllIncluded), end_time: new Date()},
+      data: {
+        ...transformBelaMatch(ongoingMatch as BelaMatchAllIncluded),
+        // the ongoing match stores only the time of day; the finished match keeps a full timestamp
+        start_time: combineDateAndTime(ongoingMatch.match_date, ongoingMatch.start_time),
+        end_time: new Date(),
+      },
     });
     await tx.ongoingMatch.delete({where: {id: ongoingMatchId}});
 
@@ -62,7 +68,7 @@ export async function finishOngoingMatch(ongoingMatchId: number): Promise<Finish
     }
 
     const nextMatch = await tx.ongoingMatch.create({
-      data: {round_id: roundId, score_threshold: threshold},
+      data: {round_id: roundId, score_threshold: threshold, start_time: new Date()},
     });
     return {roundId, roundFinished: false, nextOngoingMatchId: nextMatch.id};
   }, {timeout: 20000});
