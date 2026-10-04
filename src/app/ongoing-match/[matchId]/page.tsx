@@ -9,7 +9,7 @@ import {matchWinner} from "@/app/_lib/bela/scoring";
 import useRoundStore from "@/app/_store/RoundStore";
 import useOngoingMatchStore from "@/app/_store/ongoingMatchStore";
 import {color, teamColor} from "@/app/_styles/tokens";
-import {CenteredSpinner, DesktopShell, ErrorNote, Eyebrow, PrimaryButton, Screen} from "@/app/_ui/sp";
+import {buttonBase, CenteredSpinner, DesktopShell, ErrorNote, Eyebrow, PrimaryButton, Screen} from "@/app/_ui/sp";
 import {currentRoundPath} from "@/app/ongoing-match/ui/currentRoundPath";
 import {HandList, HandRow, ScorePanel} from "@/app/ongoing-match/ui/BoardParts";
 import HandEntryPanel from "@/app/ongoing-match/ui/HandEntryPanel";
@@ -17,6 +17,7 @@ import {markWizardOpened, openHandForEdit, previousTotals, rememberTotals, start
 import useMatchSides from "@/app/ongoing-match/ui/useMatchSides";
 import AddCircleRoundedIcon from "@mui/icons-material/AddCircleRounded";
 import DoneRoundedIcon from "@mui/icons-material/DoneRounded";
+import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
 import TableRestaurantRoundedIcon from "@mui/icons-material/TableRestaurantRounded";
 import {Box} from "@mui/material";
 import {useParams, usePathname} from "next/navigation";
@@ -300,7 +301,34 @@ export default function ScoreBoardPage() {
   return (
     <Screen fill gap={0} sx={{...boardSx, pt: "calc(14px + env(safe-area-inset-top))"}}>
       <Box sx={{display: "flex", flexDirection: "column", gap: "12px", animation: "spFadeUp 320ms 120ms both"}}>
-        <Eyebrow sx={{textAlign: "center"}}>{matchLabel}</Eyebrow>
+        <Box sx={{position: "relative", height: 44, display: "flex", alignItems: "center", justifyContent: "center"}}>
+          <Box
+            component="button"
+            type="button"
+            onClick={() => router.push("/", "back")}
+            aria-label="Početni zaslon"
+            sx={{
+              ...buttonBase,
+              position: "absolute",
+              left: "-6px",
+              top: 0,
+              width: 44,
+              height: 44,
+              borderRadius: "50%",
+              background: color.card,
+              color: color.navy,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              boxShadow: "0 1px 3px rgba(31,36,51,.1)",
+              "&:active": {transform: "scale(.94)"},
+              "& svg": {fontSize: 24},
+            }}
+          >
+            <HomeRoundedIcon />
+          </Box>
+          <Eyebrow>{matchLabel}</Eyebrow>
+        </Box>
         <Box sx={{display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,1fr)", gap: "12px"}}>{panels("phone")}</Box>
       </Box>
       <HandList rows={rows} onOpen={openPhone} listRef={listRef} sx={{mt: "14px"}} />
