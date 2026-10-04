@@ -13,7 +13,7 @@ import AddCircleRoundedIcon from "@mui/icons-material/AddCircleRounded";
 import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import EmojiEventsRoundedIcon from "@mui/icons-material/EmojiEventsRounded";
-import GroupAddRoundedIcon from "@mui/icons-material/GroupAddRounded";
+import EditRoundedIcon from "@mui/icons-material/EditRounded";
 import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
 import LibraryAddRoundedIcon from "@mui/icons-material/LibraryAddRounded";
 import LoginRoundedIcon from "@mui/icons-material/LoginRounded";
@@ -39,7 +39,7 @@ export type NavKey =
   | "manageLeague"
   | "createLeague"
   | "createRound"
-  | "teams"
+  | "manageTeam"
   | "profile";
 
 // Desktop page frame: menu button + eyebrow/title header, right-hand controls, content filling the viewport
@@ -111,8 +111,8 @@ const NAV: NavItem[] = [
   {key: "league", label: "League Standings", icon: <EmojiEventsRoundedIcon />, href: `/league/${CURRENT_LEAGUE_ID}/standings`},
   {key: "manageLeague", label: "Manage League", icon: <TuneRoundedIcon />, href: `/league/${CURRENT_LEAGUE_ID}/manage`, head: "Admin", adminOnly: true},
   {key: "createLeague", label: "Create League", icon: <LibraryAddRoundedIcon />, href: "/league/new", adminOnly: true},
+  {key: "manageTeam", label: "Manage Team", icon: <EditRoundedIcon />, href: "/teams", adminOnly: true},
   {key: "createRound", label: "Create Round", icon: <AddCircleRoundedIcon />, href: "/createRound", adminOnly: true},
-  {key: "teams", label: "Teams", icon: <GroupAddRoundedIcon />, href: "/teams", adminOnly: true},
   {key: "profile", label: "My Profile", icon: <AccountCircleRoundedIcon />, href: "/profile", head: "Račun"},
 ];
 

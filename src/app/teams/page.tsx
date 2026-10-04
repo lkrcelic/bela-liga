@@ -1,7 +1,7 @@
 "use client";
 
-import {TeamsScreen} from "@/app/_ui/teams/TeamsScreens";
+import ManageTeam from "@/app/_ui/teams/ManageTeam";
 
 export default function Teams() {
-  return <TeamsScreen />;
+  return <ManageTeam />;
 }

@@ -14,7 +14,6 @@ import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
 import EmojiEventsRoundedIcon from "@mui/icons-material/EmojiEventsRounded";
 import GroupAddRoundedIcon from "@mui/icons-material/GroupAddRounded";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
-import PersonAddRoundedIcon from "@mui/icons-material/PersonAddRounded";
 import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
 import {Box} from "@mui/material";
 import {TransitionLink} from "@/app/_lib/viewTransitions";
@@ -120,8 +119,7 @@ export default function PhoneHome({isAdmin, openTable}: {isAdmin: boolean; openT
           <SectionLabel id="admin-controls">Admin Controls</SectionLabel>
           <Card component="ul" sx={{listStyle: "none", m: 0, p: 0, display: "flex", flexDirection: "column", overflow: "hidden"}}>
             <AdminRow href="/createRound" icon={<AddCircleRoundedIcon />} label="Create Round" divider />
-            <AdminRow href="/teams/new" icon={<GroupAddRoundedIcon />} label="Create Team" divider />
-            <AdminRow href="/teams/add-teammate" icon={<PersonAddRoundedIcon />} label="Add Teammate" />
+            <AdminRow href="/teams" icon={<GroupAddRoundedIcon />} label="Manage Team" />
           </Card>
         </Box>
       )}

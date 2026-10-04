@@ -28,7 +28,7 @@ import {
   Spinner,
   SwitchTrack,
 } from "@/app/_ui/sp";
-import {searchTeams, TeamOption} from "@/app/_ui/teams/pickers";
+import {searchTeams, TeamOption} from "@/app/_ui/teams/teamSearch";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import GroupAddRoundedIcon from "@mui/icons-material/GroupAddRounded";
