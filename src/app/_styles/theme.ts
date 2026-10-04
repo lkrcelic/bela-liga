@@ -15,6 +15,23 @@ declare module '@mui/material/styles' {
   }
 }
 
+// The theme defines an extra "h7" text style (used by Typography variant="h7")
+declare module '@mui/material/styles' {
+  interface TypographyVariants {
+    h7: React.CSSProperties;
+  }
+
+  interface TypographyVariantsOptions {
+    h7?: React.CSSProperties;
+  }
+}
+
+declare module '@mui/material/Typography' {
+  interface TypographyPropsVariantOverrides {
+    h7: true;
+  }
+}
+
 // Extend the components to allow for team1 and team2 colors
 declare module '@mui/material/Button' {
   interface ButtonPropsColorOverrides {
