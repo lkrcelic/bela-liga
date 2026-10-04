@@ -9,7 +9,7 @@ import {Card, DesktopShell, ellipsis, EmptyState, ErrorNote, LoadingRows, Primar
 import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
 import {Box} from "@mui/material";
 import {useParams, useSearchParams} from "next/navigation";
-import {CURRENT_LEAGUE_ID} from "@/app/_lib/league";
+import {useActiveLeagueId} from "@/app/_hooks/useLeagues";
 import {useTransitionRouter} from "@/app/_lib/viewTransitions";
 import {useCallback, useEffect, useState} from "react";
 
@@ -18,16 +18,19 @@ type Pairing = {id: number; table: number; a: string; b: string};
 // Who sits where in a new round, shown right after the admin creates it
 export default function RoundPairings() {
   const {roundNumber} = useParams<{roundNumber: string}>();
-  const leagueId = Number(useSearchParams().get("league")) || CURRENT_LEAGUE_ID;
+  const fromUrl = Number(useSearchParams().get("league")) || null;
+  const activeId = useActiveLeagueId();
+  const leagueId = fromUrl ?? activeId;
   const router = useTransitionRouter();
   const isDesktop = useIsDesktop();
   const [pairs, setPairs] = useState<Pairing[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
+    if (leagueId === undefined) return; // still finding the league being played now
     setError(null);
     try {
-      const data = await getRoundsByRoundNumber(Number(roundNumber), leagueId);
+      const data = leagueId == null ? [] : await getRoundsByRoundNumber(Number(roundNumber), leagueId);
       setPairs(
         (data ?? [])
           .map((r: RoundMatchup, i: number) => ({id: r.id, table: r.table_number || i + 1, a: r.team1?.team_name ?? "", b: r.team2?.team_name ?? ""}))

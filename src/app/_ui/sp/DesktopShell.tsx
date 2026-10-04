@@ -5,7 +5,8 @@ import useLogout from "@/app/_hooks/useLogout";
 import useStartGame from "@/app/_hooks/useStartGame";
 import {getRoundsAPI} from "@/app/_fetchers/round/getRounds";
 import {leagueDateString} from "@/app/_lib/dates";
-import {CURRENT_LEAGUE_ID} from "@/app/_lib/league";
+import {currentLeagueHref} from "@/app/_lib/league";
+import {useActiveLeagueId} from "@/app/_hooks/useLeagues";
 import useAuthStore from "@/app/_store/authStore";
 import {color, ease, font, shadow} from "@/app/_styles/tokens";
 import AccountCircleRoundedIcon from "@mui/icons-material/AccountCircleRounded";
@@ -142,9 +143,9 @@ type NavItem = {key: NavKey; label: string; icon: React.ReactNode; href?: string
 const NAV: NavItem[] = [
   {key: "home", label: "Početna", icon: <HomeRoundedIcon />, href: "/"},
   {key: "game", label: "Start Game", icon: <PlayArrowRoundedIcon />},
-  {key: "daily", label: "Daily Standings", icon: <CalendarMonthRoundedIcon />, href: `/league/${CURRENT_LEAGUE_ID}/daily-standings`},
-  {key: "league", label: "League Standings", icon: <EmojiEventsRoundedIcon />, href: `/league/${CURRENT_LEAGUE_ID}/standings`},
-  {key: "manageLeague", label: "Manage League", icon: <TuneRoundedIcon />, href: `/league/${CURRENT_LEAGUE_ID}/manage`, head: "Admin", adminOnly: true},
+  {key: "daily", label: "Daily Standings", icon: <CalendarMonthRoundedIcon />, href: currentLeagueHref("daily-standings")},
+  {key: "league", label: "League Standings", icon: <EmojiEventsRoundedIcon />, href: currentLeagueHref("standings")},
+  {key: "manageLeague", label: "Manage League", icon: <TuneRoundedIcon />, href: currentLeagueHref("manage"), head: "Admin", adminOnly: true},
   {key: "createLeague", label: "Create League", icon: <LibraryAddRoundedIcon />, href: "/league/new", adminOnly: true},
   {key: "manageTeam", label: "Manage Teams", icon: <EditRoundedIcon />, href: "/teams", adminOnly: true},
   {key: "createRound", label: "Create Round", icon: <AddCircleRoundedIcon />, href: "/createRound", adminOnly: true},
@@ -157,13 +158,14 @@ export function NavDrawer({open, onClose, active}: {open: boolean; onClose: () =
   const {logout, loggingOut} = useLogout();
   const {start, starting, error} = useStartGame();
   const [liveToday, setLiveToday] = useState(false);
+  const leagueId = useActiveLeagueId();
   const signedIn = user != null;
 
   // the red dot on Daily Standings: is any table of tonight being played right now
   useEffect(() => {
-    if (!open || !signedIn) return;
+    if (!open || !signedIn || leagueId == null) return;
     let cancelled = false;
-    getRoundsAPI({round_date: leagueDateString(), league_id: CURRENT_LEAGUE_ID})
+    getRoundsAPI({round_date: leagueDateString(), league_id: leagueId})
       .then((rounds) => {
         if (!cancelled) setLiveToday(rounds.some((r) => r.active));
       })
@@ -173,7 +175,7 @@ export function NavDrawer({open, onClose, active}: {open: boolean; onClose: () =
     return () => {
       cancelled = true;
     };
-  }, [open, signedIn]);
+  }, [open, signedIn, leagueId]);
 
   // signed out, only the public season table is available
   const items = NAV.filter((n) => (signedIn ? isAdmin || !n.adminOnly : n.key === "league"));

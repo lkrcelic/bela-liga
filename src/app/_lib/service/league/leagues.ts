@@ -1,18 +1,29 @@
 import {LeagueCreateRequest, LeagueSummary, LeagueTeamDetails} from "@/app/_interfaces/league";
 import {BYE_TEAM_ID} from "@/app/_lib/bye";
+import {pickActiveLeague} from "@/app/_lib/league";
 import {prisma} from "@/app/_lib/prisma";
 import {InvalidResultError} from "@/app/_lib/validation/validateResult";
 import {Prisma} from "@prisma/client";
 
 const dateString = (d: Date | null) => (d ? d.toISOString().slice(0, 10) : null);
 
-// Every league, newest first, with its number of teams (the bye team is not counted)
+// Every league, newest first, with its number of teams (the bye team is not counted), its latest round night
+// and which one is being played now
 export async function listLeagues(): Promise<LeagueSummary[]> {
-  const leagues = await prisma.league.findMany({
-    orderBy: {league_id: "desc"},
-    include: {_count: {select: {leagueTeams: {where: {team_id: {not: BYE_TEAM_ID}}}}}},
-  });
-  return leagues.map((l) => ({
+  const [leagues, played] = await Promise.all([
+    prisma.league.findMany({
+      orderBy: {league_id: "desc"},
+      include: {_count: {select: {leagueTeams: {where: {team_id: {not: BYE_TEAM_ID}}}}}},
+    }),
+    prisma.$queryRaw<{league_id: number; last_played: Date | null}[]>`
+        SELECT lr.league_id, MAX(r.round_date) AS last_played
+        FROM "LeagueRound" lr
+                 JOIN "Round" r ON r.id = lr.round_id
+        GROUP BY lr.league_id
+    `,
+  ]);
+  const lastPlayed = new Map(played.map((p) => [p.league_id, dateString(p.last_played)]));
+  const rows = leagues.map((l) => ({
     league_id: l.league_id,
     league_name: l.league_name,
     season: l.season,
@@ -20,7 +31,15 @@ export async function listLeagues(): Promise<LeagueSummary[]> {
     play_day: l.play_day,
     rounds_per_night: l.rounds_per_night,
     team_count: l._count.leagueTeams,
+    last_played: lastPlayed.get(l.league_id) ?? null,
   }));
+  const activeId = pickActiveLeague(rows);
+  return rows.map((l) => ({...l, active: l.league_id === activeId}));
+}
+
+// The league being played now, or null when there are no leagues
+export async function activeLeagueId(): Promise<number | null> {
+  return (await listLeagues()).find((l) => l.active)?.league_id ?? null;
 }
 
 // Creates a league and, optionally, adds existing teams to it
@@ -50,6 +69,8 @@ export async function createLeague(req: LeagueCreateRequest): Promise<LeagueSumm
     play_day: league.play_day,
     rounds_per_night: league.rounds_per_night,
     team_count: teamIds.length,
+    last_played: null,
+    active: false,
   };
 }
 

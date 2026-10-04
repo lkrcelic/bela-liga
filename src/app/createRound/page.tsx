@@ -4,7 +4,6 @@ import {createMultipleRoundsAPI} from "@/app/_fetchers/round/createMultipleRound
 import useIsDesktop from "@/app/_hooks/useIsDesktop";
 import useLeagues, {LeagueOption} from "@/app/_hooks/useLeagues";
 import useLeagueTeams, {LeagueTeam} from "@/app/_hooks/useLeagueTeams";
-import {CURRENT_LEAGUE_ID} from "@/app/_lib/league";
 import {matchesQuery, plural} from "@/app/_lib/ui/text";
 import {color, shadow} from "@/app/_styles/tokens";
 import {
@@ -50,8 +49,8 @@ export default function CreateRound() {
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
 
-  // the desktop shows the league list and the teams together, so it starts on the current league
-  const activeLeague = leagueId ?? (isDesktop ? leagues.find((l) => l.id === CURRENT_LEAGUE_ID)?.id ?? leagues[0]?.id ?? null : null);
+  // the desktop shows the league list and the teams together, so it starts on the league being played now
+  const activeLeague = leagueId ?? (isDesktop ? leagues.find((l) => l.active)?.id ?? leagues[0]?.id ?? null : null);
   const {teams, error: teamsError, loading, reload} = useLeagueTeams(activeLeague);
   const inactive = useMemo(() => new Set((teams ?? []).filter((t) => !t.active).map((t) => t.id)), [teams]);
   const defaultRounds = leagues.find((l) => l.id === activeLeague)?.roundsPerNight;

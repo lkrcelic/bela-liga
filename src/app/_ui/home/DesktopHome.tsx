@@ -1,11 +1,11 @@
 "use client";
 
 import {getPlayerByIdAPI} from "@/app/_fetchers/player/getById";
-import useLeagues from "@/app/_hooks/useLeagues";
+import useLeagues, {useActiveLeagueId} from "@/app/_hooks/useLeagues";
 import useMyTeams from "@/app/_hooks/useMyTeams";
 import {useDailyData, useLeagueStandings, useRoundDates} from "@/app/_hooks/useStandings";
 import {leagueDateString} from "@/app/_lib/dates";
-import {CURRENT_LEAGUE_ID} from "@/app/_lib/league";
+import {currentLeagueHref} from "@/app/_lib/league";
 import {splitPodium, toStandingsRows} from "@/app/_lib/ui/standings";
 import {displayDate, weekdayDate} from "@/app/_lib/ui/text";
 import useAuthStore from "@/app/_store/authStore";
@@ -23,7 +23,10 @@ export default function DesktopHome() {
   const {teams} = useMyTeams();
   const myTeamNames = useMemo(() => teams.map((t) => t.team_name), [teams]);
   const leagues = useLeagues();
-  const leagueName = leagues.find((l) => l.id === CURRENT_LEAGUE_ID)?.name ?? "";
+  // the league being played now (the latest round night)
+  const leagueId = useActiveLeagueId();
+  const noLeague = leagueId === null;
+  const leagueName = leagues.find((l) => l.id === leagueId)?.name ?? "";
 
   useEffect(() => {
     if (!user?.id) return;
@@ -33,14 +36,14 @@ export default function DesktopHome() {
   }, [user?.id]);
 
   // the latest night the league played; the card links to the full daily view
-  const {dates} = useRoundDates(CURRENT_LEAGUE_ID);
-  const lastDate = dates == null ? null : dates.length ? dates[dates.length - 1] : "";
-  const daily = useDailyData(CURRENT_LEAGUE_ID, lastDate || null);
+  const {dates} = useRoundDates(leagueId);
+  const lastDate = noLeague ? "" : dates == null ? null : dates.length ? dates[dates.length - 1] : "";
+  const daily = useDailyData(leagueId, lastDate || null);
   const dailyRows = useMemo(() => toStandingsRows(daily.data?.standings, myTeamNames), [daily.data, myTeamNames]);
   const liveRounds = (daily.data?.rounds ?? []).filter((r) => r.active).map((r) => r.round_number);
   const liveRound = liveRounds.length ? Math.max(...liveRounds) : null;
 
-  const league = useLeagueStandings(CURRENT_LEAGUE_ID);
+  const league = useLeagueStandings(leagueId);
   const leagueRows = useMemo(() => toStandingsRows(league.standings, myTeamNames), [league.standings, myTeamNames]);
   const {podium, rest} = splitPodium(leagueRows);
 
@@ -56,7 +59,7 @@ export default function DesktopHome() {
           title="Daily Standings"
           sub={dailySub}
           badge={liveRound ? <LivePill /> : null}
-          onOpen={() => router.push(`/league/${CURRENT_LEAGUE_ID}/daily-standings`)}
+          onOpen={() => router.push(currentLeagueHref("daily-standings"))}
         >
           {daily.error ? (
             <ErrorNote onRetry={daily.reload} sx={{m: "0 20px"}}>
@@ -73,12 +76,12 @@ export default function DesktopHome() {
           )}
         </Panel>
 
-        <Panel title="League Standings" sub={leagueName} onOpen={() => router.push(`/league/${CURRENT_LEAGUE_ID}/standings`)}>
+        <Panel title="League Standings" sub={leagueName} onOpen={() => router.push(currentLeagueHref("standings"))}>
           {league.error ? (
             <ErrorNote onRetry={league.reload} sx={{m: "0 20px"}}>
               {league.error}
             </ErrorNote>
-          ) : league.loading ? (
+          ) : league.loading && !noLeague ? (
             <LoadingRows rows={8} height={46} />
           ) : leagueRows.length === 0 ? (
             <EmptyState>Još nema rezultata u ovoj ligi.</EmptyState>

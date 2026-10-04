@@ -12,8 +12,11 @@ import {useCallback, useEffect, useRef, useState} from "react";
 const withoutBye = (items: unknown): StandingsItem[] =>
   (Array.isArray(items) ? (items as StandingsItem[]) : []).filter((s) => s.team_id == null || !isByeTeam(Number(s.team_id)));
 
+// A league id that may still be loading (undefined) or missing (null); the hooks below wait until it is known
+type MaybeLeague = number | null | undefined;
+
 // Dates (YYYY-MM-DD, ascending) on which the league played
-export function useRoundDates(leagueId: number) {
+export function useRoundDates(leagueId: MaybeLeague) {
   const [dates, setDates] = useState<string[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [nonce, setNonce] = useState(0);
@@ -22,6 +25,7 @@ export function useRoundDates(leagueId: number) {
     let cancelled = false;
     setDates(null);
     setError(null);
+    if (leagueId == null) return;
     getRoundDatesByLeagueIdAPI(leagueId)
       .then((d) => {
         if (!cancelled) setDates(Array.isArray(d) ? [...d].sort() : []);
@@ -48,7 +52,7 @@ export type DailyData = {
 };
 
 // Standings and tables of one night. Refreshes every 30 s without showing the loading state again.
-export function useDailyData(leagueId: number, date: string | null) {
+export function useDailyData(leagueId: MaybeLeague, date: string | null) {
   const [data, setData] = useState<DailyData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -57,7 +61,7 @@ export function useDailyData(leagueId: number, date: string | null) {
 
   const load = useCallback(
     async (quiet: boolean) => {
-      if (!date) return;
+      if (!date || leagueId == null) return;
       const id = ++reqId.current;
       if (!quiet) {
         setLoading(true);
@@ -99,7 +103,7 @@ export function useDailyData(leagueId: number, date: string | null) {
 }
 
 // Season table of a league
-export function useLeagueStandings(leagueId: number) {
+export function useLeagueStandings(leagueId: MaybeLeague) {
   const [standings, setStandings] = useState<StandingsItem[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [nonce, setNonce] = useState(0);
@@ -108,6 +112,7 @@ export function useLeagueStandings(leagueId: number) {
     let cancelled = false;
     setStandings(null);
     setError(null);
+    if (leagueId == null) return;
     getLeagueStandingsAPI(leagueId)
       .then((s) => {
         if (!cancelled) setStandings(withoutBye(s));

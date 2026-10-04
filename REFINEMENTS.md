@@ -136,8 +136,9 @@ so I left them as they are.
 **Done**
 - "Create Team" adds the team to the current league. Before, a new team never showed up when creating rounds.
 - Duplicate names and two identical founders get a clear error, and the form validates and reports the result.
-- The current league id (2) is in one constant, `src/app/_lib/league.ts`. You can override it with
-  `NEXT_PUBLIC_LEAGUE_ID`.
+- The current league is no longer a fixed id. It is the league with the latest round night (with no rounds anywhere,
+  the newest league), see `pickActiveLeague` in `src/app/_lib/league.ts`. Home, the menus and Create Round open it,
+  and `/league/current/<page>` redirects to it.
 - Logging in while another session cookie is still there replaces that session. Before, it failed with a generic error,
   which mattered for a shared phone.
 - Login is case-insensitive (exact match first). Signup refuses usernames and emails that differ only in case.

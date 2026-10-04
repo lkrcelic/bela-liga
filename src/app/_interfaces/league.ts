@@ -31,6 +31,8 @@ export type LeagueSummary = {
   play_day: number | null;
   rounds_per_night: number;
   team_count: number;
+  last_played: string | null; // the latest round night, YYYY-MM-DD
+  active: boolean; // the league being played now (see pickActiveLeague)
 };
 
 // A team of a league with its players, for Manage League and Create Round

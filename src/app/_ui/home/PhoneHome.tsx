@@ -3,7 +3,7 @@
 import useLogout from "@/app/_hooks/useLogout";
 import {OpenTable} from "@/app/_hooks/useOpenTable";
 import useStartGame from "@/app/_hooks/useStartGame";
-import {CURRENT_LEAGUE_ID} from "@/app/_lib/league";
+import {currentLeagueHref} from "@/app/_lib/league";
 import {color, font, shadow} from "@/app/_styles/tokens";
 import {Brand} from "@/app/_ui/auth/AuthFrame";
 import {buttonBase, Card, ellipsis, ErrorNote, IconCircleButton, Screen, SectionLabel, Spinner, TextButton} from "@/app/_ui/sp";
@@ -98,8 +98,8 @@ export default function PhoneHome({
       )}
 
       <Box component="nav" aria-label="Poredak" sx={{display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px"}}>
-        <Tile href={`/league/${CURRENT_LEAGUE_ID}/daily-standings`} icon={<CalendarMonthRoundedIcon />} label="Daily Standings" />
-        <Tile href={`/league/${CURRENT_LEAGUE_ID}/standings`} icon={<EmojiEventsRoundedIcon />} label="League Standings" />
+        <Tile href={currentLeagueHref("daily-standings")} icon={<CalendarMonthRoundedIcon />} label="Daily Standings" />
+        <Tile href={currentLeagueHref("standings")} icon={<EmojiEventsRoundedIcon />} label="League Standings" />
       </Box>
 
       {openTable && (
@@ -130,7 +130,7 @@ export default function PhoneHome({
           <SectionLabel id="admin-controls">Admin Controls</SectionLabel>
           <Card component="ul" sx={{listStyle: "none", m: 0, p: 0, display: "flex", flexDirection: "column", overflow: "hidden"}}>
             <AdminRow href="/createRound" icon={<AddCircleRoundedIcon />} label="Create Round" divider />
-            <AdminRow href={`/league/${CURRENT_LEAGUE_ID}/manage`} icon={<TuneRoundedIcon />} label="Manage League" divider />
+            <AdminRow href={currentLeagueHref("manage")} icon={<TuneRoundedIcon />} label="Manage League" divider />
             <AdminRow href="/league/new" icon={<LibraryAddRoundedIcon />} label="Create League" divider />
             <AdminRow href="/teams" icon={<GroupAddRoundedIcon />} label="Manage Teams" />
           </Card>
