@@ -49,6 +49,7 @@ model Player {
   creatorTeams                   Team[]                          @relation("PlayerCreator")
   teamPlayers                    TeamPlayer[]
   roundPlayers                   RoundPlayer[]
+  ratingHistory                  PlayerRatingHistory[]
   sessions                       Session[]
   luciaSessions                  LuciaSession[]
   accounts                       Account[]
@@ -219,6 +220,23 @@ model Round {
   tournamentRounds TournamentRound[]
   leagueRounds     LeagueRound[]
   roundPlayers     RoundPlayer[]
+}
+
+// A player's rating after each league night they played (Glicko-2, one rating period per night). Rewritten by
+// every rating replay; the newest row matches the player's current rating.
+model PlayerRatingHistory {
+  player_id        Int
+  night            DateTime @db.Date
+  rating           Int
+  rating_deviation Float
+  // the rating change that night
+  change           Int
+  // rated rounds played that night
+  rounds           Int
+
+  player Player @relation(fields: [player_id], references: [id], onDelete: Cascade)
+
+  @@id([player_id, night])
 }
 
 // The two players of each team who play a round (picked on Start Game); their ratings change with its result
