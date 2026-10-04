@@ -15,12 +15,14 @@ import InsightsRoundedIcon from "@mui/icons-material/InsightsRounded";
 import PersonAddRoundedIcon from "@mui/icons-material/PersonAddRounded";
 import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
 import {Box} from "@mui/material";
-import {useParams} from "next/navigation";
+import {useParams, useSearchParams} from "next/navigation";
 import React, {useCallback, useEffect, useState} from "react";
 
 // Start Game · who plays this round (Claude Design 7c "Lineup card", desktop "tko igra"). Shown before the
 // scoreboard of the round's first match: two players per team, suggested from the team's last round in the league
 // (or its founders in the league's first round). A slot opens to swap in a teammate who isn't playing.
+// With ?league=, an admin is opening the table's scorepad from Daily: confirming goes on to that scorepad, where
+// the admin's first hand starts the match.
 
 const TITLE = "Tko igra ovu rundu?";
 // the slot's background while it is open, per side (viewer's team green, opponent red)
@@ -35,6 +37,7 @@ export default function LineupPage() {
   const id = Number(roundId);
   const router = useTransitionRouter();
   const isDesktop = useIsDesktop();
+  const padLeague = Number(useSearchParams().get("league")) || null;
   const [lineup, setLineup] = useState<Lineup | null>(null);
   // the viewer's team first; selection per team, slot by slot
   const [teams, setTeams] = useState<LineupTeam[]>([]);
@@ -74,6 +77,10 @@ export default function LineupPage() {
     setSaveError(null);
     try {
       await saveLineupAPI(id, {teams: teams.map((t, i) => ({team_id: t.id, player_ids: selected[i]}))});
+      if (padLeague) {
+        router.replace(`/league/${padLeague}/daily-standings/table/${id}`);
+        return;
+      }
       const match = await createOngoingMatchAPI({round_id: id, score_threshold: 1001});
       // replace: back from the scoreboard goes Home, not to this screen
       router.replace(`/ongoing-match/${match.id}`);
@@ -84,7 +91,7 @@ export default function LineupPage() {
   };
 
   const label = lineup ? [lineup.table != null && `Stol ${lineup.table}`, lineup.roundNumber != null && `Runda ${lineup.roundNumber}`].filter(Boolean).join(" · ") : "";
-  const back = () => router.push("/", "back");
+  const back = () => router.push(padLeague ? `/league/${padLeague}/daily-standings` : "/", "back");
 
   const slots = (t: LineupTeam, ti: number, big: boolean) => (
     <TeamSlots team={t} side={ti} selected={selected[ti]} openSlot={openSlot} onToggle={setOpenSlot} onPick={(s, p) => pick(ti, s, p)} big={big} />
@@ -111,7 +118,12 @@ export default function LineupPage() {
 
   if (isDesktop) {
     return (
-      <DesktopShell active="game" eyebrow={label || "Start Game"} title={TITLE}>
+      <DesktopShell
+        active={padLeague ? "daily" : "game"}
+        back={padLeague ? {label: "Daily", href: `/league/${padLeague}/daily-standings`} : undefined}
+        eyebrow={label || "Start Game"}
+        title={TITLE}
+      >
         {status ?? (
           <Box sx={{flex: 1, minHeight: 0, overflowY: "auto", display: "flex", justifyContent: "center"}}>
             <Box sx={{width: "100%", maxWidth: 980, display: "flex", flexDirection: "column", gap: "20px"}}>

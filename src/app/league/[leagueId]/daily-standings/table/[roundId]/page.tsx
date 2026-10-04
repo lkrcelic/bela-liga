@@ -13,6 +13,7 @@ import AdminPanelSettingsRoundedIcon from "@mui/icons-material/AdminPanelSetting
 import HistoryEduRoundedIcon from "@mui/icons-material/HistoryEduRounded";
 import {Box} from "@mui/material";
 import {useParams} from "next/navigation";
+import {useTransitionRouter} from "@/app/_lib/viewTransitions";
 import React, {useCallback, useEffect, useState} from "react";
 
 const THRESHOLD = 1001;
@@ -25,6 +26,7 @@ export default function TableScorepad() {
   const roundId = Number(params.roundId);
   const isDesktop = useIsDesktop();
   const isAdmin = useIsAdmin();
+  const router = useTransitionRouter();
 
   const [pad, setPad] = useState<TablePad | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -45,6 +47,12 @@ export default function TableScorepad() {
   useEffect(() => {
     if (isAdmin) load();
   }, [isAdmin, load]);
+
+  // a table still to be played: confirm who plays first, as players do on Start Game (the ratings need it)
+  const needsLineup = pad != null && !pad.done && !pad.bye && !pad.hasLineup;
+  useEffect(() => {
+    if (needsLineup) router.replace(`/round/lineup/${roundId}?league=${leagueId}`);
+  }, [needsLineup, router, roundId, leagueId]);
 
   // the matches to choose from; a table still in play without a match running gets the next one to start
   const matches: PadMatch[] = pad ? [...pad.matches] : [];
@@ -134,7 +142,7 @@ export default function TableScorepad() {
         </Card>
       ) : loadError ? (
         <ErrorNote onRetry={load}>{loadError}</ErrorNote>
-      ) : !pad || !match ? (
+      ) : !pad || !match || needsLineup ? (
         <CenteredSpinner />
       ) : pad.bye ? (
         <Card>
