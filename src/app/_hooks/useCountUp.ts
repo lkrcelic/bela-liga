@@ -3,7 +3,8 @@
 import useReducedMotion from "@/app/_hooks/useReducedMotion";
 import {useEffect, useRef, useState} from "react";
 
-// Animates a number from its previous value to `target` (ease-out cubic). Jumps straight there under reduced motion.
+// Animates a number from its previous value to `target` (ease-out cubic). Jumps straight there under reduced motion
+// or with a duration of 0.
 // `from` sets the starting value on mount, e.g. the totals before the hand that was just saved.
 export default function useCountUp(target: number, duration = 600, delay = 200, from?: number): number {
   const reduce = useReducedMotion();
@@ -11,7 +12,7 @@ export default function useCountUp(target: number, duration = 600, delay = 200, 
   const shownRef = useRef(from ?? target);
 
   useEffect(() => {
-    if (reduce || shownRef.current === target) {
+    if (reduce || duration <= 0 || shownRef.current === target) {
       shownRef.current = target;
       setShown(target);
       return;

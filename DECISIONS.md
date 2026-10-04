@@ -62,8 +62,8 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
     already mixes both.
 
 15. **Text contrast:** the design's `#8A8F9C` (≈3.3:1 on white) is used only for placeholders and decorative counts;
-    meaningful small text (hand numbers, inactive team names) uses `#6B7080` (≈4.8:1). Everything else in the palette
-    passes 4.5:1.
+    meaningful small text (hand numbers, inactive team names) uses `#686D7D` (5.2:1 on white, 4.6:1 on the paper
+    background). Every other text/background pair in the palette was checked and passes 4.5:1.
 
 16. **Pinch-zoom is allowed again** (`maximum-scale=1, user-scalable=no` removed from the viewport meta, WCAG 1.4.4).
     Buttons get `touch-action: manipulation`, so fast taps on the keypad still don't trigger double-tap zoom.

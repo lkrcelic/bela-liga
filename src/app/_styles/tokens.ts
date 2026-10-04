@@ -10,8 +10,8 @@ export const color = {
   ink: "#1F2433",
   inkSoft: "#4A5062",
   muted: "#5E6577",
-  // readable small text on white (4.8:1); the design's #8A8F9C is kept for placeholders only
-  faint: "#6B7080",
+  // readable small text (5.2:1 on white, 4.6:1 on paper); the design's #8A8F9C is kept for placeholders only
+  faint: "#686D7D",
   placeholder: "#8A8F9C",
   navy: "#3C4A67",
   cream: "#EDE0BF",
