@@ -5,7 +5,8 @@
   - Results keep which TEAM called trump (`trump_caller_team`: 1 = team1, 2 = team2).
   - Announcements keep which TEAM declared them (`team`: 1 = team1, 2 = team2).
   Existing data is converted from player ids to teams via the match's player pairs (falling back to the
-  round's team rosters) before the player-level columns are dropped.
+  round's team rosters) before the player-level columns are dropped. A trump caller that can't be placed stays
+  empty; an announcement that can't be placed is deleted (only the hand's detail; its points stay).
 
   Warnings:
   - Drops `OngoingMatch.seating_order_ids`, `OngoingMatch.current_shuffler_index`, the shuffler trigger,
@@ -91,6 +92,12 @@ FROM "BelaResult" r
          JOIN "Round" rd ON rd.id = m.round_id
 WHERE r.result_id = a.result_id
   AND a.team IS NULL;
+
+-- What still has no team can't be placed: the match has no player pairs and the player is on neither team's roster
+-- any more (production had 77, all in finished matches). Only hand detail is lost: the hands keep their points and
+-- totals, and match scores, round results and standings don't read announcements.
+DELETE FROM "OngoingBelaPlayerAnnouncement" WHERE team IS NULL;
+DELETE FROM "BelaPlayerAnnouncement" WHERE team IS NULL;
 
 ALTER TABLE "OngoingBelaPlayerAnnouncement" ALTER COLUMN "team" SET NOT NULL;
 ALTER TABLE "BelaPlayerAnnouncement" ALTER COLUMN "team" SET NOT NULL;
