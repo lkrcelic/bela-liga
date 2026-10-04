@@ -31,14 +31,14 @@ import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
 import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
 import EmojiEventsRoundedIcon from "@mui/icons-material/EmojiEventsRounded";
 import {Box} from "@mui/material";
-import {useRouter} from "next/navigation";
+import {useTransitionRouter} from "@/app/_lib/viewTransitions";
 import {useEffect, useMemo, useState} from "react";
 
 const MAX_ROUNDS = 5;
 const MAX_WINDOW = 200;
 
 export default function CreateRound() {
-  const router = useRouter();
+  const router = useTransitionRouter();
   const isDesktop = useIsDesktop();
   const leagues = useLeagues();
   const [leagueId, setLeagueId] = useState<number | null>(null);
@@ -212,7 +212,7 @@ export default function CreateRound() {
     return (
       <Screen>
         <Box>
-          <IconCircleButton label="Nazad" onClick={() => router.push("/")}>
+          <IconCircleButton label="Nazad" onClick={() => router.push("/", "back")}>
             <ArrowBackRoundedIcon />
           </IconCircleButton>
         </Box>

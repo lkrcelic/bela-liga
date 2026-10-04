@@ -9,14 +9,15 @@ import {Card, CenteredSpinner, DesktopShell, ErrorNote, PrimaryButton, Screen, S
 import useMatchSides from "@/app/ongoing-match/ui/useMatchSides";
 import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
 import {Box} from "@mui/material";
-import {useParams, useRouter} from "next/navigation";
+import {useParams} from "next/navigation";
+import {useTransitionRouter} from "@/app/_lib/viewTransitions";
 import React, {useCallback, useEffect, useState} from "react";
 
 type FinishedMatch = {id?: number; player_pair1_score: number; player_pair2_score: number};
 
 // "Kraj kola": round wins per team and the score of each match
 export default function RoundResultPage() {
-  const router = useRouter();
+  const router = useTransitionRouter();
   const {roundId} = useParams<{roundId: string}>();
   const isDesktop = useIsDesktop();
   const setRoundData = useRoundStore((s) => s.setRoundData);
@@ -42,7 +43,7 @@ export default function RoundResultPage() {
   const [w0, w1] = sides.wins;
   const winner = matches && (w0 !== w1) ? (w0 > w1 ? 0 : 1) : null;
   const home = (
-    <PrimaryButton icon={<HomeRoundedIcon />} onClick={() => router.push("/")} sx={{mt: "auto"}}>
+    <PrimaryButton icon={<HomeRoundedIcon />} onClick={() => router.push("/", "back")} sx={{mt: "auto"}}>
       Početni zaslon
     </PrimaryButton>
   );

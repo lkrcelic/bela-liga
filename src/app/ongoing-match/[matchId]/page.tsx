@@ -19,7 +19,8 @@ import AddCircleRoundedIcon from "@mui/icons-material/AddCircleRounded";
 import DoneRoundedIcon from "@mui/icons-material/DoneRounded";
 import TableRestaurantRoundedIcon from "@mui/icons-material/TableRestaurantRounded";
 import {Box} from "@mui/material";
-import {useParams, usePathname, useRouter} from "next/navigation";
+import {useParams, usePathname} from "next/navigation";
+import {useTransitionRouter} from "@/app/_lib/viewTransitions";
 import {useCallback, useEffect, useMemo, useRef, useState} from "react";
 
 // pips that should pop on the next match after "Završi meč"
@@ -28,7 +29,7 @@ const pipPops = new Map<number, number>();
 export default function ScoreBoardPage() {
   const params = useParams<{matchId: string}>();
   const matchId = Number(params.matchId);
-  const router = useRouter();
+  const router = useTransitionRouter();
   const pathname = usePathname();
   const isDesktop = useIsDesktop();
   const setOngoingMatch = useOngoingMatchStore((s) => s.setOngoingMatch);
@@ -78,6 +79,11 @@ export default function ScoreBoardPage() {
   useEffect(() => {
     load();
   }, [load]);
+
+  // the wizard opens with a view transition, which waits for the route; have it ready
+  useEffect(() => {
+    router.router.prefetch(`/ongoing-match/${matchId}/ongoing-result/new/trump-caller`);
+  }, [router, matchId]);
 
   // Several phones can follow the same match, so pick up hands entered elsewhere
   useEffect(() => {
@@ -216,7 +222,19 @@ export default function ScoreBoardPage() {
     </PrimaryButton>
   );
 
-  if (loading) return isDesktop ? <DesktopShell active="game" title="Meč"><CenteredSpinner /></DesktopShell> : <Screen fill><CenteredSpinner /></Screen>;
+  // the phone board's root shares its view-transition-name with the Start Game card, which grows into it
+  const boardSx = {viewTransitionName: "table", background: color.paper};
+
+  if (loading)
+    return isDesktop ? (
+      <DesktopShell active="game" title="Meč">
+        <CenteredSpinner />
+      </DesktopShell>
+    ) : (
+      <Screen fill sx={boardSx}>
+        <CenteredSpinner />
+      </Screen>
+    );
 
   if (loadError) {
     const body = <ErrorNote onRetry={load}>{loadError}</ErrorNote>;
@@ -278,8 +296,8 @@ export default function ScoreBoardPage() {
   }
 
   return (
-    <Screen fill gap={0} sx={{pt: "calc(14px + env(safe-area-inset-top))"}}>
-      <Box sx={{display: "flex", flexDirection: "column", gap: "12px", animation: "spFadeUp 320ms both"}}>
+    <Screen fill gap={0} sx={{...boardSx, pt: "calc(14px + env(safe-area-inset-top))"}}>
+      <Box sx={{display: "flex", flexDirection: "column", gap: "12px", animation: "spFadeUp 320ms 120ms both"}}>
         <Eyebrow sx={{textAlign: "center"}}>{matchLabel}</Eyebrow>
         <Box sx={{display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,1fr)", gap: "12px"}}>{panels("phone")}</Box>
       </Box>

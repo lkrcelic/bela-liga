@@ -5,13 +5,14 @@ import {color, font} from "@/app/_styles/tokens";
 import {ActionPair, buttonBase, ErrorNote} from "@/app/_ui/sp";
 import {saveHand} from "@/app/ongoing-match/ui/handFlow";
 import {Box} from "@mui/material";
-import {useParams, useRouter} from "next/navigation";
+import {useParams} from "next/navigation";
+import {useTransitionRouter} from "@/app/_lib/viewTransitions";
 import {useState} from "react";
 import {ActionProps} from "./TrumpCallerPage";
 
 // Step 3: game points for the selected team; the other team gets the rest of 162
 export default function ScorePage({actionType}: ActionProps) {
-  const router = useRouter();
+  const router = useTransitionRouter();
   const params = useParams<{matchId: string; resultId?: string}>();
   const result = useResultStore((s) => s.resultData);
   const {setGamePoints, resetScore, setCompleteVictory} = useResultStore.getState();
@@ -27,7 +28,7 @@ export default function ScorePage({actionType}: ActionProps) {
     setError(null);
     try {
       await saveHand(Number(params.matchId), actionType === "UPDATE" ? params.resultId : null);
-      router.push(`/ongoing-match/${params.matchId}`);
+      router.push(`/ongoing-match/${params.matchId}`, "back");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Spremanje nije uspjelo.");
       setSaving(false);

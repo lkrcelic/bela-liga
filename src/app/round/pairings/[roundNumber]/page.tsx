@@ -8,7 +8,8 @@ import {color, font} from "@/app/_styles/tokens";
 import {Card, DesktopShell, ellipsis, EmptyState, ErrorNote, LoadingRows, PrimaryButton, Screen, ScreenTitle, ScrollArea} from "@/app/_ui/sp";
 import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
 import {Box} from "@mui/material";
-import {useParams, useRouter} from "next/navigation";
+import {useParams} from "next/navigation";
+import {useTransitionRouter} from "@/app/_lib/viewTransitions";
 import {useCallback, useEffect, useState} from "react";
 
 type Pairing = {id: number; table: number; a: string; b: string};
@@ -16,7 +17,7 @@ type Pairing = {id: number; table: number; a: string; b: string};
 // Who sits where in a new round, shown right after the admin creates it
 export default function RoundPairings() {
   const {roundNumber} = useParams<{roundNumber: string}>();
-  const router = useRouter();
+  const router = useTransitionRouter();
   const isDesktop = useIsDesktop();
   const [pairs, setPairs] = useState<Pairing[] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -94,7 +95,7 @@ export default function RoundPairings() {
     <Screen fill>
       <ScreenTitle eyebrow={`Pairings${summary ? ` · ${summary}` : ""}`} title={`Round ${roundNumber}`} />
       <ScrollArea bleed>{list}</ScrollArea>
-      <PrimaryButton icon={<HomeRoundedIcon />} onClick={() => router.push("/")}>
+      <PrimaryButton icon={<HomeRoundedIcon />} onClick={() => router.push("/", "back")}>
         Početni zaslon
       </PrimaryButton>
     </Screen>

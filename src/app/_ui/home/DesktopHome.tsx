@@ -13,11 +13,11 @@ import {color, font} from "@/app/_styles/tokens";
 import {Card, ChipButton, DesktopShell, EmptyState, ErrorNote, LivePill, LoadingRows, Podium, StandingsGrid} from "@/app/_ui/sp";
 import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
 import {Box} from "@mui/material";
-import {useRouter} from "next/navigation";
+import {useTransitionRouter} from "@/app/_lib/viewTransitions";
 import React, {useEffect, useMemo, useState} from "react";
 
 export default function DesktopHome() {
-  const router = useRouter();
+  const router = useTransitionRouter();
   const user = useAuthStore((s) => s.user);
   const [firstName, setFirstName] = useState<string | null>(null);
   const {teams} = useMyTeams();

@@ -6,14 +6,15 @@ import {color, font, teamColor} from "@/app/_styles/tokens";
 import {ActionPair, buttonBase} from "@/app/_ui/sp";
 import useMatchSides from "@/app/ongoing-match/ui/useMatchSides";
 import {Box} from "@mui/material";
-import {useParams, useRouter} from "next/navigation";
+import {useParams} from "next/navigation";
+import {useTransitionRouter} from "@/app/_lib/viewTransitions";
 import {ActionProps} from "./TrumpCallerPage";
 
 const ZVANJA = [20, 50, 100, 150, 200];
 
 // Step 2: zvanja (announcements) for the team selected in the header
 export default function AnnouncementPage({actionType}: ActionProps) {
-  const router = useRouter();
+  const router = useTransitionRouter();
   const params = useParams<{matchId: string; resultId?: string}>();
   const sides = useMatchSides();
   const activeTeam = useResultStore((s) => s.resultData.activeTeam);

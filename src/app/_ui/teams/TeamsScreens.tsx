@@ -5,7 +5,7 @@ import {font} from "@/app/_styles/tokens";
 import {Card, DesktopShell, IconCircleButton, Muted, Screen, ScreenTitle} from "@/app/_ui/sp";
 import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import {Box} from "@mui/material";
-import {useRouter} from "next/navigation";
+import {useTransitionRouter} from "@/app/_lib/viewTransitions";
 import React from "react";
 import AddTeammateForm from "./AddTeammateForm";
 import CreateTeamForm from "./CreateTeamForm";
@@ -36,11 +36,11 @@ function DesktopTeams() {
 }
 
 function PhoneFrame({title, intro, children}: {title: string; intro?: string; children: React.ReactNode}) {
-  const router = useRouter();
+  const router = useTransitionRouter();
   return (
     <Screen>
       <Box>
-        <IconCircleButton label="Nazad" onClick={() => router.push("/")}>
+        <IconCircleButton label="Nazad" onClick={() => router.push("/", "back")}>
           <ArrowBackRoundedIcon />
         </IconCircleButton>
       </Box>

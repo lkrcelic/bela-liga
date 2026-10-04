@@ -1,6 +1,7 @@
 "use client";
 
 import UserBootstrapper from "@/app/_bootstrap/UserBootstrapper";
+import {RouteTransitions} from "@/app/_lib/viewTransitions";
 import theme from "@/app/_styles/theme";
 import {color} from "@/app/_styles/tokens";
 import {CssBaseline, ThemeProvider} from "@mui/material";
@@ -32,6 +33,7 @@ export default function RootLayout({children}: Readonly<{children: React.ReactNo
         <ThemeProvider theme={theme}>
           <CssBaseline />
           <UserBootstrapper />
+          <RouteTransitions />
           {mounted ? children : null}
         </ThemeProvider>
       </body>

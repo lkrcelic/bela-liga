@@ -25,14 +25,15 @@ import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
 import LoginRoundedIcon from "@mui/icons-material/LoginRounded";
 import useAuthStore from "@/app/_store/authStore";
 import {Box} from "@mui/material";
-import {useParams, useRouter} from "next/navigation";
+import {useParams} from "next/navigation";
+import {useTransitionRouter} from "@/app/_lib/viewTransitions";
 import {useMemo} from "react";
 
 // Season table of a league: podium for the top three, then everyone else
 export default function LeagueStandings() {
   const params = useParams<{leagueId: string}>();
   const leagueId = Number(params.leagueId);
-  const router = useRouter();
+  const router = useTransitionRouter();
   const isDesktop = useIsDesktop();
   const leagues = useLeagues(leagueId);
   const {teams} = useMyTeams();
@@ -41,7 +42,7 @@ export default function LeagueStandings() {
   const rows = useMemo(() => toStandingsRows(standings, myTeamNames), [standings, myTeamNames]);
   const {podium, rest} = splitPodium(rows);
   const leagueName = leagues.find((l) => l.id === leagueId)?.name ?? "";
-  const changeLeague = (id: number) => router.push(`/league/${id}/standings`);
+  const changeLeague = (id: number) => router.router.push(`/league/${id}/standings`);
   // the season table is public; visitors who are not logged in get a login button instead of "home"
   const signedIn = useAuthStore((s) => s.user != null);
 
@@ -113,7 +114,7 @@ export default function LeagueStandings() {
       </Box>
       {content(false)}
       {signedIn ? (
-        <PrimaryButton icon={<HomeRoundedIcon />} onClick={() => router.push("/")}>
+        <PrimaryButton icon={<HomeRoundedIcon />} onClick={() => router.push("/", "back")}>
           Početni zaslon
         </PrimaryButton>
       ) : (

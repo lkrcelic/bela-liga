@@ -2,6 +2,7 @@
 
 import {Screen} from "@/app/_ui/sp";
 import WizardHeader from "@/app/ongoing-match/[matchId]/ongoing-result/ui/WizardHeader";
+import {activeNavDirection} from "@/app/_lib/viewTransitions";
 import {Box} from "@mui/material";
 import {usePathname} from "next/navigation";
 import React, {useState} from "react";
@@ -17,6 +18,8 @@ export default function Layout({children}: {children: React.ReactNode}) {
   const [nav, setNav] = useState({step, direction: "forward"});
   if (nav.step !== step) setNav({step, direction: step > nav.step ? "forward" : "back"});
   const direction = nav.step !== step ? (step > nav.step ? "forward" : "back") : nav.direction;
+  // a view transition already slides the page; the CSS slide is the fallback (older browsers, browser back button)
+  const viaViewTransition = activeNavDirection() != null;
 
   return (
     <Screen fill gap={0} sx={{pt: "calc(22px + env(safe-area-inset-top))"}}>
@@ -28,7 +31,7 @@ export default function Layout({children}: {children: React.ReactNode}) {
           minHeight: 0,
           display: "flex",
           flexDirection: "column",
-          animation: `${direction === "forward" ? "spStepIn" : "spStepBack"} 280ms cubic-bezier(.2,.8,.2,1) both`,
+          animation: viaViewTransition ? "none" : `${direction === "forward" ? "spStepIn" : "spStepBack"} 280ms cubic-bezier(.2,.8,.2,1) both`,
         }}
       >
         {children}

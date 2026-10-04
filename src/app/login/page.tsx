@@ -7,10 +7,10 @@ import {color} from "@/app/_styles/tokens";
 import GoogleLoginButton from "@/app/login/ui/GoogleLoginButton";
 import LogInForm from "@/app/login/ui/LogInForm";
 import {Box} from "@mui/material";
-import {useRouter} from "next/navigation";
+import {useTransitionRouter} from "@/app/_lib/viewTransitions";
 
 export default function LogIn() {
-  const router = useRouter();
+  const router = useTransitionRouter();
   const isDesktop = useIsDesktop();
   const onSuccess = () => router.replace("/");
 

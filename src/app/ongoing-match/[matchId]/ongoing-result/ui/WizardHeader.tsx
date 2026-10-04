@@ -27,7 +27,7 @@ export default function WizardHeader({step}: {step: number}) {
   const label = isScore ? "Igra" : "Zvanja";
 
   return (
-    <Box component="header" sx={{display: "flex", flexDirection: "column", gap: "12px", pb: "12px", flex: "none"}}>
+    <Box component="header" sx={{display: "flex", flexDirection: "column", gap: "12px", pb: "12px", flex: "none", viewTransitionName: "team-header"}}>
       <Eyebrow sx={{px: "4px"}}>Korak {step + 1} od 3</Eyebrow>
       <Box role="radiogroup" aria-label={`${label}: upis za ekipu`} sx={{display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px"}}>
         {sides.sides.map((side, i) => {

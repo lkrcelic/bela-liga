@@ -23,11 +23,11 @@ import {
 } from "@/app/_ui/sp";
 import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
 import {Box, Skeleton} from "@mui/material";
-import {useRouter} from "next/navigation";
+import {useTransitionRouter} from "@/app/_lib/viewTransitions";
 import {useCallback, useEffect, useState} from "react";
 
 export default function ProfilePage() {
-  const router = useRouter();
+  const router = useTransitionRouter();
   const isDesktop = useIsDesktop();
   const user = useAuthStore((s) => s.user);
   const {teams, loading: teamsLoading} = useMyTeams();
@@ -164,7 +164,7 @@ export default function ProfilePage() {
         {detailsBlock(false)}
         {teamsBlock(false)}
       </ScrollArea>
-      <PrimaryButton icon={<HomeRoundedIcon />} onClick={() => router.push("/")}>
+      <PrimaryButton icon={<HomeRoundedIcon />} onClick={() => router.push("/", "back")}>
         Početni zaslon
       </PrimaryButton>
     </Screen>
