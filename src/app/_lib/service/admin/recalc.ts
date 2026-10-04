@@ -1,6 +1,7 @@
 import {Prisma} from "@prisma/client";
 import {BYE_TEAM_ID, isByeTeam} from "@/app/_lib/bye";
 import {MU0, PHI0, SIGMA0, updateTeams} from "@/app/_lib/rating/ratingService";
+import {ratedPlayerIds} from "@/app/_lib/lineup";
 
 // Recalculation after an admin changes results that were already counted (edited hands of a finished match, a table
 // re-paired or removed, a round deleted).
@@ -25,7 +26,8 @@ export async function recalcTeamScores(tx: Prisma.TransactionClient, leagueId: n
 }
 
 // Ratings from scratch: every player starts at the default and every rated round (closed, no bye, since
-// RATINGS_FROM) is applied again in the order it was played. Rosters are today's, as the app doesn't keep history.
+// RATINGS_FROM) is applied again in the order it was played. A round counts for its lineup (the players picked on
+// Start Game); a round without one counts for today's rosters, as older rounds don't keep who played.
 export async function replayRatings(tx: Prisma.TransactionClient) {
   await lockRatings(tx);
 
@@ -45,12 +47,15 @@ export async function replayRatings(tx: Prisma.TransactionClient) {
       team2_wins: true,
       team1: {select: {teamPlayers: {select: {player_id: true}}}},
       team2: {select: {teamPlayers: {select: {player_id: true}}}},
+      team1_id: true,
+      team2_id: true,
+      roundPlayers: {select: {player_id: true, team_id: true}},
     },
   });
 
   for (const r of rounds) {
-    const a = r.team1.teamPlayers.map((p) => p.player_id).filter((id) => ratings.has(id));
-    const b = r.team2.teamPlayers.map((p) => p.player_id).filter((id) => ratings.has(id));
+    const a = ratedPlayerIds(r.roundPlayers, r.team1_id, r.team1.teamPlayers.map((p) => p.player_id)).filter((id) => ratings.has(id));
+    const b = ratedPlayerIds(r.roundPlayers, r.team2_id, r.team2.teamPlayers.map((p) => p.player_id)).filter((id) => ratings.has(id));
     if (a.length === 0 || b.length === 0) continue;
     const score = r.team1_wins > r.team2_wins ? 1 : r.team1_wins === r.team2_wins ? 0.5 : 0;
     const {teamA, teamB} = updateTeams(
