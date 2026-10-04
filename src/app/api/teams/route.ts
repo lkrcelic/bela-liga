@@ -8,6 +8,7 @@ import {NextRequest, NextResponse} from "next/server";
 import {STATUS} from "@/app/_lib/statusCodes";
 import {requireAdmin, requireUser} from "@/app/_lib/service/auth/requireUser";
 import {createTeam} from "@/app/_lib/service/team/create";
+import {BYE_TEAM_ID} from "@/app/_lib/bye";
 
 export async function GET(request: NextRequest) {
   const auth = await requireUser(request);
@@ -16,18 +17,20 @@ export async function GET(request: NextRequest) {
     const {searchParams} = new URL(request.url);
     const search = searchParams.get("search");
     const dbTeams = await prisma.team.findMany({
-      where: search
-        ? {
-            team_name: {
-              contains: search,
-              mode: "insensitive",
-            },
-          }
-        : undefined,
+      // the bye placeholder is not a real team
+      where: {
+        team_id: {not: BYE_TEAM_ID},
+        ...(search ? {team_name: {contains: search, mode: "insensitive"}} : {}),
+      },
       include: {
         // only the fields the response shows (not emails or password hashes)
         teamPlayers: {
           include: {player: {select: {id: true, username: true, first_name: true, last_name: true}}},
+          orderBy: {player: {username: "asc"}},
+        },
+        leagueTeams: {
+          select: {active: true, league: {select: {league_id: true, league_name: true}}},
+          orderBy: {league_id: "desc"},
         },
       },
       orderBy: {team_name: "asc"},
