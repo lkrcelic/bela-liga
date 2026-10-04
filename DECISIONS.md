@@ -71,3 +71,6 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
 17. **Pages render only after mount** (root layout gate). Layout depends on the viewport width (`useIsDesktop`), which
     the server cannot know; server-rendering the phone layout caused hydration errors and a flash of the wrong layout
     on desktop. Every page already fetches its data on the client, so nothing useful was server-rendered before.
+
+18. **Team boxes in the hand wizard say which team they are for** ("Zvanja · Dalmatinci"), not just "Zvanja".
+    The design tells the two boxes apart by color only (green / red), which fails WCAG 1.4.1 for color-blind players.
