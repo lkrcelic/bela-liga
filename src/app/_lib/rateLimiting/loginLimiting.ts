@@ -1,4 +1,3 @@
-import {LoginUser} from "@/app/_interfaces/login";
 import {NextRequest} from "next/server";
 
 /*
@@ -6,50 +5,49 @@ import {NextRequest} from "next/server";
  * I did not do it now as it requires either setting up to run locally on our server
  * OR we could consider hosted(paid) redis options.
  */
-const rateLimitStore = new Map<string, {count: number; lastRequest: number}>();
 
-const MAX_ATTEMPTS = 5;
-const WINDOW_DURATION = 5 * 60 * 1000; // Minutes * seconds * miliseconds
+// Only failed logins count: after MAX_FAILURES wrong passwords within WINDOW_DURATION the username is locked
+// for the rest of the window. A successful login clears the count, so a player on several devices is never locked.
+export const MAX_FAILURES = 5;
+export const WINDOW_DURATION = 5 * 60 * 1000; // Minutes * seconds * miliseconds
 
-async function loginRateLimited(username: string, ip: string): Promise<boolean> {
-  // Per address and username, so someone else can't lock a player out by failing logins with their username
-  const key = `${ip}|${username.toLowerCase()}`;
-  const now = Date.now();
-  pruneExpired(now);
+type Entry = {count: number; firstFailure: number};
+const failureStore = new Map<string, Entry>();
 
-  const entry = rateLimitStore.get(key) || {count: 0, lastRequest: now};
-  if (now - entry.lastRequest > WINDOW_DURATION) {
-    rateLimitStore.set(key, {count: 1, lastRequest: now});
+// Per address and username, so someone else can't lock a player out by failing logins with their username
+export function loginLimitKey(request: NextRequest, username: string): string {
+  const ip = request.ip || request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+  return `${ip}|${username.trim().toLowerCase()}`;
+}
+
+export function isLoginLocked(key: string, now = Date.now()): boolean {
+  const entry = failureStore.get(key);
+  if (!entry) return false;
+  if (now - entry.firstFailure > WINDOW_DURATION) {
+    failureStore.delete(key);
     return false;
   }
+  return entry.count >= MAX_FAILURES;
+}
 
-  if (entry.count >= MAX_ATTEMPTS) {
-    return true;
+export function recordFailedLogin(key: string, now = Date.now()): void {
+  pruneExpired(now);
+  const entry = failureStore.get(key);
+  if (!entry || now - entry.firstFailure > WINDOW_DURATION) {
+    failureStore.set(key, {count: 1, firstFailure: now});
+  } else {
+    entry.count++;
   }
+}
 
-  entry.count++;
-  entry.lastRequest = now;
-  rateLimitStore.set(key, entry);
-  return false;
+export function clearFailedLogins(key: string): void {
+  failureStore.delete(key);
 }
 
 // The store lives in memory, so drop entries whose window is over to keep it from growing forever
 function pruneExpired(now: number) {
-  if (rateLimitStore.size < 1000) return;
-  rateLimitStore.forEach((entry, key) => {
-    if (now - entry.lastRequest > WINDOW_DURATION) rateLimitStore.delete(key);
+  if (failureStore.size < 1000) return;
+  failureStore.forEach((entry, key) => {
+    if (now - entry.firstFailure > WINDOW_DURATION) failureStore.delete(key);
   });
-}
-
-export async function handleLogin(request: NextRequest): Promise<boolean> {
-  try {
-    const body = await request.json();
-    const username = LoginUser.parse(body).username;
-
-    const ip = request.ip || request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
-    return await loginRateLimited(username, ip);
-  } catch {
-    // The error will be provided in the api route, safe to return true!
-    return true;
-  }
 }

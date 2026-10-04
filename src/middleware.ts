@@ -1,4 +1,3 @@
-import {handleLogin} from "@/app/_lib/rateLimiting/loginLimiting";
 import {isApiLimited} from "@/app/_lib/rateLimiting/requestLimiting";
 import {verifyCookie} from "@/app/_lib/service/auth/signCookie";
 import {STATUS} from "@/app/_lib/statusCodes";
@@ -25,11 +24,7 @@ export async function middleware(req: NextRequest) {
     if (!authorized) return NextResponse.redirect(new URL("/login", req.url));
   }
 
-  if (req.nextUrl.pathname.startsWith("/api/login")) {
-    if (await handleLogin(req)) {
-      return NextResponse.json({error: "Too many login attempts. Try again later."}, {status: STATUS.TooManyRequests});
-    }
-  }
+  // failed logins are limited in /api/login itself, which knows whether the password was right
 
   if (req.nextUrl.pathname.startsWith("/api")) {
     if (await isApiLimited(req)) {

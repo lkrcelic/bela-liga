@@ -7,6 +7,7 @@ import {LoginUser} from "@/app/_interfaces/login";
 import {STATUS} from "@/app/_lib/statusCodes";
 import {extractCookieWithoutSignature, signCookie} from "@/app/_lib/service/auth/signCookie";
 import { lucia } from "@/app/_lib/luciaAuth";
+import {clearFailedLogins, isLoginLocked, loginLimitKey, recordFailedLogin} from "@/app/_lib/rateLimiting/loginLimiting";
 
 // A new response each time: a response body can only be sent once
 const notFoundResponse = () => NextResponse.json({error: "Incorrect username or password."}, {status: STATUS.NotFound});
@@ -15,6 +16,11 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const user = LoginUser.parse(body);
+
+    const limitKey = loginLimitKey(req, user.username);
+    if (isLoginLocked(limitKey)) {
+      return NextResponse.json({error: "Too many login attempts. Try again later."}, {status: STATUS.TooManyRequests});
+    }
 
     // Logging in while a session cookie is still there (e.g. someone else used this phone) replaces that session
     // An exact match first, then ignoring case (phone keyboards capitalize the first letter)
@@ -32,12 +38,15 @@ export async function POST(req: NextRequest) {
       });
     // Google accounts have no password
     if (!existingUser || !existingUser.password_hash) {
+      recordFailedLogin(limitKey);
       return notFoundResponse();
     }
     const validPassword = await argon2.verify(existingUser.password_hash, user.password);
     if (!validPassword) {
+      recordFailedLogin(limitKey);
       return notFoundResponse();
     }
+    clearFailedLogins(limitKey);
 
     /*
       It is neccessary to provide sessionId because lucia implements a different kind of id generator
