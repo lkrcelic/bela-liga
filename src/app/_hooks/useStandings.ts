@@ -16,6 +16,7 @@ const withoutBye = (items: unknown): StandingsItem[] =>
 export function useRoundDates(leagueId: number) {
   const [dates, setDates] = useState<string[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [nonce, setNonce] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -34,9 +35,9 @@ export function useRoundDates(leagueId: number) {
     return () => {
       cancelled = true;
     };
-  }, [leagueId]);
+  }, [leagueId, nonce]);
 
-  return {dates, error};
+  return {dates, error, reload: () => setNonce((n) => n + 1)};
 }
 
 export type DailyData = {
@@ -52,6 +53,7 @@ export function useDailyData(leagueId: number, date: string | null) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const reqId = useRef(0);
+  const hasData = useRef(false);
 
   const load = useCallback(
     async (quiet: boolean) => {
@@ -69,13 +71,15 @@ export function useDailyData(leagueId: number, date: string | null) {
         if (id !== reqId.current) return;
         const roundNumbers = Array.from(new Set(rounds.map((r) => r.round_number).filter((n) => n != null))).sort((a, b) => a - b);
         setData({standings: withoutBye(standings), rounds, roundNumbers});
+        hasData.current = true;
         setError(null);
       } catch {
         if (id !== reqId.current) return;
-        // a failed background refresh keeps the last data on screen
-        if (!quiet) setError("Poredak nije moguće učitati.");
+        // a failed background refresh keeps the last data on screen (if there is any)
+        if (!quiet || !hasData.current) setError("Poredak nije moguće učitati.");
       } finally {
-        if (id === reqId.current && !quiet) setLoading(false);
+        // the latest request ends the loading state, also when it was a background refresh that overtook a load
+        if (id === reqId.current) setLoading(false);
       }
     },
     [leagueId, date]
@@ -84,6 +88,7 @@ export function useDailyData(leagueId: number, date: string | null) {
   useEffect(() => {
     if (!date) return;
     setData(null);
+    hasData.current = false;
     load(false);
     const t = setInterval(() => load(true), 30000);
     return () => clearInterval(t);
