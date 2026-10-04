@@ -163,6 +163,7 @@ function PhoneRow({player: p, me}: {player: RatingRow; me: boolean}) {
         background: me ? color.mine : "transparent",
         boxShadow: me ? shadow.mineBar : "none",
         textDecoration: "none",
+        textAlign: "left",
         color: color.ink,
         "&:active": {background: me ? color.mine : color.pressed},
       }}
