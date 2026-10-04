@@ -42,7 +42,7 @@ function CustomPrismaAdapter() {
             // "Ana Marija Horvat" -> first name "Ana", last name "Marija Horvat"
             first_name: data.name?.trim().split(/\s+/)[0] || "",
             last_name: data.name?.trim().split(/\s+/).slice(1).join(" ") || "",
-            birth_date: new Date(), // Default date
+            birth_date: null, // Google doesn't give it; the app asks after the first login
           },
         });
   
@@ -61,9 +61,11 @@ function CustomPrismaAdapter() {
         return {...user, id: String(user.id)};
       },
   
+      // Ignoring case: Google reports "marko@gmail.com" for a player who signed up as "Marko@Gmail.com"
       getUserByEmail: async (email) => {
-        const user = await prisma.player.findUnique({
-          where: {email},
+        const user = await prisma.player.findFirst({
+          where: {email: {equals: email, mode: "insensitive"}},
+          orderBy: {id: "asc"},
         });
         if (!user) return null;
         return {...user, id: String(user.id)};
@@ -156,6 +158,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [Google({
     clientId: process.env.GOOGLE_CLIENT_ID,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    // A player who signed up with a password and later uses Google with the same email gets into the same account
+    // instead of an "account not linked" error. Google verifies its emails; the email given at a password sign-up
+    // is not verified (see BACKEND_REVIEW.md, G).
+    allowDangerousEmailAccountLinking: true,
   })],
   session: {
     strategy: "database",

@@ -1,5 +1,6 @@
 "use client";
 
+import BirthDatePrompt from "@/app/_bootstrap/BirthDatePrompt";
 import UserBootstrapper from "@/app/_bootstrap/UserBootstrapper";
 import {RouteTransitions} from "@/app/_lib/viewTransitions";
 import theme from "@/app/_styles/theme";
@@ -35,6 +36,7 @@ export default function RootLayout({children}: Readonly<{children: React.ReactNo
           <UserBootstrapper />
           <RouteTransitions />
           {mounted ? children : null}
+          {mounted && <BirthDatePrompt />}
         </ThemeProvider>
       </body>
     </html>
