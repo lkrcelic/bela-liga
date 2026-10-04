@@ -16,7 +16,8 @@ const errorText = (e: unknown, fallback: string) => (e instanceof Error ? e.mess
 // Manage Team (admin): pick a team to rename it and change its players, or start a new team.
 // An existing team's players change at once; its name is saved with "Save name". A new team collects its name and
 // players first and is created with "Create team" (the first two players become its founders).
-export default function ManageTeam({startNew = false}: {startNew?: boolean}) {
+// leagueId: the league a new team joins (Manage League's "Create team"); without it the current league
+export default function ManageTeam({startNew = false, leagueId}: {startNew?: boolean; leagueId?: number}) {
   const isDesktop = useIsDesktop();
   const router = useTransitionRouter();
 
@@ -101,8 +102,12 @@ export default function ManageTeam({startNew = false}: {startNew?: boolean}) {
     setSaveError(null);
     try {
       if (isNew) {
-        const id = await createTeamAPI(name, newPlayers.map((p) => p.id));
-        const fresh = (await getTeamsAPI()).map(toMTTeam);
+        const id = await createTeamAPI(name, newPlayers.map((p) => p.id), leagueId);
+        // the team exists now; if the list can't be reloaded, show it from what was entered
+        const created: MTTeam = {id, name, founders: newPlayers.slice(0, 2).map((p) => p.id), players: newPlayers, leagues: []};
+        const fresh = await getTeamsAPI()
+          .then((all) => all.map(toMTTeam))
+          .catch(() => [...(teams ?? []), created]);
         setTeams(fresh);
         setIsNew(false);
         setSelectedId(id);
