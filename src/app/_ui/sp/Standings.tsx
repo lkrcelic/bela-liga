@@ -21,6 +21,7 @@ export function Podium({rows, compact = false, sx}: {rows: StandingsRow[]; compa
         <Box
           component="li"
           key={r.key}
+          aria-current={r.mine ? "true" : undefined}
           sx={{
             background: color.medalBg[i],
             color: color.ink,
@@ -28,7 +29,7 @@ export function Podium({rows, compact = false, sx}: {rows: StandingsRow[]; compa
             p: compact ? "12px 12px 14px" : "20px 22px",
             display: "flex",
             minWidth: 0,
-            boxShadow: compact ? shadow.card : "none",
+            boxShadow: [compact ? shadow.card : null, r.mine ? shadow.mineRing : null].filter(Boolean).join(", ") || "none",
             ...(compact
               ? {flexDirection: "column", gap: "10px"}
               : {alignItems: "flex-end", justifyContent: "space-between", gap: "12px"}),
@@ -110,53 +111,74 @@ export function VisuallyHidden({children}: {children: React.ReactNode}) {
   );
 }
 
-// Phone standings: two-line rows (name + stats), RAZ and BOD on the right, so nothing scrolls sideways
-export function StandingsRows({rows, withPlayed = false}: {rows: StandingsRow[]; withPlayed?: boolean}) {
+// Phone standings: two-line rows (name + stats), RAZ and BOD on the right, so nothing scrolls sideways. With
+// podium, the top three come first as medal rows that stay pinned while the rest scrolls under them (the parent
+// card is the scroller). The player's own team has a cream row with a navy bar.
+export function StandingsRows({rows, podium, withPlayed = false}: {rows: StandingsRow[]; podium?: StandingsRow[]; withPlayed?: boolean}) {
+  const top = podium && podium.length >= 3 ? podium.slice(0, 3) : null;
   return (
-    <Box component="ol" sx={{listStyle: "none", m: 0, p: 0}}>
-      {rows.map((r) => (
-        <Box
-          component="li"
-          key={r.key}
-          aria-current={r.mine ? "true" : undefined}
-          sx={{
-            height: 62,
-            display: "grid",
-            gridTemplateColumns: "30px minmax(0,1fr) auto",
-            alignItems: "center",
-            gap: "10px",
-            pl: "12px",
-            pr: "16px",
-            borderBottom: `1px solid ${color.line}`,
-            background: r.mine ? color.creamSoft : "transparent",
-          }}
-        >
-          <RankBadge rank={r.rank} live={r.live} />
-          <Box sx={{display: "flex", flexDirection: "column", gap: "2px", minWidth: 0}}>
-            <Box sx={{fontSize: 16, fontWeight: 600, ...ellipsis}}>{r.name}</Box>
-            <Box sx={{fontSize: 12.5, color: color.muted, whiteSpace: "nowrap", ...tabular}}>{statsLine(r, withPlayed)}</Box>
-          </Box>
-          <Box sx={{display: "flex", alignItems: "baseline", gap: "12px"}}>
-            <Box aria-label={`razlika ${r.diff}`} sx={{minWidth: 48, textAlign: "right", fontSize: 17, fontWeight: 700, color: color.navy, ...tabular}}>
-              {r.diff}
-            </Box>
-            <Box
-              aria-label={`${r.points} bodova`}
-              sx={{
-                minWidth: 34,
-                textAlign: "right",
-                fontFamily: font.display,
-                fontSize: 26,
-                fontWeight: 800,
-                color: r.live ? color.live : color.ink,
-                ...tabular,
-              }}
-            >
-              {r.points}
-            </Box>
+    <>
+      {top && (
+        <Box sx={{position: "sticky", top: 0, zIndex: 2, background: color.card, boxShadow: "0 6px 12px -8px rgba(31,36,51,.25)"}}>
+          <Box component="ol" aria-label="Prva tri mjesta" sx={{listStyle: "none", m: 0, p: 0}}>
+            {top.map((r, i) => (
+              <StandingsLine key={r.key} r={r} withPlayed={withPlayed} medal={i} />
+            ))}
           </Box>
         </Box>
-      ))}
+      )}
+      <Box component="ol" start={top ? 4 : undefined} sx={{listStyle: "none", m: 0, p: 0}}>
+        {rows.map((r) => (
+          <StandingsLine key={r.key} r={r} withPlayed={withPlayed} />
+        ))}
+      </Box>
+    </>
+  );
+}
+
+function StandingsLine({r, withPlayed, medal}: {r: StandingsRow; withPlayed: boolean; medal?: number}) {
+  const onPodium = medal != null;
+  return (
+    <Box
+      component="li"
+      aria-current={r.mine ? "true" : undefined}
+      sx={{
+        height: onPodium ? 58 : 62,
+        display: "grid",
+        gridTemplateColumns: "30px minmax(0,1fr) auto",
+        alignItems: "center",
+        gap: "10px",
+        pl: "12px",
+        pr: "16px",
+        borderBottom: `1px solid ${color.line}`,
+        background: onPodium ? color.medalRow[medal] : r.mine ? color.mine : "transparent",
+        boxShadow: r.mine ? shadow.mineBar : "none",
+      }}
+    >
+      {onPodium ? <Medal rank={r.rank} index={medal} size={28} /> : <RankBadge rank={r.rank} live={r.live} />}
+      <Box sx={{display: "flex", flexDirection: "column", gap: "2px", minWidth: 0}}>
+        <Box sx={{fontSize: 16, fontWeight: onPodium || r.mine ? 700 : 600, ...ellipsis}}>{r.name}</Box>
+        <Box sx={{fontSize: 12.5, color: onPodium ? color.inkSoft : color.muted, whiteSpace: "nowrap", ...tabular}}>{statsLine(r, withPlayed)}</Box>
+      </Box>
+      <Box sx={{display: "flex", alignItems: "baseline", gap: "12px"}}>
+        <Box aria-label={`razlika ${r.diff}`} sx={{minWidth: 48, textAlign: "right", fontSize: 17, fontWeight: 700, color: color.navy, ...tabular}}>
+          {r.diff}
+        </Box>
+        <Box
+          aria-label={`${r.points} bodova`}
+          sx={{
+            minWidth: 34,
+            textAlign: "right",
+            fontFamily: font.display,
+            fontSize: 26,
+            fontWeight: 800,
+            color: !onPodium && r.live ? color.live : color.ink,
+            ...tabular,
+          }}
+        >
+          {r.points}
+        </Box>
+      </Box>
     </Box>
   );
 }
@@ -234,14 +256,15 @@ export function StandingsGrid({
           return (
             <Box
               component="tr"
-          role="row"
+              role="row"
               key={r.key}
               aria-current={r.mine ? "true" : undefined}
               sx={{
                 ...cell,
                 height: dense ? 46 : 56,
                 borderBottom: `1px solid rgba(60,74,103,.07)`,
-                background: r.mine ? color.creamSoft : "transparent",
+                background: r.mine ? color.mine : "transparent",
+                boxShadow: r.mine ? shadow.mineBar : "none",
                 ...tabular,
                 "& td": {p: 0},
               }}
@@ -249,7 +272,7 @@ export function StandingsGrid({
               <Box component="td" role="cell">
                 <RankBadge rank={r.rank} live={live} size={dense ? 26 : 30} />
               </Box>
-              <Box component="td" role="cell" sx={{fontSize: dense ? 16 : 17, fontWeight: 600, ...ellipsis}}>
+              <Box component="td" role="cell" sx={{fontSize: dense ? 16 : 17, fontWeight: r.mine ? 700 : 600, ...ellipsis}}>
                 {r.name}
               </Box>
               {columns.map((c) => (
