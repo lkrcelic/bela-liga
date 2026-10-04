@@ -46,13 +46,13 @@ Desktop (≥1024 px): hamburger → overlay nav drawer, header with eyebrow + 44
 
 ## Shared foundations (build first)
 
-- [ ] Tokens: `src/app/_styles/tokens.ts` (colors, fonts, radii, shadows, motion) + theme update + Google Fonts link
-- [ ] Primitives in `src/app/_ui/sp/`: Screen, ScreenHeader (eyebrow/title), IconCircleButton, PrimaryButton,
+- [x] Tokens: `src/app/_styles/tokens.ts` (colors, fonts, radii, shadows, motion) + theme update + Google Fonts link
+- [x] Primitives in `src/app/_ui/sp/`: Screen, ScreenHeader (eyebrow/title), IconCircleButton, PrimaryButton,
       OutlineButton, ActionPair (Nazad/Dalje), Card, Field/TextInput/SearchInput, Switch, Stepper, PillTabs/Segmented,
       RankBadge/LiveDot/LivePill, Podium, StandingsRows (phone) / StandingsGrid (desktop), Avatar/initials,
       EmptyState/ErrorState/LoadingRows, BottomSheet, Icon (MUI Rounded icons)
-- [ ] DesktopShell + NavDrawer, `useIsDesktop`, `useSession` (user + isAdmin)
-- [ ] Pure helpers in `src/app/_lib/ui/*` with unit tests (standings formatting, table filters/columns, initials, dates)
+- [x] DesktopShell + NavDrawer, `useIsDesktop`, `useSession` (user + isAdmin)
+- [x] Pure helpers in `src/app/_lib/ui/*` with unit tests (standings formatting, table filters/columns, initials, dates)
 - [ ] Mock repository for features without a backend: `src/app/_mocks/leagueAdmin.ts` (team active status, add team to
       league, create league) — isolated behind one module
 
@@ -85,18 +85,32 @@ Desktop (≥1024 px): hamburger → overlay nav drawer, header with eyebrow + 44
 
 | Screen | Status | Notes |
 |--------|--------|-------|
-| Foundations | ☐ | |
-| Login | ☐ | |
-| Signup | ☐ | |
-| Home | ☐ | |
-| Scoreboard + desktop entry | ☐ | |
-| Wizard a/b/c | ☐ | |
-| Kraj kola | ☐ | |
-| Daily standings | ☐ | |
-| League standings | ☐ | |
-| Profile | ☐ | |
-| Create Round | ☐ | |
-| Create Team / Add Teammate / Teams | ☐ | |
-| Manage League (mock) | ☐ | |
-| Create League (mock) | ☐ | |
-| Pairings | ☐ | |
+| Foundations | ✅ | tokens, theme, `_ui/sp` kit, desktop shell + drawer, mount gate (D17) |
+| Login | ✅ | phone + desktop split; validation, wrong-password error verified |
+| Signup | ✅ | Croatian field validation (unit tested), server field errors mapped |
+| Home | ✅ | player (next table) + admin variants, start-game error, desktop dashboard |
+| Scoreboard + desktop entry | ✅ | add/edit/celebrate/finish verified with real API; keyboard digits on desktop |
+| Wizard a/b/c | ✅ | persistent header, step slide in/back, badges, štiglja |
+| Kraj kola | ✅ | verified after finishing a real round |
+| Daily standings | ✅ | live/finished/round tabs, league sheet; desktop presentation with 1–3 columns, filters, search; verified with live tables |
+| League standings | ✅ | league from URL (was hard-coded to 2), podium + list/table |
+| Profile | ✅ | details, teams, empty state |
+| Create Round | ✅ | phone two-step, desktop single view; inactive teams excluded (mock status) |
+| Create Team / Add Teammate / Teams | ✅ | combobox picker; team created and teammate search verified against the API |
+| Manage League (mock) | ✅ | real teams/players/rounds played; status + add team in mock store (D11) |
+| Create League (mock) | ✅ | saved to mock store with notice (D11) |
+| Pairings | ✅ | restyled; loading/empty/error |
+
+## Verification summary (end of run)
+
+- `npm test`: 28/28 pass (11 new tests for the UI helpers: standings rows, podium split, table filters/columns,
+  Croatian plurals, initials, dates, diacritic-insensitive search, signup validation)
+- `npm run lint`: 0 errors (remaining warnings are in untouched pre-existing files)
+- `tsc --noEmit`: 45 errors, down from 72 on master; none in files written or changed on this branch
+- `next build` (run in an isolated copy so the dev server kept running): succeeds, all routes compile
+- Browser checks at 375×812, 360×740, 768×1024 and 1440×900 with real data: login (validation, wrong password),
+  signup, home (player with next table, admin, start-game error), full game flow (enter hand, zvanja, edit hand,
+  winner celebration, finish match 1 → match 2 → Kraj kola), desktop inline entry with keyboard digits, daily
+  standings with live tables, league standings, profile, create round (search, filtered select-all, inactive),
+  create team (real create), add teammate search, manage league (toggle inactive → reflected in create round),
+  create league, pairings. No horizontal scroll at 360 px; focus ring visible on keyboard focus.
