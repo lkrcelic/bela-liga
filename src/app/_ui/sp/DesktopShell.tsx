@@ -15,6 +15,7 @@ import AddCircleRoundedIcon from "@mui/icons-material/AddCircleRounded";
 import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import EmojiEventsRoundedIcon from "@mui/icons-material/EmojiEventsRounded";
+import LeaderboardRoundedIcon from "@mui/icons-material/LeaderboardRounded";
 import EditRoundedIcon from "@mui/icons-material/EditRounded";
 import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
 import LibraryAddRoundedIcon from "@mui/icons-material/LibraryAddRounded";
@@ -39,6 +40,7 @@ export type NavKey =
   | "game"
   | "daily"
   | "league"
+  | "ratings"
   | "manageLeague"
   | "createLeague"
   | "createRound"
@@ -146,6 +148,7 @@ const NAV: NavItem[] = [
   {key: "game", label: "Start Game", icon: <PlayArrowRoundedIcon />},
   {key: "daily", label: "Daily Standings", icon: <CalendarMonthRoundedIcon />, leaguePage: "daily-standings"},
   {key: "league", label: "League Standings", icon: <EmojiEventsRoundedIcon />, leaguePage: "standings"},
+  {key: "ratings", label: "Rejting", icon: <LeaderboardRoundedIcon />, href: "/ratings"},
   {key: "manageLeague", label: "Manage League", icon: <TuneRoundedIcon />, leaguePage: "manage", head: "Admin", adminOnly: true},
   {key: "createLeague", label: "Create League", icon: <LibraryAddRoundedIcon />, href: "/league/new", adminOnly: true},
   {key: "manageTeam", label: "Manage Teams", icon: <EditRoundedIcon />, href: "/teams", adminOnly: true},

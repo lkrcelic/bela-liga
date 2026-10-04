@@ -4,6 +4,9 @@ import {getPlayerByIdAPI, PlayerById} from "@/app/_fetchers/player/getById";
 import {updateBirthDateAPI} from "@/app/_fetchers/player/updateBirthDate";
 import useIsDesktop from "@/app/_hooks/useIsDesktop";
 import useMyTeams from "@/app/_hooks/useMyTeams";
+import {useMyRating} from "@/app/_hooks/useRatings";
+import {formatChange} from "@/app/_lib/ui/ratings";
+import {TransitionLink} from "@/app/_lib/viewTransitions";
 import {leagueDateString} from "@/app/_lib/dates";
 import {displayDate} from "@/app/_lib/ui/text";
 import useAuthStore from "@/app/_store/authStore";
@@ -25,6 +28,7 @@ import {
   SectionLabel,
   tabular,
 } from "@/app/_ui/sp";
+import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
 import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
 import {Box, Skeleton} from "@mui/material";
 import {useTransitionRouter} from "@/app/_lib/viewTransitions";
@@ -36,6 +40,7 @@ export default function ProfilePage() {
   const user = useAuthStore((s) => s.user);
   const setUser = useAuthStore((s) => s.setUser);
   const {teams, loading: teamsLoading} = useMyTeams();
+  const {me: myRating, total: ratedPlayers} = useMyRating();
   const [player, setPlayer] = useState<PlayerById | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -57,7 +62,6 @@ export default function ProfilePage() {
     {k: "Email", v: player?.email},
     {k: "First name", v: player?.first_name},
     {k: "Last name", v: player?.last_name},
-    {k: "Rating", v: player?.rating != null ? String(player.rating) : undefined},
   ];
 
   const hero = (desktop: boolean) => (
@@ -84,11 +88,31 @@ export default function ProfilePage() {
           <Box sx={{fontSize: desktop ? 17 : 16, color: color.inkSoft}}>{player ? fullName : <Skeleton width={120} />}</Box>
         </Box>
       </Box>
-      <Box sx={{display: "flex", alignItems: "flex-end", justifyContent: "space-between", borderTop: `1px solid ${color.border}`, pt: desktop ? "16px" : "14px"}}>
-        <Box sx={{fontSize: 13, fontWeight: 600, letterSpacing: ".1em", textTransform: "uppercase", color: color.inkSoft}}>Rating</Box>
-        <Box sx={{fontFamily: font.display, fontSize: desktop ? 56 : 44, fontWeight: 800, lineHeight: 0.85, color: color.navy, ...tabular}}>
-          {player?.rating ?? "—"}
+      {/* my rating: the last change and my place, opening my rating's detail */}
+      <Box
+        component={TransitionLink}
+        href={myRating ? `/ratings/${myRating.id}` : "/ratings"}
+        sx={{...buttonBase, display: "flex", alignItems: "center", gap: "12px", borderTop: `1px solid ${color.border}`, pt: desktop ? "16px" : "14px", textDecoration: "none", color: color.ink, textAlign: "left"}}
+      >
+        <Box sx={{flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: "4px"}}>
+          <Box sx={{fontSize: 13, fontWeight: 600, letterSpacing: ".1em", textTransform: "uppercase", color: color.inkSoft}}>Rejting</Box>
+          {myRating && (
+            <Box sx={{display: "flex", alignItems: "baseline", gap: "8px", fontSize: 14, ...tabular}}>
+              {myRating.rounds > 0 && (
+                <Box component="span" sx={{fontWeight: 700, color: myRating.change! > 0 ? color.green : myRating.change! < 0 ? color.red : color.muted}}>
+                  {formatChange(myRating.change)}
+                </Box>
+              )}
+              <Box component="span" sx={{color: color.inkSoft}}>
+                #{myRating.rank} od {ratedPlayers}
+              </Box>
+            </Box>
+          )}
         </Box>
+        <Box sx={{fontFamily: font.display, fontSize: desktop ? 56 : 44, fontWeight: 800, lineHeight: 0.85, color: color.navy, ...tabular}}>
+          {myRating?.rating ?? player?.rating ?? "—"}
+        </Box>
+        <ChevronRightRoundedIcon sx={{fontSize: 24, color: color.navy}} />
       </Box>
     </Card>
   );
