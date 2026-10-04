@@ -9,8 +9,8 @@ import PhoneHome from "@/app/_ui/home/PhoneHome";
 export default function Home() {
   const isDesktop = useIsDesktop();
   const isAdmin = useIsAdmin();
-  const {table} = useOpenTable();
+  const {table, loading} = useOpenTable();
 
   if (isDesktop) return <DesktopHome />;
-  return <PhoneHome isAdmin={isAdmin} openTable={table} />;
+  return <PhoneHome isAdmin={isAdmin} openTable={table} openTableLoading={loading} />;
 }

@@ -89,13 +89,13 @@ branch diff ran in parallel; its findings were checked against the code and fixe
 | 11 | On a phone there was no way to reach Manage League or Create League. | Added to phone home's admin controls. |
 | 12 | Desktop daily standings with six rounds squeezed the date to "0…". | The title keeps its width and the round tabs scroll. |
 | 13 | Daily standings before a league's first night had a dash as its title. | "Dnevni poredak" ("Daily standings"). |
+| 14 | Phone home's Start Game card said "Tvoj sljedeći meč" ("your next match") also when the player had no match. | It shows the pairing, "Trenutno nemaš otvorenu rundu" ("you have no open round right now") when there is none, and stays blank while loading. |
 
 ## Observations, not changed
 
 - Server error messages are in English (e.g. "Someone is using this username already...", the pairing error) while
   the app is in Croatian. Translating them means touching every route; worth a separate pass.
 - A bye shows as a table in the pairings ("Stol 5 · Lavovi – bye").
-- Phone home says "Tvoj sljedeći meč" ("your next match") on the Start Game card even when there is no next match.
 - The login limit and the API limit live in memory, so they reset on a server restart and aren't shared between
   server instances. X-Forwarded-For is trusted for the address when the platform gives none; this was already so on
   `master`.

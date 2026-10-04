@@ -22,7 +22,15 @@ import {TransitionLink} from "@/app/_lib/viewTransitions";
 import {useTransitionRouter} from "@/app/_lib/viewTransitions";
 import React from "react";
 
-export default function PhoneHome({isAdmin, openTable}: {isAdmin: boolean; openTable: OpenTable | null}) {
+export default function PhoneHome({
+  isAdmin,
+  openTable,
+  openTableLoading = false,
+}: {
+  isAdmin: boolean;
+  openTable: OpenTable | null;
+  openTableLoading?: boolean;
+}) {
   const router = useTransitionRouter();
   const {logout, loggingOut} = useLogout();
   const {start, starting, error} = useStartGame();
@@ -68,7 +76,8 @@ export default function PhoneHome({isAdmin, openTable}: {isAdmin: boolean; openT
       >
         <Box sx={{display: "flex", justifyContent: "space-between", alignItems: "center", gap: "12px"}}>
           <Box component="span" sx={{fontSize: 15, fontWeight: 600, color: color.cream, ...ellipsis}}>
-            {openTable ? `${openTable.myTeam} · ${openTable.opponent}` : "Tvoj sljedeći meč"}
+            {/* the next pairing, or that there is none (blank while it loads, so nothing flashes) */}
+            {openTable ? `${openTable.myTeam} · ${openTable.opponent}` : openTableLoading ? "\u00a0" : "Trenutno nemaš otvorenu rundu"}
           </Box>
           <Box
             component="span"
