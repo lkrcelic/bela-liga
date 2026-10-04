@@ -2,7 +2,8 @@ import { RoundExtendedResponse } from "@/app/_interfaces/round";
 
 type RoundsQueryParams = {
   round_date?: string;
-  open?: boolean;
+  open?: boolean; // not finished
+  active?: boolean; // a match is being played right now
   round_number?: number;
   team_id?: number;
   league_id?: number;
@@ -18,6 +19,10 @@ export async function getRoundsAPI(params?: RoundsQueryParams): Promise<RoundExt
     
     if (params.open !== undefined) {
       queryParams.append('open', params.open.toString());
+    }
+    
+    if (params.active !== undefined) {
+      queryParams.append('active', params.active.toString());
     }
     
     if (params.round_number !== undefined) {

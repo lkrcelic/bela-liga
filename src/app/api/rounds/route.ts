@@ -15,7 +15,9 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
 
     const roundDate = searchParams.get('round_date');
+    // open = the round isn't finished; active = one of its matches is being played right now
     const open = searchParams.get('open');
+    const active = searchParams.get('active');
     const roundNumber = searchParams.get('round_number');
     const teamId = searchParams.get('team_id');
     const leagueId = searchParams.get('league_id');
@@ -39,7 +41,11 @@ export async function GET(request: NextRequest) {
     }
 
     if (open !== null) {
-      whereClause.active = open === 'true';
+      whereClause.open = open === 'true';
+    }
+
+    if (active !== null) {
+      whereClause.active = active === 'true';
     }
 
     if (roundNumber) {
