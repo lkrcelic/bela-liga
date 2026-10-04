@@ -58,6 +58,7 @@ test("podium takes the top three only when there are at least three teams", () =
   assert.deepEqual(podium.map((r) => r.name), ["Dalmatinci", "Slavonci", "Zagorci"]);
   assert.deepEqual(rest.map((r) => r.name), ["Istrani"]);
   assert.equal(splitPodium(rows.slice(0, 2)).podium.length, 0);
+  assert.equal(splitPodium(rows.map((r) => ({...r, played: 0}))).podium.length, 0);
   assert.equal(toStandingsRows(null).length, 0);
 });
 

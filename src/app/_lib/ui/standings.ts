@@ -51,8 +51,9 @@ export function statsLine(row: StandingsRow, withPlayed: boolean): string {
   return withPlayed ? `${row.played} OK · ${base}` : base;
 }
 
-// Top three for the podium and the rest for the list. With fewer than 3 teams there is no podium.
+// Top three for the podium and the rest for the list. With fewer than 3 teams, or before anyone has played
+// (the league table lists new teams with zeros), there is no podium.
 export function splitPodium(rows: StandingsRow[]): {podium: StandingsRow[]; rest: StandingsRow[]} {
-  if (rows.length < 3) return {podium: [], rest: rows};
+  if (rows.length < 3 || rows.every((r) => r.played === 0)) return {podium: [], rest: rows};
   return {podium: rows.slice(0, 3), rest: rows.slice(3)};
 }
