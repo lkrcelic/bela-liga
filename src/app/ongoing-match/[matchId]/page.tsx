@@ -103,8 +103,14 @@ export default function ScoreBoardPage() {
   const winnerSide = loading ? null : matchWinner(match.player_pair1_score ?? 0, match.player_pair2_score ?? 0, threshold);
   const winner = winnerSide == null ? null : winnerSide === sides.left ? 0 : 1;
 
-  const shownL = useCountUp(totals[0], 600, 200, startFrom?.[0]);
-  const shownR = useCountUp(totals[1], 600, 200, startFrom?.[1]);
+  // totals only count up when they change while watching (or right after saving a hand), not on first open
+  const firstView = useRef(true);
+  const animate = !loading && (startFrom != null || !firstView.current);
+  const shownL = useCountUp(loading ? startFrom?.[0] ?? 0 : totals[0], animate ? 600 : 0, 200, startFrom?.[0]);
+  const shownR = useCountUp(loading ? startFrom?.[1] ?? 0 : totals[1], animate ? 600 : 0, 200, startFrom?.[1]);
+  useEffect(() => {
+    if (!loading) firstView.current = false;
+  }, [loading]);
   useEffect(() => {
     if (!loading) rememberTotals(matchId, totals);
   });
