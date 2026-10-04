@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import {test} from "node:test";
-import {displayDate, initials, matchesQuery, signed, weekdayDate} from "../ui/text";
+import {displayDate, initials, matchesQuery, plural, signed, weekdayDate} from "../ui/text";
 import {splitPodium, statsLine, toStandingsRows} from "../ui/standings";
 import {filterTables, liveCount, splitColumns, tableColumns, toTableRows} from "../ui/tables";
 
@@ -62,15 +62,16 @@ test("podium takes the top three only when there are at least three teams", () =
 });
 
 const rounds = [
-  {id: 11, table_number: 2, team1_id: 3, team2_id: 4, team1: {team_name: "Slavonci"}, team2: {team_name: "Istrani"}, team1_wins: 1, team2_wins: 0, active: true,
+  {id: 11, table_number: 2, team1_id: 3, team2_id: 4, team1: {team_name: "Slavonci"}, team2: {team_name: "Istrani"}, team1_wins: 1, team2_wins: 0, active: true, open: true,
     ongoingMatches: [{player_pair1_score: 312, player_pair2_score: 480}]},
-  {id: 10, table_number: 1, team1_id: 1, team2_id: 2, team1: {team_name: "Dalmatinci"}, team2: {team_name: "Zagorci"}, team1_wins: 2, team2_wins: 0, active: false},
-  {id: 12, table_number: 3, team1_id: 5, team2_id: 6, team1: {team_name: "Ličani"}, team2: {team_name: "Podravci"}, team1_wins: 1, team2_wins: 1, active: false},
+  {id: 10, table_number: 1, team1_id: 1, team2_id: 2, team1: {team_name: "Dalmatinci"}, team2: {team_name: "Zagorci"}, team1_wins: 2, team2_wins: 0, active: false, open: false},
+  {id: 12, table_number: 3, team1_id: 5, team2_id: 6, team1: {team_name: "Ličani"}, team2: {team_name: "Podravci"}, team1_wins: 1, team2_wins: 1, active: false, open: false},
+  {id: 13, table_number: 4, team1_id: 7, team2_id: 8, team1: {team_name: "Purgeri"}, team2: {team_name: "Boduli"}, team1_wins: 0, team2_wins: 0, active: false, open: true},
 ];
 
 test("round tables are sorted by table and carry live match points", () => {
   const rows = toTableRows(rounds, ["Zagorci"]);
-  assert.deepEqual(rows.map((r) => r.table), [1, 2, 3]);
+  assert.deepEqual(rows.map((r) => r.table), [1, 2, 3, 4]);
   assert.equal(rows[1].pointsA, 312);
   assert.equal(rows[1].pointsB, 480);
   assert.equal(rows[0].pointsA, null);
@@ -80,8 +81,9 @@ test("round tables are sorted by table and carry live match points", () => {
 
 test("table filters by status, team name and table number", () => {
   const rows = toTableRows(rounds);
-  assert.equal(filterTables(rows, "all").length, 3);
+  assert.equal(filterTables(rows, "all").length, 4);
   assert.deepEqual(filterTables(rows, "live").map((r) => r.table), [2]);
+  // a table that has not started yet is neither live nor done
   assert.deepEqual(filterTables(rows, "done").map((r) => r.table), [1, 3]);
   assert.deepEqual(filterTables(rows, "all", "lic").map((r) => r.table), [3]);
   assert.deepEqual(filterTables(rows, "all", "3").map((r) => r.table), [3]);
@@ -106,4 +108,15 @@ test("signup validation gives Croatian messages per field", () => {
   assert.equal(validateSignupField("email", {...ok, email: "nope"}), "Neispravan email.");
   assert.equal(validateSignupField("password", {...ok, password: "123"}), "Najmanje 5 znakova.");
   assert.equal(Object.keys(validateSignup({...ok, birth_date: ""})).join(), "birth_date");
+});
+
+test("Croatian plural forms", () => {
+  const stol = (n: number) => `${n} ${plural(n, "stol", "stola", "stolova")}`;
+  assert.equal(stol(1), "1 stol");
+  assert.equal(stol(3), "3 stola");
+  assert.equal(stol(5), "5 stolova");
+  assert.equal(stol(11), "11 stolova");
+  assert.equal(stol(12), "12 stolova");
+  assert.equal(stol(21), "21 stol");
+  assert.equal(stol(24), "24 stola");
 });

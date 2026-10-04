@@ -193,12 +193,15 @@ export function PillTabs<K extends string | number>({
   onChange,
   label,
   sx,
+  idPrefix,
 }: {
   items: TabItem<K>[];
   value: K;
   onChange: (k: K) => void;
   label: string;
   sx?: SxProps<Theme>;
+  // gives the tabs ids and points them at `${idPrefix}-panel` (see tabPanelProps)
+  idPrefix?: string;
 }) {
   const {refs, onKeyDown} = useRovingKeys(items, value, onChange);
   return (
@@ -220,6 +223,8 @@ export function PillTabs<K extends string | number>({
             type="button"
             role="tab"
             aria-selected={on}
+            id={idPrefix ? `${idPrefix}-tab-${t.key}` : undefined}
+            aria-controls={idPrefix ? `${idPrefix}-panel` : undefined}
             tabIndex={on ? 0 : -1}
             ref={(el: HTMLButtonElement | null) => {
               refs.current[i] = el;
@@ -262,6 +267,7 @@ export function Segmented<K extends string | number>({
   size = 40,
   sx,
   asTabs = true,
+  idPrefix,
 }: {
   items: TabItem<K>[];
   value: K;
@@ -271,6 +277,7 @@ export function Segmented<K extends string | number>({
   size?: number;
   sx?: SxProps<Theme>;
   asTabs?: boolean;
+  idPrefix?: string;
 }) {
   const {refs, onKeyDown} = useRovingKeys(items, value, onChange);
   const solid = variant === "solid";
@@ -302,6 +309,8 @@ export function Segmented<K extends string | number>({
             role={asTabs ? "tab" : "radio"}
             aria-selected={asTabs ? on : undefined}
             aria-checked={asTabs ? undefined : on}
+            id={idPrefix ? `${idPrefix}-tab-${t.key}` : undefined}
+            aria-controls={idPrefix && asTabs ? `${idPrefix}-panel` : undefined}
             tabIndex={on ? 0 : -1}
             ref={(el: HTMLButtonElement | null) => {
               refs.current[i] = el;
@@ -340,4 +349,9 @@ export function Segmented<K extends string | number>({
       })}
     </Box>
   );
+}
+
+// Props for the element a tab strip controls
+export function tabPanelProps(idPrefix: string, value: string | number) {
+  return {role: "tabpanel", id: `${idPrefix}-panel`, "aria-labelledby": `${idPrefix}-tab-${value}`} as const;
 }

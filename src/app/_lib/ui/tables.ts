@@ -9,6 +9,8 @@ export type TableRow = {
   winsA: number;
   winsB: number;
   live: boolean;
+  // the round is closed (both matches played)
+  done: boolean;
   // current match points while live, e.g. 724 and 588
   pointsA: number | null;
   pointsB: number | null;
@@ -17,17 +19,19 @@ export type TableRow = {
 
 export type TableFilter = "all" | "live" | "done";
 
+// the API's round shape (fields are optional in the inferred zod types)
 type RoundLike = {
-  id: number;
+  id?: number;
   table_number?: number | null;
-  team1_id: number;
-  team2_id: number;
-  team1?: {team_name: string} | null;
-  team2?: {team_name: string} | null;
-  team1_wins: number;
-  team2_wins: number;
+  team1_id?: number;
+  team2_id?: number;
+  team1?: {team_name?: string} | null;
+  team2?: {team_name?: string} | null;
+  team1_wins?: number;
+  team2_wins?: number;
   active?: boolean;
-  ongoingMatches?: {player_pair1_score: number; player_pair2_score: number}[] | null;
+  open?: boolean;
+  ongoingMatches?: {player_pair1_score?: number; player_pair2_score?: number}[] | null;
 };
 
 export function toTableRows(rounds: RoundLike[], myTeamNames: string[] = []): TableRow[] {
@@ -39,15 +43,16 @@ export function toTableRows(rounds: RoundLike[], myTeamNames: string[] = []): Ta
       const teamA = r.team1?.team_name ?? `Team ${r.team1_id}`;
       const teamB = r.team2?.team_name ?? `Team ${r.team2_id}`;
       return {
-        id: r.id,
+        id: r.id ?? i,
         table: r.table_number || i + 1,
         teamA,
         teamB,
-        winsA: r.team1_wins,
-        winsB: r.team2_wins,
+        winsA: r.team1_wins ?? 0,
+        winsB: r.team2_wins ?? 0,
         live,
-        pointsA: live && om ? om.player_pair1_score : null,
-        pointsB: live && om ? om.player_pair2_score : null,
+        done: r.open === false,
+        pointsA: live && om ? om.player_pair1_score ?? 0 : null,
+        pointsB: live && om ? om.player_pair2_score ?? 0 : null,
         mine: mine.has(teamA) || mine.has(teamB),
       };
     })
@@ -59,7 +64,7 @@ export function filterTables(rows: TableRow[], filter: TableFilter, query = ""):
   const q = query.trim();
   return rows.filter((t) => {
     if (filter === "live" && !t.live) return false;
-    if (filter === "done" && t.live) return false;
+    if (filter === "done" && !t.done) return false;
     if (!q) return true;
     return String(t.table) === q || matchesQuery(t.teamA, q) || matchesQuery(t.teamB, q);
   });
