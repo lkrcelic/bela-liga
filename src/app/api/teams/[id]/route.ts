@@ -16,6 +16,8 @@ export async function GET(request: NextRequest, {params}: { params: { id: string
             where: {
                 team_id: Number(id),
             },
+            // the response includes the players, so load them (without this every request failed validation)
+            include: {teamPlayers: {include: {player: {select: {id: true, username: true, first_name: true, last_name: true}}}}},
         });
 
         if (!dbTeam) {

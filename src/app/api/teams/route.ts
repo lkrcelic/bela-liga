@@ -25,10 +25,12 @@ export async function GET(request: NextRequest) {
           }
         : undefined,
       include: {
+        // only the fields the response shows (not emails or password hashes)
         teamPlayers: {
-          include: {player: true},
+          include: {player: {select: {id: true, username: true, first_name: true, last_name: true}}},
         },
       },
+      orderBy: {team_name: "asc"},
     });
     const teams = TeamsResponseValidation.parse(dbTeams);
 

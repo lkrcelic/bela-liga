@@ -11,6 +11,11 @@ export async function createTeam(createRequest: z.infer<typeof TeamRequestValida
     throw new InvalidResultError("A team needs two different players.");
   }
 
+  const founders = await prisma.player.count({where: {id: {in: [createRequest.founder_id1, createRequest.founder_id2]}}});
+  if (founders !== 2) {
+    throw new InvalidResultError("Both founders must be existing players.");
+  }
+
   return prisma.team.create({
     data: {
       team_name: createRequest.team_name,
