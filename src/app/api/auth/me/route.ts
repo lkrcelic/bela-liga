@@ -17,6 +17,8 @@ export async function GET(req: NextRequest) {
       user: {
         id: session.user.id,
         username: session.user.username,
+        // Google sign-ups don't give a birth date; the app asks for it
+        needs_birth_date: session.user.birth_date == null,
       },
     });
     await extendSession(session, res);

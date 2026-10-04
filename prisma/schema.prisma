@@ -29,7 +29,7 @@ model Player {
   player_role     RoleEnum
   first_name      String    @db.VarChar(100)
   last_name       String    @db.VarChar(100)
-  birth_date      DateTime  @db.Date
+  birth_date      DateTime? @db.Date // null until a Google sign-up gives it
   created_at      DateTime  @default(now())
   last_updated_at DateTime? @updatedAt
 
