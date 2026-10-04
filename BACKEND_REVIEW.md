@@ -17,60 +17,35 @@ A pass over every API route, service and the standings SQL functions, looking fo
 | 9 | Google sign-up kept only the second word as last name ("Ana Marija Horvat" → "Marija"). | Everything after the first name. |
 | 10 | `/api/session` answered 405 to non-admins. | 401 / 403. |
 
-## For you to decide
+## Decided and done
 
-Each item has what happens now, the options, and what I would pick.
+Your decisions on the open items, and what was built.
 
-### A. Sessions end after 4 hours, even mid-evening
-Both login types (password and Google) create sessions that expire 4 h after login. Lucia extends the session in the
-database while it's used, but the browser cookie keeps its original 4 h expiry and is never re-issued, so a player
-who logged in at 18:00 is logged out at 22:00 in the middle of a match.
-- Options: (1) longer sessions, e.g. 7 days; (2) re-issue the cookie when Lucia extends the session (needs the
-  signed cookie to be re-signed in a route or the middleware); (3) keep 4 h.
-- I'd pick (1) + (2): long-lived and sliding.
+| # | Item | Decision | What changed |
+|---|------|----------|--------------|
+| A | Sessions ended 4 h after login (the cookie was never re-issued) | My call | Password and Google sessions last **30 days, sliding**: every app load (`/api/auth/me`, also when a phone brings a tab back after 15 min) pushes the expiry out and re-issues the cookie with the same expiry. Settings in `_lib/sessionConfig.ts`. |
+| B | `GET /api/rounds?open=` filtered `active` | As suggested | `open` filters unfinished rounds; new `active` filters rounds with a match being played. |
+| C | League standings only listed teams that had finished a round | List every team | Every team of the league is listed (zeros until it plays, inactive teams too), sorted by points, difference, name. The podium waits until someone has played. |
+| D | Inactive teams | Off by default, can be switched on | Create Round starts inactive teams switched off; the admin can switch them on, and Select all includes them. The server accepts them as before. |
+| E | A bye counts as two matches won 301:0 | Keep | — |
+| F | Ratings change for the whole roster | Later | — |
+| G | Google email matched case-sensitively; Google players got today as birth date | Match and ask | The email lookup ignores case and a Google login links to the existing player with that email. `Player.birth_date` is optional; the migration clears the placeholders of earlier Google sign-ups, and the app asks once in a sheet (never during a match; "Kasnije" asks again next time). |
+| H | Successful logins counted toward the login limit | Count only failed | The limit moved from the middleware into `/api/login`: wrong passwords count, a successful login clears the count. |
+| I | The middleware trusted any signed cookie | Best practice | Kept the middleware as an optimistic check (it runs on the edge runtime without the database, which is what Next.js recommends); the real check stays in every API route. New: `/api/auth/me` removes the cookie of a session that no longer exists, so after the first load the middleware itself sends that browser to `/login`. |
 
-### B. `GET /api/rounds?open=true` filters on `active`, not `open`
-`open` = the round is not finished; `active` = a match is being played right now. The parameter name says one thing,
-the query does the other. Nothing in the app uses the parameter today.
-- Options: make `open` filter `open` and add an `active` parameter; or rename the parameter to `active`.
-- I'd pick: `open` filters `open`, add `active`.
+Verified on the dev server: the session expiry moves to +30 days on load; an expired session gets 401 from
+`/api/auth/me`, its cookie is cleared and `/` then redirects to `/login`; six successful logins in a row all pass while
+the 6th failed one gets 429; `?open=` / `?active=` return the right rounds; a league without rounds lists its four
+teams; an inactive team can be switched on and counted; the birth-date sheet appears for a player without one, saves,
+and refuses a future date (400) or another player's profile (403).
 
-### C. League standings only list teams that have finished a round
-The season table reads `TeamScore`, which gets a row the first time a team finishes a round. A new team, or a team just
-added to the league, is missing from the standings until then (and on the first night everyone is missing).
-- Options: list every team of the league with zeros; or keep it as is.
-- I'd pick: list every team (inactive teams too, since they "stay in the league and its standings").
+### Worth knowing
 
-### D. Inactive teams are only left out by the client
-Create Round leaves inactive teams out, but `POST /api/rounds/generate-multiple` accepts any team of the league.
-- Options: the server drops (or refuses) inactive teams; or keep it client-side so an admin can still include an
-  inactive team on purpose (the UI doesn't allow that today).
-- I'd pick: the server drops them, matching the UI.
-
-### E. A bye counts as two matches won 301:0
-A team without an opponent gets the round 2:0 and two matches of 301:0, so +602 point difference per bye. Teams that
-get a bye gain a lot on the tiebreaker.
-- Options: keep; 0:0 matches (bye counts as a win but doesn't move the difference); or the team's average.
-- Your call — it's a league rule.
-
-### F. Ratings change for the whole roster
-After a round, every player of both teams (substitutes included) gets the rating change, not only the two who played.
-The app doesn't record who played.
-- Options: keep; or record the two players per match and rate only them.
-
-### G. Email matching is case-sensitive for Google sign-in
-Someone who signed up as `Marko@Gmail.com` and then uses Google (which reports `marko@gmail.com`) gets a second
-account instead of logging in, because the email lookup is exact. New Google users also get today as their birth date.
-- Options: match emails case-insensitively and link the Google account to the existing player; ask for the birth date
-  after the first Google login.
-
-### H. Login attempts include successful ones
-The login limit (5 per 5 minutes per address + username) counts every attempt, so five quick successful logins (e.g.
-the same player on several devices) lock that username out for a few minutes.
-- Options: count only failed attempts.
-- I'd pick that.
-
-### I. The middleware trusts any signed cookie
-Pages check only that the session cookie is signed, not that the session still exists (the client now sends a dead
-session to the login page). Already listed in BLOCKERS.md.
-- Options: validate the session in the middleware (one database lookup per page load) or keep the client-side check.
+- **Google login wasn't run end to end** (it needs real Google credentials). The email lookup and the linking setting
+  are small, but try one Google login with an existing password account before relying on it.
+- **Linking by email trusts the email of password accounts**, which is never verified. Someone could sign up with a
+  password using another person's email; if that person later logs in with Google, they land in that account (which
+  the first person can also open with the password). Low risk in a closed league; the fix would be email verification
+  at sign-up.
+- **The birth-date migration changes data**: it sets `birth_date` to NULL for players without a password whose birth
+  date is within a day of their sign-up. Only Google sign-ups match that.
