@@ -5,6 +5,9 @@ import {createLeague, listLeagues} from "@/app/_lib/service/league/leagues";
 import {STATUS} from "@/app/_lib/statusCodes";
 import {NextRequest, NextResponse} from "next/server";
 
+// never cached at build time: the list changes when an admin creates a league
+export const dynamic = "force-dynamic";
+
 // Every league, for the league pickers. Public: league standings can be viewed without logging in.
 export async function GET() {
   try {
