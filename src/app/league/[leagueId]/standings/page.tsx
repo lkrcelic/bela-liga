@@ -22,6 +22,8 @@ import {
   StandingsRows,
 } from "@/app/_ui/sp";
 import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
+import LoginRoundedIcon from "@mui/icons-material/LoginRounded";
+import useAuthStore from "@/app/_store/authStore";
 import {Box} from "@mui/material";
 import {useParams, useRouter} from "next/navigation";
 import {useMemo} from "react";
@@ -40,6 +42,8 @@ export default function LeagueStandings() {
   const {podium, rest} = splitPodium(rows);
   const leagueName = leagues.find((l) => l.id === leagueId)?.name ?? "";
   const changeLeague = (id: number) => router.push(`/league/${id}/standings`);
+  // the season table is public; visitors who are not logged in get a login button instead of "home"
+  const signedIn = useAuthStore((s) => s.user != null);
 
   const content = (desktop: boolean) => {
     if (error) return <ErrorNote onRetry={reload}>{error}</ErrorNote>;
@@ -108,9 +112,15 @@ export default function LeagueStandings() {
         </Display>
       </Box>
       {content(false)}
-      <PrimaryButton icon={<HomeRoundedIcon />} onClick={() => router.push("/")}>
-        Početni zaslon
-      </PrimaryButton>
+      {signedIn ? (
+        <PrimaryButton icon={<HomeRoundedIcon />} onClick={() => router.push("/")}>
+          Početni zaslon
+        </PrimaryButton>
+      ) : (
+        <PrimaryButton icon={<LoginRoundedIcon />} onClick={() => router.push("/login")}>
+          Prijava
+        </PrimaryButton>
+      )}
     </Screen>
   );
 }

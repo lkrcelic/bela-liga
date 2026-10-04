@@ -16,6 +16,7 @@ import EmojiEventsRoundedIcon from "@mui/icons-material/EmojiEventsRounded";
 import GroupAddRoundedIcon from "@mui/icons-material/GroupAddRounded";
 import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
 import LibraryAddRoundedIcon from "@mui/icons-material/LibraryAddRounded";
+import LoginRoundedIcon from "@mui/icons-material/LoginRounded";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import MenuRoundedIcon from "@mui/icons-material/MenuRounded";
 import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
@@ -121,10 +122,11 @@ export function NavDrawer({open, onClose, active}: {open: boolean; onClose: () =
   const {logout, loggingOut} = useLogout();
   const {start, starting, error} = useStartGame();
   const [liveToday, setLiveToday] = useState(false);
+  const signedIn = user != null;
 
   // the red dot on Daily Standings: is any table of tonight being played right now
   useEffect(() => {
-    if (!open) return;
+    if (!open || !signedIn) return;
     let cancelled = false;
     getRoundsAPI({round_date: leagueDateString(), league_id: CURRENT_LEAGUE_ID})
       .then((rounds) => {
@@ -136,9 +138,10 @@ export function NavDrawer({open, onClose, active}: {open: boolean; onClose: () =
     return () => {
       cancelled = true;
     };
-  }, [open]);
+  }, [open, signedIn]);
 
-  const items = NAV.filter((n) => isAdmin || !n.adminOnly);
+  // signed out, only the public season table is available
+  const items = NAV.filter((n) => (signedIn ? isAdmin || !n.adminOnly : n.key === "league"));
   const itemSx = (on: boolean) => ({
     ...buttonBase,
     width: "100%",
@@ -225,22 +228,29 @@ export function NavDrawer({open, onClose, active}: {open: boolean; onClose: () =
           );
         })}
       </Box>
-      <Box
-        sx={{mt: "auto", display: "flex", alignItems: "center", gap: "10px", p: "10px", borderRadius: "14px", background: color.card, boxShadow: shadow.card}}
-      >
-        <InitialsAvatar name={user?.username ?? ""} size={40} variant="navy" sx={{fontSize: 14}} />
-        <Box sx={{flex: 1, minWidth: 0, display: "flex", flexDirection: "column"}}>
-          <Box component="span" sx={{fontSize: 15, fontWeight: 600, ...ellipsis}}>
-            {user?.username ?? "—"}
-          </Box>
-          <Box component="span" sx={{fontSize: 13, color: color.muted}}>
-            {isAdmin ? "Admin" : "Igrač"}
-          </Box>
+      {!signedIn ? (
+        <Box component={Link} href="/login" sx={{...itemSx(true), mt: "auto", height: 48, justifyContent: "center"}}>
+          <LoginRoundedIcon />
+          Prijava
         </Box>
-        <GhostIconButton label="Odjava" size={40} onClick={() => logout()} disabled={loggingOut} sx={{borderRadius: "10px"}}>
-          <LogoutRoundedIcon />
-        </GhostIconButton>
-      </Box>
+      ) : (
+        <Box
+          sx={{mt: "auto", display: "flex", alignItems: "center", gap: "10px", p: "10px", borderRadius: "14px", background: color.card, boxShadow: shadow.card}}
+        >
+          <InitialsAvatar name={user?.username ?? ""} size={40} variant="navy" sx={{fontSize: 14}} />
+          <Box sx={{flex: 1, minWidth: 0, display: "flex", flexDirection: "column"}}>
+            <Box component="span" sx={{fontSize: 15, fontWeight: 600, ...ellipsis}}>
+              {user?.username ?? "—"}
+            </Box>
+            <Box component="span" sx={{fontSize: 13, color: color.muted}}>
+              {isAdmin ? "Admin" : "Igrač"}
+            </Box>
+          </Box>
+          <GhostIconButton label="Odjava" size={40} onClick={() => logout()} disabled={loggingOut} sx={{borderRadius: "10px"}}>
+            <LogoutRoundedIcon />
+          </GhostIconButton>
+        </Box>
+      )}
     </Drawer>
   );
 }
