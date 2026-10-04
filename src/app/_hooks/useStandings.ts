@@ -94,7 +94,8 @@ export function useDailyData(leagueId: number, date: string | null) {
     return () => clearInterval(t);
   }, [date, load]);
 
-  return {data, loading: loading || !date, error, reload: () => load(false)};
+  // refresh: reload without the loading state (after an admin edit)
+  return {data, loading: loading || !date, error, reload: () => load(false), refresh: () => load(true)};
 }
 
 // Season table of a league

@@ -3,7 +3,9 @@
 import {TableRow} from "@/app/_lib/ui/tables";
 import {color, font} from "@/app/_styles/tokens";
 import {Card, ellipsis, Eyebrow, LiveDot, LiveLabel, LivePill, tabular} from "@/app/_ui/sp";
+import {TransitionLink} from "@/app/_lib/viewTransitions";
 import {Box} from "@mui/material";
+import React from "react";
 
 // Phone: one card per table, both teams with their wins (and live match points while playing)
 export function PhoneRoundTables({title, rows}: {title: string; rows: TableRow[]}) {
@@ -64,25 +66,51 @@ export function PhoneRoundTables({title, rows}: {title: string; rows: TableRow[]
   );
 }
 
-// Desktop: a dense row per table — number chip, team A, score (live points under it), team B, status
-export function DesktopTableRow({t, dense}: {t: TableRow; dense: boolean}) {
+// Desktop: a dense row per table — number chip, team A, score (live points under it), team B, status.
+// href: the whole row opens the table (admin scorepad). actions: edit-mode buttons instead of the status.
+// confirm: replaces the row with a confirmation strip.
+export function DesktopTableRow({
+  t,
+  dense,
+  href,
+  actions,
+  confirm,
+}: {
+  t: TableRow;
+  dense: boolean;
+  href?: string;
+  actions?: React.ReactNode;
+  confirm?: React.ReactNode;
+}) {
   const font1 = dense ? 15 : 17;
-  return (
-    <Box
-      component="li"
-      aria-label={`Stol ${t.table}: ${t.teamA} ${t.winsA} : ${t.winsB} ${t.teamB}${t.live ? `, uživo ${t.pointsA ?? 0} – ${t.pointsB ?? 0}` : ""}`}
-      sx={{
-        height: 44,
-        display: "grid",
-        gridTemplateColumns: dense ? "32px minmax(0,1fr) 66px minmax(0,1fr) 40px" : "40px minmax(0,1fr) 84px minmax(0,1fr) 64px",
-        alignItems: "center",
-        gap: dense ? "6px" : "10px",
-        px: dense ? "12px" : "18px",
-        borderBottom: `1px solid rgba(60,74,103,.07)`,
-        background: t.mine ? color.creamSoft : "transparent",
-        ...tabular,
-      }}
-    >
+  const label = `Stol ${t.table}: ${t.teamA} ${t.winsA} : ${t.winsB} ${t.teamB}${t.live ? `, uživo ${t.pointsA ?? 0} – ${t.pointsB ?? 0}` : ""}`;
+  if (confirm) {
+    return (
+      <Box
+        component="li"
+        sx={{height: 44, display: "flex", alignItems: "center", gap: "6px", pl: dense ? "12px" : "18px", pr: "8px", borderBottom: `1px solid rgba(60,74,103,.07)`, background: "rgba(188,71,73,.08)"}}
+      >
+        {confirm}
+      </Box>
+    );
+  }
+  const rowSx = {
+    height: 44,
+    display: "grid",
+    gridTemplateColumns: dense
+      ? `32px minmax(0,1fr) 66px minmax(0,1fr) ${actions ? "72px" : "40px"}`
+      : `40px minmax(0,1fr) 84px minmax(0,1fr) ${actions ? "76px" : "64px"}`,
+    alignItems: "center",
+    gap: dense ? "6px" : "10px",
+    px: dense ? "12px" : "18px",
+    borderBottom: `1px solid rgba(60,74,103,.07)`,
+    background: t.mine ? color.creamSoft : "transparent",
+    color: color.ink,
+    textDecoration: "none",
+    ...tabular,
+  } as const;
+  const cells = (
+    <>
       <Box
         component="span"
         aria-hidden
@@ -106,18 +134,37 @@ export function DesktopTableRow({t, dense}: {t: TableRow; dense: boolean}) {
       <Box component="span" aria-hidden sx={{fontSize: font1, fontWeight: !t.live && t.winsB > t.winsA ? 700 : 500, ...ellipsis}}>
         {t.teamB}
       </Box>
-      <Box
-        component="span"
-        aria-hidden
-        sx={{display: "flex", alignItems: "center", justifyContent: "flex-end", gap: "5px", fontSize: 11, fontWeight: 700, letterSpacing: ".06em", color: t.live ? color.live : color.faint}}
-      >
-        {t.live && (
-          <>
-            <LiveDot size={7} />
-            LIVE
-          </>
-        )}
+    </>
+  );
+  const status = (
+    <Box
+      component="span"
+      aria-hidden
+      sx={{display: "flex", alignItems: "center", justifyContent: "flex-end", gap: "5px", fontSize: 11, fontWeight: 700, letterSpacing: ".06em", color: t.live ? color.live : color.faint}}
+    >
+      {t.live && (
+        <>
+          <LiveDot size={7} />
+          LIVE
+        </>
+      )}
+    </Box>
+  );
+
+  if (href) {
+    return (
+      <Box component="li">
+        <Box component={TransitionLink} href={href} aria-label={`${label}. Otvori stol`} sx={{...rowSx, "&:hover": {background: color.tableHead}}}>
+          {cells}
+          {status}
+        </Box>
       </Box>
+    );
+  }
+  return (
+    <Box component="li" aria-label={label} sx={rowSx}>
+      {cells}
+      {actions ?? status}
     </Box>
   );
 }
