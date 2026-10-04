@@ -1,5 +1,6 @@
 import { createTheme, ThemeOptions } from '@mui/material/styles';
 import { PaletteColorOptions } from '@mui/material/styles/createPalette';
+import {color, font} from './tokens';
 
 // Extend the palette to include custom colors
 declare module '@mui/material/styles' {
@@ -41,16 +42,23 @@ const themeOptions: ThemeOptions = {
     info: {
       main: '#92AFD7',
     },
+    error: {
+      main: color.red,
+    },
     text: {
-      primary: '#212121',  // Text color
-      secondary: '#757575',  // Secondary text color
+      primary: color.ink,
+      secondary: color.muted,
     },
     background: {
-      default: "#F1F1F1"
+      default: color.paper,
+      paper: color.card,
     }
   },
+  shape: {
+    borderRadius: 14,
+  },
   typography: {
-    fontFamily: 'Roboto, sans-serif',
+    fontFamily: font.body,
     h1: {
       fontSize: '3rem',
       fontWeight: 700,
@@ -87,6 +95,52 @@ const themeOptions: ThemeOptions = {
     },
   },
   components: {
+    MuiCssBaseline: {
+      styleOverrides: {
+        body: {
+          backgroundColor: color.paper,
+          color: color.ink,
+          fontFamily: font.body,
+          WebkitTapHighlightColor: "transparent",
+        },
+        "button, input, select, textarea": {fontFamily: "inherit"},
+        // no double-tap zoom delay on the keypad and other buttons (pinch zoom stays available)
+        "button, a, [role=button]": {touchAction: "manipulation"},
+        "input::placeholder": {color: color.placeholder, opacity: 1},
+        // keyboard focus is always visible; mouse/touch focus is not
+        ":focus-visible": {outline: `3px solid ${color.navy}`, outlineOffset: "2px"},
+        "@keyframes spLive": {
+          "0%": {boxShadow: "0 0 0 0 rgba(188,71,73,.45)"},
+          "70%": {boxShadow: "0 0 0 7px rgba(188,71,73,0)"},
+          "100%": {boxShadow: "0 0 0 0 rgba(188,71,73,0)"},
+        },
+        "@keyframes spRowIn": {
+          "0%": {opacity: 0, transform: "translateY(-10px) scale(.97)", background: color.cream},
+          "60%": {background: color.cream},
+          "100%": {opacity: 1, transform: "none", background: "transparent"},
+        },
+        "@keyframes spRowFlash": {"0%": {background: color.cream}, "100%": {background: "transparent"}},
+        "@keyframes spPulse": {"0%, 100%": {transform: "scale(1)"}, "45%": {transform: "scale(1.07)"}},
+        "@keyframes spPop": {"0%": {transform: "scale(1)"}, "40%": {transform: "scale(1.4)"}, "100%": {transform: "scale(1)"}},
+        "@keyframes spSel": {
+          "0%": {transform: "scale(1)"},
+          "35%": {transform: "scale(.94)"},
+          "70%": {transform: "scale(1.03)"},
+          "100%": {transform: "scale(1)"},
+        },
+        "@keyframes spSpin": {to: {transform: "rotate(360deg)"}},
+        "@keyframes spStepIn": {from: {transform: "translateX(28px)", opacity: 0}, to: {transform: "none", opacity: 1}},
+        "@keyframes spFadeUp": {from: {transform: "translateY(14px)", opacity: 0}, to: {transform: "none", opacity: 1}},
+        "@media (prefers-reduced-motion: reduce)": {
+          "*, *::before, *::after": {
+            animationDuration: "1ms !important",
+            animationIterationCount: "1 !important",
+            transitionDuration: "1ms !important",
+            scrollBehavior: "auto !important",
+          },
+        },
+      },
+    },
     MuiButton: {
       styleOverrides: {
         root: ({ownerState, theme}) => ({
