@@ -2,6 +2,7 @@
 
 import useIsDesktop from "@/app/_hooks/useIsDesktop";
 import {AuthFrame, OrDivider} from "@/app/_ui/auth/AuthFrame";
+import InstallSheet from "@/app/_ui/install/InstallSheet";
 import {Card, Display, TextButton} from "@/app/_ui/sp";
 import {color} from "@/app/_styles/tokens";
 import GoogleLoginButton from "@/app/login/ui/GoogleLoginButton";
@@ -46,6 +47,7 @@ export default function LogIn() {
         <LogInForm onSuccess={onSuccess} soft />
       </Card>
       <Box sx={{mt: "auto", display: "flex", justifyContent: "center"}}>{signupLink}</Box>
+      <InstallSheet />
     </AuthFrame>
   );
 }
