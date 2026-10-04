@@ -2,6 +2,7 @@ import {Prisma} from "@prisma/client";
 import {prisma} from "@/app/_lib/prisma";
 import {updateRatingsAfterMatch} from "../../rating/ratingService";
 import {InvalidResultError} from "@/app/_lib/validation/validateResult";
+import {lockRatings} from "@/app/_lib/service/admin/recalc";
 
 // A round between two teams is two matches.
 export const MATCHES_PER_ROUND = 2;
@@ -38,6 +39,8 @@ export async function closeRound(tx: Prisma.TransactionClient, roundId: number):
   }
 
   const scoreTeam1 = round.team1_wins > round.team2_wins ? 1 : round.team1_wins === round.team2_wins ? 0.5 : 0;
+  // an admin's rating replay and this update must not interleave
+  await lockRatings(tx);
   await updateRatingsAfterMatch(teamAPlayerIds, teamBPlayerIds, scoreTeam1, tx);
 }
 
