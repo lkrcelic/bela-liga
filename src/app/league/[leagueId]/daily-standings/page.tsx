@@ -1,6 +1,9 @@
 "use client";
 
+import useIsAdmin from "@/app/_hooks/useIsAdmin";
 import useIsDesktop from "@/app/_hooks/useIsDesktop";
+import useLeagueTeams from "@/app/_hooks/useLeagueTeams";
+import {addTableAPI, removeTableAPI, setTablePairAPI} from "@/app/_fetchers/admin/daily";
 import useLeagues from "@/app/_hooks/useLeagues";
 import useMyTeams from "@/app/_hooks/useMyTeams";
 import {useDailyData, useRoundDates} from "@/app/_hooks/useStandings";
@@ -32,6 +35,7 @@ import {
   tabPanelProps,
 } from "@/app/_ui/sp";
 import {DesktopTableRow, PhoneRoundTables} from "@/app/league/[leagueId]/daily-standings/ui/RoundTables";
+import {ConfirmRemove, EditToggle, NewTableButton, PairDialog, PairTarget, RowActions} from "@/app/league/[leagueId]/daily-standings/ui/RoundEditing";
 import ChevronLeftRoundedIcon from "@mui/icons-material/ChevronLeftRounded";
 import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
 import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
@@ -46,6 +50,7 @@ export default function DailyStandings() {
   const router = useTransitionRouter();
   const searchParams = useSearchParams();
   const isDesktop = useIsDesktop();
+  const isAdmin = useIsAdmin();
   const leagues = useLeagues(leagueId);
   const {teams} = useMyTeams();
   const myTeamNames = useMemo(() => teams.map((t) => t.team_name), [teams]);
@@ -67,13 +72,15 @@ export default function DailyStandings() {
   const roundNumbers = daily.data?.roundNumbers ?? [];
   const roundsLive = (n: number) => (daily.data?.rounds ?? []).some((r) => r.round_number === n && r.active);
 
-  // tab 0 is the night's table, then one tab per round; the desktop opens on the round being played
-  const [tab, setTab] = useState(0);
-  const [tabTouched, setTabTouched] = useState(false);
+  // tab 0 is the night's table, then one tab per round; the desktop opens on the round being played,
+  // or on ?round= (coming back from a table's scorepad)
+  const roundParam = Number(searchParams.get("round")) || 0;
+  const [tab, setTab] = useState(roundParam);
+  const [tabTouched, setTabTouched] = useState(roundParam > 0);
   useEffect(() => {
-    setTab(0);
-    setTabTouched(false);
-  }, [date, leagueId]);
+    setTab(roundParam);
+    setTabTouched(roundParam > 0);
+  }, [date, leagueId]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (!isDesktop || tabTouched || !daily.data) return;
     const live = [...roundNumbers].reverse().find((n) => roundsLive(n));
@@ -144,7 +151,11 @@ export default function DailyStandings() {
           ) : tab === 0 ? (
             <DesktopNightTable rows={standings} date={dateTitle} />
           ) : (
-            <DesktopRound title={`Round ${tab}`} rows={roundRows} />
+            <DesktopRound
+              title={`Round ${tab}`}
+              rows={roundRows}
+              admin={isAdmin ? {leagueId, date: date || "", roundNumber: tab, onChanged: daily.refresh} : null}
+            />
           )}
         </Box>
       </DesktopShell>
@@ -220,9 +231,18 @@ function DesktopNightTable({rows, date}: {rows: ReturnType<typeof toStandingsRow
 }
 
 // Desktop round view: every table at once, in 1–3 columns, with status filters and a search
-function DesktopRound({title, rows}: {title: string; rows: ReturnType<typeof toTableRows>}) {
+type RoundAdmin = {leagueId: number; date: string; roundNumber: number; onChanged: () => void};
+
+// admin: edit mode (re-pair, remove and add tables), and every table opens its scorepad
+function DesktopRound({title, rows, admin}: {title: string; rows: ReturnType<typeof toTableRows>; admin: RoundAdmin | null}) {
   const [filter, setFilter] = useState<TableFilter>("all");
   const [query, setQuery] = useState("");
+  const [editing, setEditing] = useState(false);
+  const [confirmId, setConfirmId] = useState<number | null>(null);
+  const [removing, setRemoving] = useState(false);
+  const [pair, setPair] = useState<PairTarget | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const {teams: leagueTeams} = useLeagueTeams(admin && editing ? admin.leagueId : null);
   const visible = filterTables(rows, filter, query);
   const cols = tableColumns(rows.length);
   const columns = splitColumns(visible, cols);
@@ -232,18 +252,48 @@ function DesktopRound({title, rows}: {title: string; rows: ReturnType<typeof toT
     {key: "live" as TableFilter, label: "Uživo", count: live},
     {key: "done" as TableFilter, label: "Gotovo", count: rows.filter((r) => r.done).length},
   ];
+
+  const toggleEdit = () => {
+    setEditing((e) => !e);
+    setConfirmId(null);
+    setActionError(null);
+  };
+  const remove = async (id: number) => {
+    if (!admin) return;
+    setRemoving(true);
+    setActionError(null);
+    try {
+      await removeTableAPI(id);
+      setConfirmId(null);
+      admin.onChanged();
+    } catch (e) {
+      setActionError(e instanceof Error ? e.message : "Stol nije uklonjen.");
+    }
+    setRemoving(false);
+  };
+  const savePair = async (team1Id: number, team2Id: number) => {
+    if (!admin || !pair) return;
+    if (pair.kind === "edit") await setTablePairAPI(pair.row.id, team1Id, team2Id);
+    else await addTableAPI(admin.leagueId, admin.date, admin.roundNumber, team1Id, team2Id);
+    setPair(null);
+    admin.onChanged();
+  };
+  const nextTable = rows.reduce((m, r) => Math.max(m, r.table), 0) + 1;
+
   return (
     <Box sx={{flex: 1, minHeight: 0, display: "flex", flexDirection: "column", gap: "12px"}}>
       <Box sx={{flex: "none", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "16px"}}>
-        <Box sx={{display: "flex", alignItems: "baseline", gap: "14px"}}>
-          <Box component="h2" sx={{m: 0, fontFamily: font.display, fontSize: 26, fontWeight: 800}}>
+        <Box sx={{display: "flex", alignItems: "baseline", gap: "14px", minWidth: 0}}>
+          <Box component="h2" sx={{m: 0, fontFamily: font.display, fontSize: 26, fontWeight: 800, whiteSpace: "nowrap"}}>
             {title}
           </Box>
-          <Box sx={{fontSize: 16, color: color.inkSoft, fontVariantNumeric: "tabular-nums"}}>
+          <Box sx={{fontSize: 16, color: color.inkSoft, fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap"}}>
             {rows.length} {plural(rows.length, "stol", "stola", "stolova")} · {live} uživo
           </Box>
         </Box>
         <Box sx={{display: "flex", alignItems: "center", gap: "10px"}}>
+          {admin && editing && <NewTableButton onClick={() => setPair({kind: "new", tableNumber: nextTable})} />}
+          {admin && <EditToggle editing={editing} onClick={toggleEdit} />}
           <SearchInput
             soft
             height={44}
@@ -251,7 +301,7 @@ function DesktopRound({title, rows}: {title: string; rows: ReturnType<typeof toT
             aria-label="Traži ekipu ili broj stola"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            sx={{width: 260}}
+            sx={{width: admin ? 220 : 260}}
           />
           <Segmented<TableFilter>
             items={filters}
@@ -263,6 +313,7 @@ function DesktopRound({title, rows}: {title: string; rows: ReturnType<typeof toT
           />
         </Box>
       </Box>
+      {actionError && <ErrorNote>{actionError}</ErrorNote>}
       {visible.length === 0 ? (
         <Card>
           <EmptyState>Nema stolova za ovaj filter.</EmptyState>
@@ -273,7 +324,29 @@ function DesktopRound({title, rows}: {title: string; rows: ReturnType<typeof toT
             col.length ? (
               <Card key={i} component="ul" sx={{listStyle: "none", m: 0, p: 0, maxHeight: "100%", overflowY: "auto", scrollbarGutter: "stable"}}>
                 {col.map((t) => (
-                  <DesktopTableRow key={t.id} t={t} dense={cols >= 3} />
+                  <DesktopTableRow
+                    key={t.id}
+                    t={t}
+                    dense={cols >= 3}
+                    href={admin && !editing && !t.bye ? `/league/${admin.leagueId}/daily-standings/table/${t.id}` : undefined}
+                    actions={
+                      admin && editing ? (
+                        <RowActions
+                          t={t}
+                          onEdit={() => setPair({kind: "edit", row: t})}
+                          onRemove={() => {
+                            setConfirmId(t.id);
+                            setActionError(null);
+                          }}
+                        />
+                      ) : undefined
+                    }
+                    confirm={
+                      admin && editing && confirmId === t.id ? (
+                        <ConfirmRemove t={t} busy={removing} onCancel={() => setConfirmId(null)} onConfirm={() => remove(t.id)} />
+                      ) : undefined
+                    }
+                  />
                 ))}
               </Card>
             ) : (
@@ -281,6 +354,9 @@ function DesktopRound({title, rows}: {title: string; rows: ReturnType<typeof toT
             )
           )}
         </Box>
+      )}
+      {pair && admin && (
+        <PairDialog target={pair} rows={rows} teams={leagueTeams ?? []} roundLabel={title} onClose={() => setPair(null)} onSave={savePair} />
       )}
     </Box>
   );

@@ -1,3 +1,4 @@
+import {isByeTeam} from "@/app/_lib/bye";
 import {matchesQuery} from "./text";
 
 // One table (round) of a round number on a given night, flattened for display
@@ -6,6 +7,8 @@ export type TableRow = {
   table: number;
   teamA: string;
   teamB: string;
+  teamAId: number;
+  teamBId: number;
   winsA: number;
   winsB: number;
   live: boolean;
@@ -15,6 +18,10 @@ export type TableRow = {
   pointsA: number | null;
   pointsB: number | null;
   mine: boolean;
+  // something was played at the table (a match running or finished)
+  started: boolean;
+  // one side is the bye: settled 2:0 when created, nothing to play
+  bye: boolean;
 };
 
 export type TableFilter = "all" | "live" | "done";
@@ -47,6 +54,8 @@ export function toTableRows(rounds: RoundLike[], myTeamNames: string[] = []): Ta
         table: r.table_number || i + 1,
         teamA,
         teamB,
+        teamAId: r.team1_id ?? 0,
+        teamBId: r.team2_id ?? 0,
         winsA: r.team1_wins ?? 0,
         winsB: r.team2_wins ?? 0,
         live,
@@ -54,6 +63,8 @@ export function toTableRows(rounds: RoundLike[], myTeamNames: string[] = []): Ta
         pointsA: live && om ? om.player_pair1_score ?? 0 : null,
         pointsB: live && om ? om.player_pair2_score ?? 0 : null,
         mine: mine.has(teamA) || mine.has(teamB),
+        started: live || r.open === false || (r.team1_wins ?? 0) + (r.team2_wins ?? 0) > 0 || !!om,
+        bye: isByeTeam(r.team1_id ?? -1) || isByeTeam(r.team2_id ?? -1),
       };
     })
     .sort((a, b) => a.table - b.table);
