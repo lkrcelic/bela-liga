@@ -48,6 +48,7 @@ model Player {
   founder2Teams                  Team[]                          @relation("PlayerFounder2")
   creatorTeams                   Team[]                          @relation("PlayerCreator")
   teamPlayers                    TeamPlayer[]
+  roundPlayers                   RoundPlayer[]
   sessions                       Session[]
   luciaSessions                  LuciaSession[]
   accounts                       Account[]
@@ -141,6 +142,7 @@ model Team {
   roundsAsTeam1   Round[]          @relation("RoundTeam1")
   roundsAsTeam2   Round[]          @relation("RoundTeam2")
   teamScore       TeamScore[]
+  roundPlayers    RoundPlayer[]
 }
 
 model TeamScore {
@@ -216,6 +218,21 @@ model Round {
   ongoingMatches   OngoingMatch[]
   tournamentRounds TournamentRound[]
   leagueRounds     LeagueRound[]
+  roundPlayers     RoundPlayer[]
+}
+
+// The two players of each team who play a round (picked on Start Game); their ratings change with its result
+model RoundPlayer {
+  round_id  Int
+  player_id Int
+  team_id   Int
+
+  round  Round  @relation(fields: [round_id], references: [id], onDelete: Cascade)
+  player Player @relation(fields: [player_id], references: [id], onDelete: Cascade)
+  team   Team   @relation(fields: [team_id], references: [team_id], onDelete: Cascade)
+
+  @@id([round_id, player_id])
+  @@index([team_id])
 }
 
 model TournamentRound {

@@ -5,7 +5,8 @@ import {getOpenRoundByPlayerIdAPI} from "@/app/_fetchers/round/getOpenByPlayerId
 import {useTransitionRouter} from "@/app/_lib/viewTransitions";
 import {useCallback, useState} from "react";
 
-// "Start Game": opens the running match of the player's open round, or starts it
+// "Start Game": opens the running match of the player's open round, or starts it (after the lineup, for a round
+// whose players aren't confirmed yet)
 export default function useStartGame() {
   const router = useTransitionRouter();
   const [starting, setStarting] = useState(false);
@@ -16,7 +17,12 @@ export default function useStartGame() {
     setStarting(true);
     setError(null);
     try {
-      const {roundId, ongoingMatchId} = await getOpenRoundByPlayerIdAPI();
+      const {roundId, ongoingMatchId, hasLineup} = await getOpenRoundByPlayerIdAPI();
+      // the round's first match: confirm who plays before the scoreboard (the lineup screen starts the match)
+      if (ongoingMatchId == null && !hasLineup) {
+        router.push(`/round/lineup/${roundId}`);
+        return;
+      }
       const id = ongoingMatchId ?? (await createOngoingMatchAPI({round_id: roundId, score_threshold: 1001})).id;
       const target = `/ongoing-match/${id}`;
       // already there (the desktop menu opened from the scoreboard): nothing will take over, so stop the spinner

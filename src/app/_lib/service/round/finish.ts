@@ -3,6 +3,7 @@ import {prisma} from "@/app/_lib/prisma";
 import {updateRatingsAfterMatch} from "../../rating/ratingService";
 import {InvalidResultError} from "@/app/_lib/validation/validateResult";
 import {lockRatings} from "@/app/_lib/service/admin/recalc";
+import {ratedPlayerIds} from "@/app/_lib/lineup";
 
 // A round between two teams is two matches.
 export const MATCHES_PER_ROUND = 2;
@@ -13,7 +14,7 @@ export async function lockRound(tx: Prisma.TransactionClient, roundId: number) {
   return round;
 }
 
-// Marks the round as played, recomputes both teams' standings and updates the players' ratings.
+// Marks the round as played, recomputes both teams' standings and updates the ratings of the players who played.
 // Call it inside a transaction that holds the round lock, so it runs once per round.
 export async function closeRound(tx: Prisma.TransactionClient, roundId: number): Promise<void> {
   const round = await tx.round.update({
@@ -23,6 +24,7 @@ export async function closeRound(tx: Prisma.TransactionClient, roundId: number):
       leagueRounds: {select: {league_id: true}},
       team1: {select: {teamPlayers: true}},
       team2: {select: {teamPlayers: true}},
+      roundPlayers: {select: {player_id: true, team_id: true}},
     },
   });
 
@@ -31,8 +33,9 @@ export async function closeRound(tx: Prisma.TransactionClient, roundId: number):
     await tx.$executeRaw`CALL update_team_score(${round.team2_id}, ${league_id})`;
   }
 
-  const teamAPlayerIds = round.team1.teamPlayers.map(player => player.player_id);
-  const teamBPlayerIds = round.team2.teamPlayers.map(player => player.player_id);
+  // the players picked on Start Game, or the whole roster when the round has no lineup
+  const teamAPlayerIds = ratedPlayerIds(round.roundPlayers, round.team1_id, round.team1.teamPlayers.map(player => player.player_id));
+  const teamBPlayerIds = ratedPlayerIds(round.roundPlayers, round.team2_id, round.team2.teamPlayers.map(player => player.player_id));
   if (teamAPlayerIds.length === 0 || teamBPlayerIds.length === 0) {
     console.warn(`Round ${roundId}: a team has no players, ratings not updated`);
     return;
