@@ -67,8 +67,9 @@ export async function finishOngoingMatch(ongoingMatchId: number): Promise<Finish
       return {roundId, roundFinished: true, nextOngoingMatchId: null};
     }
 
+    const now = new Date();
     const nextMatch = await tx.ongoingMatch.create({
-      data: {round_id: roundId, score_threshold: threshold, start_time: new Date()},
+      data: {round_id: roundId, score_threshold: threshold, match_date: now, start_time: now},
     });
     return {roundId, roundFinished: false, nextOngoingMatchId: nextMatch.id};
   }, {timeout: 20000});

@@ -24,6 +24,22 @@ export async function openHandForEdit(resultId: number) {
   return result;
 }
 
+// The phone wizard has three steps (trump caller, zvanja, score). When the scoreboard opens it, the scoreboard is three
+// history entries behind the score step, and saving goes back there instead of pushing the scoreboard again, so the
+// phone's back button doesn't lead into the finished wizard. Not known after a reload mid-entry.
+let wizardOpenedFrom: number | null = null;
+
+export function markWizardOpened(matchId: number) {
+  wizardOpenedFrom = matchId;
+}
+
+// true once per wizard: the caller may go back three entries to reach the scoreboard
+export function takeWizardOrigin(matchId: number): boolean {
+  const fromBoard = wizardOpenedFrom === matchId;
+  wizardOpenedFrom = null;
+  return fromBoard;
+}
+
 export function discardHand() {
   useResultStore.getState().resetResult();
   useAnnouncementStore.getState().resetAnnouncements();

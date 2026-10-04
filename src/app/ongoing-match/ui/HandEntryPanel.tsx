@@ -47,16 +47,18 @@ export default function HandEntryPanel({
   const counts = teamsAnnouncements[activeSide]?.announcementCounts ?? {};
   const activeIndex = sides.indexOf(activeSide) as 0 | 1;
 
-  // a fresh hand starts with the viewer's team active
+  // a fresh hand starts with the viewer's team active. Depends on the side itself, not the sides array (a new array
+  // on every render): the board re-renders on each refresh, which must not move the keypad to the other team.
+  const viewerSide = sides[0];
   useEffect(() => {
     if (editingId == null) {
       // a hand left over from another match is dropped, one from this match is kept (e.g. after a reload)
       const pending = useResultStore.getState().resultData.match_id;
       if (pending != null && pending !== matchId) discardHand();
       setMatchId(matchId);
-      setActiveTeam(sides[0] === 1 ? "team1" : "team2");
+      setActiveTeam(viewerSide === 1 ? "team1" : "team2");
     }
-  }, [editingId, matchId, sides, setMatchId, setActiveTeam]);
+  }, [editingId, matchId, viewerSide, setMatchId, setActiveTeam]);
 
   const save = async () => {
     if (!canSave || saving) return;

@@ -3,10 +3,10 @@
 import useResultStore from "@/app/_store/bela/resultStore";
 import {color, font} from "@/app/_styles/tokens";
 import {ActionPair, buttonBase, ErrorNote} from "@/app/_ui/sp";
-import {saveHand} from "@/app/ongoing-match/ui/handFlow";
+import {saveHand, takeWizardOrigin} from "@/app/ongoing-match/ui/handFlow";
 import {Box} from "@mui/material";
 import {useParams} from "next/navigation";
-import {useTransitionRouter} from "@/app/_lib/viewTransitions";
+import {navigateWithTransition, useTransitionRouter} from "@/app/_lib/viewTransitions";
 import {useState} from "react";
 import {ActionProps} from "./TrumpCallerPage";
 
@@ -28,7 +28,8 @@ export default function ScorePage({actionType}: ActionProps) {
     setError(null);
     try {
       await saveHand(Number(params.matchId), actionType === "UPDATE" ? params.resultId : null);
-      router.push(`/ongoing-match/${params.matchId}`, "back");
+      if (takeWizardOrigin(Number(params.matchId))) navigateWithTransition(() => window.history.go(-3), "back");
+      else router.replace(`/ongoing-match/${params.matchId}`, "back");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Spremanje nije uspjelo.");
       setSaving(false);
