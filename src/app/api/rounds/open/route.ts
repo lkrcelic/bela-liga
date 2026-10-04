@@ -4,7 +4,8 @@ import {getLastOpenRoundByPlayerId} from "@/app/_lib/service/round/getLastOpenBy
 import {getNewestOngoingMatchByRoundId} from "@/app/_lib/service/match/getNewstByRoundId";
 import {requireUser} from "@/app/_lib/service/auth/requireUser";
 
-// The round the logged-in player should play now, and its running match if one is started.
+// The round the logged-in player should play now, and its running match if one is started (with its score, team1
+// first, for the Continue Game card on Home).
 export async function GET(request: NextRequest) {
   const auth = await requireUser(request);
   if (auth.response) return auth.response;
@@ -19,7 +20,8 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       roundId: round.id,
-      ongoingMatchId: ongoingMatch?.id || null
+      ongoingMatchId: ongoingMatch?.id || null,
+      ongoingScore: ongoingMatch ? [ongoingMatch.player_pair1_score ?? 0, ongoingMatch.player_pair2_score ?? 0] : null,
     }, {status: STATUS.OK});
   } catch (error) {
     console.error(error);

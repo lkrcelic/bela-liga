@@ -13,6 +13,8 @@ export type OpenTable = {
   // the player's own team first
   myTeam: string;
   opponent: string;
+  // the running match's points, the player's own team first; null before a match is started
+  score: [number, number] | null;
 };
 
 // orientation used everywhere: the viewer's team on the left; if they play in neither, team1 stays left
@@ -32,7 +34,7 @@ export default function useOpenTable(): {table: OpenTable | null; loading: boole
     let cancelled = false;
     (async () => {
       try {
-        const {roundId} = await getOpenRoundByPlayerIdAPI();
+        const {roundId, ongoingScore} = await getOpenRoundByPlayerIdAPI();
         const round = await getRoundDataAPI(roundId);
         if (cancelled) return;
         const left = myTeamIsTeam1(round, userId);
@@ -44,6 +46,7 @@ export default function useOpenTable(): {table: OpenTable | null; loading: boole
           roundNumber: round.round_number ?? null,
           myTeam: left ? t1 : t2,
           opponent: left ? t2 : t1,
+          score: ongoingScore ? (left ? ongoingScore : [ongoingScore[1], ongoingScore[0]]) : null,
         });
       } catch {
         // no open round (404) or offline: no card
