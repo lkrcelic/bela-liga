@@ -1,232 +1,172 @@
 "use client";
 
+import {getPlayerByIdAPI} from "@/app/_fetchers/player/getById";
+import useIsDesktop from "@/app/_hooks/useIsDesktop";
+import useMyTeams from "@/app/_hooks/useMyTeams";
+import {PlayerResponse} from "@/app/_interfaces/player";
 import useAuthStore from "@/app/_store/authStore";
-import theme from "@/app/_styles/theme";
-import GroupsIcon from "@mui/icons-material/Groups";
-import HomeIcon from "@mui/icons-material/Home";
-import {Avatar, Box, CircularProgress, Paper, Stack, Typography, useMediaQuery, Container} from "@mui/material";
+import {color, font} from "@/app/_styles/tokens";
+import {
+  Card,
+  CenteredSpinner,
+  DesktopShell,
+  ellipsis,
+  EmptyState,
+  ErrorNote,
+  InitialsAvatar,
+  PlayerChip,
+  PrimaryButton,
+  Screen,
+  ScrollArea,
+  SectionLabel,
+  tabular,
+} from "@/app/_ui/sp";
+import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
+import {Box, Skeleton} from "@mui/material";
 import {useRouter} from "next/navigation";
-import React from "react";
-import SingleActionButton from "../_ui/SingleActionButton";
-import { PlayerResponse } from "../_interfaces/player";
-import { TeamExtendedResponse } from "../_interfaces/team";
-
-function DetailRow({label, value}: {label: string; value?: string}) {
-  return (
-    <Stack direction="row" justifyContent="space-between" alignItems="center">
-      <Typography variant="body2" color="text.secondary">
-        {label}
-      </Typography>
-      <Typography variant="body2" sx={{fontWeight: 600}}>
-        {value || "—"}
-      </Typography>
-    </Stack>
-  );
-}
+import {useCallback, useEffect, useState} from "react";
 
 export default function ProfilePage() {
   const router = useRouter();
-  const {user} = useAuthStore();
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const isDesktop = useIsDesktop();
+  const user = useAuthStore((s) => s.user);
+  const {teams, loading: teamsLoading} = useMyTeams();
+  const [player, setPlayer] = useState<PlayerResponse | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const [loading, setLoading] = React.useState(true);
-  const [player, setPlayer] = React.useState<PlayerResponse | null>(null);
-  const [teams, setTeams] = React.useState<TeamExtendedResponse[]>([]);
-
-  // Load player + teams
-  React.useEffect(() => {
-    const load = async () => {      
-      if (!user?.id) {
-        setLoading(false);
-        return;
-      }
-      try {
-        setLoading(true);
-        const [playerRes, teamsRes] = await Promise.all([fetch(`/api/players/${user.id}`), fetch(`/api/teams`)]);
-        const playerJson = playerRes.ok ? await playerRes.json() : null;
-        const teamsJson: TeamExtendedResponse[] = teamsRes.ok ? await teamsRes.json() : [];
-        const myTeams = (teamsJson || []).filter((t) => t.teamPlayers?.some((tp) => tp.player?.id === user.id));
-        setPlayer(playerJson);
-        setTeams(myTeams);
-      } catch (e) {
-        // no-op: keep page usable
-      } finally {
-        setLoading(false);
-      }
-    };
-    load();
+  const load = useCallback(() => {
+    if (!user?.id) return;
+    setError(null);
+    getPlayerByIdAPI(user.id)
+      .then(setPlayer)
+      .catch(() => setError("Profil nije moguće učitati."));
   }, [user?.id]);
 
-  // No quick actions on profile per request
+  useEffect(() => {
+    load();
+  }, [load]);
 
-  const initials = React.useMemo(() => {
-    const name = player?.username || "";
-    const parts = name.split(" ");
-    const inits = parts
-      .slice(0, 2)
-      .map((p) => p.charAt(0).toUpperCase())
-      .join("");
-    return inits || (player?.first_name?.[0]?.toUpperCase() ?? "U");
-  }, [player]);
+  const fullName = player ? `${player.first_name} ${player.last_name}`.trim() : "";
+  const details = [
+    {k: "Username", v: player?.username},
+    {k: "Email", v: player?.email},
+    {k: "First name", v: player?.first_name},
+    {k: "Last name", v: player?.last_name},
+    {k: "Rating", v: player?.rating != null ? String(player.rating) : undefined},
+  ];
 
-  return (
-    <>
-      <Box
-        sx={{
-          display: "flex",
-          flexDirection: "column",
-          minHeight: "calc(100vh - 90px)",
-          width: "100%",
-          position: "relative",
-          overflowY: "hidden",
-        }}
-      >
-        {/* Header (sticky) */}
-        <Box
-          sx={{
-            gridArea: "top",
-            width: "100%",
-            backgroundColor: "none",
-            borderBottom: "1px solid rgba(0,0,0,0.1)",
-            pb: 1,
-            position: "sticky",
-            zIndex: 10,
-            top: 0,
-          }}
-        >
-          <Container maxWidth="sm" sx={{p: 1}}>
-            <Paper
-              elevation={2}
-              sx={{
-                p: 2,
-                borderRadius: 4,
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                backgroundColor: theme.palette.secondary.main,
-                color: theme.palette.secondary.contrastText,
-              }}
-            >
-              <Box sx={{display: "flex", alignItems: "center", gap: 2}}>
-                <Avatar sx={{bgcolor: theme.palette.primary.main, width: 56, height: 56}}>{initials}</Avatar>
-                <Box sx={{flex: 1}}>
-                  <Typography variant="h6" sx={{fontWeight: "bold"}}>
-                    {player?.username || "My Profile"}
-                  </Typography>
-                  {player?.first_name || player?.last_name ? (
-                    <Typography variant="body2">
-                      {player?.first_name} {player?.last_name}
-                    </Typography>
-                  ) : null}
-                </Box>
-              </Box>
-              <Typography variant="h6" sx={{fontWeight: "bold"}}>
-                {player?.rating}
-              </Typography>
-            </Paper>
-          </Container>
-        </Box>
-
-        {/* Body (scrollable) */}
-        <Box
-          sx={{
-            gridArea: "body",
-            flex: 1,
-            overflowY: "auto",
-            overflowX: "hidden",
-            py: 2,
-          }}
-        >
-          <Container maxWidth="sm" sx={{display: "flex", flexDirection: "column", gap: 2, p: 1}}>
-          {loading ? (
-            <Box sx={{display: "flex", justifyContent: "center", alignItems: "center", height: "40vh"}}>
-              <CircularProgress />
-            </Box>
-          ) : (
-            <Stack spacing={2}>
-              {/* Classic Details */}
-              <Paper elevation={2} sx={{p: 2, borderRadius: 4}}>
-                <Typography variant="subtitle1" sx={{mb: 1, fontWeight: 600}}>
-                  Details
-                </Typography>
-                <Stack spacing={1.25}>
-                  <DetailRow label="Username" value={player?.username} />
-                  <DetailRow label="Email" value={player?.email} />
-                  <DetailRow label="First name" value={player?.first_name} />
-                  <DetailRow label="Last name" value={player?.last_name} />
-                  <DetailRow label="Rating" value={player?.rating} />
-                </Stack>
-              </Paper>
-
-              {/* My Teams */}
-              <Paper elevation={2} sx={{p: 2, borderRadius: 4}}>
-                <Typography variant="subtitle1" sx={{mb: 1, fontWeight: 600}}>
-                  My Teams
-                </Typography>
-                {teams.length === 0 ? (
-                  <Typography variant="body2" color="text.secondary">
-                    You are not a member of any team yet.
-                  </Typography>
-                ) : (
-                  <Stack spacing={1}>
-                    {teams.map((team) => (
-                      <Box
-                        key={team.team_id}
-                        sx={{
-                          backgroundColor: theme.palette.secondary.main,
-                          color: theme.palette.secondary.contrastText,
-                          borderRadius: 3,
-                          px: 2,
-                          py: 1.5,
-                        }}
-                      >
-                        <Typography variant="subtitle1" sx={{fontWeight: 600}}>
-                          {team.team_name}
-                        </Typography>
-                        <Typography variant="caption" sx={{opacity: 0.9, display: "block"}}>
-                          Teammates:
-                        </Typography>
-                        <Stack direction="column" spacing={0.5} sx={{mt: 0.5}}>
-                          {team.teamPlayers?.map((tp, idx) => (
-                            <Stack key={idx} direction="row" spacing={0.75} alignItems="center">
-                              <GroupsIcon fontSize="small" />
-                              <Typography variant="body2">{tp.player?.username}</Typography>
-                            </Stack>
-                          ))}
-                        </Stack>
-                      </Box>
-                    ))}
-                  </Stack>
-                )}
-              </Paper>
-            </Stack>
-          )}
-          </Container>
-        </Box>
-
-        {/* Footer (sticky) */}
-        <Box
-          sx={{
-            gridArea: "actions",
-            width: "100%",
-            backgroundColor: "none",
-            borderTop: "1px solid rgba(0,0,0,0.1)",
-            py: 2,
-            position: "sticky",
-            bottom: 0,
-            zIndex: 10,
-          }}
-        >
-          <Container maxWidth="sm" sx={{display: "flex", justifyContent: "center", p: 1}}>
-            <SingleActionButton
-              label={"Početni zaslon"}
-              icon={<HomeIcon />}
-              fullWidth={isMobile}
-              onClick={() => router.push(`/`)}
-            />
-          </Container>
+  const hero = (desktop: boolean) => (
+    <Card
+      component="section"
+      aria-label="Igrač"
+      sx={{
+        background: color.cream,
+        boxShadow: "none",
+        borderRadius: desktop ? "28px" : "24px",
+        p: desktop ? "28px" : "20px",
+        display: "flex",
+        flexDirection: "column",
+        gap: desktop ? "22px" : "18px",
+        flex: "none",
+      }}
+    >
+      <Box sx={{display: "flex", flexDirection: desktop ? "column" : "row", alignItems: desktop ? "flex-start" : "center", gap: desktop ? "22px" : "14px"}}>
+        <InitialsAvatar name={fullName || user?.username || ""} size={desktop ? 96 : 64} variant="navy" />
+        <Box sx={{display: "flex", flexDirection: "column", gap: desktop ? "4px" : "2px", minWidth: 0}}>
+          <Box component="h1" sx={{m: 0, fontFamily: font.display, fontSize: desktop ? 34 : 28, fontWeight: 800, lineHeight: 1, letterSpacing: "-.02em", ...ellipsis}}>
+            {player?.username ?? user?.username ?? <Skeleton width={160} />}
+          </Box>
+          <Box sx={{fontSize: desktop ? 17 : 16, color: color.inkSoft}}>{player ? fullName : <Skeleton width={120} />}</Box>
         </Box>
       </Box>
-    </>
+      <Box sx={{display: "flex", alignItems: "flex-end", justifyContent: "space-between", borderTop: `1px solid ${color.border}`, pt: desktop ? "16px" : "14px"}}>
+        <Box sx={{fontSize: 13, fontWeight: 600, letterSpacing: ".1em", textTransform: "uppercase", color: color.inkSoft}}>Rating</Box>
+        <Box sx={{fontFamily: font.display, fontSize: desktop ? 56 : 44, fontWeight: 800, lineHeight: 0.85, color: color.navy, ...tabular}}>
+          {player?.rating ?? "—"}
+        </Box>
+      </Box>
+    </Card>
+  );
+
+  const detailsBlock = (desktop: boolean) => (
+    <Box component="section" aria-labelledby="details" sx={{display: "flex", flexDirection: "column", gap: "8px"}}>
+      <SectionLabel id="details">Details</SectionLabel>
+      <Card component="dl" sx={{m: 0, overflow: "hidden"}}>
+        {details.map((d) => (
+          <Box
+            key={d.k}
+            sx={{height: desktop ? 56 : 52, display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", px: desktop ? "18px" : "16px", borderBottom: `1px solid ${color.line}`}}
+          >
+            <Box component="dt" sx={{flex: "none", whiteSpace: "nowrap", fontSize: 15, color: color.muted}}>
+              {d.k}
+            </Box>
+            <Box component="dd" sx={{m: 0, minWidth: 0, textAlign: "right", fontSize: 15, fontWeight: 600, ...ellipsis}}>
+              {player ? d.v || "—" : <Skeleton width={110} />}
+            </Box>
+          </Box>
+        ))}
+      </Card>
+    </Box>
+  );
+
+  const teamsBlock = (desktop: boolean) => (
+    <Box component="section" aria-labelledby="my-teams" sx={{display: "flex", flexDirection: "column", gap: "8px"}}>
+      <SectionLabel id="my-teams">My Teams</SectionLabel>
+      {teamsLoading ? (
+        <Card>
+          <CenteredSpinner />
+        </Card>
+      ) : teams.length === 0 ? (
+        <Card>
+          <EmptyState>Još nisi član nijedne ekipe.</EmptyState>
+        </Card>
+      ) : (
+        teams.map((t) => (
+          <Card key={t.team_id} sx={{p: desktop ? "18px" : "16px", display: "flex", flexDirection: "column", gap: desktop ? "12px" : "10px"}}>
+            <Box component="h3" sx={{m: 0, fontFamily: font.display, fontSize: desktop ? 24 : 22, fontWeight: 700, letterSpacing: "-.01em"}}>
+              {t.team_name}
+            </Box>
+            <Box component="ul" aria-label="Igrači" sx={{listStyle: "none", m: 0, p: 0, display: "flex", flexWrap: "wrap", gap: "8px"}}>
+              {t.teamPlayers?.map((tp) => (
+                <Box component="li" key={tp.player.id}>
+                  <PlayerChip name={tp.player.username} />
+                </Box>
+              ))}
+            </Box>
+          </Card>
+        ))
+      )}
+    </Box>
+  );
+
+  const errorNote = error && <ErrorNote onRetry={load}>{error}</ErrorNote>;
+
+  if (isDesktop) {
+    return (
+      <DesktopShell active="profile" eyebrow="My Profile" title="Profil">
+        {errorNote}
+        <Box sx={{flex: 1, minHeight: 0, overflowY: "auto", display: "grid", gridTemplateColumns: "360px minmax(0,1fr)", gap: "20px", alignItems: "start"}}>
+          {hero(true)}
+          <Box sx={{display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,1fr)", gap: "20px", alignItems: "start"}}>
+            {detailsBlock(true)}
+            {teamsBlock(true)}
+          </Box>
+        </Box>
+      </DesktopShell>
+    );
+  }
+
+  return (
+    <Screen fill>
+      {hero(false)}
+      {errorNote}
+      <ScrollArea bleed>
+        {detailsBlock(false)}
+        {teamsBlock(false)}
+      </ScrollArea>
+      <PrimaryButton icon={<HomeRoundedIcon />} onClick={() => router.push("/")}>
+        Početni zaslon
+      </PrimaryButton>
+    </Screen>
   );
 }
