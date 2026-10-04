@@ -7,6 +7,18 @@ import {Box, SxProps, Theme} from "@mui/material";
 import React, {useId, useState} from "react";
 import {buttonBase, mergeSx} from "./base";
 
+// iOS Safari gives a date input its own minimum width and ignores width: 100%, so on a narrow phone it runs past
+// its card; without the native look it takes the given width, and the date stays left-aligned like other text
+export const dateInputFix = {
+  appearance: "none",
+  WebkitAppearance: "none",
+  display: "block",
+  minWidth: 0,
+  maxWidth: "100%",
+  textAlign: "left",
+  "&::-webkit-date-and-time-value": {textAlign: "left", margin: 0},
+} as const;
+
 export const inputSx = {
   width: "100%",
   height: 56,
@@ -24,6 +36,7 @@ export const inputSx = {
   "&:focus-visible": {outline: "none", boxShadow: `0 0 0 3px rgba(60,74,103,.18)`},
   "&[aria-invalid=true]": {borderColor: color.red},
   "&::-webkit-calendar-picker-indicator": {opacity: 0.6},
+  "&[type=date]": dateInputFix,
 } as const;
 
 type FieldProps = {
