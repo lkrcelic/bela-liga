@@ -2,6 +2,8 @@
 
 import BirthDatePrompt from "@/app/_bootstrap/BirthDatePrompt";
 import UserBootstrapper from "@/app/_bootstrap/UserBootstrapper";
+// catches Chrome's install offer as early as possible, for the install sheet
+import "@/app/_lib/installPrompt";
 import {RouteTransitions} from "@/app/_lib/viewTransitions";
 import theme from "@/app/_styles/theme";
 import {color} from "@/app/_styles/tokens";

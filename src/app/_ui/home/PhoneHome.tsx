@@ -7,6 +7,7 @@ import useStartGame from "@/app/_hooks/useStartGame";
 import {currentLeagueHref} from "@/app/_lib/league";
 import {color, font, shadow} from "@/app/_styles/tokens";
 import {Brand} from "@/app/_ui/auth/AuthFrame";
+import InstallSheet from "@/app/_ui/install/InstallSheet";
 import {buttonBase, Card, ellipsis, ErrorNote, IconCircleButton, Screen, SectionLabel, Spinner, TextButton} from "@/app/_ui/sp";
 import AccountCircleRoundedIcon from "@mui/icons-material/AccountCircleRounded";
 import AddCircleRoundedIcon from "@mui/icons-material/AddCircleRounded";
@@ -143,6 +144,7 @@ export default function PhoneHome({
         <LogoutRoundedIcon />
         Log Out
       </TextButton>
+      <InstallSheet />
     </Screen>
   );
 }

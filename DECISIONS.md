@@ -123,3 +123,9 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
     delete waits 8 s for Undo and is sent then, when another round is deleted, or when the page is left. Round
     numbers aren't renumbered after a delete; the next Create Round continues after the highest one.
 
+
+27. **The app is installable, with no offline mode** (your decision). A web app manifest and the design's BL icon,
+    no service worker. On a phone, the login page and Home (in the browser only) show the design's install sheet
+    ("Mobile · install prompt flow"): Chrome's install dialog when Chrome offers it, otherwise the menu steps
+    (Chrome or Safari) with an arrow at the menu. The design's line that entered hands stay saved without signal is
+    left out, since nothing works offline. iPhone can't report an install, so only Android shows the success screen.
