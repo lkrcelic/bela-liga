@@ -5,7 +5,7 @@ import useLeagues from "@/app/_hooks/useLeagues";
 import useLeagueTeams from "@/app/_hooks/useLeagueTeams";
 import {useLeagueStandings} from "@/app/_hooks/useStandings";
 import {matchesQuery} from "@/app/_lib/ui/text";
-import {MOCK_NOTICE, MockTeam, useInactiveTeams, useLeagueAdminMock} from "@/app/_mocks/leagueAdmin";
+import {addTeamToLeagueAPI, setLeagueTeamActiveAPI} from "@/app/_fetchers/league/leagues";
 import {color, font} from "@/app/_styles/tokens";
 import {
   buttonBase,
@@ -33,13 +33,12 @@ import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import GroupAddRoundedIcon from "@mui/icons-material/GroupAddRounded";
 import InfoRoundedIcon from "@mui/icons-material/InfoRounded";
-import ScienceRoundedIcon from "@mui/icons-material/ScienceRounded";
 import {Box} from "@mui/material";
 import {useParams, useRouter} from "next/navigation";
 import {useEffect, useMemo, useState} from "react";
 
 type Filter = "all" | "active" | "inactive";
-type Row = {id: number; name: string; players: string[]; played: number | null; active: boolean; local: boolean};
+type Row = {id: number; name: string; players: string[]; played: number | null; active: boolean};
 
 export default function ManageLeague() {
   const params = useParams<{leagueId: string}>();
@@ -47,21 +46,19 @@ export default function ManageLeague() {
   const router = useRouter();
   const isDesktop = useIsDesktop();
   const leagues = useLeagues(leagueId);
-  const {teams, error, loading, reload} = useLeagueTeams(leagueId, true);
+  const {teams, setTeams, error, loading, reload} = useLeagueTeams(leagueId);
   const {standings} = useLeagueStandings(leagueId);
-  const inactive = useInactiveTeams(leagueId);
-  const added = useLeagueAdminMock((s) => s.added[String(leagueId)]);
-  const {setTeamActive, addTeamToLeague} = useLeagueAdminMock.getState();
   const [filter, setFilter] = useState<Filter>("all");
   const [query, setQuery] = useState("");
   const [justAdded, setJustAdded] = useState<number | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   const played = useMemo(() => new Map((standings ?? []).map((s) => [Number(s.team_id), s.rounds_played])), [standings]);
   const rows: Row[] = useMemo(() => {
-    const real = (teams ?? []).map((t) => ({...t, local: false}));
-    const local = (added ?? []).filter((a) => !real.some((t) => t.id === a.team_id)).map((a) => ({id: a.team_id, name: a.team_name, players: a.players, local: true}));
-    return [...local, ...real].map((t) => ({...t, played: played.get(t.id) ?? (t.local ? 0 : null), active: !inactive.has(t.id)}));
-  }, [teams, added, played, inactive]);
+    const list = (teams ?? []).map((t) => ({...t, played: played.get(t.id) ?? null}));
+    // a team added just now is listed first
+    return justAdded == null ? list : [...list.filter((t) => t.id === justAdded), ...list.filter((t) => t.id !== justAdded)];
+  }, [teams, played, justAdded]);
 
   const visible = rows.filter(
     (r) => (filter === "all" || (filter === "active") === r.active) && matchesQuery(`${r.name} ${r.players.join(" ")}`, query)
@@ -73,11 +70,29 @@ export default function ManageLeague() {
   ];
   const leagueName = leagues.find((l) => l.id === leagueId)?.name ?? "";
 
-  const onAdd = (t: TeamOption) => {
-    const team: MockTeam = {team_id: t.id, team_name: t.title, players: t.players};
-    addTeamToLeague(leagueId, team);
-    setJustAdded(t.id);
-    if (filter === "inactive") setFilter("all");
+  // optimistic: the switch moves at once and goes back if the server refuses
+  const setActive = async (r: Row, active: boolean) => {
+    setActionError(null);
+    setTeams((prev) => prev?.map((t) => (t.id === r.id ? {...t, active} : t)) ?? prev);
+    try {
+      await setLeagueTeamActiveAPI(leagueId, r.id, active);
+    } catch (e) {
+      setTeams((prev) => prev?.map((t) => (t.id === r.id ? {...t, active: !active} : t)) ?? prev);
+      setActionError(e instanceof Error ? e.message : "Status ekipe nije spremljen.");
+    }
+  };
+
+  const onAdd = async (t: TeamOption) => {
+    setActionError(null);
+    try {
+      await addTeamToLeagueAPI(leagueId, t.id);
+      setTeams((prev) => [...(prev ?? []), {id: t.id, name: t.title, players: t.players, active: true}]);
+      setJustAdded(t.id);
+      if (filter === "inactive") setFilter("all");
+    } catch (e) {
+      setActionError(e instanceof Error ? e.message : "Ekipu nije moguće dodati.");
+      throw e;
+    }
   };
 
   const listState = error ? (
@@ -112,7 +127,7 @@ export default function ManageLeague() {
       role="switch"
       aria-checked={r.active}
       aria-label={`${r.name}: ${r.active ? "aktivna" : "neaktivna"}`}
-      onClick={() => setTeamActive(leagueId, r.id, !r.active)}
+      onClick={() => setActive(r, !r.active)}
       sx={{
         ...buttonBase,
         justifySelf: "end",
@@ -140,9 +155,6 @@ export default function ManageLeague() {
       <InfoNote icon={<InfoRoundedIcon />}>
         Inactive teams stay in the league and its standings, but are not signed in automatically when you create a round.
       </InfoNote>
-      <InfoNote icon={<ScienceRoundedIcon />} sx={{background: color.paperDeep}}>
-        {MOCK_NOTICE}
-      </InfoNote>
     </Box>
   );
 
@@ -157,6 +169,7 @@ export default function ManageLeague() {
         <Box sx={{flex: 1, minHeight: 0, display: "grid", gridTemplateColumns: "minmax(0,1fr) 380px", gap: "20px"}}>
           <Card component="section" aria-label={`Ekipe lige ${leagueName}`} sx={{minHeight: 0, display: "flex", flexDirection: "column", overflow: "hidden", borderRadius: "24px"}}>
             {toolbar}
+            {actionError && <ErrorNote sx={{m: "12px 14px 0"}}>{actionError}</ErrorNote>}
             <Box
               aria-hidden
               sx={{flex: "none", height: 40, display: "grid", gridTemplateColumns: "minmax(0,1.1fr) minmax(0,1.4fr) 80px 170px", gap: "12px", alignItems: "center", px: "20px", background: color.tableHead, borderBottom: `1px solid rgba(60,74,103,.1)`, fontSize: 12, fontWeight: 600, letterSpacing: ".08em", textTransform: "uppercase", color: color.muted}}
@@ -224,6 +237,7 @@ export default function ManageLeague() {
       </Box>
       <Card sx={{overflow: "hidden"}}>
         {toolbar}
+        {actionError && <ErrorNote sx={{m: "12px 14px 0"}}>{actionError}</ErrorNote>}
         {listState ?? (
           <Box component="ul" sx={{listStyle: "none", m: 0, p: 0}}>
             {visible.map((r) => (
@@ -253,8 +267,9 @@ export default function ManageLeague() {
 }
 
 // Search existing teams that are not in the league and add them
-function AddTeamCard({exclude, onAdd, onCreate}: {exclude: number[]; onAdd: (t: TeamOption) => void; onCreate: () => void}) {
+function AddTeamCard({exclude, onAdd, onCreate}: {exclude: number[]; onAdd: (t: TeamOption) => Promise<void>; onCreate: () => void}) {
   const [query, setQuery] = useState("");
+  const [adding, setAdding] = useState<number | null>(null);
   const [hits, setHits] = useState<TeamOption[] | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -321,10 +336,15 @@ function AddTeamCard({exclude, onAdd, onCreate}: {exclude: number[]; onAdd: (t: 
                 <IconCircleButton
                   label={`Dodaj ${h.title} u ligu`}
                   size={44}
-                  onClick={() => onAdd(h)}
+                  disabled={adding != null}
+                  onClick={async () => {
+                    setAdding(h.id);
+                    await onAdd(h).catch(() => undefined);
+                    setAdding(null);
+                  }}
                   sx={{borderRadius: "12px", background: color.navy, color: "#FFFFFF", boxShadow: "none", "& svg": {fontSize: 24}}}
                 >
-                  <AddRoundedIcon />
+                  {adding === h.id ? <Spinner size={20} color="#FFFFFF" /> : <AddRoundedIcon />}
                 </IconCircleButton>
               </Box>
             ))

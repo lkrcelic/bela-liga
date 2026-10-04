@@ -6,7 +6,6 @@ import useLeagues, {LeagueOption} from "@/app/_hooks/useLeagues";
 import useLeagueTeams, {LeagueTeam} from "@/app/_hooks/useLeagueTeams";
 import {CURRENT_LEAGUE_ID} from "@/app/_lib/league";
 import {matchesQuery, plural} from "@/app/_lib/ui/text";
-import {useInactiveTeams} from "@/app/_mocks/leagueAdmin";
 import {color, shadow} from "@/app/_styles/tokens";
 import {
   buttonBase,
@@ -53,14 +52,16 @@ export default function CreateRound() {
   // the desktop shows the league list and the teams together, so it starts on the current league
   const activeLeague = leagueId ?? (isDesktop ? leagues.find((l) => l.id === CURRENT_LEAGUE_ID)?.id ?? leagues[0]?.id ?? null : null);
   const {teams, error: teamsError, loading, reload} = useLeagueTeams(activeLeague);
-  const inactive = useInactiveTeams(activeLeague);
+  const inactive = useMemo(() => new Set((teams ?? []).filter((t) => !t.active).map((t) => t.id)), [teams]);
+  const defaultRounds = leagues.find((l) => l.id === activeLeague)?.roundsPerNight;
 
-  // every active team starts as present; switching league starts over
+  // every active team starts as present, and Rounds starts at the league's rounds per night; switching league starts over
   useEffect(() => {
     setOff(new Set());
     setQuery("");
     setCreateError(null);
-  }, [activeLeague]);
+    if (defaultRounds) setRounds(Math.min(MAX_ROUNDS, defaultRounds));
+  }, [activeLeague, defaultRounds]);
 
   const isOn = (t: LeagueTeam) => !inactive.has(t.id) && !off.has(t.id);
   const visible = useMemo(() => (teams ?? []).filter((t) => matchesQuery(t.name, query)), [teams, query]);

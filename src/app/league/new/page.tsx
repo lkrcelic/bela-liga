@@ -4,7 +4,8 @@ import useIsDesktop from "@/app/_hooks/useIsDesktop";
 import {TeamExtendedResponse} from "@/app/_interfaces/team";
 import {isByeTeam} from "@/app/_lib/bye";
 import {matchesQuery, plural} from "@/app/_lib/ui/text";
-import {MOCK_NOTICE, useLeagueAdminMock} from "@/app/_mocks/leagueAdmin";
+import {createLeagueAPI} from "@/app/_fetchers/league/leagues";
+import {invalidateLeagues} from "@/app/_hooks/useLeagues";
 import {color, font} from "@/app/_styles/tokens";
 import {
   buttonBase,
@@ -14,7 +15,6 @@ import {
   EmptyState,
   ErrorNote,
   IconCircleButton,
-  InfoNote,
   LoadingRows,
   PrimaryButton,
   Screen,
@@ -27,8 +27,8 @@ import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
 import RemoveRoundedIcon from "@mui/icons-material/RemoveRounded";
-import ScienceRoundedIcon from "@mui/icons-material/ScienceRounded";
 import {Box} from "@mui/material";
+import Link from "next/link";
 import {useRouter} from "next/navigation";
 import React, {useEffect, useMemo, useState} from "react";
 
@@ -40,7 +40,6 @@ type TeamItem = {id: number; name: string; players: string};
 export default function CreateLeague() {
   const router = useRouter();
   const isDesktop = useIsDesktop();
-  const createLeague = useLeagueAdminMock((s) => s.createLeague);
 
   const [name, setName] = useState("");
   const [season, setSeason] = useState(String(new Date().getFullYear()));
@@ -52,7 +51,9 @@ export default function CreateLeague() {
   const [teams, setTeams] = useState<TeamItem[] | null>(null);
   const [teamsError, setTeamsError] = useState<string | null>(null);
   const [nameError, setNameError] = useState<string | undefined>();
-  const [created, setCreated] = useState<string | null>(null);
+  const [created, setCreated] = useState<{id: number; text: string} | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/teams")
@@ -79,16 +80,35 @@ export default function CreateLeague() {
       return next;
     });
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (submitting) return;
     if (!name.trim()) {
       setNameError("Upiši ime lige.");
       return;
     }
-    const league = createLeague({name: name.trim(), season, startDate, playDay, roundsPerNight, teamIds: Array.from(selected)});
-    setCreated(`„${league.name}" je spremljena (${count} ${plural(count, "ekipa", "ekipe", "ekipa")}, ${DAY_NAMES[playDay]}).`);
-    setName("");
-    setSelected(new Set());
+    setSubmitting(true);
+    setSubmitError(null);
+    try {
+      const league = await createLeagueAPI({
+        league_name: name.trim(),
+        season: season.trim() || null,
+        start_date: startDate || null,
+        play_day: playDay,
+        rounds_per_night: roundsPerNight,
+        team_ids: Array.from(selected),
+      });
+      invalidateLeagues();
+      setCreated({
+        id: league.league_id,
+        text: `„${league.league_name}" je napravljena (${league.team_count} ${plural(league.team_count, "ekipa", "ekipe", "ekipa")}, ${DAY_NAMES[playDay]}).`,
+      });
+      setName("");
+      setSelected(new Set());
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : "Ligu nije moguće napraviti.");
+    }
+    setSubmitting(false);
   };
 
   const details = (
@@ -164,14 +184,22 @@ export default function CreateLeague() {
           </IconCircleButton>
         </Box>
       </Box>
-      {created && <SuccessNote>{created}</SuccessNote>}
+      {submitError && <ErrorNote>{submitError}</ErrorNote>}
+      {created && (
+        <SuccessNote sx={{display: "flex", alignItems: "center", gap: "12px", justifyContent: "space-between", flexWrap: "wrap"}}>
+          <span>{created.text}</span>
+          <Box component={Link} href={`/league/${created.id}/manage`} sx={{color: color.navy, fontWeight: 700}}>
+            Manage League →
+          </Box>
+        </SuccessNote>
+      )}
       {isDesktop && submitButton()}
     </Box>
   );
 
   function submitButton() {
     return (
-      <PrimaryButton type="submit" form="create-league" disabled={!name.trim()} sx={{mt: "auto"}}>
+      <PrimaryButton type="submit" form="create-league" disabled={!name.trim()} loading={submitting} sx={{mt: "auto"}}>
         {`Create league${count ? ` · ${count} teams` : ""}`}
       </PrimaryButton>
     );
@@ -258,19 +286,12 @@ export default function CreateLeague() {
     </>
   );
 
-  const notice = (
-    <InfoNote icon={<ScienceRoundedIcon />} sx={{background: color.paperDeep}}>
-      {MOCK_NOTICE}
-    </InfoNote>
-  );
-
   if (isDesktop) {
     return (
       <DesktopShell active="createLeague" eyebrow="Admin" title="Create League">
         <Box sx={{flex: 1, minHeight: 0, display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,1fr)", gap: "20px"}}>
           <Box sx={{minHeight: 0, display: "flex", flexDirection: "column", gap: "16px"}}>
             <Card sx={{flex: 1, p: "26px", display: "flex", flexDirection: "column", borderRadius: "24px", overflowY: "auto"}}>{details}</Card>
-            {notice}
           </Box>
           <Card component="section" aria-label="Ekipe nove lige" sx={{minHeight: 0, display: "flex", flexDirection: "column", overflow: "hidden", borderRadius: "24px"}}>
             {teamList}
@@ -292,7 +313,6 @@ export default function CreateLeague() {
       <Card component="section" aria-label="Ekipe nove lige" sx={{display: "flex", flexDirection: "column", overflow: "hidden", maxHeight: 520}}>
         {teamList}
       </Card>
-      {notice}
       {submitButton()}
     </Screen>
   );
