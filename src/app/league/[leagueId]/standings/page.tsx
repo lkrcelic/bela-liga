@@ -82,12 +82,9 @@ export default function LeagueStandings() {
       );
     }
     return (
-      <>
-        <Podium rows={podium} compact />
-        <ScrollCard aria-label={`Ukupni poredak: ${leagueName}`}>
-          <StandingsRows rows={podium.length ? rest : rows} withPlayed />
-        </ScrollCard>
-      </>
+      <ScrollCard aria-label={`Ukupni poredak: ${leagueName}`}>
+        <StandingsRows rows={podium.length ? rest : rows} podium={podium} withPlayed />
+      </ScrollCard>
     );
   };
 

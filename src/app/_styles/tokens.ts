@@ -15,7 +15,8 @@ export const color = {
   placeholder: "#8A8F9C",
   navy: "#3C4A67",
   cream: "#EDE0BF",
-  creamSoft: "#FBF6E8", // highlighted row (my team)
+  creamSoft: "#FBF6E8", // my table's card in a round
+  mine: "#F7F0DC", // my team's row in the standings
   pressed: "#F3EEE1",
   green: "#386641",
   red: "#BC4749",
@@ -29,6 +30,8 @@ export const color = {
   hover: "rgba(60,74,103,.08)",
   medal: ["#B8901C", "#8A9099", "#A0643A"],
   medalBg: ["rgba(212,168,44,.26)", "rgba(160,166,176,.26)", "rgba(176,112,64,.24)"],
+  // the top three as rows of the phone standings
+  medalRow: ["rgba(212,168,44,.22)", "rgba(160,166,176,.22)", "rgba(176,112,64,.2)"],
 } as const;
 
 // Left team is always green, right team red (the left side is the viewer's own team).
@@ -48,6 +51,9 @@ export const shadow = {
   hero: "0 14px 30px rgba(60,74,103,.3)",
   popover: "0 18px 40px rgba(31,36,51,.18)",
   sheet: "0 -12px 40px rgba(21,24,31,.18)",
+  // my team: a navy bar on the left of a row, a navy ring around a card
+  mineBar: "inset 4px 0 0 #3C4A67",
+  mineRing: "inset 0 0 0 2px #3C4A67",
 } as const;
 
 export const radius = {

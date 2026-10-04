@@ -1,7 +1,7 @@
 "use client";
 
 import {TableRow} from "@/app/_lib/ui/tables";
-import {color, font} from "@/app/_styles/tokens";
+import {color, font, shadow} from "@/app/_styles/tokens";
 import {Card, ellipsis, Eyebrow, LiveDot, LiveLabel, LivePill, tabular} from "@/app/_ui/sp";
 import {TransitionLink} from "@/app/_lib/viewTransitions";
 import {Box} from "@mui/material";
@@ -22,7 +22,9 @@ export function PhoneRoundTables({title, rows}: {title: string; rows: TableRow[]
             component="li"
             key={t.id}
             aria-label={`Stol ${t.table}: ${t.teamA} ${t.winsA}, ${t.teamB} ${t.winsB}${t.live ? ", uživo" : ""}`}
-            sx={{p: "12px 16px 6px", display: "flex", flexDirection: "column", background: t.mine ? color.creamSoft : color.card}}
+            aria-current={t.mine ? "true" : undefined}
+            // the player's own table: cream with a navy ring
+            sx={{p: "12px 16px 6px", display: "flex", flexDirection: "column", background: t.mine ? color.creamSoft : color.card, ...(t.mine && {boxShadow: `${shadow.card}, ${shadow.mineRing}`})}}
           >
             <Box sx={{display: "flex", alignItems: "center", justifyContent: "space-between", height: 24}}>
               <Box component="span" sx={{fontSize: 13, fontWeight: 600, color: color.muted}}>
@@ -107,7 +109,9 @@ export function DesktopTableRow({
     gap: dense ? "6px" : "10px",
     px: dense ? "12px" : "18px",
     borderBottom: `1px solid rgba(60,74,103,.07)`,
-    background: t.mine ? color.creamSoft : "transparent",
+    // the player's own table: the standings' cream row with the navy bar
+    background: t.mine ? color.mine : "transparent",
+    boxShadow: t.mine ? shadow.mineBar : "none",
     color: color.ink,
     textDecoration: "none",
     ...tabular,

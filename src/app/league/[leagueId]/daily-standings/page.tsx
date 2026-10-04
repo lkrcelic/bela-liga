@@ -191,12 +191,13 @@ export default function DailyStandings() {
             <LoadingRows rows={8} />
           </ScrollCard>
         ) : tab === 0 ? (
-          <>
-            {showPodium && <Podium rows={podium} compact />}
-            <ScrollCard aria-label={`Poredak okupljanja ${dateTitle}`}>
-              {standings.length === 0 ? <EmptyState>Nema rezultata za ovaj datum.</EmptyState> : <StandingsRows rows={showPodium ? rest : standings} />}
-            </ScrollCard>
-          </>
+          <ScrollCard aria-label={`Poredak okupljanja ${dateTitle}`}>
+            {standings.length === 0 ? (
+              <EmptyState>Nema rezultata za ovaj datum.</EmptyState>
+            ) : (
+              <StandingsRows rows={showPodium ? rest : standings} podium={showPodium ? podium : undefined} />
+            )}
+          </ScrollCard>
         ) : (
           <ScrollArea bleed sx={{gap: "10px"}}>
             <PhoneRoundTables title={`Round ${tab}`} rows={roundRows} />
