@@ -90,11 +90,6 @@ export async function createByeMatches(tx: Prisma.TransactionClient, roundId: nu
   }
 }
 
-// A batch for exactly these teams that was already created today and hasn't started (the admin submitted again)
-export async function findPendingBatch(leagueId: number, teamIds: number[]): Promise<number | null> {
-  return findUnstartedBatch(prisma, leagueId, new Set(teamIds));
-}
-
 // The pairs that already meet in today's rounds of the league (bye tables included), so tonight's new rounds can
 // keep them apart
 export async function pairsPlayedToday(leagueId: number): Promise<[number, number][]> {
