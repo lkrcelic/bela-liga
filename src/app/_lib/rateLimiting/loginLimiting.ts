@@ -6,18 +6,20 @@ import {NextRequest} from "next/server";
  * OR we could consider hosted(paid) redis options.
  */
 
-// Only failed logins count: after MAX_FAILURES wrong passwords within WINDOW_DURATION the username is locked
-// for the rest of the window. A successful login clears the count, so a player on several devices is never locked.
+// Only failed logins count: after MAX_FAILURES wrong passwords within WINDOW_DURATION the account is locked
+// for the rest of the window. Every attempt is recorded before the password check and a successful login clears
+// the count, so a player on several devices is never locked.
 export const MAX_FAILURES = 5;
 export const WINDOW_DURATION = 5 * 60 * 1000; // Minutes * seconds * miliseconds
 
 type Entry = {count: number; firstFailure: number};
 const failureStore = new Map<string, Entry>();
 
-// Per address and username, so someone else can't lock a player out by failing logins with their username
-export function loginLimitKey(request: NextRequest, username: string): string {
+// Per address and account, so someone else can't lock a player out by failing logins with their username.
+// The address comes from the proxy's X-Forwarded-For when the platform doesn't give one.
+export function loginLimitKey(request: NextRequest, account: string): string {
   const ip = request.ip || request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
-  return `${ip}|${username.trim().toLowerCase()}`;
+  return `${ip}|${account}`;
 }
 
 export function isLoginLocked(key: string, now = Date.now()): boolean {

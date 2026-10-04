@@ -17,11 +17,6 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const user = LoginUser.parse(body);
 
-    const limitKey = loginLimitKey(req, user.username);
-    if (isLoginLocked(limitKey)) {
-      return NextResponse.json({error: "Too many login attempts. Try again later."}, {status: STATUS.TooManyRequests});
-    }
-
     // Logging in while a session cookie is still there (e.g. someone else used this phone) replaces that session
     // An exact match first, then ignoring case (phone keyboards capitalize the first letter)
     const login = user.username.trim();
@@ -36,14 +31,21 @@ export async function POST(req: NextRequest) {
         },
         orderBy: {id: "asc"},
       });
+
+    // The limit is per account (username and email count together). The attempt is counted before the password is
+    // checked, so parallel requests can't all get through; a correct password clears the count again.
+    const limitKey = loginLimitKey(req, existingUser ? `player:${existingUser.id}` : `login:${login.toLowerCase()}`);
+    if (isLoginLocked(limitKey)) {
+      return NextResponse.json({error: "Too many login attempts. Try again later."}, {status: STATUS.TooManyRequests});
+    }
+    recordFailedLogin(limitKey);
+
     // Google accounts have no password
     if (!existingUser || !existingUser.password_hash) {
-      recordFailedLogin(limitKey);
       return notFoundResponse();
     }
     const validPassword = await argon2.verify(existingUser.password_hash, user.password);
     if (!validPassword) {
-      recordFailedLogin(limitKey);
       return notFoundResponse();
     }
     clearFailedLogins(limitKey);
