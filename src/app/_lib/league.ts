@@ -10,5 +10,9 @@ export function pickActiveLeague<T extends {league_id: number; last_played: stri
   return best?.league_id ?? null;
 }
 
-// Links that always open the active league; /league/current resolves it on the server
-export const currentLeagueHref = (page: "daily-standings" | "standings" | "manage") => `/league/current/${page}`;
+export type LeaguePage = "daily-standings" | "standings" | "manage";
+
+// A link to a page of the active league: straight to it once its id is known (useActiveLeagueId), otherwise through
+// /league/current, which finds it on the server (a full page load, so only a fallback)
+export const currentLeagueHref = (page: LeaguePage, activeId?: number | null) =>
+  activeId != null ? `/league/${activeId}/${page}` : `/league/current/${page}`;
