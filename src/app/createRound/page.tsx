@@ -91,7 +91,7 @@ export default function CreateRound() {
     try {
       const roundNumber = await createMultipleRoundsAPI(activeLeague, selected.map((t) => t.id), rounds, windowSize);
       // replace, so the back button doesn't lead to this form again
-      router.replace(`/round/pairings/${roundNumber}`);
+      router.replace(`/round/pairings/${roundNumber}?league=${activeLeague}`);
     } catch (e) {
       setCreateError(e instanceof Error ? e.message : "Kolo nije moguće napraviti.");
       setCreating(false);
