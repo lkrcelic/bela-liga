@@ -15,6 +15,7 @@ import EditRoundedIcon from "@mui/icons-material/EditRounded";
 import {
   buttonBase,
   Card,
+  dateInputFix,
   CenteredSpinner,
   DesktopShell,
   ellipsis,
@@ -278,7 +279,7 @@ function BirthDateRow({value, desktop, onSave}: {value: string | null; desktop: 
             max={today}
             value={draft}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setDraft(e.target.value)}
-            sx={{height: 50, width: "100%", boxSizing: "border-box", borderRadius: "14px", border: `1.5px solid ${color.navy}`, background: color.card, px: "14px", font: "inherit", fontSize: 16, color: color.ink, outline: "none"}}
+            sx={{...dateInputFix, height: 50, width: "100%", boxSizing: "border-box", borderRadius: "14px", border: `1.5px solid ${color.navy}`, background: color.card, px: "14px", font: "inherit", fontSize: 16, color: color.ink, outline: "none"}}
           />
           {error && <ErrorNote>{error}</ErrorNote>}
           <Box sx={{display: "flex", gap: "8px"}}>
