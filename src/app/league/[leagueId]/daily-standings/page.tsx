@@ -51,7 +51,7 @@ export default function DailyStandings() {
   const myTeamNames = useMemo(() => teams.map((t) => t.team_name), [teams]);
 
   // the night shown: ?date= when it is one the league played, otherwise the latest one
-  const {dates, error: datesError} = useRoundDates(leagueId);
+  const {dates, error: datesError, reload: reloadDates} = useRoundDates(leagueId);
   const dateParam = searchParams.get("date");
   const date = dates == null ? null : dateParam && dates.includes(dateParam) ? dateParam : dates[dates.length - 1] ?? "";
   const index = date && dates ? dates.indexOf(date) : -1;
@@ -90,8 +90,9 @@ export default function DailyStandings() {
   );
 
   const changeLeague = (id: number) => router.router.push(`/league/${id}/daily-standings`);
-  const dateTitle = date ? displayDate(date) : "—";
   const noNights = dates != null && dates.length === 0;
+  // before the league's first night there is no date to show
+  const dateTitle = date ? displayDate(date) : noNights ? "Dnevni poredak" : "—";
   const loadError = datesError ?? daily.error;
 
   const arrows = (
@@ -121,7 +122,7 @@ export default function DailyStandings() {
       >
         <Box {...tabPanelProps("daily", tab)} sx={{flex: 1, minHeight: 0, display: "flex", flexDirection: "column", gap: "20px"}}>
           {loadError ? (
-            <ErrorNote onRetry={daily.reload}>{loadError}</ErrorNote>
+            <ErrorNote onRetry={datesError ? reloadDates : daily.reload}>{loadError}</ErrorNote>
           ) : noNights ? (
             <Card>
               <EmptyState>Ova liga još nema odigranih okupljanja.</EmptyState>
@@ -158,7 +159,7 @@ export default function DailyStandings() {
 
       <Box {...tabPanelProps("daily", tab)} sx={{flex: 1, minHeight: 0, display: "flex", flexDirection: "column", gap: "14px"}}>
         {loadError ? (
-          <ErrorNote onRetry={daily.reload}>{loadError}</ErrorNote>
+          <ErrorNote onRetry={datesError ? reloadDates : daily.reload}>{loadError}</ErrorNote>
         ) : noNights ? (
           <Card>
             <EmptyState>Ova liga još nema odigranih okupljanja.</EmptyState>
