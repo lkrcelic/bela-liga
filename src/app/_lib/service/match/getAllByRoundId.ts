@@ -8,6 +8,8 @@ export async function getAllMatchesByRoundId(id: number): Promise<MatchResponse[
     where: {
       round_id: Number(id),
     },
+    // match 1 first
+    orderBy: {id: "asc"},
   });
 
   if (!matches) {

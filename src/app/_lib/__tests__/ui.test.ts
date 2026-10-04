@@ -120,3 +120,13 @@ test("Croatian plural forms", () => {
   assert.equal(stol(21), "21 stol");
   assert.equal(stol(24), "24 stola");
 });
+
+import {combineDateAndTime} from "../dates";
+
+test("a match's date and time of day combine into one timestamp", () => {
+  const date = new Date("2026-10-04T00:00:00.000Z");
+  const time = new Date("1970-01-01T19:42:05.120Z");
+  assert.equal(combineDateAndTime(date, time)?.toISOString(), "2026-10-04T19:42:05.120Z");
+  assert.equal(combineDateAndTime(date, null), null);
+  assert.equal(combineDateAndTime(null, time)?.toISOString(), time.toISOString());
+});
