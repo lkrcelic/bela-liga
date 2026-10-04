@@ -8,7 +8,8 @@ import {color, font} from "@/app/_styles/tokens";
 import {Card, DesktopShell, ellipsis, EmptyState, ErrorNote, LoadingRows, PrimaryButton, Screen, ScreenTitle, ScrollArea} from "@/app/_ui/sp";
 import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
 import {Box} from "@mui/material";
-import {useParams} from "next/navigation";
+import {useParams, useSearchParams} from "next/navigation";
+import {CURRENT_LEAGUE_ID} from "@/app/_lib/league";
 import {useTransitionRouter} from "@/app/_lib/viewTransitions";
 import {useCallback, useEffect, useState} from "react";
 
@@ -17,6 +18,7 @@ type Pairing = {id: number; table: number; a: string; b: string};
 // Who sits where in a new round, shown right after the admin creates it
 export default function RoundPairings() {
   const {roundNumber} = useParams<{roundNumber: string}>();
+  const leagueId = Number(useSearchParams().get("league")) || CURRENT_LEAGUE_ID;
   const router = useTransitionRouter();
   const isDesktop = useIsDesktop();
   const [pairs, setPairs] = useState<Pairing[] | null>(null);
@@ -25,7 +27,7 @@ export default function RoundPairings() {
   const load = useCallback(async () => {
     setError(null);
     try {
-      const data = await getRoundsByRoundNumber(Number(roundNumber));
+      const data = await getRoundsByRoundNumber(Number(roundNumber), leagueId);
       setPairs(
         (data ?? [])
           .map((r: RoundMatchup, i: number) => ({id: r.id, table: r.table_number || i + 1, a: r.team1?.team_name ?? "", b: r.team2?.team_name ?? ""}))
@@ -34,7 +36,7 @@ export default function RoundPairings() {
     } catch {
       setError("Parove nije moguće učitati.");
     }
-  }, [roundNumber]);
+  }, [roundNumber, leagueId]);
 
   useEffect(() => {
     load();
