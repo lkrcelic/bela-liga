@@ -9,6 +9,7 @@ import {CURRENT_LEAGUE_ID} from "@/app/_lib/league";
 import useAuthStore from "@/app/_store/authStore";
 import {color, ease, font, shadow} from "@/app/_styles/tokens";
 import AccountCircleRoundedIcon from "@mui/icons-material/AccountCircleRounded";
+import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import AddCircleRoundedIcon from "@mui/icons-material/AddCircleRounded";
 import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
@@ -23,6 +24,7 @@ import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
 import TuneRoundedIcon from "@mui/icons-material/TuneRounded";
 import {Box, Drawer, SxProps, Theme} from "@mui/material";
 import Link from "next/link";
+import {TransitionLink} from "@/app/_lib/viewTransitions";
 import React, {useEffect, useState} from "react";
 import {buttonBase, ellipsis, mergeSx} from "./base";
 import {GhostIconButton, IconCircleButton} from "./Buttons";
@@ -48,6 +50,7 @@ export function DesktopShell({
   eyebrow,
   title,
   right,
+  back,
   children,
   sx,
 }: {
@@ -55,6 +58,8 @@ export function DesktopShell({
   eyebrow?: React.ReactNode;
   title: React.ReactNode;
   right?: React.ReactNode;
+  // a "← label" pill next to the menu button (e.g. back to the round from a table's scorepad)
+  back?: {label: string; href: string};
   children: React.ReactNode;
   sx?: SxProps<Theme>;
 }) {
@@ -83,6 +88,35 @@ export function DesktopShell({
         >
           <MenuRoundedIcon />
         </IconCircleButton>
+        {back && (
+          <Box
+            component={TransitionLink}
+            href={back.href}
+            direction="back"
+            sx={{
+              ...buttonBase,
+              height: 52,
+              flex: "none",
+              pl: "12px",
+              pr: "18px",
+              borderRadius: "26px",
+              background: color.card,
+              color: color.navy,
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+              fontSize: 15,
+              fontWeight: 700,
+              whiteSpace: "nowrap",
+              textDecoration: "none",
+              boxShadow: "0 1px 3px rgba(31,36,51,.1)",
+              "& svg": {fontSize: 24},
+            }}
+          >
+            <ArrowBackRoundedIcon />
+            {back.label}
+          </Box>
+        )}
         {/* the title keeps its width (up to half the header); crowded right-hand controls shrink and scroll instead */}
         <Box sx={{display: "flex", flexDirection: "column", gap: "6px", mr: "auto", minWidth: 0, flexShrink: 0, maxWidth: "50%"}}>
           {eyebrow && <Eyebrow>{eyebrow}</Eyebrow>}
