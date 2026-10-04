@@ -1,0 +1,246 @@
+"use client";
+
+import useIsAdmin from "@/app/_hooks/useIsAdmin";
+import useLogout from "@/app/_hooks/useLogout";
+import useStartGame from "@/app/_hooks/useStartGame";
+import {getRoundsAPI} from "@/app/_fetchers/round/getRounds";
+import {leagueDateString} from "@/app/_lib/dates";
+import {CURRENT_LEAGUE_ID} from "@/app/_lib/league";
+import useAuthStore from "@/app/_store/authStore";
+import {color, ease, font, shadow} from "@/app/_styles/tokens";
+import AccountCircleRoundedIcon from "@mui/icons-material/AccountCircleRounded";
+import AddCircleRoundedIcon from "@mui/icons-material/AddCircleRounded";
+import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
+import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
+import EmojiEventsRoundedIcon from "@mui/icons-material/EmojiEventsRounded";
+import GroupAddRoundedIcon from "@mui/icons-material/GroupAddRounded";
+import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
+import LibraryAddRoundedIcon from "@mui/icons-material/LibraryAddRounded";
+import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
+import MenuRoundedIcon from "@mui/icons-material/MenuRounded";
+import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
+import TuneRoundedIcon from "@mui/icons-material/TuneRounded";
+import {Box, Drawer, SxProps, Theme} from "@mui/material";
+import Link from "next/link";
+import React, {useEffect, useState} from "react";
+import {buttonBase, ellipsis, mergeSx} from "./base";
+import {GhostIconButton, IconCircleButton} from "./Buttons";
+import {LiveDot} from "./Live";
+import {Spinner} from "./States";
+import {InitialsAvatar} from "./Surface";
+import {Eyebrow} from "./Text";
+
+export type NavKey =
+  | "home"
+  | "game"
+  | "daily"
+  | "league"
+  | "manageLeague"
+  | "createLeague"
+  | "createRound"
+  | "teams"
+  | "profile";
+
+// Desktop page frame: menu button + eyebrow/title header, right-hand controls, content filling the viewport
+export function DesktopShell({
+  active,
+  eyebrow,
+  title,
+  right,
+  children,
+  sx,
+}: {
+  active?: NavKey;
+  eyebrow?: React.ReactNode;
+  title: React.ReactNode;
+  right?: React.ReactNode;
+  children: React.ReactNode;
+  sx?: SxProps<Theme>;
+}) {
+  const [navOpen, setNavOpen] = useState(false);
+  return (
+    <Box
+      sx={{
+        height: "100dvh",
+        minHeight: 640,
+        display: "flex",
+        flexDirection: "column",
+        gap: "20px",
+        p: "24px 36px 28px",
+        boxSizing: "border-box",
+        maxWidth: 1920,
+        mx: "auto",
+      }}
+    >
+      <Box component="header" sx={{display: "flex", alignItems: "center", gap: "20px", flex: "none"}}>
+        <IconCircleButton
+          label="Izbornik"
+          size={52}
+          onClick={() => setNavOpen(true)}
+          aria-expanded={navOpen}
+          aria-controls="sp-nav"
+        >
+          <MenuRoundedIcon />
+        </IconCircleButton>
+        <Box sx={{display: "flex", flexDirection: "column", gap: "6px", mr: "auto", minWidth: 0}}>
+          {eyebrow && <Eyebrow>{eyebrow}</Eyebrow>}
+          <Box
+            component="h1"
+            sx={{m: 0, fontFamily: font.display, fontSize: 44, fontWeight: 800, lineHeight: 1, letterSpacing: "-.02em", ...ellipsis}}
+          >
+            {title}
+          </Box>
+        </Box>
+        {right && <Box sx={{display: "flex", alignItems: "center", gap: "12px", flex: "none"}}>{right}</Box>}
+      </Box>
+      <Box component="main" sx={mergeSx({flex: 1, minHeight: 0, display: "flex", flexDirection: "column", gap: "20px"}, sx)}>
+        {children}
+      </Box>
+      <NavDrawer open={navOpen} onClose={() => setNavOpen(false)} active={active} />
+    </Box>
+  );
+}
+
+type NavItem = {key: NavKey; label: string; icon: React.ReactNode; href?: string; head?: string; adminOnly?: boolean};
+
+const NAV: NavItem[] = [
+  {key: "home", label: "Početna", icon: <HomeRoundedIcon />, href: "/"},
+  {key: "game", label: "Start Game", icon: <PlayArrowRoundedIcon />},
+  {key: "daily", label: "Daily Standings", icon: <CalendarMonthRoundedIcon />, href: `/league/${CURRENT_LEAGUE_ID}/daily-standings`},
+  {key: "league", label: "League Standings", icon: <EmojiEventsRoundedIcon />, href: `/league/${CURRENT_LEAGUE_ID}/standings`},
+  {key: "manageLeague", label: "Manage League", icon: <TuneRoundedIcon />, href: `/league/${CURRENT_LEAGUE_ID}/manage`, head: "Admin", adminOnly: true},
+  {key: "createLeague", label: "Create League", icon: <LibraryAddRoundedIcon />, href: "/league/new", adminOnly: true},
+  {key: "createRound", label: "Create Round", icon: <AddCircleRoundedIcon />, href: "/createRound", adminOnly: true},
+  {key: "teams", label: "Teams", icon: <GroupAddRoundedIcon />, href: "/teams", adminOnly: true},
+  {key: "profile", label: "My Profile", icon: <AccountCircleRoundedIcon />, href: "/profile", head: "Račun"},
+];
+
+export function NavDrawer({open, onClose, active}: {open: boolean; onClose: () => void; active?: NavKey}) {
+  const isAdmin = useIsAdmin();
+  const user = useAuthStore((s) => s.user);
+  const {logout, loggingOut} = useLogout();
+  const {start, starting, error} = useStartGame();
+  const [liveToday, setLiveToday] = useState(false);
+
+  // the red dot on Daily Standings: is any table of tonight being played right now
+  useEffect(() => {
+    if (!open) return;
+    let cancelled = false;
+    getRoundsAPI({round_date: leagueDateString(), league_id: CURRENT_LEAGUE_ID})
+      .then((rounds) => {
+        if (!cancelled) setLiveToday(rounds.some((r) => r.active));
+      })
+      .catch(() => {
+        // no dot
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [open]);
+
+  const items = NAV.filter((n) => isAdmin || !n.adminOnly);
+  const itemSx = (on: boolean) => ({
+    ...buttonBase,
+    width: "100%",
+    height: 44,
+    borderRadius: "12px",
+    background: on ? color.navy : "transparent",
+    color: on ? "#FFFFFF" : color.ink,
+    display: "flex",
+    alignItems: "center",
+    gap: "12px",
+    px: "12px",
+    fontSize: 15,
+    fontWeight: 600,
+    textDecoration: "none",
+    textAlign: "left" as const,
+    "&:hover": {background: on ? color.navy : color.hover},
+    "& svg": {fontSize: 22},
+  });
+
+  return (
+    <Drawer
+      id="sp-nav"
+      anchor="left"
+      open={open}
+      onClose={onClose}
+      transitionDuration={{enter: 240, exit: 200}}
+      SlideProps={{easing: {enter: ease, exit: ease}}}
+      slotProps={{backdrop: {sx: {background: "rgba(21,24,31,.28)"}}}}
+      PaperProps={{
+        component: "nav",
+        "aria-label": "Glavni izbornik",
+        sx: {
+          width: 264,
+          background: color.paperDeep,
+          boxShadow: "16px 0 48px rgba(21,24,31,.22)",
+          p: "24px 16px 20px",
+          display: "flex",
+          flexDirection: "column",
+          gap: "6px",
+        },
+      }}
+    >
+      <Box sx={{display: "flex", alignItems: "flex-start", justifyContent: "space-between", pl: "12px", pb: "22px"}}>
+        <Box sx={{display: "flex", flexDirection: "column", gap: "2px"}}>
+          <Box sx={{fontSize: 12, fontWeight: 600, letterSpacing: ".14em", textTransform: "uppercase", color: color.muted}}>Piatnik</Box>
+          <Box sx={{fontFamily: font.display, fontSize: 30, fontWeight: 800, lineHeight: 0.95, letterSpacing: "-.03em"}}>Bela Liga</Box>
+        </Box>
+        <GhostIconButton label="Zatvori izbornik" onClick={onClose} sx={{borderRadius: "50%"}}>
+          <CloseRoundedIcon />
+        </GhostIconButton>
+      </Box>
+      <Box component="ul" sx={{listStyle: "none", m: 0, p: 0, display: "flex", flexDirection: "column"}}>
+        {items.map((n) => {
+          const on = n.key === active;
+          return (
+            <Box component="li" key={n.key} sx={{display: "flex", flexDirection: "column"}}>
+              {n.head && (
+                <Box sx={{p: "18px 12px 6px", fontSize: 12, fontWeight: 600, letterSpacing: ".1em", textTransform: "uppercase", color: color.muted}}>
+                  {n.head}
+                </Box>
+              )}
+              {n.href ? (
+                <Box component={Link} href={n.href} onClick={onClose} aria-current={on ? "page" : undefined} sx={itemSx(on)}>
+                  {n.icon}
+                  <Box component="span" sx={{flex: 1}}>
+                    {n.label}
+                  </Box>
+                  {n.key === "daily" && liveToday && <LiveDot label="uživo" />}
+                </Box>
+              ) : (
+                <Box component="button" type="button" onClick={start} disabled={starting} aria-busy={starting || undefined} sx={itemSx(on)}>
+                  {starting ? <Spinner size={20} /> : n.icon}
+                  <Box component="span" sx={{flex: 1}}>
+                    {n.label}
+                  </Box>
+                </Box>
+              )}
+              {!n.href && error && (
+                <Box role="alert" sx={{px: "12px", py: "6px", fontSize: 13, fontWeight: 600, color: color.red}}>
+                  {error}
+                </Box>
+              )}
+            </Box>
+          );
+        })}
+      </Box>
+      <Box
+        sx={{mt: "auto", display: "flex", alignItems: "center", gap: "10px", p: "10px", borderRadius: "14px", background: color.card, boxShadow: shadow.card}}
+      >
+        <InitialsAvatar name={user?.username ?? ""} size={40} variant="navy" sx={{fontSize: 14}} />
+        <Box sx={{flex: 1, minWidth: 0, display: "flex", flexDirection: "column"}}>
+          <Box component="span" sx={{fontSize: 15, fontWeight: 600, ...ellipsis}}>
+            {user?.username ?? "—"}
+          </Box>
+          <Box component="span" sx={{fontSize: 13, color: color.muted}}>
+            {isAdmin ? "Admin" : "Igrač"}
+          </Box>
+        </Box>
+        <GhostIconButton label="Odjava" size={40} onClick={() => logout()} disabled={loggingOut} sx={{borderRadius: "10px"}}>
+          <LogoutRoundedIcon />
+        </GhostIconButton>
+      </Box>
+    </Drawer>
+  );
+}
