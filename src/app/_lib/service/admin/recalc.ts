@@ -1,6 +1,6 @@
 import {Prisma} from "@prisma/client";
 import {BYE_TEAM_ID, isByeTeam} from "@/app/_lib/bye";
-import {MU0, PHI0, SIGMA0, updateTeams} from "@/app/_lib/rating/ratingService";
+import {RatedRound, replaySeason} from "@/app/_lib/rating/season";
 import {ratedPlayerIds} from "@/app/_lib/lineup";
 
 // Recalculation after an admin changes results that were already counted (edited hands of a finished match, a table
@@ -25,15 +25,15 @@ export async function recalcTeamScores(tx: Prisma.TransactionClient, leagueId: n
   }
 }
 
-// Ratings from scratch: every player starts at the default and every rated round (closed, no bye, since
-// RATINGS_FROM) is applied again in the order it was played. A round counts for its lineup (the players picked on
-// Start Game); a round without one counts for today's rosters, as older rounds don't keep who played.
+// Ratings from scratch (Glicko-2, see rating/glicko2.ts): every player starts at the default and every rated round
+// (closed, no bye, since RATINGS_FROM) is replayed, one rating period per league night, each match a game. A round
+// counts for its lineup (the players picked on Start Game); a round without one counts for today's rosters, as
+// older rounds don't keep who played. Also rewrites the per-night history the ratings page shows.
+// Runs whenever a round closes or a counted result changes, so tonight's rounds always form one period.
 export async function replayRatings(tx: Prisma.TransactionClient) {
   await lockRatings(tx);
 
   const players = await tx.player.findMany({select: {id: true}});
-  const ratings = new Map(players.map((p) => [p.id, {rating: MU0, rd: PHI0, vol: SIGMA0}]));
-
   const rounds = await tx.round.findMany({
     where: {
       open: false,
@@ -43,37 +43,49 @@ export async function replayRatings(tx: Prisma.TransactionClient) {
     },
     orderBy: [{round_date: "asc"}, {round_number: "asc"}, {table_number: "asc"}, {id: "asc"}],
     select: {
+      round_date: true,
       team1_wins: true,
       team2_wins: true,
-      team1: {select: {teamPlayers: {select: {player_id: true}}}},
-      team2: {select: {teamPlayers: {select: {player_id: true}}}},
       team1_id: true,
       team2_id: true,
+      team1: {select: {teamPlayers: {select: {player_id: true}}}},
+      team2: {select: {teamPlayers: {select: {player_id: true}}}},
       roundPlayers: {select: {player_id: true, team_id: true}},
+      matches: {select: {player_pair1_score: true, player_pair2_score: true}, orderBy: {id: "asc"}},
     },
   });
 
-  for (const r of rounds) {
-    const a = ratedPlayerIds(r.roundPlayers, r.team1_id, r.team1.teamPlayers.map((p) => p.player_id)).filter((id) => ratings.has(id));
-    const b = ratedPlayerIds(r.roundPlayers, r.team2_id, r.team2.teamPlayers.map((p) => p.player_id)).filter((id) => ratings.has(id));
-    if (a.length === 0 || b.length === 0) continue;
-    const score = r.team1_wins > r.team2_wins ? 1 : r.team1_wins === r.team2_wins ? 0.5 : 0;
-    const {teamA, teamB} = updateTeams(
-      a.map((id) => ratings.get(id)!),
-      b.map((id) => ratings.get(id)!),
-      score
-    );
-    a.forEach((id, i) => ratings.set(id, teamA[i]));
-    b.forEach((id, i) => ratings.set(id, teamB[i]));
+  const rated: RatedRound[] = rounds.map((r) => ({
+    night: r.round_date!.toISOString().slice(0, 10),
+    teamA: ratedPlayerIds(r.roundPlayers, r.team1_id, r.team1.teamPlayers.map((p) => p.player_id)),
+    teamB: ratedPlayerIds(r.roundPlayers, r.team2_id, r.team2.teamPlayers.map((p) => p.player_id)),
+    matches: r.matches.map((m) => [m.player_pair1_score, m.player_pair2_score]),
+    wins: [r.team1_wins, r.team2_wins],
+  }));
+  const {ratings, history} = replaySeason(players.map((p) => p.id), rated);
+
+  if (ratings.size > 0) {
+    const rows = Array.from(ratings, ([id, r]) => Prisma.sql`(${id}::int, ${Math.round(r.rating)}::int, ${r.rd}::float8, ${r.vol}::float8)`);
+    await tx.$executeRaw`
+        UPDATE "Player" AS p
+        SET rating = v.rating, rating_deviation = v.rd, volatility = v.vol
+        FROM (VALUES ${Prisma.join(rows)}) AS v(id, rating, rd, vol)
+        WHERE p.id = v.id`;
   }
 
-  if (ratings.size === 0) return;
-  const rows = Array.from(ratings, ([id, r]) => Prisma.sql`(${id}::int, ${r.rating}::int, ${r.rd}::float8, ${r.vol}::float8)`);
-  await tx.$executeRaw`
-      UPDATE "Player" AS p
-      SET rating = v.rating, rating_deviation = v.rd, volatility = v.vol
-      FROM (VALUES ${Prisma.join(rows)}) AS v(id, rating, rd, vol)
-      WHERE p.id = v.id`;
+  await tx.playerRatingHistory.deleteMany({});
+  for (let i = 0; i < history.length; i += 1000) {
+    await tx.playerRatingHistory.createMany({
+      data: history.slice(i, i + 1000).map((h) => ({
+        player_id: h.playerId,
+        night: new Date(`${h.night}T00:00:00Z`),
+        rating: h.rating,
+        rating_deviation: h.rd,
+        change: h.change,
+        rounds: h.rounds,
+      })),
+    });
+  }
 }
 
 // A round whose result counts for ratings: closed and without a bye
