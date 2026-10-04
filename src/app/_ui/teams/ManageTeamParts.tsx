@@ -326,6 +326,8 @@ function TeammateSearch({exclude, onAdd}: {exclude: number[]; onAdd: (p: MTPlaye
 
   useEffect(() => {
     if (!q) {
+      // a search still on its way must not fill the list under the empty box
+      reqId.current++;
       setHits(null);
       return;
     }

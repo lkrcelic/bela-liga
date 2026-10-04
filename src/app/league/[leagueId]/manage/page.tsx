@@ -152,7 +152,7 @@ export default function ManageLeague() {
 
   const sidePanel = (
     <Box sx={{minHeight: 0, display: "flex", flexDirection: "column", gap: "16px"}}>
-      <AddTeamCard exclude={rows.map((r) => r.id)} onAdd={onAdd} onCreate={() => router.push("/teams/new")} />
+      <AddTeamCard exclude={rows.map((r) => r.id)} onAdd={onAdd} onCreate={() => router.push(`/teams/new?league=${leagueId}`)} />
       <InfoNote icon={<InfoRoundedIcon />}>
         Inactive teams stay in the league and its standings, but are not signed in automatically when you create a round.
       </InfoNote>
