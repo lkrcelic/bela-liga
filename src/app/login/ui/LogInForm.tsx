@@ -1,5 +1,6 @@
 "use client";
 
+import {refreshUser} from "@/app/_bootstrap/refreshUser";
 import {loginUser} from "@/app/_fetchers/authentication/login";
 import {ErrorNote, PasswordField, PrimaryButton, TextField} from "@/app/_ui/sp";
 import {Box} from "@mui/material";
@@ -24,12 +25,21 @@ export default function LogInForm({onSuccess, soft = false}: {onSuccess: () => v
 
     setSubmitting(true);
     try {
-      const ok = await loginUser({username: username.trim(), password});
-      if (ok) {
+      const outcome = await loginUser({username: username.trim(), password});
+      if (outcome === "ok") {
+        // the app keeps the logged-in player in a store; fill it before leaving the page
+        await refreshUser();
         onSuccess();
         return;
       }
-      setErrors({form: "Korisničko ime ili lozinka su netočni."});
+      setErrors({
+        form:
+          outcome === "wrong"
+            ? "Korisničko ime ili lozinka su netočni."
+            : outcome === "locked"
+              ? "Previše neuspjelih pokušaja. Pokušaj ponovo za nekoliko minuta."
+              : "Prijava trenutno nije moguća. Pokušaj ponovo.",
+      });
     } catch {
       setErrors({form: "Prijava trenutno nije moguća. Pokušaj ponovo."});
     }
