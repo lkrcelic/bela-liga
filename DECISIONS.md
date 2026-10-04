@@ -26,29 +26,34 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
 6. **Desktop navigation is an overlay drawer opened from a menu button**, as in the design (the sidebar is never
    docked). Phone keeps Home as the hub with back / "Početni zaslon" buttons, as in the design.
 
-7. **No `next-view-transitions` / framer-motion.** The design's implementation notes suggest them, but the brief says
-   not to add dependencies unless clearly necessary. Motion is done with CSS keyframes + one small rAF count-up hook:
-   step body slides in, new hand row flashes in, totals count up over 600 ms, winner panel tints and pulses, zvanja
-   badges pop, trump pick fills. Everything collapses to no motion under `prefers-reduced-motion`.
+7. **Route transitions use the View Transitions API, without a new dependency** (`src/app/_lib/viewTransitions.tsx`).
+   Alternatives: the `next-view-transitions` package the design notes suggest, or framer-motion. Reason: the brief
+   asked not to add dependencies unless necessary, and the needed part is small. Navigations go through
+   `useTransitionRouter` / `TransitionLink`; the update promise resolves when `<RouteTransitions />` in the root layout
+   sees the new pathname committed (with a 1.5 s safety timeout). forward slides in from the right, back reverses,
+   morph grows the Start Game card into the scoreboard (`view-transition-name: table`) while the rest crossfades;
+   the wizard's team header (`team-header`) stays put. Browsers without the API, the browser back button and reduced
+   motion fall back to the CSS step animations (or none). Other motion (count-up, row-in, badges, trump fill) stays
+   CSS keyframes + a small rAF hook. Date and league changes navigate without a transition.
 
 8. **Home shows the "Sljedeći stol" card for anyone who has an open round, and Admin Controls for admins.**
    The design shows them as alternatives (player vs admin), but admins also play; showing both when both apply loses
    nothing. The card only appears when `/api/rounds/open` returns a round.
 
-9. **League picker (daily + league standings) uses `/api/leagues`, which is admin-only.** For non-admins it falls back
-   to the league in the URL / the current league only. Alternative: open the endpoint to all users (backend change,
-   which the project rules say to make only when asked). Follow-up: allow `GET /api/leagues` for any logged-in user.
+9. **`GET /api/leagues` is public** (follow-up request): every player sees every league in the pickers, and logged-out
+   visitors can open the season table (`/league/<id>/standings`) of any league. Daily standings and round dates need a
+   login.
 
 10. **Daily standings "finished day" (podium + rest) is shown for any date other than today (Zagreb time).** Today is
     shown as the live list with pulsing ranks for teams that have a running round. Reason: mirrors the design's
     logic (`done = not the latest date`) with real data.
 
-11. **Manage League and Create League have no backend** (no `active` flag on `LeagueTeam`, no endpoints to add a team to
-    a league or create a league). They read real data where it exists (league teams, team search) and keep their
-    changes in an isolated mock repository (`src/app/_mocks/leagueAdmin.ts`, persisted in `localStorage`). Both screens
-    show a small "Pregled · spremljeno samo na ovom uređaju" note so an admin is not misled. Create Round reads the same
-    repository, so a team marked inactive is shown with an "Inactive" badge and left out by default, exactly like the
-    design. Replace the repository functions with API calls when the endpoints exist.
+11. **Manage League and Create League have a backend** (follow-up request). Migration
+    `20261004120000_league_admin` adds `League.season / start_date / play_day / rounds_per_night / created_at` and
+    `LeagueTeam.active`. Admin endpoints: `POST /api/leagues`, `GET|POST /api/leagues/:id/teams`,
+    `PATCH /api/leagues/:id/teams/:teamId`. The old `/api/leagueTeams/:id` route and the local mock store were removed.
+    Create Round starts with the league's rounds per night and leaves inactive teams out (the client still sends the
+    explicit team list, as before).
 
 12. **Teams on desktop is one screen (`/teams`) with Create Team and Add Teammate side by side**; the existing phone
     routes `/teams/new` and `/teams/add-teammate` stay and reuse the same form components.
@@ -75,10 +80,8 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
 18. **Team boxes in the hand wizard say which team they are for** ("Zvanja · Dalmatinci"), not just "Zvanja".
     The design tells the two boxes apart by color only (green / red), which fails WCAG 1.4.1 for color-blind players.
 
-19. **Old components are left in place, unused**, because the brief says not to delete files I did not create:
-    `_ui/StandingsTable.tsx`, `_ui/DoubleActionButton.tsx`, `_ui/SingleActionButton.tsx`, `_ui/PlayerName.tsx`,
-    `_styles/Form.modules.css`, `league/[leagueId]/daily-standings/ui/{PageHeader,RoundResultCard,RoundResultsPanel,
-    StandingsTabContent,TabPanel,index}`, `ongoing-match/[matchId]/ongoing-result/ui/{AnnouncementsSection,DigitGrid,
-    TeamScoreBox,TeamsScoreSection,TrumpCallerSection}.tsx`, `ongoing-match/ui/{Action,ResultsDisplay,
-    TotalScoreSection}.tsx`, `round/[roundId]/result/LoadingScoreBoard.tsx`. Nothing imports them any more; they can be
-    deleted in a follow-up (they account for most of the remaining pre-existing type errors).
+19. **The components the redesign replaced were removed** (follow-up request), together with the unused
+    `createRound/ui` dropdown and table.
+
+20. **Player search matches first and last names too**; every word of the query must match one of username, first or
+    last name, results sorted by username and capped at 20.
