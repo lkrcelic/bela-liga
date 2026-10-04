@@ -80,6 +80,7 @@ export async function getTablePad(roundId: number): Promise<TablePad> {
       leagueRounds: {select: {league_id: true}},
       matches: {orderBy: {id: "asc"}, include: {belaResults: {orderBy: {result_id: "asc"}, include: handInclude}}},
       ongoingMatches: {orderBy: {id: "desc"}, take: 1, include: {belaResults: {orderBy: {result_id: "asc"}, include: handInclude}}},
+      _count: {select: {roundPlayers: true}},
     },
   });
   if (!round) throw new NotFoundError("Table not found.");
@@ -122,6 +123,7 @@ export async function getTablePad(roundId: number): Promise<TablePad> {
     team2: {id: round.team2.team_id, name: round.team2.team_name},
     done: !round.open,
     bye: isByeTeam(round.team1_id) || isByeTeam(round.team2_id),
+    hasLineup: round._count.roundPlayers > 0,
     matches,
   };
 }

@@ -62,5 +62,7 @@ export type TablePad = {
   // the round is finished (both matches played, or settled by hand)
   done: boolean;
   bye: boolean;
+  // who plays is confirmed (an open table without a lineup goes through the lineup screen first)
+  hasLineup: boolean;
   matches: PadMatch[];
 };
