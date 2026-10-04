@@ -27,8 +27,9 @@ export async function getLastOpenRoundByPlayerId(playerId: number): Promise<Roun
         },
       ],
     },
-    // the earliest open round is the one to play next (several can be created at once)
-    orderBy: [{round_number: "asc"}, {id: "asc"}],
+    // The latest night first, so a round left unplayed on an earlier night doesn't block tonight's;
+    // within the night the earliest open round is next (several are created at once)
+    orderBy: [{round_date: {sort: "desc", nulls: "last"}}, {round_number: "asc"}, {id: "asc"}],
   } as Prisma.RoundFindFirstArgs);
 
   if (!dbRound) return null;
