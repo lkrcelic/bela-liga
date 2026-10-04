@@ -1,6 +1,6 @@
 import {matchesQuery} from "./text";
 
-// Manage Team: what the screen shows for a team, kept free of React so it can be tested
+// Manage Teams: what the screen shows for a team, kept free of React so it can be tested
 
 export type MTPlayer = {id: number; username: string; first_name: string; last_name: string};
 export type MTLeague = {id: number; name: string; active: boolean};

@@ -69,8 +69,8 @@ branch diff ran in parallel; its findings were checked against the code and fixe
   - An inactive team starts off and can be switched on; the defaults come from the league.
   - 4 rounds for 3 teams is refused with a message.
   - Round numbers count per league.
-- Manage Team (tested the round before): rename, a duplicate name refused, add and remove teammates, new team.
-- Phone home admin controls reach Create Round, Manage League, Create League and Manage Team.
+- Manage Teams (tested the round before): rename, a duplicate name refused, add and remove teammates, new team.
+- Phone home admin controls reach Create Round, Manage League, Create League and Manage Teams.
 
 ## Bugs found and fixed in this pass
 

@@ -146,7 +146,7 @@ const NAV: NavItem[] = [
   {key: "league", label: "League Standings", icon: <EmojiEventsRoundedIcon />, href: `/league/${CURRENT_LEAGUE_ID}/standings`},
   {key: "manageLeague", label: "Manage League", icon: <TuneRoundedIcon />, href: `/league/${CURRENT_LEAGUE_ID}/manage`, head: "Admin", adminOnly: true},
   {key: "createLeague", label: "Create League", icon: <LibraryAddRoundedIcon />, href: "/league/new", adminOnly: true},
-  {key: "manageTeam", label: "Manage Team", icon: <EditRoundedIcon />, href: "/teams", adminOnly: true},
+  {key: "manageTeam", label: "Manage Teams", icon: <EditRoundedIcon />, href: "/teams", adminOnly: true},
   {key: "createRound", label: "Create Round", icon: <AddCircleRoundedIcon />, href: "/createRound", adminOnly: true},
   {key: "profile", label: "My Profile", icon: <AccountCircleRoundedIcon />, href: "/profile", head: "Račun"},
 ];

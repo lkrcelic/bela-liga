@@ -1,7 +1,7 @@
 import {responseErrorMessage} from "@/app/_fetchers/errorMessage";
 import {TeamExtendedResponse, TeamsResponseValidation} from "@/app/_interfaces/team";
 
-// Every team with its players and leagues (Manage Team)
+// Every team with its players and leagues (Manage Teams)
 export async function getTeamsAPI(): Promise<TeamExtendedResponse[]> {
   const response = await fetch("/api/teams");
   if (!response.ok) throw new Error(await responseErrorMessage(response, "Failed to fetch teams"));

@@ -13,7 +13,7 @@ import {NameCard, TeamList, TeammatesCard} from "./ManageTeamParts";
 
 const errorText = (e: unknown, fallback: string) => (e instanceof Error ? e.message : fallback);
 
-// Manage Team (admin): pick a team to rename it and change its players, or start a new team.
+// Manage Teams (admin): pick a team to rename it and change its players, or start a new team.
 // An existing team's players change at once; its name is saved with "Save name". A new team collects its name and
 // players first and is created with "Create team" (the first two players become its founders).
 // leagueId: the league a new team joins (Manage League's "Create team"); without it the current league
@@ -212,7 +212,7 @@ export default function ManageTeam({startNew = false, leagueId}: {startNew?: boo
 
   if (isDesktop) {
     return (
-      <DesktopShell active="manageTeam" eyebrow="Admin" title="Manage Team">
+      <DesktopShell active="manageTeam" eyebrow="Admin" title="Manage Teams">
         <Box sx={{flex: 1, minHeight: 0, display: "grid", gridTemplateColumns: "340px minmax(0,1fr)", gap: "20px"}}>
           {list}
           <Box sx={{minHeight: 0, overflowY: "auto", display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,1fr)", gap: "20px", alignContent: "start"}}>
@@ -231,7 +231,7 @@ export default function ManageTeam({startNew = false, leagueId}: {startNew?: boo
             <ArrowBackRoundedIcon />
           </IconCircleButton>
         </Box>
-        <ScreenTitle eyebrow="Admin" title="Manage Team" sx={{pt: "4px", pb: "8px"}} />
+        <ScreenTitle eyebrow="Admin" title="Manage Teams" sx={{pt: "4px", pb: "8px"}} />
         {list}
       </Screen>
     );
@@ -244,7 +244,7 @@ export default function ManageTeam({startNew = false, leagueId}: {startNew?: boo
           <ArrowBackRoundedIcon />
         </IconCircleButton>
       </Box>
-      <ScreenTitle eyebrow="Manage Team" title={isNew ? "New team" : team?.name ?? ""} sx={{pt: "4px", pb: "8px", "& > div:last-of-type": {overflowWrap: "anywhere"}}} />
+      <ScreenTitle eyebrow="Manage Teams" title={isNew ? "New team" : team?.name ?? ""} sx={{pt: "4px", pb: "8px", "& > div:last-of-type": {overflowWrap: "anywhere"}}} />
       {editor}
     </Screen>
   );
