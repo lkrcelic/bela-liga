@@ -1,14 +1,12 @@
 "use client";
 
-import {getLeagueTeamsAPI} from "@/app/_fetchers/league/getLeagueTeams";
-import {TeamExtendedResponse} from "@/app/_interfaces/team";
-import {isByeTeam} from "@/app/_lib/bye";
+import {getLeagueTeamsAPI} from "@/app/_fetchers/league/leagues";
 import {useCallback, useEffect, useState} from "react";
 
-export type LeagueTeam = {id: number; name: string; players: string[]};
+export type LeagueTeam = {id: number; name: string; players: string[]; active: boolean};
 
-// Teams of a league with their players' usernames. withPlayers joins /api/teams (one extra request).
-export default function useLeagueTeams(leagueId: number | null, withPlayers = false) {
+// Teams of a league with their players' usernames and the active flag (admin only)
+export default function useLeagueTeams(leagueId: number | null) {
   const [teams, setTeams] = useState<LeagueTeam[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [nonce, setNonce] = useState(0);
@@ -16,31 +14,23 @@ export default function useLeagueTeams(leagueId: number | null, withPlayers = fa
   useEffect(() => {
     if (leagueId == null) return;
     let cancelled = false;
-    setTeams(null);
     setError(null);
-    (async () => {
-      try {
-        const [entries, all] = await Promise.all([
-          getLeagueTeamsAPI(leagueId),
-          withPlayers ? fetch("/api/teams").then((r) => (r.ok ? (r.json() as Promise<TeamExtendedResponse[]>) : [])) : Promise.resolve([]),
-        ]);
+    getLeagueTeamsAPI(leagueId)
+      .then((rows) => {
         if (cancelled) return;
-        const players = new Map(all.map((t) => [t.team_id, (t.teamPlayers ?? []).map((tp) => tp.player.username)]));
-        setTeams(
-          entries
-            .filter((e) => !isByeTeam(e.team.team_id))
-            .map((e) => ({id: e.team.team_id, name: e.team.team_name, players: players.get(e.team.team_id) ?? []}))
-            .sort((a, b) => a.name.localeCompare(b.name, "hr"))
-        );
-      } catch (e) {
+        setTeams(rows.map((t) => ({id: t.team_id, name: t.team_name, players: t.players.map((p) => p.username), active: t.active})));
+      })
+      .catch((e) => {
         if (!cancelled) setError(e instanceof Error ? e.message : "Ekipe nije moguće učitati.");
-      }
-    })();
+      });
     return () => {
       cancelled = true;
     };
-  }, [leagueId, withPlayers, nonce]);
+  }, [leagueId, nonce]);
+
+  // a new league starts from a loading state; a reload keeps the list on screen
+  useEffect(() => setTeams(null), [leagueId]);
 
   const reload = useCallback(() => setNonce((n) => n + 1), []);
-  return {teams, error, loading: leagueId != null && teams == null && !error, reload};
+  return {teams, setTeams, error, loading: leagueId != null && teams == null && !error, reload};
 }
