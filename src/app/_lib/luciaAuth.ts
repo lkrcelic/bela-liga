@@ -1,6 +1,7 @@
 import { PrismaAdapter } from "@lucia-auth/adapter-prisma";
 import { Lucia, TimeSpan } from "lucia";
 import { prisma } from "./prisma";
+import { SESSION_MAX_AGE_SECONDS } from "./sessionConfig";
 
 const adapter = new PrismaAdapter(prisma.luciaSession, prisma.player);
 
@@ -12,7 +13,7 @@ export const lucia = new Lucia(adapter, {
       secure: process.env.NODE_ENV === "production",
     },
   },
-  sessionExpiresIn: new TimeSpan(4, "h"),
+  sessionExpiresIn: new TimeSpan(SESSION_MAX_AGE_SECONDS, "s"),
   getUserAttributes: (attributes) => {
     return {
       // attributes has the type of DatabaseUserAttributes
