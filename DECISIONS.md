@@ -74,3 +74,11 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
 
 18. **Team boxes in the hand wizard say which team they are for** ("Zvanja · Dalmatinci"), not just "Zvanja".
     The design tells the two boxes apart by color only (green / red), which fails WCAG 1.4.1 for color-blind players.
+
+19. **Old components are left in place, unused**, because the brief says not to delete files I did not create:
+    `_ui/StandingsTable.tsx`, `_ui/DoubleActionButton.tsx`, `_ui/SingleActionButton.tsx`, `_ui/PlayerName.tsx`,
+    `_styles/Form.modules.css`, `league/[leagueId]/daily-standings/ui/{PageHeader,RoundResultCard,RoundResultsPanel,
+    StandingsTabContent,TabPanel,index}`, `ongoing-match/[matchId]/ongoing-result/ui/{AnnouncementsSection,DigitGrid,
+    TeamScoreBox,TeamsScoreSection,TrumpCallerSection}.tsx`, `ongoing-match/ui/{Action,ResultsDisplay,
+    TotalScoreSection}.tsx`, `round/[roundId]/result/LoadingScoreBoard.tsx`. Nothing imports them any more; they can be
+    deleted in a follow-up (they account for most of the remaining pre-existing type errors).
