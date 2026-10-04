@@ -125,3 +125,4 @@ Desktop (≥1024 px): hamburger → overlay nav drawer, header with eyebrow + 44
 | Route transitions (View Transitions API, card → scoreboard morph) | ✅ | see BLOCKERS 2 for how it was verified |
 | Remove unused components | ✅ | 22 files, nothing imported them |
 | Manage Team (replaces Teams; design "Manage Team · edit + new team") | ✅ | rename (duplicate name refused), add / remove teammates, new team with players, leagues per team; desktop as designed, phone list → team; bye team hidden |
+| Daily admin editing (design "Daily" admin screens) + Manage League · Rounds | ✅ | re-pair with swaps, remove/add tables, scorepad for live and finished matches with manual entry, finish match, results recounted with standings and rating replay, rounds list with delete + undo; verified in the browser and through the API |

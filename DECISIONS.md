@@ -101,3 +101,25 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
     - A new team still joins the current league, as before, so it can be picked for rounds; other leagues are added
       in Manage League. The card lists the team's leagues with Active / Inactive.
     - Team names are unique ignoring case. The bye placeholder team is hidden and can't be edited.
+
+24. **Admins edit a night's tables and results on the desktop Daily screen** (design "Daily · Round 3 · uređivanje
+    stolova", "scorepad (admin)", "ručni unos").
+    - Any table can be re-paired or removed, also one where something was played (your decision): its matches and
+      hands are deleted, with a warning in the dialog. A team picked from another table swaps places with the team
+      it replaces. A table with the bye can keep the bye; the bye can't be seated anywhere new.
+    - The scorepad edits every hand of the match in progress and of finished matches. "Ručni unos" stores only each
+      team's points (no zvanja, not limited to 162; admins only); such a hand has no trump caller.
+    - A finished match that an edit leaves without a team over 1001 counts for neither team (your decision); the
+      round's wins and the standings follow.
+    - The scorepad is desktop only, as designed; on a phone it says so.
+
+25. **Ratings are replayed after a counted result changes** (your decision). Every player starts at 1500 and every
+    closed round without a bye is applied again in date order, from the day ratings were introduced (7 Oct 2025),
+    so a replay without edits gives the same ratings as the live updates. Today's rosters are used (the app keeps
+    no roster history). A replay runs only when a round's outcome (win/draw/loss) changed; a change in points
+    only updates the standings.
+
+26. **Manage League has a Rounds view** (desktop): rounds per night with their state, and deleting one. The
+    delete waits 8 s for Undo and is sent then, when another round is deleted, or when the page is left. Round
+    numbers aren't renumbered after a delete; the next Create Round continues after the highest one.
+
