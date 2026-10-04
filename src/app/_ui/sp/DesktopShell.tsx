@@ -5,7 +5,7 @@ import useLogout from "@/app/_hooks/useLogout";
 import useStartGame from "@/app/_hooks/useStartGame";
 import {getRoundsAPI} from "@/app/_fetchers/round/getRounds";
 import {leagueDateString} from "@/app/_lib/dates";
-import {currentLeagueHref} from "@/app/_lib/league";
+import {currentLeagueHref, LeaguePage} from "@/app/_lib/league";
 import {useActiveLeagueId} from "@/app/_hooks/useLeagues";
 import useAuthStore from "@/app/_store/authStore";
 import {color, ease, font, shadow} from "@/app/_styles/tokens";
@@ -138,14 +138,15 @@ export function DesktopShell({
   );
 }
 
-type NavItem = {key: NavKey; label: string; icon: React.ReactNode; href?: string; head?: string; adminOnly?: boolean};
+// leaguePage: a page of the league being played now (its href is filled in when the league is known)
+type NavItem = {key: NavKey; label: string; icon: React.ReactNode; href?: string; leaguePage?: LeaguePage; head?: string; adminOnly?: boolean};
 
 const NAV: NavItem[] = [
   {key: "home", label: "Početna", icon: <HomeRoundedIcon />, href: "/"},
   {key: "game", label: "Start Game", icon: <PlayArrowRoundedIcon />},
-  {key: "daily", label: "Daily Standings", icon: <CalendarMonthRoundedIcon />, href: currentLeagueHref("daily-standings")},
-  {key: "league", label: "League Standings", icon: <EmojiEventsRoundedIcon />, href: currentLeagueHref("standings")},
-  {key: "manageLeague", label: "Manage League", icon: <TuneRoundedIcon />, href: currentLeagueHref("manage"), head: "Admin", adminOnly: true},
+  {key: "daily", label: "Daily Standings", icon: <CalendarMonthRoundedIcon />, leaguePage: "daily-standings"},
+  {key: "league", label: "League Standings", icon: <EmojiEventsRoundedIcon />, leaguePage: "standings"},
+  {key: "manageLeague", label: "Manage League", icon: <TuneRoundedIcon />, leaguePage: "manage", head: "Admin", adminOnly: true},
   {key: "createLeague", label: "Create League", icon: <LibraryAddRoundedIcon />, href: "/league/new", adminOnly: true},
   {key: "manageTeam", label: "Manage Teams", icon: <EditRoundedIcon />, href: "/teams", adminOnly: true},
   {key: "createRound", label: "Create Round", icon: <AddCircleRoundedIcon />, href: "/createRound", adminOnly: true},
@@ -178,7 +179,9 @@ export function NavDrawer({open, onClose, active}: {open: boolean; onClose: () =
   }, [open, signedIn, leagueId]);
 
   // signed out, only the public season table is available
-  const items = NAV.filter((n) => (signedIn ? isAdmin || !n.adminOnly : n.key === "league"));
+  const items = NAV.filter((n) => (signedIn ? isAdmin || !n.adminOnly : n.key === "league")).map((n) =>
+    n.leaguePage ? {...n, href: currentLeagueHref(n.leaguePage, leagueId)} : n
+  );
   const itemSx = (on: boolean) => ({
     ...buttonBase,
     width: "100%",

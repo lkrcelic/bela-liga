@@ -59,7 +59,7 @@ export default function DesktopHome() {
           title="Daily Standings"
           sub={dailySub}
           badge={liveRound ? <LivePill /> : null}
-          onOpen={() => router.push(currentLeagueHref("daily-standings"))}
+          onOpen={() => router.push(currentLeagueHref("daily-standings", leagueId))}
         >
           {daily.error ? (
             <ErrorNote onRetry={daily.reload} sx={{m: "0 20px"}}>
@@ -76,7 +76,7 @@ export default function DesktopHome() {
           )}
         </Panel>
 
-        <Panel title="League Standings" sub={leagueName} onOpen={() => router.push(currentLeagueHref("standings"))}>
+        <Panel title="League Standings" sub={leagueName} onOpen={() => router.push(currentLeagueHref("standings", leagueId))}>
           {league.error ? (
             <ErrorNote onRetry={league.reload} sx={{m: "0 20px"}}>
               {league.error}

@@ -1,5 +1,6 @@
 "use client";
 
+import {useActiveLeagueId} from "@/app/_hooks/useLeagues";
 import useLogout from "@/app/_hooks/useLogout";
 import {OpenTable} from "@/app/_hooks/useOpenTable";
 import useStartGame from "@/app/_hooks/useStartGame";
@@ -32,6 +33,7 @@ export default function PhoneHome({
   openTableLoading?: boolean;
 }) {
   const router = useTransitionRouter();
+  const leagueId = useActiveLeagueId();
   const {logout, loggingOut} = useLogout();
   const {start, starting, error} = useStartGame();
 
@@ -98,8 +100,8 @@ export default function PhoneHome({
       )}
 
       <Box component="nav" aria-label="Poredak" sx={{display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px"}}>
-        <Tile href={currentLeagueHref("daily-standings")} icon={<CalendarMonthRoundedIcon />} label="Daily Standings" />
-        <Tile href={currentLeagueHref("standings")} icon={<EmojiEventsRoundedIcon />} label="League Standings" />
+        <Tile href={currentLeagueHref("daily-standings", leagueId)} icon={<CalendarMonthRoundedIcon />} label="Daily Standings" />
+        <Tile href={currentLeagueHref("standings", leagueId)} icon={<EmojiEventsRoundedIcon />} label="League Standings" />
       </Box>
 
       {openTable && (
@@ -130,7 +132,7 @@ export default function PhoneHome({
           <SectionLabel id="admin-controls">Admin Controls</SectionLabel>
           <Card component="ul" sx={{listStyle: "none", m: 0, p: 0, display: "flex", flexDirection: "column", overflow: "hidden"}}>
             <AdminRow href="/createRound" icon={<AddCircleRoundedIcon />} label="Create Round" divider />
-            <AdminRow href={currentLeagueHref("manage")} icon={<TuneRoundedIcon />} label="Manage League" divider />
+            <AdminRow href={currentLeagueHref("manage", leagueId)} icon={<TuneRoundedIcon />} label="Manage League" divider />
             <AdminRow href="/league/new" icon={<LibraryAddRoundedIcon />} label="Create League" divider />
             <AdminRow href="/teams" icon={<GroupAddRoundedIcon />} label="Manage Teams" />
           </Card>
