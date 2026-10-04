@@ -4,7 +4,7 @@ import {generateMultipleRoundPairings, RoundsPlan} from "@/app/_lib/matching/mul
 import {getLeagueTeamsWithScores} from "@/app/_lib/helpers/query/leagueScores";
 import {REPEAT_MATCHUPS, RoundCreateRequestValidation} from "@/app/_interfaces/round";
 import {requireAdmin} from "@/app/_lib/service/auth/requireUser";
-import {findPendingBatch, insertRoundBatch, pairsPlayedToday} from "@/app/_lib/service/round/insertPairRounds";
+import {insertRoundBatch, pairsPlayedToday} from "@/app/_lib/service/round/insertPairRounds";
 import {errorResponse} from "@/app/_lib/apiErrors";
 
 // the pairing stops searching after a few seconds; this leaves room for the database around it
@@ -23,13 +23,6 @@ export async function POST(request: NextRequest) {
 
     const teamsWithScores = await getLeagueTeamsWithScores(league_id);
     const filteredTeams = teamsWithScores.filter((team) => present_teams.includes(team.id));
-
-    // submitted again (back button, double click): the rounds already exist, and pairing them again would only
-    // find that everyone already meets today
-    const pending = await findPendingBatch(league_id, filteredTeams.map((t) => t.id));
-    if (pending !== null) {
-      return NextResponse.json({round_number: pending, already_created: true}, {status: STATUS.OK});
-    }
 
     let plan: RoundsPlan;
     try {
