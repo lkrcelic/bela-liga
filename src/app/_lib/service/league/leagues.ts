@@ -4,6 +4,7 @@ import {pickActiveLeague} from "@/app/_lib/league";
 import {prisma} from "@/app/_lib/prisma";
 import {InvalidResultError} from "@/app/_lib/validation/validateResult";
 import {Prisma} from "@prisma/client";
+import {recalcTeamScores} from "@/app/_lib/service/admin/recalc";
 
 const dateString = (d: Date | null) => (d ? d.toISOString().slice(0, 10) : null);
 
@@ -94,11 +95,28 @@ export async function listLeagueTeams(leagueId: number): Promise<LeagueTeamDetai
     .sort((a, b) => a.team_name.localeCompare(b.team_name, "hr"));
 }
 
-// Adds an existing team to a league (active). Adding a team that is already there is refused.
+// Renames a league. The name is shown on standings and the league pickers, so two leagues can't share it (any case).
+// Returns false when the league doesn't exist.
+export async function renameLeague(leagueId: number, name: string): Promise<boolean> {
+  const leagueName = name.trim();
+  if (!(await leagueExists(leagueId))) return false;
+  const taken = await prisma.league.count({
+    where: {league_id: {not: leagueId}, league_name: {equals: leagueName, mode: "insensitive"}},
+  });
+  if (taken) throw new InvalidResultError("Another league already has this name.");
+  await prisma.league.update({where: {league_id: leagueId}, data: {league_name: leagueName}});
+  return true;
+}
+
+// Adds an existing team to a league (active). Adding a team that is already there is refused. A team that was in the
+// league before gets its season row back from its closed rounds.
 export async function addTeamToLeague(leagueId: number, teamId: number): Promise<void> {
   if (teamId === BYE_TEAM_ID) throw new InvalidResultError("The bye team can't be added.");
   try {
-    await prisma.leagueTeam.create({data: {league_id: leagueId, team_id: teamId}});
+    await prisma.$transaction(async (tx) => {
+      await tx.leagueTeam.create({data: {league_id: leagueId, team_id: teamId}});
+      await recalcTeamScores(tx, leagueId, [teamId]);
+    });
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
       if (error.code === "P2002") throw new InvalidResultError("The team is already in this league.");
@@ -112,4 +130,21 @@ export async function addTeamToLeague(leagueId: number, teamId: number): Promise
 export async function setLeagueTeamActive(leagueId: number, teamId: number, active: boolean): Promise<boolean> {
   const {count} = await prisma.leagueTeam.updateMany({where: {league_id: leagueId, team_id: teamId}, data: {active}});
   return count > 0;
+}
+
+// Takes a team out of a league: it leaves the league's standings and team lists. Its rounds stay, so its opponents keep
+// their results; the team itself and its players stay in the app. A team with an unfinished round in the league can't
+// be removed. Returns false when the team is not in the league.
+export async function removeTeamFromLeague(leagueId: number, teamId: number): Promise<boolean> {
+  return prisma.$transaction(async (tx) => {
+    const inLeague = await tx.leagueTeam.count({where: {league_id: leagueId, team_id: teamId}});
+    if (!inLeague) return false;
+    const open = await tx.round.count({
+      where: {open: true, OR: [{team1_id: teamId}, {team2_id: teamId}], leagueRounds: {some: {league_id: leagueId}}},
+    });
+    if (open) throw new InvalidResultError("The team has an unfinished round in this league. Finish or delete it first.");
+    await tx.leagueTeam.delete({where: {league_id_team_id: {league_id: leagueId, team_id: teamId}}});
+    await tx.teamScore.deleteMany({where: {league_id: leagueId, team_id: teamId}});
+    return true;
+  });
 }

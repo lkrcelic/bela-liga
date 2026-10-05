@@ -41,3 +41,18 @@ export async function setLeagueTeamActiveAPI(leagueId: number, teamId: number, a
   });
   if (!response.ok) throw new Error(await responseErrorMessage(response, "Failed to update the team"));
 }
+
+export async function renameLeagueAPI(leagueId: number, leagueName: string): Promise<void> {
+  const response = await fetch(`/api/leagues/${leagueId}`, {
+    method: "PATCH",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({league_name: leagueName}),
+  });
+  if (!response.ok) throw new Error(await responseErrorMessage(response, "Naziv lige nije spremljen"));
+}
+
+// keepalive: a delete waiting for its undo window still goes out when the page is closed
+export async function removeTeamFromLeagueAPI(leagueId: number, teamId: number, keepalive = false): Promise<void> {
+  const response = await fetch(`/api/leagues/${leagueId}/teams/${teamId}`, {method: "DELETE", keepalive});
+  if (!response.ok) throw new Error(await responseErrorMessage(response, "Ekipa nije obrisana iz lige"));
+}
