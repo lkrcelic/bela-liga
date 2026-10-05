@@ -12,6 +12,10 @@ export const LeagueCreateRequestValidation = z.object({
   team_ids: z.array(z.number().int()).default([]),
 });
 
+export const LeagueRenameRequestValidation = z.object({
+  league_name: z.string().trim().min(1, "League name is required.").max(100),
+});
+
 export const LeagueTeamAddRequestValidation = z.object({
   team_id: z.number().int(),
 });
