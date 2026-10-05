@@ -13,6 +13,8 @@ const PLAY_DAY = ["ponedjeljkom", "utorkom", "srijedom", "četvrtkom", "petkom",
 // share one request
 let cache: LeagueOption[] | null = null;
 let inflight: Promise<LeagueOption[]> | null = null;
+// mounted pickers, told when a league is renamed
+const listeners = new Set<(leagues: LeagueOption[]) => void>();
 
 function loadLeagues(): Promise<LeagueOption[]> {
   inflight ??= getLeaguesAPI()
@@ -40,6 +42,7 @@ function useLeagueList(): {leagues: LeagueOption[] | null; error: boolean} {
 
   useEffect(() => {
     let cancelled = false;
+    listeners.add(setLeagues);
     loadLeagues()
       .then((options) => {
         if (!cancelled) setLeagues(options);
@@ -50,6 +53,7 @@ function useLeagueList(): {leagues: LeagueOption[] | null; error: boolean} {
       });
     return () => {
       cancelled = true;
+      listeners.delete(setLeagues);
     };
   }, []);
 
@@ -74,4 +78,11 @@ export function useActiveLeagueId(): number | null | undefined {
 // Clears the cached list after a league was created
 export function invalidateLeagues() {
   cache = null;
+}
+
+// Shows a league's new name everywhere at once, without fetching the list again
+export function renameCachedLeague(id: number, name: string) {
+  if (!cache) return;
+  cache = cache.map((l) => (l.id === id ? {...l, name} : l));
+  listeners.forEach((notify) => notify(cache!));
 }
