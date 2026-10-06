@@ -12,6 +12,7 @@ import {
   GhostIconButton,
   InitialsAvatar,
   LoadingRows,
+  LoadMoreButton,
   OutlineButton,
   SearchInput,
   SolidButton,
@@ -54,6 +55,13 @@ export function TeamList({
   onNew: () => void;
   sx?: SxProps<Theme>;
 }) {
+  // 12 teams at a time; a new search starts from the first 12, and the selected team is always in view
+  const [pages, setPages] = useState(1);
+  useEffect(() => setPages(1), [query]);
+  const selectedAt = teams && !isNew && selectedId != null ? teams.findIndex((t) => t.id === selectedId) : -1;
+  const shown = teams?.slice(0, Math.max(12 * pages, selectedAt + 1)) ?? [];
+  const left = (teams?.length ?? 0) - shown.length;
+
   return (
     <Card component="section" aria-label="Ekipe" sx={{minHeight: 0, display: "flex", flexDirection: "column", overflow: "hidden", borderRadius: "24px", ...sx}}>
       <Box sx={{flex: "none", p: "14px", borderBottom: `1px solid rgba(60,74,103,.1)`, display: "flex", flexDirection: "column", gap: "10px"}}>
@@ -92,7 +100,7 @@ export function TeamList({
         <EmptyState>{query ? "Nijedna ekipa ne odgovara pretrazi." : "Još nema ekipa."}</EmptyState>
       ) : (
         <Box component="ul" sx={{listStyle: "none", m: 0, flex: 1, minHeight: 0, overflowY: "auto", scrollbarGutter: "stable", p: "6px"}}>
-          {teams.map((t) => {
+          {shown.map((t) => {
             const on = !isNew && t.id === selectedId;
             return (
               <li key={t.id}>
@@ -134,6 +142,11 @@ export function TeamList({
               </li>
             );
           })}
+          {left > 0 && (
+            <Box component="li" sx={{pt: "6px"}}>
+              <LoadMoreButton left={left} noun={["team", "teams"]} onClick={() => setPages(Math.ceil(shown.length / 12) + 1)} sx={{borderRadius: "14px"}} />
+            </Box>
+          )}
         </Box>
       )}
     </Card>
@@ -320,11 +333,14 @@ function TeammateSearch({exclude, onAdd}: {exclude: number[]; onAdd: (p: MTPlaye
   const [query, setQuery] = useState("");
   const [hits, setHits] = useState<MTPlayer[] | null>(null);
   const [failed, setFailed] = useState(false);
+  // hits are shown 4 at a time; a new search starts from the first 4
+  const [pages, setPages] = useState(1);
   const reqId = useRef(0);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const q = query.trim();
 
   useEffect(() => {
+    setPages(1);
     if (!q) {
       // a search still on its way must not fill the list under the empty box
       reqId.current++;
@@ -345,7 +361,9 @@ function TeammateSearch({exclude, onAdd}: {exclude: number[]; onAdd: (p: MTPlaye
     return () => clearTimeout(t);
   }, [q]);
 
-  const shown = (hits ?? []).filter((p) => !exclude.includes(p.id)).slice(0, 5);
+  const available = (hits ?? []).filter((p) => !exclude.includes(p.id));
+  const shown = available.slice(0, 4 * pages);
+  const left = available.length - shown.length;
   const add = (p: MTPlayer) => {
     onAdd(p);
     setQuery("");
@@ -416,6 +434,9 @@ function TeammateSearch({exclude, onAdd}: {exclude: number[]; onAdd: (p: MTPlaye
                 </Box>
               );
             })
+          )}
+          {!failed && left > 0 && (
+            <LoadMoreButton left={left} noun={["player", "players"]} onClick={() => setPages((n) => n + 1)} sx={{borderTop: `1px solid rgba(60,74,103,.07)`}} />
           )}
         </Box>
       )}

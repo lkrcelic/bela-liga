@@ -18,6 +18,7 @@ import {
   InfoNote,
   LeagueEyebrowButton,
   LeagueMenuButton,
+  LoadMoreButton,
   LoadingRows,
   OutlineButton,
   PlayerChip,
@@ -466,9 +467,12 @@ function AddTeamCard({exclude, onAdd, onCreate}: {exclude: number[]; onAdd: (t: 
   const [adding, setAdding] = useState<number | null>(null);
   const [hits, setHits] = useState<TeamOption[] | null>(null);
   const [loading, setLoading] = useState(false);
+  // results are shown 4 at a time; a new search starts from the first 4
+  const [pages, setPages] = useState(1);
 
   useEffect(() => {
     const q = query.trim();
+    setPages(1);
     if (q.length < 2) {
       setHits(null);
       return;
@@ -493,7 +497,9 @@ function AddTeamCard({exclude, onAdd, onCreate}: {exclude: number[]; onAdd: (t: 
     };
   }, [query]);
 
-  const shown = (hits ?? []).filter((h) => !exclude.includes(h.id)).slice(0, 4);
+  const outside = (hits ?? []).filter((h) => !exclude.includes(h.id));
+  const shown = outside.slice(0, 4 * pages);
+  const left = outside.length - shown.length;
 
   return (
     <Card component="section" aria-labelledby="add-team" sx={{p: "20px", display: "flex", flexDirection: "column", gap: "12px", borderRadius: "24px"}}>
@@ -543,6 +549,7 @@ function AddTeamCard({exclude, onAdd, onCreate}: {exclude: number[]; onAdd: (t: 
               </Box>
             ))
           )}
+          {!loading && left > 0 && <LoadMoreButton left={left} noun={["team", "teams"]} onClick={() => setPages((n) => n + 1)} />}
         </Box>
       )}
       <OutlineButton onClick={onCreate} height={50} tone={color.navy} sx={{borderWidth: "1.5px", borderColor: "rgba(60,74,103,.25)", fontSize: 15}}>
