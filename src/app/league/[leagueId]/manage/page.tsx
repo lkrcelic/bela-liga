@@ -79,9 +79,9 @@ export default function ManageLeague() {
   const [query, setQuery] = useState("");
   const [justAdded, setJustAdded] = useState<number | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
-  // desktop: create a round, the league's teams, its rounds (delete a round) or its details; ?view= opens one
+  // desktop: create a round (the first view), the league's teams, its rounds (delete a round) or its details; ?view= opens another
   const viewParam = useSearchParams().get("view") as View | null;
-  const [view, setView] = useState<View>(viewParam && VIEWS.includes(viewParam) ? viewParam : "teams");
+  const [view, setView] = useState<View>(viewParam && VIEWS.includes(viewParam) ? viewParam : "create");
   const leagueRounds = useLeagueRounds(leagueId);
   const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
   const [pending, setPending] = useState<PendingRemoval | null>(null);
