@@ -133,6 +133,26 @@ test("when every team has had a bye, the fewest byes wins, then the lowest rank"
   assert.deepEqual(rounds.map(byeTeamOf), [5, 4]);
 });
 
+test("a team never gets the bye twice in one night, even with far fewer byes than the rest", () => {
+  // 21 teams in windows of 8 and 13; team 12 joined late and is the only one in its window without byes
+  const teams = makeTeams(21);
+  for (let id = 9; id <= 21; id++) if (id !== 12) giveBye(teams, id), giveBye(teams, id);
+  const {rounds, repeats} = generateMultipleRoundPairings(teams, {windowSize: 8, numberOfRounds: 3});
+  assert.deepEqual(rounds.map(byeTeamOf), [12, 21, 20]);
+  assert.deepEqual(repeats, []);
+});
+
+test("a team that had the bye in an earlier round today doesn't get it again", () => {
+  const teams = makeTeams(7);
+  const {rounds, repeats} = generateMultipleRoundPairings(teams, {
+    windowSize: 8,
+    numberOfRounds: 2,
+    playedToday: [[7, BYE_TEAM_ID], [1, 2], [3, 4], [5, 6]],
+  });
+  assert.deepEqual(rounds.map(byeTeamOf), [6, 5]);
+  assert.deepEqual(repeats, []);
+});
+
 test("the bye only comes up in the last window", () => {
   const {rounds} = generateMultipleRoundPairings(makeTeams(17), {windowSize: 8, numberOfRounds: 2});
   for (const round of rounds) assert.ok(byeTeamOf(round)! > 8);

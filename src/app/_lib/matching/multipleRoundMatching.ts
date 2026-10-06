@@ -84,6 +84,8 @@ class WindowPlanner {
   private readonly today: boolean[][];
   // byeOf[r]: the team (index) that gets the bye in round r, or -1
   readonly byeOf: number[];
+  // byeRepeat[r]: round r's bye goes to a team that already had one today
+  private readonly byeRepeat: boolean[] = [];
 
   constructor(
     private readonly teams: Team[],
@@ -101,25 +103,26 @@ class WindowPlanner {
     this.byeOf = this.assignByes(playedToday);
   }
 
-  // Round by round, the bye goes to the team with the fewest byes so far (today's included), the lowest-ranked of them
+  // Round by round, the bye goes to a team that hasn't had one today: the one with the fewest byes this season, the
+  // lowest-ranked of them. Only when every team already had today's bye does a team get it twice.
   private assignByes(playedToday: Set<string>): number[] {
     if (this.bye < 0) return new Array(this.rounds).fill(-1);
     const byes = this.teams.map((t) => countMatchups(t, createByeTeam()));
+    const today = this.teams.map((t) => (playedToday.has(pairKey(t.id, BYE_TEAM_ID)) ? 1 : 0));
     const result: number[] = [];
     for (let r = 0; r < this.rounds; r++) {
       let pick = this.n - 1;
       for (let i = this.n - 2; i >= 0; i--) {
-        if (byes[i] < byes[pick]) pick = i;
+        if (today[i] < today[pick] || (today[i] === today[pick] && byes[i] < byes[pick])) pick = i;
       }
+      // a team that already had today's bye gets it again: mark it like a repeat
+      this.byeRepeat.push(today[pick] > 0);
+      today[pick]++;
       byes[pick]++;
       result.push(pick);
     }
-    // a team that already had today's bye in an earlier round meets the bye again: mark it like a repeat
-    this.byeRepeat = result.map((i) => playedToday.has(pairKey(this.teams[i].id, BYE_TEAM_ID)));
     return result;
   }
-
-  private byeRepeat: boolean[] = [];
 
   plan(): {rounds: IndexRound[]; repeats: [number, number][]} {
     const plan: IndexRound[] = [];
