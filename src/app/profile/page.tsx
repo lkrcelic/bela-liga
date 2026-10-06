@@ -2,6 +2,7 @@
 
 import {getPlayerByIdAPI, PlayerById} from "@/app/_fetchers/player/getById";
 import {updateBirthDateAPI} from "@/app/_fetchers/player/updateBirthDate";
+import {updateUsernameAPI} from "@/app/_fetchers/player/updateUsername";
 import useIsDesktop from "@/app/_hooks/useIsDesktop";
 import useMyTeams from "@/app/_hooks/useMyTeams";
 import {useMyRating} from "@/app/_hooks/useRatings";
@@ -9,6 +10,7 @@ import {formatChange} from "@/app/_lib/ui/ratings";
 import {TransitionLink} from "@/app/_lib/viewTransitions";
 import {leagueDateString} from "@/app/_lib/dates";
 import {displayDate} from "@/app/_lib/ui/text";
+import {normalizeUsername, USERNAME_MAX, usernameError} from "@/app/_lib/validation/username";
 import useAuthStore from "@/app/_store/authStore";
 import {color, font} from "@/app/_styles/tokens";
 import EditRoundedIcon from "@mui/icons-material/EditRounded";
@@ -59,7 +61,6 @@ export default function ProfilePage() {
 
   const fullName = player ? `${player.first_name} ${player.last_name}`.trim() : "";
   const details = [
-    {k: "Username", v: player?.username},
     {k: "Email", v: player?.email},
     {k: "First name", v: player?.first_name},
     {k: "Last name", v: player?.last_name},
@@ -122,6 +123,17 @@ export default function ProfilePage() {
     <Box component="section" aria-labelledby="details" sx={{display: "flex", flexDirection: "column", gap: "8px"}}>
       <SectionLabel id="details">Details</SectionLabel>
       <Card component="dl" sx={{m: 0, overflow: "hidden"}}>
+        <UsernameRow
+          value={player?.username ?? null}
+          desktop={desktop}
+          onSave={async (username) => {
+            if (!player) return;
+            const saved = await updateUsernameAPI(player.id, username);
+            setPlayer({...player, username: saved});
+            // the nav and everything else reading the logged-in player show the new name without logging in again
+            if (user?.id === player.id) setUser({...user, username: saved});
+          }}
+        />
         {details.map((d) => (
           <Box
             key={d.k}
@@ -282,6 +294,118 @@ function BirthDateRow({value, desktop, onSave}: {value: string | null; desktop: 
             sx={{...dateInputFix, height: 50, width: "100%", boxSizing: "border-box", borderRadius: "14px", border: `1.5px solid ${color.navy}`, background: color.card, px: "14px", font: "inherit", fontSize: 16, color: color.ink, outline: "none"}}
           />
           {error && <ErrorNote>{error}</ErrorNote>}
+          <Box sx={{display: "flex", gap: "8px"}}>
+            <Box
+              component="button"
+              type="button"
+              onClick={() => setDraft(null)}
+              sx={{...buttonBase, flex: 1, height: 46, borderRadius: "14px", border: "1.5px solid rgba(60,74,103,.25)", background: color.card, color: color.navy, fontSize: 15, fontWeight: 600}}
+            >
+              Cancel
+            </Box>
+            <Box
+              component="button"
+              type="submit"
+              disabled={!canSave}
+              aria-busy={saving || undefined}
+              sx={{...buttonBase, flex: 1, height: 46, borderRadius: "14px", background: color.navy, color: "#FFFFFF", fontSize: 15, fontWeight: 600, "&:disabled": {opacity: 0.4}}}
+            >
+              {saving ? "Spremam…" : "Save"}
+            </Box>
+          </Box>
+        </Box>
+      </Box>
+    </Box>
+  );
+}
+
+// The first Details row: "@username" with an edit button, opening a field with the username rules, Cancel and Save in place.
+// value is null while the profile loads.
+function UsernameRow({value, desktop, onSave}: {value: string | null; desktop: boolean; onSave: (username: string) => Promise<void>}) {
+  const [draft, setDraft] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  // a save that failed (e.g. the username is taken), shown until the field changes
+  const [saveError, setSaveError] = useState<{draft: string; message: string} | null>(null);
+  const px = desktop ? "18px" : "16px";
+
+  if (draft == null) {
+    return (
+      <Box sx={{height: desktop ? 56 : 52, display: "flex", alignItems: "center", gap: "8px", pl: px, pr: "6px", borderBottom: `1px solid ${color.line}`}}>
+        <Box component="dt" sx={{flex: "none", whiteSpace: "nowrap", fontSize: 15, color: color.muted}}>
+          Username
+        </Box>
+        <Box component="dd" sx={{m: 0, flex: 1, minWidth: 0, textAlign: "right", fontSize: 15, fontWeight: 600, ...ellipsis}}>
+          {value != null ? `@${value}` : <Skeleton width={110} sx={{ml: "auto"}} />}
+        </Box>
+        <Box
+          component="button"
+          type="button"
+          aria-label="Edit username"
+          disabled={value == null}
+          onClick={() => {
+            setDraft(value ?? "");
+            setSaveError(null);
+          }}
+          sx={{...buttonBase, width: 44, height: 44, flex: "none", borderRadius: "12px", color: color.navy, display: "flex", alignItems: "center", justifyContent: "center", "&:hover": {background: color.paper}, "& svg": {fontSize: 20}}}
+        >
+          <EditRoundedIcon />
+        </Box>
+      </Box>
+    );
+  }
+
+  const username = normalizeUsername(draft);
+  const unchanged = draft === value || username === value;
+  // the current username may predate the rules, so it isn't flagged until it's changed
+  const error = (unchanged ? undefined : usernameError(draft)) ?? (saveError?.draft === draft ? saveError.message : undefined);
+  const canSave = !unchanged && !error && !saving;
+  const save = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!canSave) return;
+    setSaving(true);
+    setSaveError(null);
+    try {
+      await onSave(username);
+      setDraft(null);
+    } catch (err) {
+      setSaveError({draft, message: err instanceof Error ? err.message : "Username not saved."});
+    }
+    setSaving(false);
+  };
+
+  return (
+    <Box sx={{display: "flex", flexDirection: "column", gap: "8px", p: `12px ${px} 14px`, borderBottom: `1px solid ${color.line}`, background: color.creamSoft}}>
+      <Box component="dt" sx={{fontSize: 13, fontWeight: 600, color: color.inkSoft}}>
+        <label htmlFor="username">Username</label>
+      </Box>
+      <Box component="dd" sx={{m: 0}}>
+        <Box component="form" onSubmit={save} noValidate sx={{display: "flex", flexDirection: "column", gap: "8px"}}>
+          <Box
+            sx={{height: 50, display: "flex", alignItems: "center", gap: "2px", boxSizing: "border-box", borderRadius: "14px", border: `1.5px solid ${error ? color.red : color.navy}`, background: color.card, px: "14px"}}
+          >
+            <Box component="span" aria-hidden sx={{flex: "none", fontSize: 16, color: color.placeholder}}>
+              @
+            </Box>
+            <Box
+              component="input"
+              id="username"
+              type="text"
+              autoFocus
+              autoComplete="off"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
+              maxLength={USERNAME_MAX}
+              value={draft}
+              aria-invalid={error ? true : undefined}
+              aria-describedby="username-hint"
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setDraft(e.target.value.replace(/\s+/g, ""))}
+              sx={{flex: 1, minWidth: 0, height: "100%", p: 0, border: "none", background: "transparent", font: "inherit", fontSize: 16, color: color.ink, outline: "none"}}
+            />
+          </Box>
+          <Box id="username-hint" aria-live="polite" sx={{fontSize: 12.5, color: error ? color.red : color.muted}}>
+            {error ?? "Teammates find you by this name when adding you to a team."}
+          </Box>
           <Box sx={{display: "flex", gap: "8px"}}>
             <Box
               component="button"
