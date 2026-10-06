@@ -3,9 +3,11 @@ import {NextRequest, NextResponse} from "next/server";
 import {STATUS} from "@/app/_lib/statusCodes";
 import {getPlayerById} from "@/app/_lib/service/players/getById";
 import {isAdmin, requireUser} from "@/app/_lib/service/auth/requireUser";
-import {PlayerBirthDateUpdate, PlayerPartialResponseValidation} from "@/app/_interfaces/player";
+import {PlayerPartialResponseValidation, PlayerProfileUpdate} from "@/app/_interfaces/player";
 import {prisma} from "@/app/_lib/prisma";
 import {errorResponse} from "@/app/_lib/apiErrors";
+import {USERNAME_TAKEN} from "@/app/_lib/validation/username";
+import {Prisma} from "@prisma/client";
 
 // Handle GET request to fetch a single player by ID.
 // Email and role are only shown to the player themselves and to admins.
@@ -29,7 +31,8 @@ export async function GET(request: NextRequest, {params}: { params: { id: string
   }
 }
 
-// A player sets their own birth date (asked after a Google sign-up). Admins may set anyone's.
+// A player changes their own birth date (asked after a Google sign-up) and/or username. Admins may change anyone's.
+// A taken username (ignoring case) is a 409 with {error, errors: {username}}.
 export async function PATCH(request: NextRequest, {params}: { params: { id: string } }) {
   const auth = await requireUser(request);
   if (auth.response) return auth.response;
@@ -39,13 +42,33 @@ export async function PATCH(request: NextRequest, {params}: { params: { id: stri
   }
 
   try {
-    const {birth_date} = PlayerBirthDateUpdate.parse(await request.json());
-    const {count} = await prisma.player.updateMany({where: {id}, data: {birth_date: new Date(birth_date)}});
+    const {birth_date, username} = PlayerProfileUpdate.parse(await request.json());
+    if (username !== undefined) {
+      const taken = await prisma.player.findFirst({
+        where: {username: {equals: username, mode: "insensitive"}, id: {not: id}},
+        select: {id: true},
+      });
+      if (taken) return usernameTakenResponse();
+    }
+
+    const {count} = await prisma.player.updateMany({
+      where: {id},
+      data: {
+        ...(birth_date !== undefined && {birth_date: new Date(birth_date)}),
+        ...(username !== undefined && {username}),
+      },
+    });
     if (count === 0) {
       return NextResponse.json({error: "Player not found."}, {status: STATUS.NotFound});
     }
-    return NextResponse.json({birth_date}, {status: STATUS.OK});
+    return NextResponse.json({birth_date, username}, {status: STATUS.OK});
   } catch (error) {
+    // two players taking the same username at once: the unique index catches the second
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") return usernameTakenResponse();
     return errorResponse(error, "Failed to update player.");
   }
+}
+
+function usernameTakenResponse(): NextResponse {
+  return NextResponse.json({error: USERNAME_TAKEN, errors: {username: USERNAME_TAKEN}}, {status: STATUS.Conflict});
 }

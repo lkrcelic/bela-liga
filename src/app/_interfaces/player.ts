@@ -1,5 +1,6 @@
 import {RoleEnum} from "@prisma/client";
 import {z} from "zod";
+import {normalizeUsername, usernameError} from "@/app/_lib/validation/username";
 
 const DATE_FORMAT = /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$/;
 
@@ -14,13 +15,25 @@ export const PlayerCreate = z.object({
   last_updated_at: z.date().optional(),
 });
 
-// A player giving their birth date later (Google sign-ups don't have one)
-export const PlayerBirthDateUpdate = z.object({
-  birth_date: z
-    .string()
-    .regex(DATE_FORMAT, "Invalid date format.")
-    .refine((d) => d >= "1900-01-01" && d <= new Date().toISOString().slice(0, 10), "Invalid birth date."),
-});
+// A player changing their own profile: the birth date (Google sign-ups give it later) and/or a new username,
+// stored lowercase (rules in validation/username.ts)
+export const PlayerProfileUpdate = z
+  .object({
+    birth_date: z
+      .string()
+      .regex(DATE_FORMAT, "Invalid date format.")
+      .refine((d) => d >= "1900-01-01" && d <= new Date().toISOString().slice(0, 10), "Invalid birth date.")
+      .optional(),
+    username: z
+      .string()
+      .transform(normalizeUsername)
+      .superRefine((u, ctx) => {
+        const message = usernameError(u);
+        if (message) ctx.addIssue({code: z.ZodIssueCode.custom, message});
+      })
+      .optional(),
+  })
+  .refine((o) => o.birth_date !== undefined || o.username !== undefined, "Nothing to update.");
 
 export type PlayerCreateInterface = z.infer<typeof PlayerCreate>;
 
