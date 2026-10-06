@@ -310,7 +310,7 @@ function BirthDateRow({value, desktop, onSave}: {value: string | null; desktop: 
               aria-busy={saving || undefined}
               sx={{...buttonBase, flex: 1, height: 46, borderRadius: "14px", background: color.navy, color: "#FFFFFF", fontSize: 15, fontWeight: 600, "&:disabled": {opacity: 0.4}}}
             >
-              {saving ? "Spremam…" : "Save"}
+              {saving ? "Saving…" : "Save"}
             </Box>
           </Box>
         </Box>
@@ -422,7 +422,7 @@ function UsernameRow({value, desktop, onSave}: {value: string | null; desktop: b
               aria-busy={saving || undefined}
               sx={{...buttonBase, flex: 1, height: 46, borderRadius: "14px", background: color.navy, color: "#FFFFFF", fontSize: 15, fontWeight: 600, "&:disabled": {opacity: 0.4}}}
             >
-              {saving ? "Spremam…" : "Save"}
+              {saving ? "Saving…" : "Save"}
             </Box>
           </Box>
         </Box>

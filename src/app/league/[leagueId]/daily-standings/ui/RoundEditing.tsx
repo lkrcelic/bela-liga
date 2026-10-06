@@ -71,10 +71,17 @@ const iconBtn = {
 export function RowActions({t, onEdit, onRemove}: {t: TableRow; onEdit: () => void; onRemove: () => void}) {
   return (
     <Box component="span" sx={{display: "flex", justifyContent: "flex-end", gap: "2px"}}>
-      <Box component="button" type="button" onClick={onEdit} aria-label={`Uredi par za stolom ${t.table}`} sx={{...iconBtn, color: color.navy, "&:hover": {background: color.paper}}}>
+      <Box component="button" type="button" onClick={(e: React.MouseEvent) => {
+          // the row itself also opens the pair; one dialog is enough
+          e.stopPropagation();
+          onEdit();
+        }} aria-label={`Uredi par za stolom ${t.table}`} sx={{...iconBtn, color: color.navy, "&:hover": {background: color.paper}}}>
         <EditRoundedIcon />
       </Box>
-      <Box component="button" type="button" onClick={onRemove} aria-label={`Ukloni stol ${t.table}`} sx={{...iconBtn, color: color.red, "&:hover": {background: "rgba(188,71,73,.1)"}}}>
+      <Box component="button" type="button" onClick={(e: React.MouseEvent) => {
+          e.stopPropagation();
+          onRemove();
+        }} aria-label={`Ukloni stol ${t.table}`} sx={{...iconBtn, color: color.red, "&:hover": {background: "rgba(188,71,73,.1)"}}}>
         <DeleteRoundedIcon />
       </Box>
     </Box>

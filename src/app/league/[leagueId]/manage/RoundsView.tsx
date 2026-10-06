@@ -177,7 +177,7 @@ export default function RoundsView({leagueId, data}: {leagueId: number; data: Re
                           sx={{...small, pl: "10px", pr: "14px", color: color.red, display: "flex", alignItems: "center", gap: "6px", "& svg": {fontSize: 20}, "&:hover": {background: "rgba(188,71,73,.08)"}}}
                         >
                           <DeleteRoundedIcon />
-                          Delete round
+                          Delete
                         </Box>
                       )}
                     </Box>

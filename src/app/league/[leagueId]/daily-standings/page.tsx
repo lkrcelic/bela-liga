@@ -163,8 +163,11 @@ export default function DailyStandings() {
     );
   }
 
+  // the medals go up once the night is over: an earlier night, or tonight once every table is closed
   const {podium, rest} = splitPodium(standings);
-  const showPodium = !isToday && podium.length > 0;
+  const tables = daily.data?.rounds ?? [];
+  const nightDone = !isToday || (tables.length > 0 && tables.every((r) => r.open === false));
+  const showPodium = nightDone && podium.length > 0;
 
   return (
     <Screen fill>
@@ -244,6 +247,8 @@ function DesktopRound({title, rows, admin}: {title: string; rows: ReturnType<typ
   const [confirmId, setConfirmId] = useState<number | null>(null);
   const [removing, setRemoving] = useState(false);
   const [pair, setPair] = useState<PairTarget | null>(null);
+  // the number of the table added last, highlighted until editing ends
+  const [freshTable, setFreshTable] = useState<number | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const {teams: leagueTeams} = useLeagueTeams(admin && editing ? admin.leagueId : null);
   const visible = filterTables(rows, filter, query);
@@ -253,13 +258,14 @@ function DesktopRound({title, rows, admin}: {title: string; rows: ReturnType<typ
   const live = liveCount(rows);
   const filters = [
     {key: "all" as TableFilter, label: "Svi", count: rows.length},
-    {key: "live" as TableFilter, label: "Uživo", count: live},
+    {key: "live" as TableFilter, label: "Uživo", count: live, alert: true},
     {key: "done" as TableFilter, label: "Gotovo", count: rows.filter((r) => r.done).length},
   ];
 
   const toggleEdit = () => {
     setEditing((e) => !e);
     setConfirmId(null);
+    setFreshTable(null);
     setActionError(null);
   };
   const remove = async (id: number) => {
@@ -278,7 +284,10 @@ function DesktopRound({title, rows, admin}: {title: string; rows: ReturnType<typ
   const savePair = async (team1Id: number, team2Id: number) => {
     if (!admin || !pair) return;
     if (pair.kind === "edit") await setTablePairAPI(pair.row.id, team1Id, team2Id);
-    else await addTableAPI(admin.leagueId, admin.date, admin.roundNumber, team1Id, team2Id);
+    else {
+      await addTableAPI(admin.leagueId, admin.date, admin.roundNumber, team1Id, team2Id);
+      setFreshTable(pair.tableNumber);
+    }
     setPair(null);
     admin.onChanged();
   };
@@ -312,6 +321,7 @@ function DesktopRound({title, rows, admin}: {title: string; rows: ReturnType<typ
             value={filter}
             onChange={setFilter}
             label="Filtriraj stolove"
+            variant="panel"
             size={38}
             asTabs={false}
           />
@@ -346,6 +356,8 @@ function DesktopRound({title, rows, admin}: {title: string; rows: ReturnType<typ
                           />
                         ) : undefined
                       }
+                      onOpen={admin && editing ? () => setPair({kind: "edit", row: t}) : undefined}
+                      fresh={editing && t.table === freshTable}
                       confirm={
                         admin && editing && confirmId === t.id ? (
                           <ConfirmRemove t={t} busy={removing} onCancel={() => setConfirmId(null)} onConfirm={() => remove(t.id)} />
