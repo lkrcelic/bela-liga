@@ -26,10 +26,11 @@ import TuneRoundedIcon from "@mui/icons-material/TuneRounded";
 import {Box, Drawer, SxProps, Theme} from "@mui/material";
 import Link from "next/link";
 import {TransitionLink} from "@/app/_lib/viewTransitions";
-import React, {useEffect, useState} from "react";
+import React, {useEffect, useRef, useState} from "react";
 import {buttonBase, ellipsis, mergeSx} from "./base";
 import {GhostIconButton, IconCircleButton} from "./Buttons";
 import {LiveDot} from "./Live";
+import {useScrollArrows} from "./ScrollArrows";
 import {Spinner} from "./States";
 import {InitialsAvatar} from "./Surface";
 import {Eyebrow} from "./Text";
@@ -65,8 +66,13 @@ export function DesktopShell({
   sx?: SxProps<Theme>;
 }) {
   const [navOpen, setNavOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const scroll = useScrollArrows(rootRef);
   return (
     <Box
+      ref={rootRef}
+      onMouseMove={scroll.onMouseMove}
+      onMouseLeave={scroll.onMouseLeave}
       sx={{
         height: "100dvh",
         minHeight: 640,
@@ -134,6 +140,7 @@ export function DesktopShell({
         {children}
       </Box>
       <NavDrawer open={navOpen} onClose={() => setNavOpen(false)} active={active} />
+      {scroll.arrows}
     </Box>
   );
 }
