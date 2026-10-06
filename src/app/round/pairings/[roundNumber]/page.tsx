@@ -90,7 +90,7 @@ export default function RoundPairings() {
 
   if (isDesktop) {
     return (
-      <DesktopShell active="createRound" eyebrow={`Pairings · ${summary}`} title={`Round ${roundNumber}`}>
+      <DesktopShell active="manageLeague" eyebrow={`Pairings · ${summary}`} title={`Round ${roundNumber}`}>
         <Box sx={{flex: 1, minHeight: 0, overflowY: "auto"}}>{list}</Box>
       </DesktopShell>
     );

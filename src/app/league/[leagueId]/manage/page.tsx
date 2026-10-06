@@ -37,15 +37,21 @@ import GroupAddRoundedIcon from "@mui/icons-material/GroupAddRounded";
 import InfoRoundedIcon from "@mui/icons-material/InfoRounded";
 import WarningRoundedIcon from "@mui/icons-material/WarningRounded";
 import {Box} from "@mui/material";
-import {useParams} from "next/navigation";
+import {useParams, useSearchParams} from "next/navigation";
+import LeagueDetailsView from "./LeagueDetailsView";
 import LeagueNameCard from "./LeagueNameCard";
 import RoundsView, {useLeagueRounds} from "./RoundsView";
+import AddCircleRoundedIcon from "@mui/icons-material/AddCircleRounded";
 import EventNoteRoundedIcon from "@mui/icons-material/EventNoteRounded";
+import TuneRoundedIcon from "@mui/icons-material/TuneRounded";
+import {CreateRoundView} from "@/app/_ui/round/CreateRound";
 import GroupsRoundedIcon from "@mui/icons-material/GroupsRounded";
 import {useTransitionRouter} from "@/app/_lib/viewTransitions";
-import {useCallback, useEffect, useMemo, useRef, useState} from "react";
+import {ReactNode, useCallback, useEffect, useMemo, useRef, useState} from "react";
 
 type Filter = "all" | "active" | "inactive";
+type View = "create" | "teams" | "rounds" | "details";
+const VIEWS: View[] = ["create", "teams", "rounds", "details"];
 type Row = {id: number; name: string; players: string[]; played: number | null; active: boolean};
 type Team = NonNullable<ReturnType<typeof useLeagueTeams>["teams"]>[number];
 // a team taken out of the league waits this long for Undo before the delete is sent
@@ -73,8 +79,9 @@ export default function ManageLeague() {
   const [query, setQuery] = useState("");
   const [justAdded, setJustAdded] = useState<number | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
-  // desktop: the league's teams, or its rounds (delete a round)
-  const [view, setView] = useState<"teams" | "rounds">("teams");
+  // desktop: create a round, the league's teams, its rounds (delete a round) or its details; ?view= opens one
+  const viewParam = useSearchParams().get("view") as View | null;
+  const [view, setView] = useState<View>(viewParam && VIEWS.includes(viewParam) ? viewParam : "teams");
   const leagueRounds = useLeagueRounds(leagueId);
   const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
   const [pending, setPending] = useState<PendingRemoval | null>(null);
@@ -238,9 +245,10 @@ export default function ManageLeague() {
     </Box>
   );
 
+  // the desktop renames the league in the Details view
   const sidePanel = (
     <Box sx={{minHeight: 0, overflowY: isDesktop ? "auto" : undefined, display: "flex", flexDirection: "column", gap: "16px"}}>
-      <LeagueNameCard key={leagueId} leagueId={leagueId} leagues={leagues} />
+      {!isDesktop && <LeagueNameCard key={leagueId} leagueId={leagueId} leagues={leagues} />}
       <AddTeamCard exclude={rows.map((r) => r.id)} onAdd={onAdd} onCreate={() => router.push(`/teams/new?league=${leagueId}`)} />
       <InfoNote icon={<InfoRoundedIcon />}>
         Inactive teams stay in the league and its standings, but are not signed in automatically when you create a round.
@@ -254,10 +262,14 @@ export default function ManageLeague() {
         active="manageLeague"
         eyebrow="Admin"
         title="Manage League"
-        right={<LeagueMenuButton leagues={leagues} value={leagueId} onChange={(id) => router.router.push(`/league/${id}/manage`)} />}
+        right={<LeagueMenuButton leagues={leagues} value={leagueId} onChange={(id) => router.router.push(`/league/${id}/manage?view=${view}`)} />}
       >
         <ViewSwitch view={view} onChange={setView} teams={rows.length} rounds={leagueRounds.rounds?.length ?? null} />
-        {view === "rounds" ? (
+        {view === "create" ? (
+          <CreateRoundView leagueId={leagueId} defaultRounds={leagues.find((l) => l.id === leagueId)?.roundsPerNight} />
+        ) : view === "details" ? (
+          <LeagueDetailsView key={leagueId} leagueId={leagueId} leagues={leagues} />
+        ) : view === "rounds" ? (
           <RoundsView leagueId={leagueId} data={leagueRounds} />
         ) : (
           <Box sx={{flex: 1, minHeight: 0, display: "grid", gridTemplateColumns: "minmax(0,1fr) 380px", gap: "20px"}}>
@@ -566,14 +578,16 @@ function ViewSwitch({
   teams,
   rounds,
 }: {
-  view: "teams" | "rounds";
-  onChange: (v: "teams" | "rounds") => void;
+  view: View;
+  onChange: (v: View) => void;
   teams: number;
   rounds: number | null;
 }) {
-  const items = [
-    {key: "teams" as const, label: "Teams", icon: <GroupsRoundedIcon />, count: teams},
-    {key: "rounds" as const, label: "Rounds", icon: <EventNoteRoundedIcon />, count: rounds},
+  const items: {key: View; label: string; icon: ReactNode; count: number | null}[] = [
+    {key: "create", label: "Create round", icon: <AddCircleRoundedIcon />, count: null},
+    {key: "teams", label: "Teams", icon: <GroupsRoundedIcon />, count: teams},
+    {key: "rounds", label: "Rounds", icon: <EventNoteRoundedIcon />, count: rounds},
+    {key: "details", label: "Details", icon: <TuneRoundedIcon />, count: null},
   ];
   return (
     <Box role="tablist" aria-label="Prikaz" sx={{flex: "none", alignSelf: "flex-start", display: "flex", gap: "4px", p: "4px", borderRadius: "16px", background: color.card, boxShadow: "0 1px 3px rgba(31,36,51,.06)"}}>

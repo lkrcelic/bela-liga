@@ -11,7 +11,6 @@ import useAuthStore from "@/app/_store/authStore";
 import {color, ease, font, shadow} from "@/app/_styles/tokens";
 import AccountCircleRoundedIcon from "@mui/icons-material/AccountCircleRounded";
 import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
-import AddCircleRoundedIcon from "@mui/icons-material/AddCircleRounded";
 import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import EmojiEventsRoundedIcon from "@mui/icons-material/EmojiEventsRounded";
@@ -43,7 +42,6 @@ export type NavKey =
   | "ratings"
   | "manageLeague"
   | "createLeague"
-  | "createRound"
   | "manageTeam"
   | "profile";
 
@@ -152,7 +150,6 @@ const NAV: NavItem[] = [
   {key: "manageLeague", label: "Manage League", icon: <TuneRoundedIcon />, leaguePage: "manage", head: "Admin", adminOnly: true},
   {key: "createLeague", label: "Create League", icon: <LibraryAddRoundedIcon />, href: "/league/new", adminOnly: true},
   {key: "manageTeam", label: "Manage Teams", icon: <EditRoundedIcon />, href: "/teams", adminOnly: true},
-  {key: "createRound", label: "Create Round", icon: <AddCircleRoundedIcon />, href: "/createRound", adminOnly: true},
   {key: "profile", label: "My Profile", icon: <AccountCircleRoundedIcon />, href: "/profile", head: "Račun"},
 ];
 

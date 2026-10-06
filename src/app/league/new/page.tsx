@@ -5,6 +5,7 @@ import {TeamExtendedResponse} from "@/app/_interfaces/team";
 import {isByeTeam} from "@/app/_lib/bye";
 import {matchesQuery, plural} from "@/app/_lib/ui/text";
 import {createLeagueAPI} from "@/app/_fetchers/league/leagues";
+import {END_DATE_ERROR, endsAfterStart} from "@/app/_interfaces/league";
 import {invalidateLeagues} from "@/app/_hooks/useLeagues";
 import {color, font} from "@/app/_styles/tokens";
 import {
@@ -44,6 +45,7 @@ export default function CreateLeague() {
   const [name, setName] = useState("");
   const [season, setSeason] = useState(String(new Date().getFullYear()));
   const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const [playDay, setPlayDay] = useState(1);
   const [roundsPerNight, setRoundsPerNight] = useState(3);
   const [selected, setSelected] = useState<Set<number>>(new Set());
@@ -87,6 +89,7 @@ export default function CreateLeague() {
       setNameError("Upiši ime lige.");
       return;
     }
+    if (!endsAfterStart(startDate, endDate)) return;
     setSubmitting(true);
     setSubmitError(null);
     try {
@@ -94,6 +97,7 @@ export default function CreateLeague() {
         league_name: name.trim(),
         season: season.trim() || null,
         start_date: startDate || null,
+        end_date: endDate || null,
         play_day: playDay,
         rounds_per_night: roundsPerNight,
         team_ids: Array.from(selected),
@@ -129,9 +133,21 @@ export default function CreateLeague() {
         soft
         inputSx={{height: 52, borderRadius: "14px", fontSize: 16}}
       />
-      <Box sx={{display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,1fr)", gap: "12px"}}>
+      {/* the phone puts the end date on its own row */}
+      <Box sx={{display: "grid", gridTemplateColumns: isDesktop ? "minmax(0,.7fr) minmax(0,1fr) minmax(0,1fr)" : "minmax(0,1fr) minmax(0,1fr)", gap: "12px"}}>
         <TextField label="Season" placeholder="2026" inputMode="numeric" value={season} onChange={(e) => setSeason(e.target.value)} soft inputSx={{height: 52, borderRadius: "14px", fontSize: 16}} />
         <TextField label="Start date" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} soft inputSx={{height: 52, borderRadius: "14px", fontSize: 16}} />
+        <TextField
+          label="End date"
+          type="date"
+          value={endDate}
+          min={startDate || undefined}
+          onChange={(e) => setEndDate(e.target.value)}
+          error={endsAfterStart(startDate, endDate) ? undefined : END_DATE_ERROR}
+          soft
+          sx={isDesktop ? undefined : {gridColumn: "1 / -1"}}
+          inputSx={{height: 52, borderRadius: "14px", fontSize: 16}}
+        />
       </Box>
       <Box role="radiogroup" aria-labelledby="play-day" sx={{display: "flex", flexDirection: "column", gap: "6px"}}>
         <Box id="play-day" sx={{fontSize: 14, fontWeight: 600, color: color.inkSoft, pl: "4px"}}>
@@ -199,7 +215,7 @@ export default function CreateLeague() {
 
   function submitButton() {
     return (
-      <PrimaryButton type="submit" form="create-league" disabled={!name.trim()} loading={submitting} sx={{mt: "auto"}}>
+      <PrimaryButton type="submit" form="create-league" disabled={!name.trim() || !endsAfterStart(startDate, endDate)} loading={submitting} sx={{mt: "auto"}}>
         {`Create league${count ? ` · ${count} teams` : ""}`}
       </PrimaryButton>
     );
