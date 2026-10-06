@@ -166,7 +166,7 @@ export function Stepper({
   );
 }
 
-export type TabItem<K extends string | number> = {key: K; label: React.ReactNode; live?: boolean; count?: number};
+export type TabItem<K extends string | number> = {key: K; label: React.ReactNode; live?: boolean; count?: number; alert?: boolean};
 
 // Arrow-key navigation shared by the tab strips (WAI-ARIA tabs pattern, automatic activation)
 function useRovingKeys<K extends string | number>(items: TabItem<K>[], value: K, onChange: (k: K) => void) {
@@ -257,7 +257,9 @@ export function PillTabs<K extends string | number>({
   );
 }
 
-// Segmented control: white track with a navy (variant "solid") or white-raised (variant "soft") selected segment
+// Segmented control: white track with a navy (variant "solid") or white-raised (variant "soft") selected segment;
+// "panel" is a compact white box with a navy selected segment (Daily's table filter). An item's `alert` count is red
+// while it isn't selected.
 export function Segmented<K extends string | number>({
   items,
   value,
@@ -273,7 +275,7 @@ export function Segmented<K extends string | number>({
   value: K;
   onChange: (k: K) => void;
   label: string;
-  variant?: "solid" | "soft";
+  variant?: "solid" | "soft" | "panel";
   size?: number;
   sx?: SxProps<Theme>;
   asTabs?: boolean;
@@ -281,6 +283,8 @@ export function Segmented<K extends string | number>({
 }) {
   const {refs, onKeyDown} = useRovingKeys(items, value, onChange);
   const solid = variant === "solid";
+  const panel = variant === "panel";
+  const navyOn = solid || panel;
   return (
     <Box
       role={asTabs ? "tablist" : "radiogroup"}
@@ -293,8 +297,8 @@ export function Segmented<K extends string | number>({
           gap: solid ? "6px" : "4px",
           p: solid ? "4px" : "3px",
           borderRadius: solid ? "24px" : "14px",
-          background: solid ? color.card : color.paper,
-          boxShadow: solid ? shadow.card : "none",
+          background: navyOn ? color.card : color.paper,
+          boxShadow: navyOn ? shadow.card : "none",
         },
         sx
       )}
@@ -321,11 +325,11 @@ export function Segmented<K extends string | number>({
               flex: "none",
               whiteSpace: "nowrap",
               height: size,
-              px: solid ? "16px" : "12px",
+              px: solid ? "16px" : panel ? "14px" : "12px",
               borderRadius: solid ? `${size / 2}px` : "11px",
-              background: on ? (solid ? color.navy : color.card) : "transparent",
-              color: on ? (solid ? "#FFFFFF" : color.ink) : solid ? color.ink : color.inkSoft,
-              boxShadow: on && !solid ? "0 1px 3px rgba(31,36,51,.12)" : "none",
+              background: on ? (navyOn ? color.navy : color.card) : "transparent",
+              color: on ? (navyOn ? "#FFFFFF" : color.ink) : solid ? color.ink : color.inkSoft,
+              boxShadow: on && !navyOn ? "0 1px 3px rgba(31,36,51,.12)" : "none",
               fontSize: solid ? 15 : 14,
               fontWeight: 600,
               display: "flex",
@@ -339,7 +343,7 @@ export function Segmented<K extends string | number>({
             {t.count != null && (
               <Box
                 component="span"
-                sx={{fontSize: 12, fontWeight: 700, ...tabular, color: on && solid ? color.cream : t.live === false ? color.faint : color.faint}}
+                sx={{fontSize: 12, fontWeight: 700, ...tabular, color: on && navyOn ? color.cream : t.alert ? color.red : color.faint}}
               >
                 {t.count}
               </Box>

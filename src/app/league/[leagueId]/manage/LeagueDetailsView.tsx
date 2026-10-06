@@ -47,7 +47,7 @@ export default function LeagueDetailsView({leagueId, leagues}: {leagueId: number
     ? "League name is required."
     : duplicate
       ? "Another league already has this name."
-      : !d.start && base.start
+      : !d.start
         ? "Start date is required."
         : !endsAfterStart(d.start, d.end)
           ? END_DATE_ERROR

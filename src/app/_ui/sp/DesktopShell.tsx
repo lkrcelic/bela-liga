@@ -156,7 +156,7 @@ const NAV: NavItem[] = [
   {key: "ratings", label: "Rejting", icon: <LeaderboardRoundedIcon />, href: "/ratings"},
   {key: "manageLeague", label: "Manage League", icon: <TuneRoundedIcon />, leaguePage: "manage", head: "Admin", adminOnly: true},
   {key: "createLeague", label: "Create League", icon: <LibraryAddRoundedIcon />, href: "/league/new", adminOnly: true},
-  {key: "manageTeam", label: "Manage Teams", icon: <EditRoundedIcon />, href: "/teams", adminOnly: true},
+  {key: "manageTeam", label: "Manage Team", icon: <EditRoundedIcon />, href: "/teams", adminOnly: true},
   {key: "profile", label: "My Profile", icon: <AccountCircleRoundedIcon />, href: "/profile", head: "Račun"},
 ];
 

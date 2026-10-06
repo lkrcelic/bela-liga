@@ -473,7 +473,7 @@ export default function ManageLeague() {
   );
 }
 
-// Search existing teams that are not in the league and add them
+// Teams that are not in the league, listed as soon as the card shows; the search narrows them
 function AddTeamCard({exclude, onAdd, onCreate}: {exclude: number[]; onAdd: (t: TeamOption) => Promise<void>; onCreate: () => void}) {
   const [query, setQuery] = useState("");
   const [adding, setAdding] = useState<number | null>(null);
@@ -485,12 +485,9 @@ function AddTeamCard({exclude, onAdd, onCreate}: {exclude: number[]; onAdd: (t: 
   useEffect(() => {
     const q = query.trim();
     setPages(1);
-    if (q.length < 2) {
-      setHits(null);
-      return;
-    }
     let cancelled = false;
     setLoading(true);
+    // the whole list loads at once; typing waits for a pause
     const t = setTimeout(() => {
       searchTeams(q)
         .then((found) => {
@@ -502,7 +499,7 @@ function AddTeamCard({exclude, onAdd, onCreate}: {exclude: number[]; onAdd: (t: 
         .finally(() => {
           if (!cancelled) setLoading(false);
         });
-    }, 220);
+    }, q ? 220 : 0);
     return () => {
       cancelled = true;
       clearTimeout(t);

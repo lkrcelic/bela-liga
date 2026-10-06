@@ -72,19 +72,24 @@ export function PhoneRoundTables({title, rows}: {title: string; rows: TableRow[]
 // height of one table row on the desktop round view (the confirmation strip is the same height)
 export const TABLE_ROW_HEIGHT = 44;
 
-// href: the whole row opens the table (admin scorepad). actions: edit-mode buttons instead of the status.
+// href: the whole row opens the table (admin scorepad). actions: edit-mode buttons instead of the status, and onOpen:
+// a click anywhere on the row in edit mode (opens its pair). fresh: a table just added (cream row, navy number).
 // confirm: replaces the row with a confirmation strip.
 export function DesktopTableRow({
   t,
   dense,
   href,
   actions,
+  onOpen,
+  fresh,
   confirm,
 }: {
   t: TableRow;
   dense: boolean;
   href?: string;
   actions?: React.ReactNode;
+  onOpen?: () => void;
+  fresh?: boolean;
   confirm?: React.ReactNode;
 }) {
   const font1 = dense ? 15 : 17;
@@ -110,7 +115,7 @@ export function DesktopTableRow({
     px: dense ? "12px" : "18px",
     borderBottom: `1px solid rgba(60,74,103,.07)`,
     // the player's own table: the standings' cream row with the navy bar
-    background: t.mine ? color.mine : "transparent",
+    background: fresh ? color.creamSoft : t.mine ? color.mine : "transparent",
     boxShadow: t.mine ? shadow.mineBar : "none",
     color: color.ink,
     textDecoration: "none",
@@ -121,7 +126,7 @@ export function DesktopTableRow({
       <Box
         component="span"
         aria-hidden
-        sx={{height: 28, borderRadius: "8px", background: color.paper, color: color.navy, fontSize: 14, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center"}}
+        sx={{height: 28, borderRadius: "8px", background: fresh ? color.navy : color.paper, color: fresh ? "#FFFFFF" : color.navy, fontSize: 14, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center"}}
       >
         {t.table}
       </Box>
@@ -169,7 +174,7 @@ export function DesktopTableRow({
     );
   }
   return (
-    <Box component="li" aria-label={label} sx={rowSx}>
+    <Box component="li" aria-label={label} onClick={onOpen} sx={onOpen ? {...rowSx, cursor: "pointer", "&:hover": {background: fresh ? color.creamSoft : color.tableHead}} : rowSx}>
       {cells}
       {actions ?? status}
     </Box>

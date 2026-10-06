@@ -212,7 +212,7 @@ export default function ManageTeam({startNew = false, leagueId}: {startNew?: boo
 
   if (isDesktop) {
     return (
-      <DesktopShell active="manageTeam" eyebrow="Admin" title="Manage Teams">
+      <DesktopShell active="manageTeam" eyebrow="Admin" title="Manage Team">
         <Box sx={{flex: 1, minHeight: 0, display: "grid", gridTemplateColumns: "340px minmax(0,1fr)", gap: "20px"}}>
           {list}
           <Box sx={{minHeight: 0, overflowY: "auto", display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,1fr)", gap: "20px", alignContent: "start"}}>
@@ -231,7 +231,7 @@ export default function ManageTeam({startNew = false, leagueId}: {startNew?: boo
             <ArrowBackRoundedIcon />
           </IconCircleButton>
         </Box>
-        <ScreenTitle eyebrow="Admin" title="Manage Teams" sx={{pt: "4px", pb: "8px"}} />
+        <ScreenTitle eyebrow="Admin" title="Manage Team" sx={{pt: "4px", pb: "8px"}} />
         {list}
       </Screen>
     );
