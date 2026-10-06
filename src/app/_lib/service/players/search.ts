@@ -15,7 +15,8 @@ export async function searchPlayers(query: string): Promise<PlayerPartialRespons
       })),
     },
     orderBy: {username: "asc"},
-    take: 20,
+    // the search lists show a few at a time with "Load more"
+    take: 100,
     select: {
       id: true,
       first_name: true,

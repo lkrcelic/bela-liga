@@ -1,4 +1,5 @@
 import {color, font, shadow} from "@/app/_styles/tokens";
+import ExpandMoreRoundedIcon from "@mui/icons-material/ExpandMoreRounded";
 import {Box, SxProps, Theme} from "@mui/material";
 import React from "react";
 import {buttonBase, mergeSx} from "./base";
@@ -288,6 +289,39 @@ export function TextButton({children, sx, type = "button", ...rest}: NativeButto
       {...rest}
     >
       {children}
+    </Box>
+  );
+}
+
+// "Load more · 7 teams left" under a list that shows its results a page at a time
+export function LoadMoreButton({left, noun, onClick, sx}: {left: number; noun: [string, string]; onClick: () => void; sx?: SxProps<Theme>}) {
+  return (
+    <Box
+      component="button"
+      type="button"
+      onClick={onClick}
+      sx={mergeSx(
+        buttonBase,
+        {
+          width: "100%",
+          height: 48,
+          flex: "none",
+          background: color.tableHead,
+          color: color.navy,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: "6px",
+          fontSize: 14,
+          fontWeight: 600,
+          "&:hover": {background: color.paper},
+          "& svg": {fontSize: 20},
+        },
+        sx
+      )}
+    >
+      <ExpandMoreRoundedIcon aria-hidden />
+      Load more · {left} {left === 1 ? noun[0] : noun[1]} left
     </Box>
   );
 }
