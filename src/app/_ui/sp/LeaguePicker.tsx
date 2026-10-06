@@ -1,6 +1,6 @@
 "use client";
 
-import {LeagueOption} from "@/app/_hooks/useLeagues";
+import {chooseLeague, LeagueOption} from "@/app/_hooks/useLeagues";
 import {color, shadow} from "@/app/_styles/tokens";
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
 import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
@@ -70,6 +70,7 @@ export function LeagueEyebrowButton({
                 role="option"
                 aria-selected={on}
                 onClick={() => {
+                  chooseLeague(l.id);
                   onChange(l.id);
                   setOpen(false);
                 }}
@@ -179,6 +180,7 @@ export function LeagueMenuButton({
                 role="option"
                 aria-selected={on}
                 onClick={() => {
+                  chooseLeague(l.id);
                   onChange(l.id);
                   setOpen(false);
                 }}

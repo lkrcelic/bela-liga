@@ -1,7 +1,7 @@
 "use client";
 
 import {getPlayerByIdAPI} from "@/app/_fetchers/player/getById";
-import useLeagues, {useActiveLeagueId} from "@/app/_hooks/useLeagues";
+import useLeagues, {useSelectedLeagueId} from "@/app/_hooks/useLeagues";
 import useMyTeams from "@/app/_hooks/useMyTeams";
 import {useDailyData, useLeagueStandings, useRoundDates} from "@/app/_hooks/useStandings";
 import {leagueDateString} from "@/app/_lib/dates";
@@ -10,7 +10,7 @@ import {splitPodium, toStandingsRows} from "@/app/_lib/ui/standings";
 import {displayDate, weekdayDate} from "@/app/_lib/ui/text";
 import useAuthStore from "@/app/_store/authStore";
 import {color, font} from "@/app/_styles/tokens";
-import {Card, ChipButton, DesktopShell, EmptyState, ErrorNote, LivePill, LoadingRows, Podium, StandingsGrid} from "@/app/_ui/sp";
+import {Card, ChipButton, DesktopShell, EmptyState, ErrorNote, LeagueMenuButton, LivePill, LoadingRows, Podium, StandingsGrid} from "@/app/_ui/sp";
 import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
 import {Box} from "@mui/material";
 import {useTransitionRouter} from "@/app/_lib/viewTransitions";
@@ -23,8 +23,8 @@ export default function DesktopHome() {
   const {teams} = useMyTeams();
   const myTeamNames = useMemo(() => teams.map((t) => t.team_name), [teams]);
   const leagues = useLeagues();
-  // the league being played now (the latest round night)
-  const leagueId = useActiveLeagueId();
+  // the league picked in the menu top right (shared with the other league screens), or the one being played now
+  const leagueId = useSelectedLeagueId();
   const noLeague = leagueId === null;
   const leagueName = leagues.find((l) => l.id === leagueId)?.name ?? "";
 
@@ -52,8 +52,16 @@ export default function DesktopHome() {
     ? "Još nema okupljanja"
     : `${displayDate(lastDate)} · ${liveRound ? `Round ${liveRound} u tijeku` : lastDate === today ? "Večeras" : "Završeno"}`;
 
+  // the picker remembers the pick itself (chooseLeague), and Početna follows it like the other league screens
+  const picker = leagueId != null && leagues.length > 0 ? <LeagueMenuButton leagues={leagues} value={leagueId} onChange={() => undefined} /> : undefined;
+
   return (
-    <DesktopShell active="home" eyebrow={weekdayDate(today)} title={firstName ? `Dobrodošao, ${firstName}` : "Dobrodošao"}>
+    <DesktopShell
+      active="home"
+      eyebrow={weekdayDate(today)}
+      title={firstName ? `Dobrodošao, ${firstName}` : "Dobrodošao"}
+      right={picker}
+    >
       <Box sx={{flex: 1, minHeight: 0, display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,1fr)", gap: "20px"}}>
         <Panel
           title="Daily Standings"

@@ -75,6 +75,52 @@ export function useActiveLeagueId(): number | null | undefined {
   return error ? null : undefined;
 }
 
+// The league picked in a league picker (Početna, Daily, League Standings, Manage League) for this browser tab. The
+// menu links and Početna follow it; until a league is picked they show the league being played now.
+const CHOSEN_KEY = "bela.chosenLeague";
+let chosen: number | null | undefined; // undefined: not read from sessionStorage yet
+const chosenListeners = new Set<(id: number | null) => void>();
+
+function readChosen(): number | null {
+  if (chosen === undefined) {
+    try {
+      const v = Number(window.sessionStorage.getItem(CHOSEN_KEY));
+      chosen = Number.isInteger(v) && v > 0 ? v : null;
+    } catch {
+      chosen = null;
+    }
+  }
+  return chosen;
+}
+
+export function chooseLeague(id: number) {
+  chosen = id;
+  try {
+    window.sessionStorage.setItem(CHOSEN_KEY, String(id));
+  } catch {
+    // private mode: remembered until the page is reloaded
+  }
+  chosenListeners.forEach((notify) => notify(id));
+}
+
+// The picked league, or the one being played now: undefined while loading, null when there are no leagues
+export function useSelectedLeagueId(): number | null | undefined {
+  const {leagues, error} = useLeagueList();
+  const [picked, setPicked] = useState<number | null>(null);
+  useEffect(() => {
+    setPicked(readChosen());
+    chosenListeners.add(setPicked);
+    return () => {
+      chosenListeners.delete(setPicked);
+    };
+  }, []);
+  if (leagues) {
+    if (picked != null && leagues.some((l) => l.id === picked)) return picked;
+    return leagues.find((l) => l.active)?.id ?? null;
+  }
+  return error ? null : undefined;
+}
+
 // Clears the cached list after a league was created
 export function invalidateLeagues() {
   cache = null;

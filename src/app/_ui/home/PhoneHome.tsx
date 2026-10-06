@@ -1,6 +1,6 @@
 "use client";
 
-import {useActiveLeagueId} from "@/app/_hooks/useLeagues";
+import {useSelectedLeagueId} from "@/app/_hooks/useLeagues";
 import {useMyRating} from "@/app/_hooks/useRatings";
 import useLogout from "@/app/_hooks/useLogout";
 import {OpenTable} from "@/app/_hooks/useOpenTable";
@@ -37,7 +37,7 @@ export default function PhoneHome({
   openTableLoading?: boolean;
 }) {
   const router = useTransitionRouter();
-  const leagueId = useActiveLeagueId();
+  const leagueId = useSelectedLeagueId();
   const {logout, loggingOut} = useLogout();
   const {start, starting, error} = useStartGame();
 

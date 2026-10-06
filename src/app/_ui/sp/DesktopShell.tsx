@@ -6,7 +6,7 @@ import useStartGame from "@/app/_hooks/useStartGame";
 import {getRoundsAPI} from "@/app/_fetchers/round/getRounds";
 import {leagueDateString} from "@/app/_lib/dates";
 import {currentLeagueHref, LeaguePage} from "@/app/_lib/league";
-import {useActiveLeagueId} from "@/app/_hooks/useLeagues";
+import {useSelectedLeagueId} from "@/app/_hooks/useLeagues";
 import useAuthStore from "@/app/_store/authStore";
 import {color, ease, font, shadow} from "@/app/_styles/tokens";
 import AccountCircleRoundedIcon from "@mui/icons-material/AccountCircleRounded";
@@ -140,7 +140,7 @@ export function DesktopShell({
   );
 }
 
-// leaguePage: a page of the league being played now (its href is filled in when the league is known)
+// leaguePage: a page of the picked league, or of the one being played now (its href is filled in when it is known)
 type NavItem = {key: NavKey; label: string; icon: React.ReactNode; href?: string; leaguePage?: LeaguePage; head?: string; adminOnly?: boolean};
 
 const NAV: NavItem[] = [
@@ -162,7 +162,7 @@ export function NavDrawer({open, onClose, active}: {open: boolean; onClose: () =
   const {logout, loggingOut} = useLogout();
   const {start, starting, error} = useStartGame();
   const [liveToday, setLiveToday] = useState(false);
-  const leagueId = useActiveLeagueId();
+  const leagueId = useSelectedLeagueId();
   const signedIn = user != null;
 
   // the red dot on Daily Standings: is any table of tonight being played right now
