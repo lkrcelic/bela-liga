@@ -112,10 +112,14 @@ model League {
   league_name      String    @db.VarChar(100)
   season           String?   @db.VarChar(20)
   start_date       DateTime? @db.Date
+  // after start_date; CHECK constraint added in the migration script
+  end_date         DateTime? @db.Date
   // 0 = Monday ... 6 = Sunday; CHECK constraint added in the migration script
   play_day         Int?
   // default "Rounds" in Create Round
   rounds_per_night Int       @default(3)
+  // the admins' notes, shown next to Create Round (never in the public league list)
+  notes            String    @default("")
   created_at       DateTime  @default(now())
 
   // Relationships

@@ -1,5 +1,5 @@
 import {responseErrorMessage} from "@/app/_fetchers/errorMessage";
-import {LeagueCreateRequest, LeagueSummary, LeagueTeamDetails} from "@/app/_interfaces/league";
+import {LeagueCreateRequest, LeagueSummary, LeagueTeamDetails, LeagueUpdateRequest} from "@/app/_interfaces/league";
 
 export async function getLeaguesAPI(): Promise<LeagueSummary[]> {
   const response = await fetch("/api/leagues");
@@ -42,13 +42,34 @@ export async function setLeagueTeamActiveAPI(leagueId: number, teamId: number, a
   if (!response.ok) throw new Error(await responseErrorMessage(response, "Failed to update the team"));
 }
 
-export async function renameLeagueAPI(leagueId: number, leagueName: string): Promise<void> {
+export async function updateLeagueAPI(leagueId: number, league: LeagueUpdateRequest): Promise<void> {
   const response = await fetch(`/api/leagues/${leagueId}`, {
     method: "PATCH",
     headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({league_name: leagueName}),
+    body: JSON.stringify(league),
   });
-  if (!response.ok) throw new Error(await responseErrorMessage(response, "Naziv lige nije spremljen"));
+  if (!response.ok) throw new Error(await responseErrorMessage(response, "Promjene lige nisu spremljene"));
+}
+
+export async function renameLeagueAPI(leagueId: number, leagueName: string): Promise<void> {
+  return updateLeagueAPI(leagueId, {league_name: leagueName});
+}
+
+export async function getLeagueNotesAPI(leagueId: number): Promise<string> {
+  const response = await fetch(`/api/leagues/${leagueId}/notes`);
+  if (!response.ok) throw new Error(await responseErrorMessage(response, "Bilješke nije moguće učitati"));
+  return (await response.json()).notes;
+}
+
+// keepalive: notes typed just before leaving the page are still saved
+export async function saveLeagueNotesAPI(leagueId: number, notes: string, keepalive = false): Promise<void> {
+  const response = await fetch(`/api/leagues/${leagueId}/notes`, {
+    method: "PUT",
+    keepalive,
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({notes}),
+  });
+  if (!response.ok) throw new Error(await responseErrorMessage(response, "Bilješke nisu spremljene"));
 }
 
 // keepalive: a delete waiting for its undo window still goes out when the page is closed

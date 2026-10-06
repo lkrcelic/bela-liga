@@ -1,10 +1,22 @@
 "use client";
 
 import {getLeaguesAPI} from "@/app/_fetchers/league/leagues";
+import {LeagueSummary} from "@/app/_interfaces/league";
 import {plural} from "@/app/_lib/ui/text";
 import {useEffect, useState} from "react";
 
-export type LeagueOption = {id: number; name: string; meta?: string; roundsPerNight: number; active: boolean};
+export type LeagueOption = {
+  id: number;
+  name: string;
+  meta?: string;
+  roundsPerNight: number;
+  active: boolean;
+  season?: string | null;
+  startDate?: string | null; // YYYY-MM-DD
+  endDate?: string | null;
+  playDay?: number | null; // 0 = Monday ... 6 = Sunday
+  teamCount?: number;
+};
 
 // "na koji dan" for the league meta line: "16 ekipa · utorkom"
 const PLAY_DAY = ["ponedjeljkom", "utorkom", "srijedom", "četvrtkom", "petkom", "subotom", "nedjeljom"];
@@ -16,18 +28,31 @@ let inflight: Promise<LeagueOption[]> | null = null;
 // mounted pickers, told when a league is renamed
 const listeners = new Set<(leagues: LeagueOption[]) => void>();
 
+function leagueMeta(teamCount: number, playDay: number | null | undefined, active: boolean): string {
+  return [`${teamCount} ${plural(teamCount, "ekipa", "ekipe", "ekipa")}`, playDay != null ? PLAY_DAY[playDay] : null, active ? "aktivna" : null]
+    .filter(Boolean)
+    .join(" · ");
+}
+
+function toOption(l: LeagueSummary): LeagueOption {
+  return {
+    id: l.league_id,
+    name: l.league_name,
+    roundsPerNight: l.rounds_per_night,
+    active: l.active,
+    season: l.season,
+    startDate: l.start_date,
+    endDate: l.end_date,
+    playDay: l.play_day,
+    teamCount: l.team_count,
+    meta: leagueMeta(l.team_count, l.play_day, l.active),
+  };
+}
+
 function loadLeagues(): Promise<LeagueOption[]> {
   inflight ??= getLeaguesAPI()
     .then((data) => {
-      cache = data.map((l) => ({
-        id: l.league_id,
-        name: l.league_name,
-        roundsPerNight: l.rounds_per_night,
-        active: l.active,
-        meta: [`${l.team_count} ${plural(l.team_count, "ekipa", "ekipe", "ekipa")}`, l.play_day != null ? PLAY_DAY[l.play_day] : null, l.active ? "aktivna" : null]
-          .filter(Boolean)
-          .join(" · "),
-      }));
+      cache = data.map(toOption);
       return cache;
     })
     .finally(() => {
@@ -126,9 +151,17 @@ export function invalidateLeagues() {
   cache = null;
 }
 
-// Shows a league's new name everywhere at once, without fetching the list again
-export function renameCachedLeague(id: number, name: string) {
+// Shows a league's new name and details everywhere at once, without fetching the list again
+export function updateCachedLeague(id: number, change: Partial<Omit<LeagueOption, "id" | "meta">>) {
   if (!cache) return;
-  cache = cache.map((l) => (l.id === id ? {...l, name} : l));
+  cache = cache.map((l) => {
+    if (l.id !== id) return l;
+    const next = {...l, ...change};
+    return {...next, meta: leagueMeta(next.teamCount ?? 0, next.playDay, next.active)};
+  });
   listeners.forEach((notify) => notify(cache!));
+}
+
+export function renameCachedLeague(id: number, name: string) {
+  updateCachedLeague(id, {name});
 }
