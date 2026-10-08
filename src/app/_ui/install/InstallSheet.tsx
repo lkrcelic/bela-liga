@@ -1,6 +1,7 @@
 "use client";
 
 import useReducedMotion from "@/app/_hooks/useReducedMotion";
+import {chromeIntentUrl} from "@/app/_lib/installPlatform";
 import {useInstallPrompt} from "@/app/_lib/installPrompt";
 import {color, ease, font, shadow} from "@/app/_styles/tokens";
 import {buttonBase} from "@/app/_ui/sp";
@@ -12,6 +13,7 @@ import IosShareRoundedIcon from "@mui/icons-material/IosShareRounded";
 import MoreHorizRoundedIcon from "@mui/icons-material/MoreHorizRounded";
 import MoreVertRoundedIcon from "@mui/icons-material/MoreVertRounded";
 import NorthRoundedIcon from "@mui/icons-material/NorthRounded";
+import OpenInBrowserRoundedIcon from "@mui/icons-material/OpenInBrowserRounded";
 import SouthRoundedIcon from "@mui/icons-material/SouthRounded";
 import ToggleOnRoundedIcon from "@mui/icons-material/ToggleOnRounded";
 import {Box, Drawer, keyframes} from "@mui/material";
@@ -20,7 +22,8 @@ import React, {useEffect, useId, useState} from "react";
 // Mobile · install prompt flow (Claude Design). On the phone login page and every time Home opens in the browser, a
 // skippable sheet offers to install the app. Chrome on Android gets an install button (its own dialog follows, then
 // a success screen); Safari, and Chrome when it doesn't offer installing, get the menu steps with an arrow pointing
-// at the menu. Opened from the home screen, nothing shows.
+// at the menu. Samsung Internet instead gets a link that opens the page in Chrome, as Play Protect blocks what
+// Samsung's own install builds (ChromeHandoff). Opened from the home screen, nothing shows.
 
 const IOS_BLUE = "#0A84FF";
 const ANDROID_BLUE = "#0B57D0";
@@ -51,7 +54,7 @@ export default function InstallSheet() {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
 
-  const offered = (platform === "android" || platform === "ios") && !standalone;
+  const offered = (platform === "android" || platform === "samsung" || platform === "ios") && !standalone;
   useEffect(() => {
     if (!offered) return;
     const t = window.setTimeout(() => setOpen(true), OPEN_DELAY_MS);
@@ -59,10 +62,13 @@ export default function InstallSheet() {
   }, [offered]);
 
   if (!offered) return null;
+  // Chrome only: on Samsung an accepted install can still end in Play Protect's block
   if (installed && platform === "android") return <Installed />;
 
   const ios = platform === "ios";
-  const steps = ios ? IOS_STEPS : canPrompt ? null : ANDROID_STEPS;
+  const samsung = platform === "samsung";
+  // never Samsung's own install, neither its prompt() nor its menu: both build the package Play Protect blocks
+  const steps = ios ? IOS_STEPS : samsung || canPrompt ? null : ANDROID_STEPS;
   const install = async () => {
     setBusy(true);
     const accepted = await prompt();
@@ -106,7 +112,9 @@ export default function InstallSheet() {
         <Box sx={{fontSize: 15, lineHeight: 1.45, color: color.inkSoft, textWrap: "pretty"}}>
           Otvara se preko cijelog zaslona, bez trake preglednika, i pokreće se ravno s početnog zaslona.
         </Box>
-        {steps ? (
+        {samsung ? (
+          <ChromeHandoff />
+        ) : steps ? (
           <Box component="ol" aria-label="Kako instalirati" sx={{listStyle: "none", m: 0, p: "4px 14px", borderRadius: "18px", background: color.paper}}>
             {steps.map((s, i) => (
               <Box
@@ -179,6 +187,56 @@ function AppIcon({size, radius, inverted = false}: {size: number; radius: string
     >
       BL
     </Box>
+  );
+}
+
+// Samsung Internet on a Galaxy installs the app as a package built on Samsung's server for an old Android, and Play
+// Protect blocks it. Chrome's install isn't blocked, so Samsung users open the page there. Chrome has its own cookies:
+// it opens on the login page, which shows this sheet again with Chrome's install.
+function ChromeHandoff() {
+  const [copy, setCopy] = useState<"idle" | "copied" | "failed">("idle");
+  const url = `${window.location.origin}/login`;
+  const copyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopy("copied");
+    } catch {
+      setCopy("failed"); // no clipboard access: the address is shown to copy by hand
+    }
+  };
+
+  return (
+    <>
+      <Box sx={{p: "12px 14px", borderRadius: "18px", background: color.paper, fontSize: 15, lineHeight: 1.45, textWrap: "pretty"}}>
+        Iz Samsung Interneta Android može blokirati instalaciju („Nesigurna aplikacija blokirana“). Instaliraj je iz
+        Chromea i tamo se ponovno prijavi. Ako te pita čime otvoriti, odaberi Chrome.
+      </Box>
+      {/* a real link: Android follows an intent only from a tap */}
+      <Box
+        component="a"
+        href={chromeIntentUrl(url)}
+        sx={{...buttonBase, height: 60, borderRadius: "18px", background: color.navy, color: "#FFFFFF", textDecoration: "none", display: "flex", alignItems: "center", justifyContent: "center", gap: "10px", fontSize: 18, fontWeight: 600, boxShadow: shadow.action, "& svg": {fontSize: 24}}}
+      >
+        <OpenInBrowserRoundedIcon />
+        Otvori u Chromeu
+      </Box>
+      {/* whether Samsung opens Chrome, asks first or does nothing varies; the link can always be pasted into Chrome */}
+      <Box component="button" type="button" onClick={copyLink} sx={{...buttonBase, minHeight: 40, background: "transparent", color: color.inkSoft, fontSize: 14, fontWeight: 600, textDecoration: "underline"}}>
+        Ne otvara se? Kopiraj poveznicu
+      </Box>
+      {/* the result is read out where the button stays focused */}
+      <Box role="status" sx={{mt: "-8px", textAlign: "center", fontSize: 14, lineHeight: 1.4, color: color.inkSoft, "&:empty": {display: "none"}}}>
+        {copy === "copied" && "Poveznica je kopirana, zalijepi je u Chrome."}
+        {copy === "failed" && (
+          <>
+            Upiši u Chrome:{" "}
+            <Box component="span" sx={{userSelect: "all", fontWeight: 700, color: color.ink, overflowWrap: "anywhere"}}>
+              {url}
+            </Box>
+          </>
+        )}
+      </Box>
+    </>
   );
 }
 

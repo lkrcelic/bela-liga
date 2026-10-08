@@ -129,3 +129,8 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
     ("Mobile · install prompt flow"): Chrome's install dialog when Chrome offers it, otherwise the menu steps
     (Chrome or Safari) with an arrow at the menu. The design's line that entered hands stay saved without signal is
     left out, since nothing works offline. iPhone can't report an install, so only Android shows the success screen.
+    Samsung Internet doesn't get its own install: on a Galaxy it has Samsung's server build the app package, for an
+    old Android, and Play Protect blocks it ("Nesigurna aplikacija blokirana"; Samsung's open issue
+    SamsungInternet/support#123). Its sheet says so and opens the page in Chrome instead, with a copy-link fallback.
+    The manifest and the missing service worker aren't the cause and stay as they are. Drop the detour once Samsung
+    fixes its package.
