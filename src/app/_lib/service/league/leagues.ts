@@ -35,6 +35,7 @@ export async function listLeagues(): Promise<LeagueSummary[]> {
     end_date: dateString(l.end_date),
     play_day: l.play_day,
     rounds_per_night: l.rounds_per_night,
+    smoking_tables: l.smoking_tables,
     team_count: l._count.leagueTeams,
     last_played: lastPlayed.get(l.league_id) ?? null,
   }));
@@ -78,6 +79,7 @@ export async function createLeague(req: LeagueCreateRequest): Promise<LeagueSumm
     end_date: dateString(league.end_date),
     play_day: league.play_day,
     rounds_per_night: league.rounds_per_night,
+    smoking_tables: league.smoking_tables,
     team_count: teamIds.length,
     last_played: null,
     active: false,
@@ -88,18 +90,19 @@ export async function leagueExists(leagueId: number): Promise<boolean> {
   return (await prisma.league.count({where: {league_id: leagueId}})) > 0;
 }
 
-// Teams of a league with their players, sorted by name
+// Teams of a league with their players (and how many of them smoke), sorted by name
 export async function listLeagueTeams(leagueId: number): Promise<LeagueTeamDetails[]> {
   const rows = await prisma.leagueTeam.findMany({
     where: {league_id: leagueId, team_id: {not: BYE_TEAM_ID}},
-    include: {team: {include: {teamPlayers: {include: {player: {select: {id: true, username: true}}}}}}},
+    include: {team: {include: {teamPlayers: {include: {player: {select: {id: true, username: true, smoker: true}}}}}}},
   });
   return rows
     .map((r) => ({
       team_id: r.team_id,
       team_name: r.team.team_name,
       active: r.active,
-      players: r.team.teamPlayers.map((tp) => tp.player),
+      players: r.team.teamPlayers.map((tp) => ({id: tp.player.id, username: tp.player.username})),
+      smokers: r.team.teamPlayers.filter((tp) => tp.player.smoker).length,
     }))
     .sort((a, b) => a.team_name.localeCompare(b.team_name, "hr"));
 }

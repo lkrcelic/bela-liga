@@ -6,6 +6,9 @@ import {REPEAT_MATCHUPS, RoundCreateRequestValidation} from "@/app/_interfaces/r
 import {requireAdmin} from "@/app/_lib/service/auth/requireUser";
 import {insertRoundBatch, pairsPlayedToday} from "@/app/_lib/service/round/insertPairRounds";
 import {errorResponse} from "@/app/_lib/apiErrors";
+import {seatRounds} from "@/app/_lib/matching/smokingTables";
+import {smokingSetup} from "@/app/_lib/service/round/smoking";
+import {teamSmokers} from "@/app/_lib/service/team/smokers";
 
 // the pairing stops searching after a few seconds; this leaves room for the database around it
 export const maxDuration = 30;
@@ -45,7 +48,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const {firstRoundNumber, alreadyCreated} = await insertRoundBatch(plan.rounds, league_id);
+    // smoking tables only decide where a pair sits; a page from before them sends none and keeps the league's ones
+    const smokingTables = parsed.smoking_tables;
+    const smokers = await teamSmokers(filteredTeams.map((t) => t.id));
+    const setup = smokingTables?.length ? await smokingSetup(league_id, smokingTables, smokers) : null;
+    const seated = seatRounds(plan.rounds, setup);
+
+    const {firstRoundNumber, alreadyCreated} = await insertRoundBatch(seated, league_id, {smokers, tables: smokingTables});
 
     return NextResponse.json(
       {round_number: firstRoundNumber, already_created: alreadyCreated},

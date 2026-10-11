@@ -67,6 +67,8 @@ export type LeagueSummary = {
   end_date: string | null;
   play_day: number | null;
   rounds_per_night: number;
+  // the smoking tables of its last Create Round (empty: none)
+  smoking_tables: number[];
   team_count: number;
   last_played: string | null; // the latest round night, YYYY-MM-DD
   active: boolean; // the league being played now (see pickActiveLeague)
@@ -78,4 +80,6 @@ export type LeagueTeamDetails = {
   team_name: string;
   active: boolean;
   players: {id: number; username: string}[];
+  // players on the team who smoke
+  smokers: number;
 };

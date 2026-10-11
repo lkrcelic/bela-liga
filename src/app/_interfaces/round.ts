@@ -1,6 +1,7 @@
 import {TeamExtendedResponseValidation} from "@/app/_interfaces/team";
 import {z} from "zod";
 import {OngoingMatchExtendedResponseValidation} from "./match";
+import {SmokingTablesValidation} from "./smoking";
 
 export const RoundResponseValidation = z.object({
   id: z.number().int(),
@@ -15,6 +16,8 @@ export const RoundResponseValidation = z.object({
   open: z.boolean(),
   active: z.boolean(),
   table_number: z.number().int().optional(),
+  // smoking is allowed at the table
+  smoking_table: z.boolean().optional(),
 });
 
 export const RoundExtendedResponseValidation = RoundResponseValidation.extend({
@@ -30,6 +33,8 @@ export const RoundCreateRequestValidation = z.object({
   windowSize: z.number().int().min(2).max(200).optional(),
   // create the rounds even though some teams then meet twice today
   allowRepeats: z.boolean().optional(),
+  // the tables where smoking is allowed (empty: none); also remembered for the league's next round creation
+  smoking_tables: SmokingTablesValidation.optional(),
 });
 
 // the error code of a round creation that would have some teams meet twice today
