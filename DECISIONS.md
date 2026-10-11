@@ -180,3 +180,33 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
     menu (Burza also when logged out). Burza shows the ads as a grid of cards with the tabs and the date arrows
     above, "Objavi" opens "Što objavljuješ?" as a popover, and an ad or a form is one column. Raspored puts the next
     night and the team next to the list.
+
+32. **Smokers and smoking tables** (design "Pušači i pušački stolovi", 12a–12g).
+    - A player is a smoker or not (Ne by default): "Pušiš li?" right after the birth date at sign-up, and Smoker
+      under Details on the profile, saved when flipped. Players from before the question, and Google sign-ups after
+      their birth date, are asked once in a sheet ("Kasnije" waits until the app is opened again). Alternative: only
+      the profile switch. Reason: no existing player would be a smoker until they found it.
+    - Create Round (phone and desktop) has the design's Smoking tables card: the switch and a chip per table tonight
+      (half the teams switched on). The league remembers the tables of its last round creation and the switch
+      starts on with them; the first time it offers 1 and 2, as in the design.
+    - The pairing is made as before; smoking tables only decide where a match sits. Round by round, the matches that
+      need one most get the smoking tables in the order of their numbers, the other matches keep their order on the
+      rest, the bye stays last. First come teams that haven't sat at a smoking table tonight, and of them the teams
+      with the most missed nights (a night with a smoker at a round with smoking tables, but at no smoking table),
+      which outweighs having more smokers, as asked. Then points: one per smoker at the table, ten for every team
+      that hasn't sat at one tonight, and up to three for a team below its fair share this season (each round's
+      smoking seats split by smokers, at most one a round per team), minus up to three above it.
+      Alternative: the design's single score (smokers + share), with the missed nights but without "tonight first".
+      Reason: in a simulated season (24 teams, 2 smoking tables, 4 rounds) it left three times as many missed nights
+      (36 against 12), while teams with two smokers sat at a smoking table barely more often (0.32 of their rounds
+      against 0.30). With "tonight first" teams with two smokers still sit there more often than teams with one
+      (0.30 against 0.27; with 3 smoking tables 0.56 against 0.35), and the missed nights stay close between teams.
+    - A table keeps whether it is a smoking table and each team's smokers when it was seated, so a later profile or
+      roster change doesn't rewrite the season. Re-pairing a table in Daily keeps it a smoking table and counts the
+      new teams' smokers; a table added there isn't a smoking table.
+    - The design's "Smoking plan · tonight" (in the Desktop file, with nothing that opens it) opens from the card
+      ("Smoking plan · rotation"), as a sheet on the phone: tonight's smoking tables round by round, and every
+      smoking team's smokers, tonight's rounds as dots, Share (rounds at a smoking table / rounds played this season)
+      and Missed (the nights without one).
+    - The smoking mark is on Početna's Start Game card (12c), the round's tables on the phone (12d), the desktop round
+      rows (on the table number), the new round's pairings and the re-pair dialog.
