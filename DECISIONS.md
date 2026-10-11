@@ -153,9 +153,12 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
       A partner ad closes when its league's end date passes; "Dostupan sam" stays until it's switched off (your
       decision). The author or an admin closes any ad; a closed ad's page no longer shows the number.
     - Publishing the same ad again (a double tap, the form sent twice) updates the open one.
-    - A phone number is required on an ad, at least 9 digits, stored as "+385 91 234 5678"; "Spremi broj na
-      profil" also saves it on the profile, where it is optional. "Dostupan sam" switched on in the profile uses the
-      profile's number and isn't listed without one (the design's warning says so).
+    - A phone number is required on an ad, at least 9 digits, stored as "+385 91 234 5678". An ad's number goes
+      on the profile too (where it is optional) when the profile has none; one that would replace the profile's
+      asks first, with a checkbox. The design's "Spremi broj na profil" pill started on and read as a button, so
+      tapping it turned saving off. The profile saves a typed number when the field is left (removing one needs
+      the button). "Dostupan sam" switched on in the profile uses the profile's number and isn't listed without
+      one (the design's warning says so).
     - "Rejting ekipe oko 1550" is the average rating of the team's players, in tens. A player's own rating shows
       once they have a rated round ("Još nema" before).
     - Team names aren't declined or given a verb: "Ekipa Slavonci traži zamjenu", "Taj dan igraš za ekipu
