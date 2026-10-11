@@ -156,9 +156,10 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
     - A phone number is required on an ad, at least 9 digits, stored as "+385 91 234 5678". An ad's number goes
       on the profile too (where it is optional) when the profile has none; one that would replace the profile's
       asks first, with a checkbox. The design's "Spremi broj na profil" pill started on and read as a button, so
-      tapping it turned saving off. The profile saves a typed number when the field is left (removing one needs
-      the button). "Dostupan sam" switched on in the profile uses the profile's number and isn't listed without
-      one (the design's warning says so).
+      tapping it turned saving off.
+    - The profile has no Burza section (your decision; the design had "Dostupan sam" and the phone number there):
+      "Dostupan sam" is published and closed in Burza, and the profile's number is kept only from ads. An
+      availability ad without a number of its own still uses the profile's.
     - "Rejting ekipe oko 1550" is the average rating of the team's players, in tens. A player's own rating shows
       once they have a rated round ("Još nema" before).
     - Team names aren't declined or given a verb: "Ekipa Slavonci traži zamjenu", "Taj dan igraš za ekipu
@@ -178,4 +179,4 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
 31. **Burza and Raspored on the desktop** (your decision; the design shows them on the phone only): both are in the
     menu (Burza also when logged out). Burza shows the ads as a grid of cards with the tabs and the date arrows
     above, "Objavi" opens "Što objavljuješ?" as a popover, and an ad or a form is one column. Raspored puts the next
-    night and the team next to the list. The profile's Burza section is on both.
+    night and the team next to the list.
