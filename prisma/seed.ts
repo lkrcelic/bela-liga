@@ -334,11 +334,20 @@ async function main() {
   await prisma.teamPlayer.createMany({data: teamPlayers});
 
 
-  // The current league in production has id 2 and the home page links to /league/2/..., so mirror that locally
+  // The current league in production has id 2 and the home page links to /league/2/..., so mirror that locally.
+  // It plays on Tuesdays, from five weeks before the last Tuesday to ten weeks after it (Raspored, Burza igrača).
+  const DAY = 24 * 60 * 60 * 1000;
+  const today = new Date(`${new Date().toISOString().slice(0, 10)}T00:00:00.000Z`);
+  const lastTuesday = today.getTime() - ((today.getUTCDay() + 5) % 7) * DAY;
+  const nights = Array.from({length: 16}, (_, i) => new Date(lastTuesday + (i - 5) * 7 * DAY));
   const league = await prisma.league.create({
     data: {
       league_id: 2,
       league_name: "Liga ljeta gospodnjeg 2024-2025",
+      start_date: nights[0],
+      end_date: nights[nights.length - 1],
+      play_day: 1,
+      nights: {create: nights.map((night) => ({night}))},
     },
   });
   await prisma.$executeRaw`SELECT setval(pg_get_serial_sequence('"League"', 'league_id'), (SELECT MAX(league_id) FROM "League"))`;

@@ -1,3 +1,4 @@
+import {isIsoDate, MAX_NIGHTS} from "@/app/_lib/nights";
 import {z} from "zod";
 
 const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Use the YYYY-MM-DD format.");
@@ -16,6 +17,11 @@ export const LeagueCreateRequestValidation = z
     play_day: z.number().int().min(0).max(6).optional().nullable(),
     rounds_per_night: z.number().int().min(1).max(6).default(3),
     team_ids: z.array(z.number().int()).default([]),
+    // the league nights; left out, they are filled in from the start date, end date and play day
+    nights: z
+      .array(z.string().refine(isIsoDate, "Use the YYYY-MM-DD format."))
+      .max(MAX_NIGHTS, `A league can have at most ${MAX_NIGHTS} nights.`)
+      .optional(),
   })
   .refine((l) => endsAfterStart(l.start_date, l.end_date), {message: END_DATE_ERROR, path: ["end_date"]});
 
@@ -32,6 +38,14 @@ export const LeagueUpdateRequestValidation = z.object({
 export const LeagueNotesRequestValidation = z.object({
   notes: z.string().max(5000, "Notes can be at most 5000 characters."),
 });
+
+// Manage League · Dates: add a night
+export const LeagueNightAddRequestValidation = z.object({
+  date: z.string().refine(isIsoDate, "Use the YYYY-MM-DD format."),
+});
+
+// A league night and whether it has rounds (a played night can't be removed)
+export type LeagueNightRow = {date: string; played: boolean};
 
 export const LeagueTeamAddRequestValidation = z.object({
   team_id: z.number().int(),
