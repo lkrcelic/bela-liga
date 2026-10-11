@@ -134,3 +134,45 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
     SamsungInternet/support#123). Its sheet says so and opens the page in Chrome instead, with a copy-link fallback.
     The manifest and the missing service worker aren't the cause and stay as they are. Drop the detour once Samsung
     fixes its package.
+
+28. **League nights** (design "Burza igrača · spojeno", 11b "Datumi lige").
+    - A league keeps its nights (`LeagueNight`). Create League fills them in from the start date, end date and play
+      day, where single nights can be removed or added; Manage League · Dates adds and removes them afterwards.
+    - The migration filled the nights of the existing leagues the same way, plus every date that already had a
+      round. A round created on a date that isn't a night adds that night.
+    - A night with rounds can't be removed (delete its rounds first, as the design says). A past night without
+      rounds shows "Not played" / "Nije odigrano" instead of "Played", and can be removed.
+    - Changing a league's start date, end date or play day in Details doesn't change its nights; Dates is the list.
+
+29. **Burza igrača** (design "Burza igrača · spojeno", 11a).
+    - The list and a single ad are public, with the phone number, as decided in the design; publishing and
+      closing need a login. A Burza form opened without a login goes to the login page and back (`?next=`, only
+      paths of this app).
+    - A substitute ad is for the poster's own team (admins may post for any team), on one of the league's nights
+      from today on; the form offers the next six. It closes by itself when its night has passed or is removed.
+      A partner ad closes when its league's end date passes; "Dostupan sam" stays until it's switched off (your
+      decision). The author or an admin closes any ad; a closed ad's page no longer shows the number.
+    - Publishing the same ad again (a double tap, the form sent twice) updates the open one.
+    - A phone number is required on an ad, at least 9 digits, stored as "+385 91 234 5678"; "Spremi broj na
+      profil" also saves it on the profile, where it is optional. "Dostupan sam" switched on in the profile uses the
+      profile's number and isn't listed without one (the design's warning says so).
+    - "Rejting ekipe oko 1550" is the average rating of the team's players, in tens. A player's own rating shows
+      once they have a rated round ("Još nema" before).
+    - Team names aren't declined or given a verb: "Ekipa Slavonci traži zamjenu", "Taj dan igraš za ekipu
+      Dalmatinci", since names like "Barcelona" or "Mujo i Haso" can't follow the design's "Slavonci trebaju
+      zamjenu" / "za Dalmatince".
+    - Početna's card counts other teams' substitute ads ("1 ekipa traži igrača"), not the player's own.
+    - Croatian addresses, as the links get shared: `/burza`, `/burza/12`, `/burza/novi/zamjena|partner|dostupan`,
+      `/raspored`. The design's `front_hand` and `event_upcoming` icons aren't in `@mui/icons-material`; BackHand
+      and Event stand in.
+
+30. **Phone Home switches by state** (your decision): on a league night with the player's table open it shows Start
+    Game / Continue Game as before; the rest of the week "Sljedeća večer" with the team's next night takes the place
+    of the grey "Nema otvorene runde" card, which stays for players without a team or nights. Under it, the Burza
+    card and the design's 2×2 tiles (Raspored, Dnevni poredak, Ukupni poredak, Rejting); the rating number is on
+    Profil and Rejting.
+
+31. **Burza and Raspored on the desktop** (your decision; the design shows them on the phone only): both are in the
+    menu (Burza also when logged out). Burza shows the ads as a grid of cards with the tabs and the date arrows
+    above, "Objavi" opens "Što objavljuješ?" as a popover, and an ad or a form is one column. Raspored puts the next
+    night and the team next to the list. The profile's Burza section is on both.
