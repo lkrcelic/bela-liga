@@ -9,6 +9,8 @@ import {useEffect, useState} from "react";
 export type OpenTable = {
   roundId: number;
   table: number | null;
+  // smoking is allowed at the table
+  smoking: boolean;
   roundNumber: number | null;
   // the player's own team first
   myTeam: string;
@@ -43,6 +45,7 @@ export default function useOpenTable(): {table: OpenTable | null; loading: boole
         setTable({
           roundId,
           table: round.table_number ?? null,
+          smoking: !!round.smoking_table,
           roundNumber: round.round_number ?? null,
           myTeam: left ? t1 : t2,
           opponent: left ? t2 : t1,

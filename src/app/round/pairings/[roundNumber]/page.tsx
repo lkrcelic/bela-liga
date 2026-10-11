@@ -6,6 +6,7 @@ import type {RoundMatchup} from "@/app/_lib/service/round/getRoundMatchups";
 import {plural} from "@/app/_lib/ui/text";
 import {color, font} from "@/app/_styles/tokens";
 import {Card, DesktopShell, ellipsis, EmptyState, ErrorNote, LoadingRows, PrimaryButton, Screen, ScreenTitle, ScrollArea} from "@/app/_ui/sp";
+import {SmokingMark} from "@/app/_ui/smoking/SmokingParts";
 import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
 import {Box} from "@mui/material";
 import {useParams, useSearchParams} from "next/navigation";
@@ -13,7 +14,7 @@ import {useActiveLeagueId} from "@/app/_hooks/useLeagues";
 import {useTransitionRouter} from "@/app/_lib/viewTransitions";
 import {useCallback, useEffect, useState} from "react";
 
-type Pairing = {id: number; table: number; a: string; b: string};
+type Pairing = {id: number; table: number; smoking: boolean; a: string; b: string};
 
 // Who sits where in a new round, shown right after the admin creates it
 export default function RoundPairings() {
@@ -33,7 +34,7 @@ export default function RoundPairings() {
       const data = leagueId == null ? [] : await getRoundsByRoundNumber(Number(roundNumber), leagueId);
       setPairs(
         (data ?? [])
-          .map((r: RoundMatchup, i: number) => ({id: r.id, table: r.table_number || i + 1, a: r.team1?.team_name ?? "", b: r.team2?.team_name ?? ""}))
+          .map((r: RoundMatchup, i: number) => ({id: r.id, table: r.table_number || i + 1, smoking: !!r.smoking_table, a: r.team1?.team_name ?? "", b: r.team2?.team_name ?? ""}))
           .sort((x, y) => x.table - y.table)
       );
     } catch {
@@ -72,6 +73,7 @@ export default function RoundPairings() {
             <Box component="span" sx={{fontFamily: font.display, fontSize: 34, fontWeight: 800, lineHeight: 0.95}}>
               {p.table}
             </Box>
+            {p.smoking && <SmokingMark sx={{mt: "6px", background: color.card}} />}
           </Box>
           <Box sx={{display: "flex", flexDirection: "column", justifyContent: "center", px: "14px"}}>
             {[p.a, p.b].map((name, k) => (

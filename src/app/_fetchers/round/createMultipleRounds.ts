@@ -14,6 +14,8 @@ export async function createMultipleRoundsAPI(
   numberOfRounds?: number,
   windowSize?: number,
   allowRepeats?: boolean,
+  // the tables where smoking is allowed tonight (empty: none)
+  smokingTables?: number[],
 ): Promise<number> {
   const response = await fetch("/api/rounds/generate-multiple", {
     method: "POST",
@@ -24,6 +26,7 @@ export async function createMultipleRoundsAPI(
       numberOfRounds,
       windowSize,
       allowRepeats,
+      smoking_tables: smokingTables,
     } as RoundCreateRequest),
   });
   if (response.status === 409) {

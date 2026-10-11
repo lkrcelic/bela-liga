@@ -22,6 +22,8 @@ export type TableRow = {
   started: boolean;
   // one side is the bye: settled 2:0 when created, nothing to play
   bye: boolean;
+  // smoking is allowed at the table
+  smoking: boolean;
 };
 
 export type TableFilter = "all" | "live" | "done";
@@ -30,6 +32,7 @@ export type TableFilter = "all" | "live" | "done";
 type RoundLike = {
   id?: number;
   table_number?: number | null;
+  smoking_table?: boolean | null;
   team1_id?: number;
   team2_id?: number;
   team1?: {team_name?: string} | null;
@@ -65,6 +68,7 @@ export function toTableRows(rounds: RoundLike[], myTeamNames: string[] = []): Ta
         mine: mine.has(teamA) || mine.has(teamB),
         started: live || r.open === false || (r.team1_wins ?? 0) + (r.team2_wins ?? 0) > 0 || !!om,
         bye: isByeTeam(r.team1_id ?? -1) || isByeTeam(r.team2_id ?? -1),
+        smoking: !!r.smoking_table,
       };
     })
     .sort((a, b) => a.table - b.table);
