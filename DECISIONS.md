@@ -514,3 +514,34 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
       On a narrow strip (the desktop's 360 px column, phones under 390 px) Privremeno sits under "REJTING".
     - A desktop scroll arrow steps aside while the pointer is on a link or button it would cover (a "Stranica ekipe ›"
       pill at the top of a scrolled column), so the link can still be clicked.
+
+44. **The Team and Player pages** (handoff §6, design 13a–13c, 13f, 13g, 13k–13o). Every logged-in player can open
+    them: a team from Moj profil's "Stranica ekipe ›" or a player's page, a player from a team's Igrači. They are the
+    same for everyone; the admin's controls come with the Ekipe and Igrači directories (until then an admin sees the
+    plain page too).
+    - The phone Team page has the three tiles of the desktop (Najbolje mjesto, Igrači, Lige; the handoff lists them
+      under the header card, the phone mockups have none) and no "2 igrača · 2 lige" line. Igrači and Lige get a small
+      labels row ("IGRAČ · REJTING", "# · LIGA · BOD") as the handoff's columns; Lige shows the place in a circle (gold,
+      silver, bronze for 1–3) and the points as a number instead of the mockup's "#2 / 33 bod". Zadnje večeri has no
+      labels row.
+    - A league row reads "Jesen 2026 · U tijeku" or "Završeno"; a league without a season says only that. League names
+      and the leagues under a player's team wrap instead of being cut short (they differ at their end: "… Proljeće
+      25/26", "… Jesen 25/26"); a night's result breaks only between counts, and the next line starts with the
+      separator ("1 pob · 3 ner" / "· 0 por").
+    - On the phone, "Tvoja ekipa" sits in the header card's top-right corner on a line of its own above the name, so a
+      long team name keeps the card's whole width and never breaks inside a word ("Balkonski / špijun").
+    - A deactivated player's row on a Team page has a small red "Neaktivan" tag on its second line; their own page has
+      it next to the name (under it on the phone).
+    - A player who isn't on Rejting has "Mjesto –" and "od N igrača", and their rating doesn't open the rating detail
+      (#42). The Player page's tiles read "od 25 igrača" for every number (genitive after "od") and "kola · još
+      privremeno" while the rating is provisional.
+    - A team or player that doesn't exist (or a deleted player) shows "Ekipa ne postoji" / "Igrač ne postoji" with
+      "Možda je obrisana/obrisan ili je poveznica pogrešna." and a Početna button. A page that failed to load shows
+      "Ekipa se nije učitala" / "Igrač se nije učitao" with Pokušaj ponovno; a page already on screen stays when a later
+      refresh fails.
+    - In a desktop window under 800 px high (a 1024×640 laptop window) the cream header is smaller and the back pill
+      ("‹ Puleni") moves up into the header row next to the menu button, so the columns below keep room for their
+      rows; each column scrolls on its own.
+    - The phone Najbolje mjesto tile keeps the league name on one line, cut at its end ("Pitanik Bela…"): at about 80 px
+      neither two lines nor cutting its start showed the season readably, and the Lige card just below lists every
+      league with the team's place.
