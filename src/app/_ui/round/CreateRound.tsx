@@ -5,7 +5,7 @@ import useLeagueTeams, {LeagueTeam} from "@/app/_hooks/useLeagueTeams";
 import {updateCachedLeague} from "@/app/_hooks/useLeagues";
 import {matchesQuery, plural} from "@/app/_lib/ui/text";
 import {useTransitionRouter} from "@/app/_lib/viewTransitions";
-import {color, font} from "@/app/_styles/tokens";
+import {color, font, shadow, tint} from "@/app/_styles/tokens";
 import {buttonBase, Card, EmptyState, ErrorNote, LoadingRows, OutlineButton, PrimaryButton, SearchInput, SectionLabel, SolidButton, Stepper, SwitchRow, SwitchTrack} from "@/app/_ui/sp";
 import WarningRoundedIcon from "@mui/icons-material/WarningRounded";
 import {Box, Dialog} from "@mui/material";
@@ -227,7 +227,7 @@ export function CreateRoundView({leagueId, defaultRounds, defaultSmokingTables}:
       {cr.repeatsDialog}
       <Card component="section" aria-label="Prisutne ekipe" sx={{minHeight: 0, display: "flex", flexDirection: "column", overflow: "hidden", borderRadius: "24px"}}>
         {!cr.teamState && cr.teams && <NotInRound teams={cr.teams} isOn={cr.isOn} inactive={cr.inactive} onAddBack={cr.toggle} />}
-        <Box sx={{display: "flex", alignItems: "center", gap: "12px", p: "14px", borderBottom: `1px solid rgba(60,74,103,.1)`}}>
+        <Box sx={{display: "flex", alignItems: "center", gap: "12px", p: "14px", borderBottom: `1px solid ${tint.navy[10]}`}}>
           <SearchInput soft height={48} placeholder="Search" aria-label="Traži ekipu" value={cr.query} onChange={(e) => cr.setQuery(e.target.value)} sx={{flex: 1}} />
           <Box
             component="button"
@@ -236,7 +236,7 @@ export function CreateRoundView({leagueId, defaultRounds, defaultSmokingTables}:
             aria-checked={cr.allOn}
             onClick={cr.toggleAll}
             disabled={cr.visible.length === 0}
-            sx={{...buttonBase, height: 48, display: "flex", alignItems: "center", gap: "12px", pl: "14px", pr: "8px", borderRadius: "14px", background: color.tableHead, fontSize: 15, fontWeight: 700, color: color.ink}}
+            sx={{...buttonBase, height: 48, display: "flex", alignItems: "center", gap: "12px", pl: "14px", pr: "8px", borderRadius: "14px", background: color.paper2, fontSize: 15, fontWeight: 700, color: color.ink}}
           >
             <span>{cr.query ? "Select all filtered" : "Select all"}</span>
             <SwitchTrack on={cr.allOn} />
@@ -283,11 +283,11 @@ function RepeatsDialog({
       open
       onClose={onClose}
       aria-labelledby={titleId}
-      slotProps={{backdrop: {sx: {background: "rgba(21,24,31,.32)"}}}}
-      PaperProps={{sx: {width: 480, maxWidth: "calc(100% - 32px)", m: "16px", borderRadius: "24px", p: "24px", display: "flex", flexDirection: "column", gap: "16px", boxShadow: "0 30px 80px rgba(21,24,31,.3)"}}}
+      slotProps={{backdrop: {sx: {background: tint.scrim[32]}}}}
+      PaperProps={{sx: {width: 480, maxWidth: "calc(100% - 32px)", m: "16px", borderRadius: "24px", p: "24px", display: "flex", flexDirection: "column", gap: "16px", boxShadow: shadow.dialog}}}
     >
       <Box sx={{display: "flex", alignItems: "center", gap: "12px"}}>
-        <Box aria-hidden sx={{width: 44, height: 44, flex: "none", borderRadius: "14px", background: "rgba(188,71,73,.1)", color: color.red, display: "flex", alignItems: "center", justifyContent: "center", "& svg": {fontSize: 26}}}>
+        <Box aria-hidden sx={{width: 44, height: 44, flex: "none", borderRadius: "14px", background: tint.red[10], color: color.red, display: "flex", alignItems: "center", justifyContent: "center", "& svg": {fontSize: 26}}}>
           <WarningRoundedIcon />
         </Box>
         <Box component="h2" id={titleId} sx={{m: 0, fontFamily: font.display, fontSize: 24, fontWeight: 800, lineHeight: 1.1}}>
@@ -299,10 +299,10 @@ function RepeatsDialog({
           <Box
             component="li"
             key={`${a}-${b}-${i}`}
-            sx={{minHeight: 40, display: "grid", gridTemplateColumns: "minmax(0,1fr) auto minmax(0,1fr)", alignItems: "center", gap: "8px", fontSize: 15, fontWeight: 600, borderBottom: i < repeats.length - 1 ? "1px solid rgba(60,74,103,.1)" : "none", "& > span:not([aria-hidden])": {overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap"}}}
+            sx={{minHeight: 40, display: "grid", gridTemplateColumns: "minmax(0,1fr) auto minmax(0,1fr)", alignItems: "center", gap: "8px", fontSize: 15, fontWeight: 600, borderBottom: i < repeats.length - 1 ? `1px solid ${tint.navy[10]}` : "none", "& > span:not([aria-hidden])": {overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap"}}}
           >
             <span>{a}</span>
-            <Box component="span" aria-hidden sx={{fontSize: 13, color: color.placeholder}}>
+            <Box component="span" aria-hidden sx={{fontSize: 13, color: color.faint}}>
               vs
             </Box>
             <Box component="span" sx={{textAlign: "right"}}>
@@ -311,13 +311,13 @@ function RepeatsDialog({
           </Box>
         ))}
       </Box>
-      <Box sx={{fontSize: 14, lineHeight: 1.4, color: color.inkSoft}}>
+      <Box sx={{fontSize: 14, lineHeight: 1.4, color: color.ink2}}>
         {expandedWindow
           ? `A bigger window gives every team more opponents to choose from (window ${windowSize} → ${expandedWindow}).`
           : "The window already holds every team, so it can't be expanded."}
       </Box>
       <Box sx={{display: "flex", gap: "10px", flexWrap: "wrap"}}>
-        <OutlineButton height={52} onClick={onExpand} disabled={!expandedWindow} sx={{flex: "1 1 160px", fontSize: 16, border: `1.5px solid rgba(60,74,103,.25)`, "&:disabled": {opacity: 0.4}}}>
+        <OutlineButton height={52} onClick={onExpand} disabled={!expandedWindow} sx={{flex: "1 1 160px", fontSize: 16, border: `1.5px solid ${tint.navy[25]}`, "&:disabled": {opacity: 0.4}}}>
           Expand the window
         </OutlineButton>
         <SolidButton height={52} onClick={onContinue} sx={{flex: "1 1 160px", fontSize: 16}}>
@@ -354,12 +354,12 @@ function NotInRound({
           {teams.length - out.length} / {teams.length} playing
         </Box>
       </Box>
-      <Box sx={{borderRadius: "16px", background: color.tableHead, p: "12px 14px", display: "flex", flexDirection: "column", gap: "10px"}}>
+      <Box sx={{borderRadius: "16px", background: color.paper2, p: "12px 14px", display: "flex", flexDirection: "column", gap: "10px"}}>
         <Box role="status" sx={{display: "flex", alignItems: "baseline", gap: "10px", flexWrap: "wrap"}}>
           <Box component="span" sx={{fontFamily: font.display, fontSize: 34, fontWeight: 800, lineHeight: 1, fontVariantNumeric: "tabular-nums"}}>
             {out.length}
           </Box>
-          <Box component="span" sx={{fontSize: 14, color: color.inkSoft}}>
+          <Box component="span" sx={{fontSize: 14, color: color.ink2}}>
             {out.length === 1 ? "team will sit out" : "teams will sit out"}
           </Box>
           {out.length > 0 && (
@@ -390,7 +390,7 @@ function NotInRound({
                       pl: "12px",
                       pr: "6px",
                       borderRadius: "16px",
-                      background: why === "Inactive" ? color.paper : "rgba(188,71,73,.1)",
+                      background: why === "Inactive" ? color.paper : tint.red[10],
                       color: why === "Inactive" ? color.muted : color.red,
                       fontSize: 13,
                       fontWeight: 600,
@@ -403,7 +403,7 @@ function NotInRound({
                     <Box
                       component="span"
                       aria-hidden
-                      sx={{height: 20, px: "6px", flex: "none", borderRadius: "10px", background: "rgba(255,255,255,.7)", fontSize: 10, fontWeight: 700, letterSpacing: ".06em", textTransform: "uppercase", display: "flex", alignItems: "center"}}
+                      sx={{height: 20, px: "6px", flex: "none", borderRadius: "10px", background: tint.white[70], fontSize: 10, fontWeight: 700, letterSpacing: ".06em", textTransform: "uppercase", display: "flex", alignItems: "center"}}
                     >
                       {why}
                     </Box>

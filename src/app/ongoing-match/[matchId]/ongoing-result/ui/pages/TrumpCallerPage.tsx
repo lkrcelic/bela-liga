@@ -58,7 +58,7 @@ export default function TrumpCallerPage({actionType}: ActionProps) {
                 height: 200,
                 borderRadius: "24px",
                 border: `2.5px solid ${teamColor[i]}`,
-                background: color.card,
+                background: color.white,
                 overflow: "hidden",
                 animation: on ? "spSel 420ms cubic-bezier(.3,1.4,.5,1)" : "none",
               }}
@@ -87,7 +87,7 @@ export default function TrumpCallerPage({actionType}: ActionProps) {
                   justifyContent: "center",
                   gap: "10px",
                   px: "10px",
-                  color: on ? "#FFFFFF" : teamColor[i],
+                  color: on ? color.white : teamColor[i],
                   transition: "color 200ms ease",
                 }}
               >

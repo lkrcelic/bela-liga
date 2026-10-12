@@ -72,7 +72,7 @@ export default function AnnouncementPage({actionType}: ActionProps) {
                   boxSizing: "border-box",
                   borderRadius: "14px",
                   background: teamColor[index],
-                  color: "#FFFFFF",
+                  color: color.white,
                   fontFamily: font.body,
                   fontSize: 14,
                   fontWeight: 700,

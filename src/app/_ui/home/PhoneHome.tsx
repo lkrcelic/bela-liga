@@ -7,7 +7,7 @@ import useLogout from "@/app/_hooks/useLogout";
 import {OpenTable} from "@/app/_hooks/useOpenTable";
 import useStartGame from "@/app/_hooks/useStartGame";
 import {currentLeagueHref} from "@/app/_lib/league";
-import {color, font, shadow} from "@/app/_styles/tokens";
+import {color, font, shadow, teamOnNavy, tint} from "@/app/_styles/tokens";
 import {Brand} from "@/app/_ui/auth/AuthFrame";
 import {BurzaHomeCard, HomeTile, NextNightCard, NextNightPlaceholder, nextNight} from "@/app/_ui/home/HomeCards";
 import InstallSheet from "@/app/_ui/install/InstallSheet";
@@ -124,7 +124,7 @@ function StartCard({table, starting, onStart, errorId}: {table: OpenTable | null
         flex: "none",
         borderRadius: "24px",
         background: color.navy,
-        color: "#FFFFFF",
+        color: color.white,
         p: "20px 20px 22px 22px",
         display: "flex",
         flexDirection: "column",
@@ -154,8 +154,8 @@ function StartCard({table, starting, onStart, errorId}: {table: OpenTable | null
               )}
             </Box>
             <Box sx={{display: "flex", flexDirection: "column", gap: "2px", minWidth: 0, fontSize: 17, fontWeight: 600, lineHeight: 1.2}}>
-              <TeamName name={table.myTeam} dot={TEAM_DOT[0]} />
-              <TeamName name={table.opponent} dot={TEAM_DOT[1]} />
+              <TeamName name={table.myTeam} dot={teamOnNavy[0]} />
+              <TeamName name={table.opponent} dot={teamOnNavy[1]} />
             </Box>
           </Box>
         ) : (
@@ -175,9 +175,6 @@ function StartCard({table, starting, onStart, errorId}: {table: OpenTable | null
     </Box>
   );
 }
-
-// the team dots on the navy card: the board's green and red, lightened to stand out on navy
-const TEAM_DOT = ["#6FA67A", "#E07A7C"] as const;
 
 function TeamName({name, dot}: {name: string; dot: string}) {
   return (
@@ -200,9 +197,9 @@ function NoRoundCard() {
         flex: "none",
         boxSizing: "border-box",
         borderRadius: "24px",
-        background: "#E9E5DB",
-        border: "1.5px dashed rgba(60,74,103,.22)",
-        color: color.placeholder,
+        background: color.lineFill,
+        border: `1.5px dashed ${tint.navy[22]}`,
+        color: color.faint,
         p: "20px 20px 22px 22px",
         display: "flex",
         flexDirection: "column",
@@ -217,7 +214,7 @@ function NoRoundCard() {
         <Box
           component="span"
           aria-hidden
-          sx={{width: 52, height: 52, flex: "none", borderRadius: "50%", background: "rgba(60,74,103,.1)", color: color.placeholder, display: "flex", alignItems: "center", justifyContent: "center", "& svg": {fontSize: 28}}}
+          sx={{width: 52, height: 52, flex: "none", borderRadius: "50%", background: tint.navy[10], color: color.faint, display: "flex", alignItems: "center", justifyContent: "center", "& svg": {fontSize: 28}}}
         >
           <LockRoundedIcon />
         </Box>
@@ -248,7 +245,7 @@ function AdminRow({href, icon, label, divider = false}: {href: string; icon: Rea
           textDecoration: "none",
           textAlign: "left",
           borderBottom: divider ? `1px solid ${color.line}` : "none",
-          "&:active": {background: color.pressed},
+          "&:active": {background: color.lineFill},
           "& > svg:first-of-type": {fontSize: 24, color: color.navy},
         }}
       >

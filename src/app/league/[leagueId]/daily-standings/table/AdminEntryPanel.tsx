@@ -15,7 +15,7 @@ import {
   zvanjaPoints,
 } from "@/app/_lib/ui/adminEntry";
 import {Side} from "@/app/_lib/bela/scoring";
-import {color, font, teamColor} from "@/app/_styles/tokens";
+import {color, font, shadow, teamColor, tint} from "@/app/_styles/tokens";
 import {buttonBase, Card, ErrorNote, PrimaryButton, tabular} from "@/app/_ui/sp";
 import AddCircleRoundedIcon from "@mui/icons-material/AddCircleRounded";
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
@@ -89,7 +89,7 @@ export default function AdminEntryPanel({
     fontSize: 26,
     fontWeight: 700,
     minHeight: 44,
-    "&:active:not(:disabled)": {transform: "scale(.96)", background: "#EAE4D6"},
+    "&:active:not(:disabled)": {transform: "scale(.96)", background: color.lineFill},
     "&:disabled": {opacity: 0.35},
   } as const;
   const small = {...buttonBase, height: 36, px: "12px", borderRadius: "10px", fontSize: 14, fontWeight: 600, display: "flex", alignItems: "center", gap: "4px", "& svg": {fontSize: 18}} as const;
@@ -102,7 +102,7 @@ export default function AdminEntryPanel({
         </Box>
         <Box sx={{display: "flex", gap: "8px"}}>
           {editing && (
-            <Box component="button" type="button" onClick={onDelete} disabled={saving} sx={{...small, pl: "8px", background: "rgba(188,71,73,.1)", color: color.red}}>
+            <Box component="button" type="button" onClick={onDelete} disabled={saving} sx={{...small, pl: "8px", background: tint.red[10], color: color.red}}>
               <DeleteRoundedIcon />
               Obriši igru
             </Box>
@@ -133,9 +133,9 @@ export default function AdminEntryPanel({
                 ...buttonBase,
                 height: 40,
                 borderRadius: "11px",
-                background: on ? color.card : "transparent",
-                color: on ? color.ink : color.inkSoft,
-                boxShadow: on ? "0 1px 3px rgba(31,36,51,.12)" : "none",
+                background: on ? color.white : "transparent",
+                color: on ? color.ink : color.ink2,
+                boxShadow: on ? shadow.segment : "none",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -153,7 +153,7 @@ export default function AdminEntryPanel({
       </Box>
 
       {manual ? (
-        <Box sx={{display: "flex", alignItems: "flex-start", gap: "10px", p: "10px 12px", borderRadius: "12px", background: "rgba(60,74,103,.07)", fontSize: 13, lineHeight: 1.4, "& svg": {fontSize: 18, color: color.navy, flex: "none"}}}>
+        <Box sx={{display: "flex", alignItems: "flex-start", gap: "10px", p: "10px 12px", borderRadius: "12px", background: tint.navy[7], fontSize: 13, lineHeight: 1.4, "& svg": {fontSize: 18, color: color.navy, flex: "none"}}}>
           <InfoRoundedIcon />
           Upiši bodove za obje ekipe. Bez zvanja i bez ograničenja na 162.
         </Box>
@@ -179,8 +179,8 @@ export default function AdminEntryPanel({
                     minWidth: 0,
                     borderRadius: "14px",
                     border: `2px solid ${teamColor[i]}`,
-                    background: on ? teamColor[i] : color.card,
-                    color: on ? "#FFFFFF" : teamColor[i],
+                    background: on ? teamColor[i] : color.white,
+                    color: on ? color.white : teamColor[i],
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
@@ -222,8 +222,8 @@ export default function AdminEntryPanel({
                 minWidth: 0,
                 borderRadius: "16px",
                 border: `2px solid ${teamColor[i]}`,
-                background: on ? teamColor[i] : color.card,
-                color: on ? "#FFFFFF" : teamColor[i],
+                background: on ? teamColor[i] : color.white,
+                color: on ? color.white : teamColor[i],
                 display: "grid",
                 gridTemplateColumns: manual ? "minmax(0,1fr)" : "1fr 1fr",
                 alignItems: "center",
@@ -272,14 +272,14 @@ export default function AdminEntryPanel({
                     boxSizing: "border-box",
                     borderRadius: "11px",
                     background: teamColor[entry.active - 1],
-                    color: "#FFFFFF",
+                    color: color.white,
                     fontFamily: font.body,
                     fontSize: 12,
                     fontWeight: 700,
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    boxShadow: "0 0 0 2px #FFFFFF",
+                    boxShadow: `0 0 0 2px ${color.white}`,
                     opacity: cnt ? 1 : 0,
                   }}
                 >
@@ -294,7 +294,7 @@ export default function AdminEntryPanel({
             onClick={() => onChange(clearZvanja(entry))}
             aria-label="Obriši zvanja"
             title="Obriši zvanja"
-            sx={{...buttonBase, height: 52, borderRadius: "14px", border: `2px solid rgba(60,74,103,.25)`, color: color.navy, display: "flex", alignItems: "center", justifyContent: "center"}}
+            sx={{...buttonBase, height: 52, borderRadius: "14px", border: `2px solid ${tint.navy[25]}`, color: color.navy, display: "flex", alignItems: "center", justifyContent: "center"}}
           >
             <DeleteRoundedIcon sx={{fontSize: 22}} />
           </Box>
@@ -325,7 +325,7 @@ export default function AdminEntryPanel({
           type="button"
           onClick={() => onChange(clearPoints(entry))}
           aria-label="Obriši bodove"
-          sx={{...key, background: "transparent", border: `2px solid rgba(60,74,103,.25)`, color: color.navy, fontSize: 22}}
+          sx={{...key, background: "transparent", border: `2px solid ${tint.navy[25]}`, color: color.navy, fontSize: 22}}
         >
           X
         </Box>

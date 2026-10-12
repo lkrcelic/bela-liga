@@ -73,7 +73,7 @@ export default function RoundPairings() {
             <Box component="span" sx={{fontFamily: font.display, fontSize: 34, fontWeight: 800, lineHeight: 0.95}}>
               {p.table}
             </Box>
-            {p.smoking && <SmokingMark sx={{mt: "6px", background: color.card}} />}
+            {p.smoking && <SmokingMark sx={{mt: "6px", background: color.white}} />}
           </Box>
           <Box sx={{display: "flex", flexDirection: "column", justifyContent: "center", px: "14px"}}>
             {[p.a, p.b].map((name, k) => (

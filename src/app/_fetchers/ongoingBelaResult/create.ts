@@ -11,7 +11,7 @@ export async function createOngoingBelaResultAPI({result}: CreateOngoingBelaResu
         headers: {
             "Content-Type": "application/json",
         },
-        body: JSON.stringify({...result}),
+        body: JSON.stringify(result),
     });
 
     if (!response.ok) {

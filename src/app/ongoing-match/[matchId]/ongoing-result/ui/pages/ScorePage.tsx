@@ -1,7 +1,7 @@
 "use client";
 
 import useResultStore from "@/app/_store/bela/resultStore";
-import {color, font} from "@/app/_styles/tokens";
+import {color, font, shadow} from "@/app/_styles/tokens";
 import {ActionPair, buttonBase, ErrorNote} from "@/app/_ui/sp";
 import {saveHand, takeWizardOrigin} from "@/app/ongoing-match/ui/handFlow";
 import {Box} from "@mui/material";
@@ -40,14 +40,14 @@ export default function ScorePage({actionType}: ActionProps) {
     ...buttonBase,
     height: 66,
     borderRadius: "16px",
-    background: color.card,
+    background: color.white,
     color: color.ink,
     fontFamily: font.display,
     fontSize: 30,
     fontWeight: 700,
-    boxShadow: "0 1px 2px rgba(31,36,51,.06)",
+    boxShadow: shadow.card,
     transition: "transform 100ms ease, opacity 200ms ease",
-    "&:active:not(:disabled)": {transform: "scale(.95)", background: "#EFEAE0"},
+    "&:active:not(:disabled)": {transform: "scale(.95)", background: color.lineFill},
     "&:disabled": {opacity: 0.35},
   } as const;
 

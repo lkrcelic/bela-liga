@@ -26,8 +26,6 @@ export async function createRandomPlayer() {
       player_role: "PLAYER",
       first_name: generateString(5),
       last_name: generateString(5),
-      birth_year: 1996,
-      city: "Zagreb",
     },
   });
 }

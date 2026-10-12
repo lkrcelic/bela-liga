@@ -3,7 +3,7 @@
 import {TeamSide} from "@/app/_interfaces/belaPlayerAnnouncement";
 import useAnnouncementStore from "@/app/_store/bela/announcementStore";
 import useResultStore from "@/app/_store/bela/resultStore";
-import {color, font, teamColor} from "@/app/_styles/tokens";
+import {color, font, teamColor, tint} from "@/app/_styles/tokens";
 import {buttonBase, Card, ErrorNote, PrimaryButton, tabular} from "@/app/_ui/sp";
 import AddCircleRoundedIcon from "@mui/icons-material/AddCircleRounded";
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
@@ -116,7 +116,7 @@ export default function HandEntryPanel({
     fontSize: 26,
     fontWeight: 700,
     minHeight: 44,
-    "&:active:not(:disabled)": {transform: "scale(.96)", background: "#EAE4D6"},
+    "&:active:not(:disabled)": {transform: "scale(.96)", background: color.lineFill},
     "&:disabled": {opacity: 0.35},
   } as const;
 
@@ -160,8 +160,8 @@ export default function HandEntryPanel({
                   height: 52,
                   borderRadius: "14px",
                   border: `2px solid ${teamColor[i]}`,
-                  background: on ? teamColor[i] : color.card,
-                  color: on ? "#FFFFFF" : teamColor[i],
+                  background: on ? teamColor[i] : color.white,
+                  color: on ? color.white : teamColor[i],
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -201,8 +201,8 @@ export default function HandEntryPanel({
                 height: 84,
                 borderRadius: "16px",
                 border: `2px solid ${teamColor[i]}`,
-                background: on ? teamColor[i] : color.card,
-                color: on ? "#FFFFFF" : teamColor[i],
+                background: on ? teamColor[i] : color.white,
+                color: on ? color.white : teamColor[i],
                 display: "grid",
                 gridTemplateColumns: "1fr 1fr",
                 alignItems: "center",
@@ -256,14 +256,14 @@ export default function HandEntryPanel({
                   boxSizing: "border-box",
                   borderRadius: "11px",
                   background: teamColor[activeIndex],
-                  color: "#FFFFFF",
+                  color: color.white,
                   fontFamily: font.body,
                   fontSize: 12,
                   fontWeight: 700,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  boxShadow: "0 0 0 2px #FFFFFF",
+                  boxShadow: `0 0 0 2px ${color.white}`,
                   opacity: cnt ? 1 : 0,
                   animation: cnt ? "spPop 320ms ease" : "none",
                 }}
@@ -283,7 +283,7 @@ export default function HandEntryPanel({
             ...buttonBase,
             height: 52,
             borderRadius: "14px",
-            border: `2px solid rgba(60,74,103,.25)`,
+            border: `2px solid ${tint.navy[25]}`,
             color: color.navy,
             display: "flex",
             alignItems: "center",
@@ -321,7 +321,7 @@ export default function HandEntryPanel({
           type="button"
           onClick={resetScore}
           aria-label="Obriši bodove"
-          sx={{...key, background: "transparent", border: `2px solid rgba(60,74,103,.25)`, color: color.navy, fontSize: 22}}
+          sx={{...key, background: "transparent", border: `2px solid ${tint.navy[25]}`, color: color.navy, fontSize: 22}}
         >
           X
         </Box>

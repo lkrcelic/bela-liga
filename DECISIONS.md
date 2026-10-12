@@ -65,9 +65,10 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
     "Upiši igru") instead of translating everything. Reason: the design is the source of truth and the current app
     already mixes both.
 
-15. **Text contrast:** the design's `#8A8F9C` (≈3.3:1 on white) is used only for placeholders and decorative counts;
+15. ~~**Text contrast:** the design's `#8A8F9C` (≈3.3:1 on white) is used only for placeholders and decorative counts;
     meaningful small text (hand numbers, inactive team names) uses `#686D7D` (5.2:1 on white, 4.6:1 on the paper
-    background). Every other text/background pair in the palette was checked and passes 4.5:1.
+    background). Every other text/background pair in the palette was checked and passes 4.5:1.~~ — replaced by One
+    colour palette (33).
 
 16. **Pinch-zoom is allowed again** (`maximum-scale=1, user-scalable=no` removed from the viewport meta, WCAG 1.4.4).
     Buttons get `touch-action: manipulation`, so fast taps on the keypad still don't trigger double-tap zoom.
@@ -210,3 +211,26 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
       and Missed (the nights without one).
     - The smoking mark is on Početna's Start Game card (12c), the round's tables on the phone (12d), the desktop round
       rows (on the table number), the new round's pairings and the re-pair dialog.
+
+33. **One colour palette** (handoff §1; replaces #15). Every colour comes from `_styles/tokens.ts`: the handoff's
+    palette, named alpha scales (`tint`) and shadows. No hex or rgba() values anywhere else (a test checks it).
+    - faint is the design's `#8A8F9C` (3.2:1 on white), for idle icons, placeholders and decorative counts such as the
+      tab counts (2.7:1 on the line-fill track of the Burza tabs, as in the design). Text that used the darker
+      `#686D7D` (hand numbers, inactive team names, the Aktivna/Neaktivna and night labels, missed nights) is now
+      muted `#5E6577` (5.8:1 on white, 5.2:1 on paper), so it stays readable.
+      Alternative: keep a separate readable-text tone. Reason: the handoff removes every near-duplicate.
+    - The design's darker red `#A63B3D` ("Treba zamjena", "Zatvori oglas", the "Taj dan igraš" line, a form error)
+      is red `#BC4749`, and the success note's `#2B5233` is green (5.0:1 on its tint). Red text on the red tag tint is
+      4.4:1 on a white card and 3.4:1 on the cream header of an ad. Alternative: a `redInk` token (5.5:1 on white).
+      Reason: the handoff says to use only its tokens.
+    - The error note keeps its red tint and red icon, but its text is ink (12:1); red text on the tint would be 4.0:1
+      on paper, under AA on every screen that shows an error. Alternative: red text, or the `redInk` token.
+    - The Start Game card keeps its lightened team dots `#6FA67A`/`#E07A7C` (token `teamOnNavy`), which the handoff
+      table doesn't list but the design uses. Alternative: cream dots.
+    - Merged near-duplicates: pressed keys, segmented tracks, rank circles and the "no round" card are line-fill;
+      my table, a new row and the plan rows are cream-2; grab handles and the second Burza avatar are hairline. The
+      phone podium rows use the medal tints (.26/.26/.24) and my team on the podium gets cream-2 with the bar.
+      Backdrops: the white sheets (league picker, Pušiš li?, date of birth) .32; the paper sheets (Burza, smoking
+      plan), the install guide and the Rejting sheet .42; dialogs .32; the nav drawer .28.
+    - Google's button keeps Google's colours and the install guide the iOS and Android blues (tokens `brand`,
+      `platform`).
