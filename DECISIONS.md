@@ -404,3 +404,35 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
       Zatvori ga kad nađeš partnera." (it used to add "a sam se zatvara kad liga završi", which isn't true of a league
       without an end date). The Dostupan sam form now says "Dok si dostupan, oglas stoji u Burzi. Zatvori ga u Mojim
       oglasima." (the profile lost its switch in #29).
+
+40. **Deactivated and deleted players, and who sees whose personal data** (handoff §6 "Privacy" and "Račun"). A player
+    now has `active` and `deleted_at` (migration `20261012130000_player_active`; a deleted player is always inactive).
+    The admin controls that set them come with the player pages.
+    - Another player's personal data goes only to that player and to admins: a regular user gets their first and last
+      name and whether the account is active, and the server leaves out the username, email, phone, birth date, smoker
+      flag and admin role. Usernames are hidden everywhere else too: team rosters send them only to admins and to the
+      player themselves (rosters are in Croatian name order) and a round's teams not at all, Moj profil's team chips show the teammates' first names with both initials (the
+      design shows usernames in 13e; the Player page's chips in 13c show first names), Rejting no longer sends them
+      and its search looks at names only, and finding a player to add to a team is for admins only. Kept: Tko igra
+      ovu rundu? still shows the usernames under the names to the players of that round, as in design 7c.
+    - "Neaktivan" is shown to everyone, not only to admins: it isn't on the handoff's private list, and it explains why
+      a teammate isn't offered any more.
+    - A deactivated player can't log in. With a password, after the right password, the form says "Račun je
+      deaktiviran. Javi se administratoru."; with Google they come back to Prijava with the same words. A login that
+      is already open ends on the next thing they do: the first request that is refused sends them to Prijava, which
+      says the same. Prijava shows such a message once (a reload or a new try clears it). They aren't offered when
+      admins search for a player to add to a team, nor in Tko igra ovu rundu? (also not picked by default): when a
+      lineup saved before the deactivation names them, the open round's screen puts an active teammate in their
+      place, and saving a lineup with them says "<ime> ima deaktiviran račun. Odaberi drugog igrača."; a finished
+      round keeps who played. Their results and rating stay, and they stay on Rejting.
+    - A deleted player disappears from Rejting (the list, the total and every rank), from player search and the
+      admin lists; their page and rating detail answer "Igrač ne postoji." (Rejting shows "Igrač ne postoji · Možda
+      je obrisan ili je poveznica pogrešna." instead of the connection error). The rounds they played still count for
+      everyone else's rating.
+    - A deleted player's row is anonymised and can never log in again (no password, Google unlinked, email replaced).
+      If that person signs in with Google again, a new empty account is made; the app keeps nothing of the old email
+      to refuse it. Alternative: keep a hash of the old email and refuse it.
+    - Copy the design doesn't have: "Prijava s Googleom nije uspjela. Pokušaj ponovno." when a Google login fails or
+      is cancelled (before, NextAuth's own English page; a database error while checking the account reads the same,
+      not "deaktiviran"), and "Igrač bez imena" for a player without a name on Rejting, Burza and Raspored (there is
+      none today; the username was shown before, also to logged-out Burza visitors).
