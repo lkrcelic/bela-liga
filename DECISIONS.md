@@ -495,3 +495,22 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
       team's leagues newest first ("Liga A · Liga B +1"), and the chips show every player of the team with their first
       name in the team's rating order, the order of the Team page's Igrači (frame 13c: Ivan 1712, Marko, Krešimir).
       Moj profil's chips stay in name order.
+
+43. **Back and Home on the Team, Player and related pages** (handoff §6 "Pages stack: Back returns to the previous
+    page, and the mobile top bar also has Home"). The phone top bar of these pages has Back, the page kind ("EKIPA",
+    "IGRAČ") and Home; on the desktop a white pill above the page goes back and names the page it returns to
+    ("‹ Puleni"), or says "Natrag" when that page has no name of its own (Ukupni poredak, Početna).
+    - Back is the browser's Back: it returns to the page you came from, step by step (Team → Player → Rejting → Back →
+      Back), also when you went from a player back to his team by a link (that team page then returns to the player).
+      Jumping several pages back at once (the browser's history menu) lands on that page with its own Back. Moj profil
+      names itself, so a team opened from it says "‹ Moj profil".
+    - A page opened from the desktop menu or by a link from outside the app (a shared link, a new tab) has no Back;
+      Home is always there on the phone, the menu on the desktop. Početna and the menu's pages start afresh: Back
+      never goes past them, but the phone's own Back gesture still steps back through everything before them.
+    - Moj profil gets "Stranica ekipe ›" on every team card, on the phone and on the desktop (the desktop design has
+      none; the handoff asks for it on Moj profil). Its rating strip shows "Privremeno" like Rejting, also before the
+      player's first rated round (then without a place, still opening the Rejting list). Each desktop column of Moj
+      profil scrolls on its own. A team's name is never cut short: in a narrow column the pill moves under the name.
+      On a narrow strip (the desktop's 360 px column, phones under 390 px) Privremeno sits under "REJTING".
+    - A desktop scroll arrow steps aside while the pointer is on a link or button it would cover (a "Stranica ekipe ›"
+      pill at the top of a scrolled column), so the link can still be clicked.
