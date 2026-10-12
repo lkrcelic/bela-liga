@@ -366,3 +366,41 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
       pušačkih stolova.", "Nijedna ekipa u ovoj ligi još nema pušača.", the dot labels "Kolo N: pušački stol / običan
       stol / nije za stolom", the chip "Isključena" (design "Off"), and the repeat dialog "Neke ekipe bi se večeras
       srele dvaput" with "Proširi prozor" and "Kreiraj svejedno" (the Admin upute's words).
+
+39. **Moji oglasi** (handoff §5, design 11c; adds to #29). Burza's header has "Moji oglasi" with the number of the
+    player's open ads. It opens `/burza/moji`: Aktivni and Prošli tabs, a card per ad with its kind, Aktivan / Istekao /
+    Zatvoren and when it closes, Pogledaj and Zatvori oglas on an open ad, Objavi ponovno on a past one, and Novi oglas
+    at the bottom (the same "Što objavljuješ?").
+    - The button shows only to a logged-in player, since Burza stays public and a visitor has no ads; with no open ads
+      it shows without the number. On the desktop it sits next to Objavi. On a phone narrower than 340 px it is only
+      the person icon and the number (its name stays for screen readers), so the "Burza" title keeps its room.
+    - Objavi ponovno puts the same ad up again: it is reopened and counts as new ("upravo", first in Burza), so the card
+      leaves Prošli and the tab switches to Aktivni, as in the design. Alternative: publish a copy and keep the old ad
+      in Prošli. A substitute ad whose night has passed or was removed opens Trebam zamjenu filled in with its league,
+      team, player, note and phone number, to pick a new night; the old ad then stays in Prošli, and the form's back
+      (and the chevron on "Oglas je objavljen") returns to Aktivni, where the new ad is. An old availability ad without
+      any phone number opens Dostupan sam the same way (Burza lists no ad without a number; the server refuses it with
+      "Oglas nema broja mobitela. Upiši ga u obrascu Dostupan sam."). A partner ad whose league has ended can't go up
+      again: instead of the button its card says "Liga je završila" (the server would answer "Ova liga je završila.").
+      When the same ad is already open (an availability ad, a partner ad for the same league, a substitute ad for the
+      same team, night and player), that one comes up first in Aktivni with "Već imaš ovakav oglas" instead of a copy;
+      the tapped ad stays in Prošli. A new ad and one published again go through the same checks
+      (`_lib/burzaStatus.ts`), each with its own words.
+    - Only the author publishes an ad again, admins included (they can still close anyone's ad, #29). Zatvori oglas
+      closes without asking, as in the design; the card moves to Prošli as "Zatvoren upravo", the keyboard moves on to
+      the next ad (or the Prošli tab) and a screen reader hears "Oglas je zatvoren.". Each tab opens at its top, where
+      a card that has just moved there is.
+    - Copy the design doesn't have, written the #29 way: "Ekipa Dalmatinci traži zamjenu" and "Liga Utorak · uto
+      13. 10. · umjesto: Ivan Perić" (design "Dalmatinci trebaju zamjenu", "umjesto Ivana Perića"); "Zatvara se sam
+      kad liga završi, 15. 12." (a league without an end date: "Aktivan dok ga ne zatvoriš"), "Istekao kad je liga
+      završila 15. 12.", "Istekao: večer je uklonjena iz rasporeda"; "Dodaj broj mobitela da se oglas vidi u Burzi."
+      (a link to Dostupan sam) on an old availability ad without any number (Burza doesn't list it, so the header's
+      count leaves it out while Aktivni counts it); the errors "Odaberi novu večer.", "Više nisi u toj ekipi.", "Ekipa
+      više ne igra u toj ligi.", "Igrač kojeg mijenjaš više nije u ekipi." and "Možeš ponovno objaviti samo svoj
+      oglas.". Prošli lists the latest 50.
+    - The desktop page has no design: the phone's tabs above a grid of cards as in Burza, and Novi oglas in the header.
+    - "Oglas je objavljen" gets the design's back chevron on the phone. "Gotovo" (to Burza, on the ad's tab) stays next
+      to Podijeli, though the design has only Podijeli. A partner ad's line there is the design's "Ovako ga vide drugi.
+      Zatvori ga kad nađeš partnera." (it used to add "a sam se zatvara kad liga završi", which isn't true of a league
+      without an end date). The Dostupan sam form now says "Dok si dostupan, oglas stoji u Burzi. Zatvori ga u Mojim
+      oglasima." (the profile lost its switch in #29).
