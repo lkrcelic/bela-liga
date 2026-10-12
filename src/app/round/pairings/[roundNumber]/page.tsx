@@ -3,14 +3,14 @@
 import {getRoundsByRoundNumber} from "@/app/_fetchers/round/getRoundsByRoundNumber";
 import useIsDesktop from "@/app/_hooks/useIsDesktop";
 import type {RoundMatchup} from "@/app/_lib/service/round/getRoundMatchups";
-import {plural} from "@/app/_lib/ui/text";
+import {count, displayDate, NOUN} from "@/app/_lib/ui/text";
 import {color, font} from "@/app/_styles/tokens";
 import {Card, DesktopShell, ellipsis, EmptyState, ErrorNote, LoadingRows, PrimaryButton, Screen, ScreenTitle, ScrollArea} from "@/app/_ui/sp";
 import {SmokingMark} from "@/app/_ui/smoking/SmokingParts";
 import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
 import {Box} from "@mui/material";
 import {useParams, useSearchParams} from "next/navigation";
-import {useActiveLeagueId} from "@/app/_hooks/useLeagues";
+import useLeagues, {useActiveLeagueId} from "@/app/_hooks/useLeagues";
 import {useTransitionRouter} from "@/app/_lib/viewTransitions";
 import {useCallback, useEffect, useState} from "react";
 
@@ -22,9 +22,11 @@ export default function RoundPairings() {
   const fromUrl = Number(useSearchParams().get("league")) || null;
   const activeId = useActiveLeagueId();
   const leagueId = fromUrl ?? activeId;
+  const leagueName = useLeagues().find((l) => l.id === leagueId)?.name;
   const router = useTransitionRouter();
   const isDesktop = useIsDesktop();
   const [pairs, setPairs] = useState<Pairing[] | null>(null);
+  const [date, setDate] = useState<string | null>(null); // "dd.mm." of the night
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
@@ -32,6 +34,8 @@ export default function RoundPairings() {
     setError(null);
     try {
       const data = leagueId == null ? [] : await getRoundsByRoundNumber(Number(roundNumber), leagueId);
+      const night = data?.find((r) => r.round_date)?.round_date;
+      setDate(night ? displayDate(String(night)).slice(0, 6) : null);
       setPairs(
         (data ?? [])
           .map((r: RoundMatchup, i: number) => ({id: r.id, table: r.table_number || i + 1, smoking: !!r.smoking_table, a: r.team1?.team_name ?? "", b: r.team2?.team_name ?? ""}))
@@ -46,7 +50,9 @@ export default function RoundPairings() {
     load();
   }, [load]);
 
-  const summary = pairs ? `${pairs.length} ${plural(pairs.length, "stol", "stola", "stolova")}` : "";
+  // as designed: "Parovi · <liga>" over "Kolo 3 · 17.02."
+  const eyebrow = leagueName ? `Parovi · ${leagueName}` : "Parovi";
+  const title = date ? `Kolo ${roundNumber} · ${date}` : `Kolo ${roundNumber}`;
 
   const list = error ? (
     <ErrorNote onRetry={load}>{error}</ErrorNote>
@@ -61,7 +67,7 @@ export default function RoundPairings() {
   ) : (
     <Box
       component="ol"
-      aria-label={`Parovi, Round ${roundNumber}`}
+      aria-label={`Parovi, kolo ${roundNumber}, ${count(pairs.length, NOUN.stol)}`}
       sx={{listStyle: "none", m: 0, p: 0, display: "grid", gridTemplateColumns: isDesktop ? "repeat(auto-fill, minmax(280px, 1fr))" : "1fr", gap: isDesktop ? "16px" : "10px", alignContent: "start"}}
     >
       {pairs.map((p) => (
@@ -92,7 +98,7 @@ export default function RoundPairings() {
 
   if (isDesktop) {
     return (
-      <DesktopShell active="manageLeague" eyebrow={`Pairings · ${summary}`} title={`Round ${roundNumber}`}>
+      <DesktopShell active="manageLeague" eyebrow={eyebrow} title={title}>
         <Box sx={{flex: 1, minHeight: 0, overflowY: "auto"}}>{list}</Box>
       </DesktopShell>
     );
@@ -100,7 +106,7 @@ export default function RoundPairings() {
 
   return (
     <Screen fill>
-      <ScreenTitle eyebrow={`Pairings${summary ? ` · ${summary}` : ""}`} title={`Round ${roundNumber}`} />
+      <ScreenTitle eyebrow={eyebrow} title={title} />
       <ScrollArea bleed>{list}</ScrollArea>
       <PrimaryButton icon={<HomeRoundedIcon />} onClick={() => router.push("/", "back")}>
         Početni zaslon

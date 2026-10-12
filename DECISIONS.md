@@ -61,9 +61,9 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
     primitive, so the grid areas are unused. The old `_ui/StandingsTable`, `DoubleActionButton` and
     `SingleActionButton` are replaced by the new primitives.
 
-14. **Labels follow the design's mixed Croatian/English copy** (e.g. "Start Game", "Daily Standings", "Prijava",
+14. ~~**Labels follow the design's mixed Croatian/English copy** (e.g. "Start Game", "Daily Standings", "Prijava",
     "Upiši igru") instead of translating everything. Reason: the design is the source of truth and the current app
-    already mixes both.
+    already mixes both.~~ — replaced by Croatian everywhere (34, 35).
 
 15. ~~**Text contrast:** the design's `#8A8F9C` (≈3.3:1 on white) is used only for placeholders and decorative counts;
     meaningful small text (hand numbers, inactive team names) uses `#686D7D` (5.2:1 on white, 4.6:1 on the paper
@@ -253,3 +253,20 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
       mockups. Reason: the handoff asks for Croatian everywhere, and the Admin upute say "uživo".
     - "Učitaj još · još N ekipa / igrača" under paged lists, and "Pokušaj ponovno" on error notes, as designed.
     - Not shown to anyone, so left as they are: the bye team's internal name and a developer check in the hand entry.
+
+35. **Croatian screen copy** (handoff §1; replaces #14). The desktop menu, Početna, Dnevni poredak, the admin
+    scorepad, Započni igru, the pairings, Upravljanje ligom (Ekipe, Kola, Podaci, Bilješke) and Moj profil use the
+    design's Croatian copy, and counts go through the plural helper ("7 stolova", "njezinih 12 odigranih kola"), also
+    in what screen readers hear ("1 bod", "4 boda", "1521 bod rejtinga").
+    - A numbered league round is "Kolo N" everywhere (tabs, titles, back pills, the pairings and the game chip). The
+      round a team plays at one table stays "runda", as designed: "Tko igra ovu rundu?", "Stol 4 · Runda 4" and the
+      scorepad's "Runda je završena." (it means that table's round, while other tables may still be playing).
+      Alternative: "Kolo je završeno.", which would be wrong while the other tables play.
+    - The team filters in Upravljanje ligom read "Sve / Aktivne / Neaktivne" (a set of teams); the row status stays
+      "Aktivna / Neaktivna". The design shows "All" and the singular.
+    - The confirm button for taking a team out of a league keeps the design's "Obriši ekipu"; the question ("Ukloniti
+      X iz ove lige?") and the note ("Ekipa i igrači ostaju u aplikaciji.") say what it does.
+    - The pairings page after "Kreiraj kolo" reads "Parovi · <liga>" over "Kolo N · dd.mm.", as in the design; the
+      table count it showed before is now only in what screen readers hear ("Parovi, kolo 3, 7 stolova").
+    - Moj profil on the desktop scrolls each column on its own (hero, Podaci, Moje ekipe), as the handoff asks
+      ("desktop columns never clip"), and the Kola tab's right column scrolls too.

@@ -50,8 +50,8 @@ export function toTableRows(rounds: RoundLike[], myTeamNames: string[] = []): Ta
     .map((r, i) => {
       const live = !!r.active;
       const om = r.ongoingMatches && r.ongoingMatches.length ? r.ongoingMatches[r.ongoingMatches.length - 1] : null;
-      const teamA = r.team1?.team_name ?? `Team ${r.team1_id}`;
-      const teamB = r.team2?.team_name ?? `Team ${r.team2_id}`;
+      const teamA = r.team1?.team_name ?? `Ekipa ${r.team1_id}`;
+      const teamB = r.team2?.team_name ?? `Ekipa ${r.team2_id}`;
       return {
         id: r.id ?? i,
         table: r.table_number || i + 1,

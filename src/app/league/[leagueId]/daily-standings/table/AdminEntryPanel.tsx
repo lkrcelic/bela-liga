@@ -15,6 +15,7 @@ import {
   zvanjaPoints,
 } from "@/app/_lib/ui/adminEntry";
 import {Side} from "@/app/_lib/bela/scoring";
+import {count, NOUN} from "@/app/_lib/ui/text";
 import {color, font, shadow, teamColor, tint} from "@/app/_styles/tokens";
 import {buttonBase, Card, ErrorNote, PrimaryButton, tabular} from "@/app/_ui/sp";
 import AddCircleRoundedIcon from "@mui/icons-material/AddCircleRounded";
@@ -214,7 +215,7 @@ export default function AdminEntryPanel({
               type="button"
               role="radio"
               aria-checked={on}
-              aria-label={manual ? `${names[i]}: ${points} bodova` : `${names[i]}: zvanja ${zvanjaPoints(entry.zvanja[side])}, igra ${points}`}
+              aria-label={manual ? `${names[i]}: ${count(points, NOUN.bod)}` : `${names[i]}: zvanja ${zvanjaPoints(entry.zvanja[side])}, igra ${points}`}
               onClick={() => onChange(setActive(entry, side))}
               sx={{
                 ...buttonBase,

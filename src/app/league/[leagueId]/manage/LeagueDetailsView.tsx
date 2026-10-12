@@ -25,7 +25,7 @@ const fromLeague = (l: LeagueOption | undefined): Details => ({
   rounds: l?.roundsPerNight ?? 3,
 });
 
-// Manage League (desktop) · Details: the league's name, season, dates, play day and default rounds per night.
+// Upravljanje ligom (desktop) · Podaci: the league's name, season, dates, play day and default rounds per night.
 // Save stays off until something changes; the name can't be empty or another league's (any case).
 export default function LeagueDetailsView({leagueId, leagues}: {leagueId: number; leagues: LeagueOption[]}) {
   const base = fromLeague(leagues.find((l) => l.id === leagueId));
@@ -44,11 +44,11 @@ export default function LeagueDetailsView({leagueId, leagues}: {leagueId: number
   const name = d.name.trim();
   const duplicate = name !== "" && leagues.some((l) => l.id !== leagueId && l.name.toLowerCase() === name.toLowerCase());
   const error = !name
-    ? "League name is required."
+    ? "Ime lige je obavezno."
     : duplicate
-      ? "Another league already has this name."
+      ? "Druga liga već ima to ime."
       : !d.start
-        ? "Start date is required."
+        ? "Početak je obavezan."
         : !endsAfterStart(d.start, d.end)
           ? END_DATE_ERROR
           : "";
@@ -92,17 +92,17 @@ export default function LeagueDetailsView({leagueId, leagues}: {leagueId: number
           sx={{display: "flex", flexDirection: "column", gap: "18px"}}
         >
           <Box component="h2" id="ld-title" sx={{m: 0, fontFamily: font.display, fontSize: 24, fontWeight: 800}}>
-            League details
+            Podaci lige
           </Box>
-          <TextField label="League name" placeholder="e.g. Proljetna liga 2026" value={d.name} onChange={(e) => set("name", e.target.value)} soft inputSx={inputSx} />
+          <TextField label="Ime lige" placeholder="npr. Proljetna liga 2026" value={d.name} onChange={(e) => set("name", e.target.value)} soft inputSx={inputSx} />
           <Box sx={{display: "grid", gridTemplateColumns: "minmax(0,.7fr) minmax(0,1fr) minmax(0,1fr)", gap: "12px"}}>
-            <TextField label="Season" placeholder="2026" inputMode="numeric" value={d.season} onChange={(e) => set("season", e.target.value)} soft inputSx={inputSx} />
-            <TextField label="Start date" type="date" value={d.start} onChange={(e) => set("start", e.target.value)} soft inputSx={inputSx} />
-            <TextField label="End date" type="date" value={d.end} min={d.start || undefined} onChange={(e) => set("end", e.target.value)} soft inputSx={inputSx} />
+            <TextField label="Sezona" placeholder="2026" inputMode="numeric" value={d.season} onChange={(e) => set("season", e.target.value)} soft inputSx={inputSx} />
+            <TextField label="Početak" type="date" value={d.start} onChange={(e) => set("start", e.target.value)} soft inputSx={inputSx} />
+            <TextField label="Kraj" type="date" value={d.end} min={d.start || undefined} onChange={(e) => set("end", e.target.value)} soft inputSx={inputSx} />
           </Box>
           <Box role="radiogroup" aria-labelledby="ld-day" sx={{display: "flex", flexDirection: "column", gap: "6px"}}>
             <Box id="ld-day" sx={{fontSize: 14, fontWeight: 600, color: color.ink2, pl: "4px"}}>
-              Play day
+              Dan igranja
             </Box>
             <Box sx={{display: "grid", gridTemplateColumns: "repeat(7, minmax(0,1fr))", gap: "6px"}}>
               {DAYS.map((label, i) => (
@@ -133,10 +133,10 @@ export default function LeagueDetailsView({leagueId, leagues}: {leagueId: number
           <Box role="group" aria-labelledby="ld-rpn" sx={{display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", p: "12px 14px", borderRadius: "16px", background: color.paper2}}>
             <Box sx={{display: "flex", flexDirection: "column"}}>
               <Box id="ld-rpn" component="span" sx={{fontSize: 15, fontWeight: 600}}>
-                Rounds per night
+                Kola po večeri
               </Box>
               <Box component="span" sx={{fontSize: 13, color: color.muted}}>
-                Default for Create Round
+                Zadano za novo kolo
               </Box>
             </Box>
             <Box sx={{display: "flex", alignItems: "center", gap: "10px"}}>
@@ -168,10 +168,10 @@ export default function LeagueDetailsView({leagueId, leagues}: {leagueId: number
               disabled={!dirty || saving}
               sx={{flex: 1, fontSize: 16, border: `1.5px solid ${tint.navy[25]}`, "&:disabled": {opacity: 0.4}}}
             >
-              Discard changes
+              Odbaci promjene
             </OutlineButton>
             <PrimaryButton type="submit" disabled={!canSave} loading={saving} sx={{flex: 1}}>
-              {!dirty && saved ? "Saved ✓" : "Save changes"}
+              {!dirty && saved ? "Spremljeno ✓" : "Spremi promjene"}
             </PrimaryButton>
           </Box>
         </Box>
