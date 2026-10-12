@@ -545,3 +545,38 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
     - The phone Najbolje mjesto tile keeps the league name on one line, cut at its end ("Pitanik Bela…"): at about 80 px
       neither two lines nor cutting its start showed the season readably, and the Lige card just below lists every
       league with the team's place.
+
+45. **Links between the pages, and a league's table opened from a team** (handoff §6 "Links between pages", design
+    13d). Every row of Dnevni and Ukupni poredak (also on the desktop Početna) and every podium card opens its team's
+    page; the team's name is the link and covers the row. On the public Ukupni poredak the rows are links only for a
+    logged-in player (the Team pages need a login, Q7).
+    - A team's league row opens that league's Ukupni poredak with `?team=<id>`: that team is highlighted instead of the
+      player's own (one highlighted row; a cream row with the navy bar, also on the podium; a navy ring around a desktop
+      podium card) and scrolled into the middle of the list. The page is then a page of the stack, as in 13d: on the
+      phone Back, "LIGA" and Home on top, the league's name, "Ukupni poredak" and the season's state ("Sezona 2025 ·
+      završeno", "Jesen 2026 · u tijeku"; "Završeno" / "U tijeku" for a league without a season: the same rule as the
+      Team page's "U tijeku / Završeno"), and no Početni zaslon button. On the desktop it is laid out like a Team page
+      (Profiles P:145-174, P:320-357): "PIATNIK BELA LIGA" in the header, the back pill ("‹ Puleni") on top of the page
+      column (in a short window up in the header row, as on the Team page), then the league's name in navy and
+      "Ukupni poredak" at 40 px. In this view there is no league picker (the mockups have none). Someone not logged in
+      who opens such a link gets the ordinary public table with the team highlighted.
+    - A season stored as numbers only (Nova liga suggests the year, "2026") reads "Sezona 2026", here and in the Team
+      page's league rows; a season with words in it ("Jesen 2026") stays as written.
+    - The phone Ukupni poredak card has the labels row of 13d ("#  EKIPA … RAZ  BOD") on top, pinned with the podium,
+      also without `?team` (13d is the only phone design of the table). Dnevni poredak keeps its design without it.
+    - RAZ in the standings is written with a real minus sign ("−42"), as on the Team and Player pages and in 13d.
+    - The rating detail's cream card opens the player's page ("Profil ›" on the phone, "Profil igrača ›" on the
+      desktop; the pill is the link and covers the card). The phone detail has Back, "REJTING" and Home on top; Back
+      returns to wherever the detail was opened from (the list, a Player page, Moj profil), and to the list when it was
+      opened from outside the app. The desktop Rejting opened from a Player page has a back pill ("‹ Ivan Perić") where
+      the Team and Player pages have it (under the header; in a short window next to the menu button) and scrolls the
+      player's row into the middle of the list.
+    - Back to a page puts it as it was left: Ukupni and Dnevni poredak, the desktop Početna's two tables and Rejting
+      keep their list's scroll position, and the desktop Rejting the player picked in the list (Back from that
+      player's page returns to them, not to the player in the address, which doesn't follow the pick yet).
+      Arriving by a link starts at the top, or at the highlighted team. A row reached with the keyboard is scrolled
+      clear of the pinned labels and podium.
+    - The pages name themselves for the next page's back pill: a league's table by the league's name, Dnevni poredak,
+      Početna and Rejting by those words (#43 had "Natrag" for Ukupni poredak and Početna).
+    - /league/current/<page> keeps the link's query (`?team=`, `?date=`). Opened from outside the app it only forwards,
+      so the page it lands on is a fresh start with no Back (it used to count as a step from the forwarding page).

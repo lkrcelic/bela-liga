@@ -1,10 +1,16 @@
 "use client";
 
+import {useScrollMemory} from "@/app/_hooks/useBackRestore";
 import useIsDesktop from "@/app/_hooks/useIsDesktop";
-import useLeagues from "@/app/_hooks/useLeagues";
+import useLeagues, {useLeagueList} from "@/app/_hooks/useLeagues";
 import useMyTeams from "@/app/_hooks/useMyTeams";
+import useNavStack from "@/app/_hooks/useNavStack";
 import {useLeagueStandings} from "@/app/_hooks/useStandings";
-import {splitPodium, toStandingsRows} from "@/app/_lib/ui/standings";
+import {leagueDateString} from "@/app/_lib/dates";
+import {leagueEnded} from "@/app/_lib/league";
+import {leagueStatusLine} from "@/app/_lib/ui/profiles";
+import {highlightParam, splitPodium, standingsTeamHref, toStandingsRows} from "@/app/_lib/ui/standings";
+import {color} from "@/app/_styles/tokens";
 import {
   Card,
   DesktopShell,
@@ -18,33 +24,78 @@ import {
   PrimaryButton,
   Screen,
   ScrollCard,
+  scrollIntoMiddle,
+  StackTopBar,
   StandingsGrid,
   StandingsRows,
 } from "@/app/_ui/sp";
+import {DesktopFrame, useShortWindow} from "@/app/_ui/profiles/PageParts";
 import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
 import LoginRoundedIcon from "@mui/icons-material/LoginRounded";
 import useAuthStore from "@/app/_store/authStore";
 import {Box} from "@mui/material";
-import {useParams} from "next/navigation";
+import {useParams, useSearchParams} from "next/navigation";
 import {useTransitionRouter} from "@/app/_lib/viewTransitions";
-import {useMemo} from "react";
+import {Suspense, useEffect, useMemo, useRef} from "react";
 
-// Season table of a league: podium for the top three, then everyone else
-export default function LeagueStandings() {
+// Season table of a league: podium for the top three, then everyone else. Each row opens its team's page (for a
+// logged-in player; the table itself is public), and Back from it finds the list where it was left. Opened from a
+// Team page (?team=<id>, design 13d) it highlights that team instead of the player's own, scrolls to it and is a page
+// of the stack: Back to the team (and Home on the phone) instead of the league picker.
+export default function LeagueStandingsPage() {
+  return (
+    <Suspense fallback={null}>
+      <LeagueStandings />
+    </Suspense>
+  );
+}
+
+function LeagueStandings() {
   const params = useParams<{leagueId: string}>();
   const leagueId = Number(params.leagueId);
+  const highlightTeamId = highlightParam(useSearchParams().get("team"));
   const router = useTransitionRouter();
   const isDesktop = useIsDesktop();
+  const short = useShortWindow();
   const leagues = useLeagues(leagueId);
   const {teams} = useMyTeams();
   const myTeamNames = useMemo(() => teams.map((t) => t.team_name), [teams]);
   const {standings, loading, error, reload} = useLeagueStandings(leagueId);
-  const rows = useMemo(() => toStandingsRows(standings, myTeamNames), [standings, myTeamNames]);
+  const rows = useMemo(() => toStandingsRows(standings, {myTeamNames, highlightTeamId}), [standings, myTeamNames, highlightTeamId]);
   const {podium, rest} = splitPodium(rows);
   const leagueName = leagues.find((l) => l.id === leagueId)?.name ?? "";
+  // the list itself (useLeagues has a stand-in "Bela Liga" for the picker until it is in, and when it didn't load)
+  const list = useLeagueList();
+  const league = list.leagues?.find((l) => l.id === leagueId) ?? null;
+  const settled = list.leagues != null || list.error;
+  // the name a Team page opened from a row shows on its back pill ("‹ Pitanik Bela Liga Jesen 25/26")
+  const nav = useNavStack(settled ? leagueName || null : null);
   const changeLeague = (id: number) => router.router.push(`/league/${id}/standings`);
-  // the season table is public; visitors who are not logged in get a login button instead of "home"
+  // the season table is public; visitors who are not logged in get a login button instead of "home", and rows that
+  // aren't links (the Team pages need a login)
   const signedIn = useAuthStore((s) => s.user != null);
+  const rowHref = signedIn ? standingsTeamHref : undefined;
+  // opened from a Team page: Back and Home instead of the league picker (13d)
+  const fromTeam = highlightTeamId != null && signedIn;
+  // "Sezona 2025 · završeno", by the same rule as the Team page's league rows
+  const status = league ? leagueStatusLine(league.season, !leagueEnded(league.endDate ?? null, league.lastNight ?? null, leagueDateString()), {lower: true}) : null;
+  // the list that scrolls (phone card, desktop table)
+  const scroller = useScrollMemory("standings");
+
+  // the highlighted team in view once the table is there, in the middle of the list (a row of the pinned podium shows
+  // itself); Back to the page finds the list where it was left instead
+  const scrolledTo = useRef<string | null>(null);
+  useEffect(() => {
+    if (highlightTeamId == null || loading || rows.length === 0) return;
+    const key = `${leagueId}:${highlightTeamId}:${isDesktop}`;
+    const box = scroller.element();
+    if (scrolledTo.current === key || !box) return;
+    scrolledTo.current = key;
+    const row = box.querySelector<HTMLElement>("[data-highlight]");
+    const pinned = box.querySelector<HTMLElement>("[data-pinned]");
+    if (scroller.restored() || !row || pinned?.contains(row)) return;
+    scrollIntoMiddle(row, box, pinned?.offsetHeight ?? 0);
+  }, [highlightTeamId, leagueId, isDesktop, loading, rows, scroller]);
 
   const content = (desktop: boolean) => {
     if (error) return <ErrorNote onRetry={reload}>{error}</ErrorNote>;
@@ -69,24 +120,44 @@ export default function LeagueStandings() {
     if (desktop) {
       return (
         <>
-          <Podium rows={podium} />
-          <Card sx={{flex: 1, minHeight: 0, overflowY: "auto", borderRadius: "24px"}}>
+          <Podium rows={podium} rowHref={rowHref} />
+          <Card ref={scroller.ref} sx={{flex: 1, minHeight: 0, overflowY: "auto", borderRadius: "24px"}}>
             <StandingsGrid
               rows={podium.length ? rest : rows}
               columns={["played", "wins", "draws", "losses"]}
               showLive={false}
               caption={`Ukupni poredak: ${leagueName}`}
+              rowHref={rowHref}
             />
           </Card>
         </>
       );
     }
     return (
-      <ScrollCard aria-label={`Ukupni poredak: ${leagueName}`}>
-        <StandingsRows rows={podium.length ? rest : rows} podium={podium} withPlayed />
+      <ScrollCard ref={scroller.ref} aria-label={`Ukupni poredak: ${leagueName}`}>
+        <StandingsRows rows={podium.length ? rest : rows} podium={podium} withPlayed head rowHref={rowHref} />
       </ScrollCard>
     );
   };
+
+  // the league's name over the title (13d), once the list is in
+  const eyebrow = settled ? leagueName || "\u00a0" : "\u00a0";
+
+  if (isDesktop && fromTeam) {
+    // as a Team page (Profiles P:145-174, P:320-357): the back pill on top of the page column (in a short window up
+    // in the header row), then the league's name and the title, the podium and the table
+    return (
+      <DesktopFrame embedded={false} short={short} nav={nav} active="league">
+        <Box component="header" sx={{flex: "none", display: "flex", flexDirection: "column", gap: "6px", minWidth: 0}}>
+          <Box sx={{fontSize: 13, fontWeight: 700, letterSpacing: ".12em", textTransform: "uppercase", color: color.navy, overflowWrap: "anywhere"}}>{eyebrow}</Box>
+          <Display size={40} sx={{lineHeight: 1}}>
+            Ukupni poredak
+          </Display>
+        </Box>
+        <Box sx={{flex: 1, minHeight: 0, display: "flex", flexDirection: "column", gap: "20px"}}>{content(true)}</Box>
+      </DesktopFrame>
+    );
+  }
 
   if (isDesktop) {
     return (
@@ -98,6 +169,22 @@ export default function LeagueStandings() {
       >
         {content(true)}
       </DesktopShell>
+    );
+  }
+
+  if (fromTeam) {
+    return (
+      <Screen fill gap={14}>
+        <StackTopBar eyebrow="Liga" nav={nav} />
+        <Box component="header" sx={{display: "flex", flexDirection: "column", gap: "6px", px: "4px", minWidth: 0}}>
+          <Box sx={{fontSize: 13, fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", color: color.navy, overflowWrap: "anywhere"}}>{eyebrow}</Box>
+          <Display size={36} sx={{lineHeight: 1}}>
+            Ukupni poredak
+          </Display>
+          <Box sx={{fontSize: 14, color: color.muted}}>{status ?? "\u00a0"}</Box>
+        </Box>
+        {content(false)}
+      </Screen>
     );
   }
 

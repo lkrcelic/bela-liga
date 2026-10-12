@@ -1,4 +1,4 @@
-import {signed} from "./text";
+import {formatChange} from "./ratings";
 
 // One team's line in the league or daily standings, as returned by the standings APIs
 export type StandingsItem = {
@@ -16,33 +16,60 @@ export type StandingsItem = {
 
 export type StandingsRow = {
   key: string;
+  // the team's page (/teams/<id>); null when the API gave no id
+  teamId: number | null;
   rank: number;
   name: string;
   played: number;
   wins: number;
   draws: number;
   losses: number;
+  // "+612", "−5" (a real minus sign, as on the Team and Player pages), "0"
   diff: string;
   points: number;
   live: boolean;
-  mine: boolean;
+  // the row in cream with the navy bar: the player's own team, or the team the page was opened for
+  highlight: boolean;
 };
 
-export function toStandingsRows(items: StandingsItem[] | null | undefined, myTeamNames: string[] = []): StandingsRow[] {
+type StandingsHighlight = {
+  // the player's teams, by name (the standings APIs have no player data)
+  myTeamNames?: string[];
+  // a league's standings opened from a Team page (?team=<id>): only that team is highlighted, not the player's own
+  highlightTeamId?: number | null;
+};
+
+export function toStandingsRows(items: StandingsItem[] | null | undefined, {myTeamNames = [], highlightTeamId = null}: StandingsHighlight = {}): StandingsRow[] {
   const mine = new Set(myTeamNames);
-  return (items ?? []).map((s, i) => ({
-    key: String(s.team_id ?? s.id ?? s.team?.team_name ?? i),
-    rank: i + 1,
-    name: s.team?.team_name ?? "—",
-    played: Number(s.rounds_played ?? 0),
-    wins: Number(s.wins ?? 0),
-    draws: Number(s.draws ?? 0),
-    losses: Number(s.losses ?? 0),
-    diff: signed(Number(s.point_difference ?? 0)),
-    points: Number(s.score ?? 0),
-    live: Number(s.active_round_count ?? 0) > 0,
-    mine: mine.has(s.team?.team_name),
-  }));
+  return (items ?? []).map((s, i) => {
+    const teamId = s.team_id != null && Number.isInteger(Number(s.team_id)) ? Number(s.team_id) : null;
+    return {
+      key: String(s.team_id ?? s.id ?? s.team?.team_name ?? i),
+      teamId,
+      rank: i + 1,
+      name: s.team?.team_name ?? "—",
+      played: Number(s.rounds_played ?? 0),
+      wins: Number(s.wins ?? 0),
+      draws: Number(s.draws ?? 0),
+      losses: Number(s.losses ?? 0),
+      diff: formatChange(Number(s.point_difference ?? 0)),
+      points: Number(s.score ?? 0),
+      live: Number(s.active_round_count ?? 0) > 0,
+      highlight: highlightTeamId != null ? teamId === highlightTeamId : mine.has(s.team?.team_name),
+    };
+  });
+}
+
+// A standings row opens its team's page (null: no id to link to)
+export function standingsTeamHref(row: StandingsRow): string | null {
+  return row.teamId != null ? `/teams/${row.teamId}` : null;
+}
+
+// The team id of a ?team= parameter (a league's standings opened from a Team page), or null for none or a bad one
+export function highlightParam(value: string | null | undefined): number | null {
+  if (value == null || !/^\d{1,9}$/.test(value.trim())) return null;
+  const id = Number(value);
+  return id > 0 ? id : null;
 }
 
 // The second line of a phone standings row: "24 OK · 19 POB · 3 NER · 2 IZG" (OK only in the league table)

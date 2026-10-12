@@ -1,5 +1,6 @@
 "use client";
 
+import {ScrollMemory, useScrollMemory} from "@/app/_hooks/useBackRestore";
 import useIsAdmin from "@/app/_hooks/useIsAdmin";
 import useElementHeight from "@/app/_hooks/useElementHeight";
 import useIsDesktop from "@/app/_hooks/useIsDesktop";
@@ -7,9 +8,10 @@ import useLeagueTeams from "@/app/_hooks/useLeagueTeams";
 import {addTableAPI, removeTableAPI, setTablePairAPI} from "@/app/_fetchers/admin/daily";
 import useLeagues from "@/app/_hooks/useLeagues";
 import useMyTeams from "@/app/_hooks/useMyTeams";
+import useNavStack from "@/app/_hooks/useNavStack";
 import {useDailyData, useRoundDates} from "@/app/_hooks/useStandings";
 import {leagueDateString} from "@/app/_lib/dates";
-import {splitPodium, toStandingsRows} from "@/app/_lib/ui/standings";
+import {splitPodium, standingsTeamHref, toStandingsRows} from "@/app/_lib/ui/standings";
 import {filterTables, liveCount, splitColumns, TableFilter, tableColumns, toTableRows} from "@/app/_lib/ui/tables";
 import {count, displayDate, NOUN} from "@/app/_lib/ui/text";
 import {color, font} from "@/app/_styles/tokens";
@@ -55,6 +57,10 @@ export default function DailyStandings() {
   const leagues = useLeagues(leagueId);
   const {teams} = useMyTeams();
   const myTeamNames = useMemo(() => teams.map((t) => t.team_name), [teams]);
+  // the name a Team page opened from a row shows on its back pill
+  useNavStack("Dnevni poredak");
+  // the night's table: Back from a team's page finds it where it was left
+  const scroller = useScrollMemory("daily");
 
   // the night shown: ?date= when it is one the league played, otherwise the latest one
   const {dates, error: datesError, reload: reloadDates} = useRoundDates(leagueId);
@@ -69,7 +75,7 @@ export default function DailyStandings() {
   const today = leagueDateString();
   const isToday = date === today;
 
-  const standings = useMemo(() => toStandingsRows(daily.data?.standings, myTeamNames), [daily.data, myTeamNames]);
+  const standings = useMemo(() => toStandingsRows(daily.data?.standings, {myTeamNames}), [daily.data, myTeamNames]);
   const roundNumbers = daily.data?.roundNumbers ?? [];
   const roundsLive = (n: number) => (daily.data?.rounds ?? []).some((r) => r.round_number === n && r.active);
 
@@ -160,7 +166,7 @@ export default function DailyStandings() {
               <LoadingRows rows={10} height={56} />
             </Card>
           ) : tab === 0 ? (
-            <DesktopNightTable rows={standings} date={dateTitle} />
+            <DesktopNightTable rows={standings} date={dateTitle} scroller={scroller} />
           ) : (
             <DesktopRound
               title={`Kolo ${tab}`}
@@ -204,11 +210,11 @@ export default function DailyStandings() {
             <LoadingRows rows={8} />
           </ScrollCard>
         ) : tab === 0 ? (
-          <ScrollCard aria-label={`Poredak okupljanja ${dateTitle}`}>
+          <ScrollCard ref={scroller.ref} aria-label={`Poredak okupljanja ${dateTitle}`}>
             {standings.length === 0 ? (
               <EmptyState>Nema rezultata za ovaj datum.</EmptyState>
             ) : (
-              <StandingsRows rows={showPodium ? rest : standings} podium={showPodium ? podium : undefined} />
+              <StandingsRows rows={showPodium ? rest : standings} podium={showPodium ? podium : undefined} rowHref={standingsTeamHref} />
             )}
           </ScrollCard>
         ) : (
@@ -227,7 +233,7 @@ export default function DailyStandings() {
 
 // Desktop "Tablica okupljanja": podium and the full table with real columns. Teams still playing are marked red on
 // the podium too, so a live night reads the same from 1st place down.
-function DesktopNightTable({rows, date}: {rows: ReturnType<typeof toStandingsRows>; date: string}) {
+function DesktopNightTable({rows, date, scroller}: {rows: ReturnType<typeof toStandingsRows>; date: string; scroller: ScrollMemory}) {
   const {podium, rest} = splitPodium(rows);
   if (rows.length === 0) {
     return (
@@ -238,9 +244,9 @@ function DesktopNightTable({rows, date}: {rows: ReturnType<typeof toStandingsRow
   }
   return (
     <>
-      <Podium rows={podium} showLive />
-      <Card sx={{flex: 1, minHeight: 0, overflowY: "auto", scrollbarGutter: "stable", borderRadius: "22px", alignSelf: "stretch"}}>
-        <StandingsGrid rows={podium.length ? rest : rows} caption={`Poredak okupljanja ${date}`} sx={{"& tr[role=row]": {px: "18px"}}} />
+      <Podium rows={podium} showLive rowHref={standingsTeamHref} />
+      <Card ref={scroller.ref} sx={{flex: 1, minHeight: 0, overflowY: "auto", scrollbarGutter: "stable", borderRadius: "22px", alignSelf: "stretch"}}>
+        <StandingsGrid rows={podium.length ? rest : rows} caption={`Poredak okupljanja ${date}`} sx={{"& tr[role=row]": {px: "18px"}}} rowHref={standingsTeamHref} />
       </Card>
     </>
   );
