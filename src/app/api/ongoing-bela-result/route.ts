@@ -20,8 +20,8 @@ export async function POST(request: NextRequest) {
 
         await createBelaResult(resultData);
 
-        return NextResponse.json({message: "Result successfully created"}, {status: STATUS.OK});
+        return NextResponse.json({message: "Igra je spremljena."}, {status: STATUS.OK});
     } catch (error) {
-        return errorResponse(error, "Failed to save the hand.");
+        return errorResponse(error, "Igra nije spremljena.");
     }
 }

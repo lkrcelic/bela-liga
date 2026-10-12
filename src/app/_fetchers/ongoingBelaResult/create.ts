@@ -1,4 +1,4 @@
-import {responseErrorMessage} from "@/app/_fetchers/errorMessage";
+import {apiFetch, responseErrorMessage} from "@/app/_fetchers/errorMessage";
 import {BelaResultResponse} from "@/app/_interfaces/belaResult";
 
 type CreateOngoingBelaResultAPIProps = {
@@ -6,7 +6,7 @@ type CreateOngoingBelaResultAPIProps = {
 }
 
 export async function createOngoingBelaResultAPI({result}: CreateOngoingBelaResultAPIProps): Promise<BelaResultResponse> {
-    const response = await fetch(`/api/ongoing-bela-result`, {
+    const response = await apiFetch(`/api/ongoing-bela-result`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
@@ -15,7 +15,7 @@ export async function createOngoingBelaResultAPI({result}: CreateOngoingBelaResu
     });
 
     if (!response.ok) {
-        throw new Error(await responseErrorMessage(response, "Failed to save the hand"));
+        throw new Error(await responseErrorMessage(response, "Igra nije spremljena."));
     }
 
     return response.json();

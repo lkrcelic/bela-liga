@@ -5,7 +5,7 @@ import useLeagues from "@/app/_hooks/useLeagues";
 import useLeagueNights from "@/app/_hooks/useLeagueNights";
 import useLeagueTeams from "@/app/_hooks/useLeagueTeams";
 import {useLeagueStandings} from "@/app/_hooks/useStandings";
-import {matchesQuery} from "@/app/_lib/ui/text";
+import {matchesQuery, NOUN} from "@/app/_lib/ui/text";
 import {addTeamToLeagueAPI, removeTeamFromLeagueAPI, setLeagueTeamActiveAPI} from "@/app/_fetchers/league/leagues";
 import {color, font, shadow, tint} from "@/app/_styles/tokens";
 import {
@@ -569,7 +569,7 @@ function AddTeamCard({exclude, onAdd, onCreate}: {exclude: number[]; onAdd: (t: 
               </Box>
             ))
           )}
-          {!loading && left > 0 && <LoadMoreButton left={left} noun={["team", "teams"]} onClick={() => setPages((n) => n + 1)} />}
+          {!loading && left > 0 && <LoadMoreButton left={left} noun={NOUN.ekipa} onClick={() => setPages((n) => n + 1)} />}
         </Box>
       )}
       <OutlineButton onClick={onCreate} height={50} tone={color.navy} sx={{borderWidth: "1.5px", borderColor: tint.navy[25], fontSize: 15}}>

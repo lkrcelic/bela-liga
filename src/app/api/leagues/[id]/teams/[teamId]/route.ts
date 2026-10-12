@@ -13,10 +13,10 @@ export async function PATCH(request: NextRequest, {params}: {params: {id: string
   try {
     const {active} = LeagueTeamUpdateRequestValidation.parse(await request.json());
     const updated = await setLeagueTeamActive(Number(params.id), Number(params.teamId), active);
-    if (!updated) return NextResponse.json({error: "The team is not in this league."}, {status: STATUS.NotFound});
+    if (!updated) return NextResponse.json({error: "Ekipa nije u ovoj ligi."}, {status: STATUS.NotFound});
     return NextResponse.json({league_id: Number(params.id), team_id: Number(params.teamId), active}, {status: STATUS.OK});
   } catch (error) {
-    return errorResponse(error, "Failed to update the team.");
+    return errorResponse(error, "Promjena ekipe nije spremljena.");
   }
 }
 
@@ -27,9 +27,9 @@ export async function DELETE(request: NextRequest, {params}: {params: {id: strin
 
   try {
     const removed = await removeTeamFromLeague(Number(params.id), Number(params.teamId));
-    if (!removed) return NextResponse.json({error: "The team is not in this league."}, {status: STATUS.NotFound});
+    if (!removed) return NextResponse.json({error: "Ekipa nije u ovoj ligi."}, {status: STATUS.NotFound});
     return new NextResponse(null, {status: STATUS.NoContent});
   } catch (error) {
-    return errorResponse(error, "Failed to remove the team.");
+    return errorResponse(error, "Ekipa nije uklonjena iz lige.");
   }
 }

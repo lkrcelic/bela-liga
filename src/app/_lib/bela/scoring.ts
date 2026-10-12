@@ -67,13 +67,13 @@ export function gamePointsError(gamePoints1: number, gamePoints2: number, comple
     const oneSideTookAll =
       (gamePoints1 === COMPLETE_VICTORY_POINTS && gamePoints2 === 0) ||
       (gamePoints2 === COMPLETE_VICTORY_POINTS && gamePoints1 === 0);
-    return oneSideTookAll ? null : `A complete victory must be ${COMPLETE_VICTORY_POINTS} to 0.`;
+    return oneSideTookAll ? null : `Štiglja mora biti ${COMPLETE_VICTORY_POINTS} : 0.`;
   }
   if (gamePoints1 < 0 || gamePoints2 < 0) {
-    return "Game points can't be negative.";
+    return "Bodovi igre ne mogu biti negativni.";
   }
   if (gamePoints1 + gamePoints2 !== HAND_POINTS) {
-    return `Game points must add up to ${HAND_POINTS}.`;
+    return `Bodovi igre moraju zajedno biti ${HAND_POINTS}.`;
   }
   return null;
 }

@@ -1,4 +1,4 @@
-import {responseErrorMessage} from "@/app/_fetchers/errorMessage";
+import {apiFetch, responseErrorMessage} from "@/app/_fetchers/errorMessage";
 import {BelaResultResponse} from "@/app/_interfaces/belaResult";
 
 type UpdateOngoingBelaResultAPIProps = {
@@ -10,7 +10,7 @@ export async function updateOngoingBelaResultAPI({
                                                      resultId,
                                                      result
                                                  }: UpdateOngoingBelaResultAPIProps): Promise<BelaResultResponse> {
-    const response = await fetch(`/api/ongoing-bela-result/${resultId}`, {
+    const response = await apiFetch(`/api/ongoing-bela-result/${resultId}`, {
         method: "PUT",
         headers: {
             "Content-Type": "application/json",
@@ -19,7 +19,7 @@ export async function updateOngoingBelaResultAPI({
     });
 
     if (!response.ok) {
-        throw new Error(await responseErrorMessage(response, "Failed to update the hand"));
+        throw new Error(await responseErrorMessage(response, "Igra nije spremljena."));
     }
 
     return response.json();

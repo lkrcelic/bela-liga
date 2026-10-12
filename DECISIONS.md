@@ -234,3 +234,22 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
       plan), the install guide and the Rejting sheet .42; dialogs .32; the nav drawer .28.
     - Google's button keeps Google's colours and the install guide the iOS and Android blues (tokens `brand`,
       `platform`).
+
+34. **Croatian messages everywhere** (handoff §1). Every API and service message, every fetcher fallback and the
+    validation messages are Croatian, and counts use one plural helper (`count(n, NOUN.ekipa)` in `_lib/ui/text.ts`,
+    with the three forms of every noun the app counts: "još 1 ekipa / 2 ekipe / 5 ekipa", "1 igrač / 2 igrača").
+    - An error note shows the server's sentence, or the screen's own sentence when the server sent none, never the
+      HTTP status text ("Internal Server Error").
+    - A request that never reaches the server (no signal at the bar) reads "Provjeri vezu i pokušaj ponovno." (the
+      design's sentence for a failed load), never the browser's "Failed to fetch" / "Load failed".
+    - An expired session reads "Prijava je istekla. Prijavi se ponovno." A round or match that doesn't exist (also
+      a malformed id) is a 404 with "Runda ne postoji." / "Meč ne postoji.", not a 500.
+    - A rejected form (zod) answers `{error, issues}`: `error` is the schema's own Croatian message ("Ime lige je
+      obavezno."), or the route's sentence ("Liga nije napravljena.") where zod would use its English one.
+    - A league's numbered round is "kolo" ("To kolo ne postoji.", "Kolo nije obrisano."); the round a player plays
+      at a table is "runda" ("Ne igraš u ovoj rundi.", "Ova runda je već završena."), like the designed "Nema otvorene
+      runde" and "Tko igra ovu rundu?".
+    - The live pill and label say "UŽIVO" instead of the design's "LIVE". Alternative: keep "LIVE" as in the
+      mockups. Reason: the handoff asks for Croatian everywhere, and the Admin upute say "uživo".
+    - "Učitaj još · još N ekipa / igrača" under paged lists, and "Pokušaj ponovno" on error notes, as designed.
+    - Not shown to anyone, so left as they are: the bye team's internal name and a developer check in the hand entry.

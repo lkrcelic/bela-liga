@@ -27,7 +27,7 @@ export function normalizeBelaResult(belaResult: BelaResultCreateRequest): BelaRe
     announcementPoints1 !== belaResult.player_pair1_announcement_points ||
     announcementPoints2 !== belaResult.player_pair2_announcement_points
   ) {
-    throw new InvalidResultError("Announcement points don't match the announcements.");
+    throw new InvalidResultError("Bodovi zvanja ne odgovaraju upisanim zvanjima.");
   }
 
   const totals = computeHandTotals({

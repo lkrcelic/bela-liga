@@ -22,7 +22,7 @@ export default function useLeagueTeams(leagueId: number | null) {
         setTeams(rows.map((t) => ({id: t.team_id, name: t.team_name, players: t.players.map((p) => p.username), active: t.active, smokers: t.smokers ?? 0})));
       })
       .catch((e) => {
-        if (!cancelled) setError(e instanceof Error ? e.message : "Ekipe nije moguće učitati.");
+        if (!cancelled) setError(e instanceof Error ? e.message : "Ekipe se nisu učitale.");
       });
     return () => {
       cancelled = true;

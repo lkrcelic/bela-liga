@@ -21,7 +21,7 @@ export async function updateOngoingBelaResult({result_id, resultData, normalize 
             SELECT match_id, player_pair1_total_points, player_pair2_total_points
             FROM "OngoingBelaResult" WHERE result_id = ${result_id} FOR UPDATE`;
         if (!existingResult) {
-            throw new InvalidResultError(`Hand ${result_id} not found.`);
+            throw new InvalidResultError("Igra ne postoji.");
         }
 
         await tx.ongoingBelaResult.update({

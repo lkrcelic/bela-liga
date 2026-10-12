@@ -1,6 +1,6 @@
 import {NextRequest, NextResponse} from "next/server";
 import {STATUS} from "@/app/_lib/statusCodes";
-import {generateMultipleRoundPairings, RoundsPlan} from "@/app/_lib/matching/multipleRoundMatching";
+import {generateMultipleRoundPairings} from "@/app/_lib/matching/multipleRoundMatching";
 import {getLeagueTeamsWithScores} from "@/app/_lib/helpers/query/leagueScores";
 import {REPEAT_MATCHUPS, RoundCreateRequestValidation} from "@/app/_interfaces/round";
 import {requireAdmin} from "@/app/_lib/service/auth/requireUser";
@@ -27,20 +27,15 @@ export async function POST(request: NextRequest) {
     const teamsWithScores = await getLeagueTeamsWithScores(league_id);
     const filteredTeams = teamsWithScores.filter((team) => present_teams.includes(team.id));
 
-    let plan: RoundsPlan;
-    try {
-      const playedToday = await pairsPlayedToday(league_id);
-      plan = generateMultipleRoundPairings(filteredTeams, {windowSize, numberOfRounds, playedToday});
-    } catch (error) {
-      // the pairing rejects impossible settings (odd window, more rounds than teams, ...)
-      return NextResponse.json({error: (error as Error).message}, {status: STATUS.BadRequest});
-    }
+    // the pairing rejects impossible settings (odd window, more rounds than teams, ...) with an InvalidResultError: a 400
+    const playedToday = await pairsPlayedToday(league_id);
+    const plan = generateMultipleRoundPairings(filteredTeams, {windowSize, numberOfRounds, playedToday});
 
     // the admin decides: create them anyway, or try again with a bigger window
     if (plan.repeats.length > 0 && !parsed.allowRepeats) {
       return NextResponse.json(
         {
-          error: "Some teams will play twice today",
+          error: "Neke ekipe bi se večeras srele dvaput.",
           code: REPEAT_MATCHUPS,
           repeats: plan.repeats.map((p) => [p.teamOne.name, p.teamTwo.name]),
         },
@@ -61,6 +56,6 @@ export async function POST(request: NextRequest) {
       {status: alreadyCreated ? STATUS.OK : STATUS.Created}
     );
   } catch (error) {
-    return errorResponse(error, "Failed to create rounds.");
+    return errorResponse(error, "Kolo nije napravljeno.");
   }
 }
