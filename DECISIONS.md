@@ -436,3 +436,39 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
       is cancelled (before, NextAuth's own English page; a database error while checking the account reads the same,
       not "deaktiviran"), and "Igrač bez imena" for a player without a name on Rejting, Burza and Raspored (there is
       none today; the username was shown before, also to logged-out Burza visitors).
+
+41. **What admins can do to a player, and ratings that stay put when a team's players change** (handoff §6 "Admin
+    controls"; adds to #40). This is the server side of the desktop Igrači directory and "Uredi osobne podatke"; their
+    screens come with the player pages.
+    - Spremi changes the name, username, email, phone, birth date, Pušač and Admin in one go. A username or email
+      that another player already has (ignoring case) is refused under that field: "To korisničko ime je zauzeto." or
+      "Taj email se već koristi.". An admin can't take the admin role from themselves, and can't deactivate or delete
+      themselves. The last active admin keeps the role.
+    - Deaktiviraj račun logs the player out on every device (their sessions are deleted, as planned) and closes their
+      ads that are still up; an ad that had already expired stays "Istekao" with its own date. Aktiviraj račun doesn't
+      reopen the ads; the player can publish them again from Moji oglasi. Because the sessions are gone, a login that
+      is open at that moment ends on the player's next request at a plain Prijava, without the "deaktiviran" message
+      #40 describes for an open login; they see "Račun je deaktiviran. Javi se administratoru." when they try to log
+      in again. Alternative: keep the sessions while the account is inactive (they are refused anyway) and delete them
+      on Aktiviraj račun, so the open login ends with that message at once. A deactivated player can't be added to a
+      team, old or new ("Igrač je deaktiviran."); adding one who is still in the team changes nothing.
+    - Obriši igrača takes the player out of every team, deletes their ads (these hold a phone number and a note), logs
+      them out and unlinks Google. The account becomes "Obrisani igrač": username obrisani_<id> and an email address
+      that can't receive mail. A teammate's substitute ad that names them reads "umjesto: Obrisani igrač". Adding a
+      deleted player to a team reads "Igrač ne postoji.".
+    - **Ratings don't change when a team's players change.** All 1013 rounds rated so far are older than lineups. They
+      are rated with each team's players as they are today, so adding or removing a player used to change other
+      players' ratings at the next recalculation. On a copy of the data, deleting two players, taking one player out
+      of a team and adding two would have changed 57 ratings, by up to 170 points. Now, before a team's players change
+      (Dodaj, Ukloni, Obriši igrača), the team's current players are saved as the lineup of each of its finished rounds
+      that has none. With that, the same changes and a few more left every player's rating and rating history exactly
+      as before.
+      - The lineup key now includes the team (migration `20261012140000_round_player_team_key`). One old round has a
+        player on both teams' rosters and was rated for both sides; the new key keeps them on both sides.
+      - Tko igra ovu rundu? still starts from the founders when a team's last lineup is such a saved roster (more
+        than two players).
+      - A finished table that an admin re-pairs in Dnevni poredak loses its saved lineup along with its result, so
+        Tko igra ovu rundu? asks again when it is played (before, a lineup picked on Start Game stayed and the new
+        game skipped that step).
+    - A new team can start in no league (the directory's "Nova ekipa"). A request that names no league still joins
+      the league being played now, as before.
