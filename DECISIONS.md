@@ -298,3 +298,28 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
       traži zamjenu" and "Objavi oglas kad tebi zatreba igrač ili partner.".
     - While Početna asks whether the player has an open round, the top card is a neutral navy frame; before, it showed
       an active Započni igru for a moment on every visit, also on the days without a round.
+
+37. **League nights in Croatian** (handoff §3, design 11b and "Raspored lige"). Upravljanje ligom · Datumi and Nova liga
+    use the design's Croatian copy; the logic of #28 stays.
+    - The Datumi summary reads "6 odigrano · još 10" (the design has English "6 played · 10 to go"): played nights
+      have rounds, "još" counts the nights from today on. After the season it is only "6 odigrano", and a league
+      without nights shows no summary above its empty state.
+    - The participle after a count agrees with it: "1 odigrana", "2 odigrane", "6 odigrano" (also Raspored's
+      "17 večeri · 2 odigrane"), and Nova liga's "1 odabrana", "2 odabrane", "0 odabrano". The design only shows the
+      "odigrano"/"odabrano" form, which is right for 0 and 5+.
+    - Nova liga refuses a name another league already has (any case), as Podaci does when renaming: "Druga liga već
+      ima to ime." under Ime lige, before sending and from the server. "_" and "%" in a name are plain characters
+      in that check (the team-name check too); before, the server read them as wildcards.
+    - Below 1200 px Nova liga puts Sezona on a row of its own, so Početak and Kraj are wide enough for
+      "01.09.2026."; from 1200 px the three share a row as designed.
+    - Raspored's back button is the design's chevron ("Natrag", to Početna) instead of a house. Its list marks
+      Odigrano, Sljedeća and Zadnja as designed, plus "Nije odigrano" for a past night without rounds (#28) and
+      "Večeras" for the next night on the night itself (kept from before). Alternative: "Sljedeća" also on the night.
+      Reason: on a league night "Sljedeća" reads as next week's.
+    - Not in the design: after the season Raspored's card reads "Zadnja večer" with the last night's date and
+      "Sezona je završila" (before: "Sljedeća večer —"). A league without nights shows no card and no count, only
+      "Admin još nije upisao večeri lige." in the list.
+    - Kept from before, not in the design: the league switcher shows only for a player in more than one league, and
+      "Nađi zamjenu" sits under the list.
+    - Burza igrača offers only the league's nights for a substitute (the form lists them, the server refuses any
+      other date with "Liga te večeri ne igra."); unchanged.

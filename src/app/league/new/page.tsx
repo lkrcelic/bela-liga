@@ -3,10 +3,10 @@
 import useIsDesktop from "@/app/_hooks/useIsDesktop";
 import {TeamExtendedResponse} from "@/app/_interfaces/team";
 import {isByeTeam} from "@/app/_lib/bye";
-import {matchesQuery, plural} from "@/app/_lib/ui/text";
+import {count, matchesQuery, NOUN} from "@/app/_lib/ui/text";
 import {createLeagueAPI} from "@/app/_fetchers/league/leagues";
-import {END_DATE_ERROR, endsAfterStart} from "@/app/_interfaces/league";
-import {invalidateLeagues} from "@/app/_hooks/useLeagues";
+import {END_DATE_ERROR, endsAfterStart, LEAGUE_NAME_TAKEN, leagueNameTaken} from "@/app/_interfaces/league";
+import useLeagues, {reloadLeagues} from "@/app/_hooks/useLeagues";
 import {generateNights, isIsoDate, nightLabel, sortNights} from "@/app/_lib/nights";
 import {color, font, tint} from "@/app/_styles/tokens";
 import {
@@ -63,6 +63,10 @@ function CreateLeagueDesktop() {
   const [created, setCreated] = useState<{id: number; text: string} | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const leagues = useLeagues();
+  const trimmedName = name.trim();
+  // two leagues can't share a name (any case); the server checks it too
+  const nameTaken = leagueNameTaken(leagues, trimmedName);
 
   useEffect(() => {
     fetch("/api/teams")
@@ -94,7 +98,7 @@ function CreateLeagueDesktop() {
     setRemovedNights((r) => r.filter((x) => x !== newNight));
     setNewNight("");
   };
-  const count = selected.size;
+  const selectedCount = selected.size;
 
   const toggle = (id: number) =>
     setSelected((prev) => {
@@ -107,16 +111,16 @@ function CreateLeagueDesktop() {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (submitting) return;
-    if (!name.trim()) {
+    if (!trimmedName) {
       setNameError("Upiši ime lige.");
       return;
     }
-    if (!endsAfterStart(startDate, endDate)) return;
+    if (nameTaken || !endsAfterStart(startDate, endDate)) return;
     setSubmitting(true);
     setSubmitError(null);
     try {
       const league = await createLeagueAPI({
-        league_name: name.trim(),
+        league_name: trimmedName,
         season: season.trim() || null,
         start_date: startDate || null,
         end_date: endDate || null,
@@ -125,17 +129,23 @@ function CreateLeagueDesktop() {
         team_ids: Array.from(selected),
         nights,
       });
-      invalidateLeagues();
+      // the new league shows in the pickers at once, and its name counts as taken here
+      void reloadLeagues();
       setCreated({
         id: league.league_id,
-        text: `„${league.league_name}" je napravljena (${league.team_count} ${plural(league.team_count, "ekipa", "ekipe", "ekipa")}, ${DAY_NAMES[playDay]}, ${nights.length} ${plural(nights.length, "večer", "večeri", "večeri")}).`,
+        text: `„${league.league_name}“ je napravljena (${count(league.team_count, NOUN.ekipa)}, ${DAY_NAMES[playDay]}, ${count(nights.length, NOUN.večer)}).`,
       });
       setName("");
       setSelected(new Set());
       setRemovedNights([]);
       setExtraNights([]);
     } catch (err) {
-      setSubmitError(err instanceof Error ? err.message : "Ligu nije moguće napraviti.");
+      const message = err instanceof Error ? err.message : "Ligu nije moguće napraviti.";
+      // a league made elsewhere in the meantime: say it at the name, and fetch the list so the check here knows it
+      if (message === LEAGUE_NAME_TAKEN) {
+        setNameError(message);
+        void reloadLeagues();
+      } else setSubmitError(message);
     }
     setSubmitting(false);
   };
@@ -143,26 +153,36 @@ function CreateLeagueDesktop() {
   const details = (
     <Box component="form" onSubmit={submit} noValidate sx={{display: "flex", flexDirection: "column", gap: "18px", flex: 1}}>
       <Box component="h2" sx={{m: 0, fontFamily: font.display, fontSize: 24, fontWeight: 800}}>
-        League details
+        Podaci lige
       </Box>
       <TextField
-        label="League name"
-        placeholder="e.g. Proljetna liga 2026"
+        label="Ime lige"
+        placeholder="npr. Proljetna liga 2026"
         value={name}
         onChange={(e) => {
           setName(e.target.value);
           setNameError(undefined);
           setCreated(null);
         }}
-        error={nameError}
+        error={nameError ?? (nameTaken ? LEAGUE_NAME_TAKEN : undefined)}
         soft
         inputSx={{height: 52, borderRadius: "14px", fontSize: 16}}
       />
-      <Box sx={{display: "grid", gridTemplateColumns: "minmax(0,.7fr) minmax(0,1fr) minmax(0,1fr)", gap: "12px"}}>
-        <TextField label="Season" placeholder="2026" inputMode="numeric" value={season} onChange={(e) => setSeason(e.target.value)} soft inputSx={{height: 52, borderRadius: "14px", fontSize: 16}} />
-        <TextField label="Start date" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} soft inputSx={{height: 52, borderRadius: "14px", fontSize: 16}} />
+      {/* below 1200 px a third of the row is too narrow for "01.09.2026.", so Sezona gets a row of its own */}
+      <Box sx={{display: "grid", gridTemplateColumns: {xs: "minmax(0,1fr) minmax(0,1fr)", lg: "minmax(0,.7fr) minmax(0,1fr) minmax(0,1fr)"}, gap: "12px"}}>
         <TextField
-          label="End date"
+          label="Sezona"
+          placeholder="2026"
+          inputMode="numeric"
+          value={season}
+          onChange={(e) => setSeason(e.target.value)}
+          soft
+          sx={{gridColumn: {xs: "1 / -1", lg: "auto"}}}
+          inputSx={{height: 52, borderRadius: "14px", fontSize: 16}}
+        />
+        <TextField label="Početak" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} soft inputSx={{height: 52, borderRadius: "14px", fontSize: 16}} />
+        <TextField
+          label="Kraj"
           type="date"
           value={endDate}
           min={startDate || undefined}
@@ -174,7 +194,7 @@ function CreateLeagueDesktop() {
       </Box>
       <Box role="radiogroup" aria-labelledby="play-day" sx={{display: "flex", flexDirection: "column", gap: "6px"}}>
         <Box id="play-day" sx={{fontSize: 14, fontWeight: 600, color: color.ink2, pl: "4px"}}>
-          Play day
+          Dan igranja
         </Box>
         <Box sx={{display: "grid", gridTemplateColumns: "repeat(7, minmax(0,1fr))", gap: "6px"}}>
           {DAYS.map((d, i) => (
@@ -205,14 +225,14 @@ function CreateLeagueDesktop() {
       <Box role="group" aria-labelledby="league-nights" sx={{display: "flex", flexDirection: "column", gap: "10px"}}>
         <Box sx={{display: "flex", alignItems: "baseline", justifyContent: "space-between", px: "4px"}}>
           <Box id="league-nights" sx={{fontSize: 14, fontWeight: 600, color: color.ink2}}>
-            League nights
+            Večeri lige
           </Box>
           <Box component="span" aria-live="polite" sx={{fontSize: 13, color: color.muted}}>
-            {nights.length} {nights.length === 1 ? "night" : "nights"}
+            {count(nights.length, NOUN.večer)}
           </Box>
         </Box>
         <Box sx={{fontSize: 13, lineHeight: 1.45, color: color.muted, px: "4px"}}>
-          Filled in from start date, end date and play day. Remove a night that isn&apos;t played (holiday) or add an extra one.
+          Popunjeno iz početka, kraja i dana igranja. Ukloni večer koja se ne igra (praznik) ili dodaj dodatnu.
         </Box>
         {nights.length > 0 && (
           <Box component="ul" sx={{listStyle: "none", m: 0, p: 0, display: "flex", flexWrap: "wrap", gap: "6px"}}>
@@ -227,7 +247,7 @@ function CreateLeagueDesktop() {
                   component="button"
                   type="button"
                   onClick={() => removeNight(n)}
-                  aria-label={`Remove the night ${nightLabel(n)}`}
+                  aria-label={`Ukloni večer ${nightLabel(n)}`}
                   sx={{...buttonBase, width: 28, height: 28, borderRadius: "50%", color: color.muted, display: "flex", alignItems: "center", justifyContent: "center", "& svg": {fontSize: 18}, "&:hover": {background: tint.red[12], color: color.red}}}
                 >
                   <CloseRoundedIcon />
@@ -240,7 +260,7 @@ function CreateLeagueDesktop() {
           <Box
             component="input"
             type="date"
-            aria-label="Extra night"
+            aria-label="Dodatna večer"
             value={newNight}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewNight(e.target.value)}
             onKeyDown={(e: React.KeyboardEvent) => {
@@ -259,17 +279,17 @@ function CreateLeagueDesktop() {
             sx={{...buttonBase, flex: "none", height: 48, px: "16px", border: `1.5px solid ${color.borderControl}`, borderRadius: "14px", background: color.white, color: color.navy, display: "flex", alignItems: "center", gap: "6px", fontSize: 15, fontWeight: 600, "&:disabled": {opacity: 0.4}, "& svg": {fontSize: 20}}}
           >
             <AddRoundedIcon />
-            Add night
+            Dodaj večer
           </Box>
         </Box>
       </Box>
       <Box role="group" aria-labelledby="rpn" sx={{display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", p: "12px 14px", borderRadius: "16px", background: color.paper2}}>
         <Box sx={{display: "flex", flexDirection: "column"}}>
           <Box id="rpn" component="span" sx={{fontSize: 15, fontWeight: 600}}>
-            Rounds per night
+            Kola po večeri
           </Box>
           <Box component="span" sx={{fontSize: 13, color: color.muted}}>
-            Default for Create Round
+            Zadano za novo kolo
           </Box>
         </Box>
         <Box sx={{display: "flex", alignItems: "center", gap: "10px"}}>
@@ -289,12 +309,12 @@ function CreateLeagueDesktop() {
         <SuccessNote sx={{display: "flex", alignItems: "center", gap: "12px", justifyContent: "space-between", flexWrap: "wrap"}}>
           <span>{created.text}</span>
           <Box component={Link} href={`/league/${created.id}/manage`} sx={{color: color.navy, fontWeight: 700}}>
-            Manage League →
+            Upravljanje ligom →
           </Box>
         </SuccessNote>
       )}
-      <PrimaryButton type="submit" disabled={!name.trim() || !endsAfterStart(startDate, endDate)} loading={submitting} sx={{mt: "auto"}}>
-        {`Create league${count ? ` · ${count} teams` : ""}`}
+      <PrimaryButton type="submit" disabled={!trimmedName || nameTaken || !endsAfterStart(startDate, endDate)} loading={submitting} sx={{mt: "auto"}}>
+        {`Kreiraj ligu${selectedCount ? ` · ${count(selectedCount, NOUN.ekipa)}` : ""}`}
       </PrimaryButton>
     </Box>
   );
@@ -304,14 +324,14 @@ function CreateLeagueDesktop() {
       <Box sx={{flex: "none", p: "22px 20px 14px", display: "flex", flexDirection: "column", gap: "12px", borderBottom: `1px solid ${tint.navy[10]}`}}>
         <Box sx={{display: "flex", alignItems: "baseline", justifyContent: "space-between"}}>
           <Box component="h2" sx={{m: 0, fontFamily: font.display, fontSize: 24, fontWeight: 800}}>
-            Teams
+            Ekipe
           </Box>
           <Box aria-live="polite" sx={{fontSize: 14, color: color.muted}}>
-            {count} selected
+            {count(selectedCount, NOUN.odabrana)}
           </Box>
         </Box>
-        <SearchInput soft height={48} placeholder="Search teams" aria-label="Traži ekipe" value={query} onChange={(e) => setQuery(e.target.value)} />
-        <Box sx={{fontSize: 13, color: color.muted}}>Optional. You can add teams later in Manage League.</Box>
+        <SearchInput soft height={48} placeholder="Traži ekipe" aria-label="Traži ekipe" value={query} onChange={(e) => setQuery(e.target.value)} />
+        <Box sx={{fontSize: 13, color: color.muted}}>Nije obavezno. Ekipe možeš dodati kasnije u Upravljanju ligom.</Box>
       </Box>
       {teamsError ? (
         <ErrorNote sx={{m: "14px"}}>{teamsError}</ErrorNote>
@@ -381,7 +401,7 @@ function CreateLeagueDesktop() {
   );
 
   return (
-    <DesktopShell active="createLeague" eyebrow="Admin" title="Create League">
+    <DesktopShell active="createLeague" eyebrow="Admin" title="Nova liga">
       <Box sx={{flex: 1, minHeight: 0, display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,1fr)", gap: "20px"}}>
         <Box sx={{minHeight: 0, display: "flex", flexDirection: "column", gap: "16px"}}>
           <Card sx={{flex: 1, p: "26px", display: "flex", flexDirection: "column", borderRadius: "24px", overflowY: "auto"}}>{details}</Card>
