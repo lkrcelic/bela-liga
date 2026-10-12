@@ -183,11 +183,12 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
     above, "Objavi" opens "Što objavljuješ?" as a popover, and an ad or a form is one column. Raspored puts the next
     night and the team next to the list.
 
-32. **Smokers and smoking tables** (design "Pušači i pušački stolovi", 12a–12g).
+32. **Smokers and smoking tables** (design "Pušači i pušački stolovi", 12a–12g; the copy and "Kasnije" are updated by #38).
     - A player is a smoker or not (Ne by default): "Pušiš li?" right after the birth date at sign-up, and Smoker
       under Details on the profile, saved when flipped. Players from before the question, and Google sign-ups after
-      their birth date, are asked once in a sheet ("Kasnije" waits until the app is opened again). Alternative: only
-      the profile switch. Reason: no existing player would be a smoker until they found it.
+      their birth date, are asked once in a sheet (~~"Kasnije" waits until the app is opened again~~ — now
+      "Preskoči", which answers Ne, #38). Alternative: only the profile switch. Reason: no existing player would be a
+      smoker until they found it.
     - Create Round (phone and desktop) has the design's Smoking tables card: the switch and a chip per table tonight
       (half the teams switched on). The league remembers the tables of its last round creation and the switch
       starts on with them; the first time it offers 1 and 2, as in the design.
@@ -323,3 +324,45 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
       "Nađi zamjenu" sits under the list.
     - Burza igrača offers only the league's nights for a substitute (the form lists them, the server refuses any
       other date with "Liga te večeri ne igra."); unchanged.
+
+38. **Smokers and smoking tables in Croatian** (handoff §4; updates #32). Novo kolo's Pušački stolovi card, the
+    Pušački raspored and the rest of Novo kolo use the design's Croatian copy, and the counts agree with their number:
+    "Stolovi 1, 2 · 7 pušača u 6 ekipa" ("1 pušač u 1 ekipi"), "2 pušačka stola × 3 kola · 6 ekipa s pušačima",
+    "Kreiraj kolo · 14 ekipa", "2 ekipe ne igraju", "2 neaktivne · 0 isključenih". The design shows "2 ekipa ne igra",
+    "2 neaktivnih" and English leftovers ("Create round · 14 teams", "Smokers", "Share", "Off").
+    - The rule that gives out the smoking tables stays as #32 describes, as you asked then: teams that haven't sat at a
+      smoking table tonight come first, then the teams with the most missed nights, and only then the points. "Kako se
+      biraju stolovi" now says exactly that in three steps: the design's first sentence; then that matches with a team
+      that hasn't sat at a smoking table tonight come first, and of those the ones where such a team has the most missed
+      nights; then the points that decide between matches with the same priority: ten for every team that hasn't sat at
+      a smoking table tonight (the design leaves these out, and they let two such teams beat one team with more
+      smokers), one per smoker at the table, and up to three more for a team under its share this season (up to three
+      fewer above it), followed by the design's table-order sentence. **Open for you:** the handoff's single score
+      instead, without the first two tiers. It is simpler to explain, but when smoking tables are scarce, teams with
+      one smoker go more nights without one (the simulation behind #32).
+    - The rotation keeps the Propušteno column (nights with a smoker but no smoking table) after the design's Ekipa,
+      Pušači, Večeras and Udio, because the rule uses it; the line under the heading explains both Udio and
+      Propušteno. The Večeras column widens for a fifth round so its dots don't overlap Udio.
+    - Layout changes from the design, so the extra column and a big league fit at 1024 px: Pušači, Udio and Propušteno
+      are 56 px (design 64 and 84 px), and the Propušteno header breaks onto two lines ("Propu-šteno"); below 1200 px the
+      Pušački raspored splits half and half (design 1.25 : 1), or the team names in the rotation are cut to about
+      50 px. In Novo kolo the error and "Kreiraj kolo" stay in view under the left column and only Postavke, the
+      smoking card and Bilješke scroll above them, because a 76-team league has five rows of table chips and the button
+      fell below the fold at 1024 × 768. Alternative: the design's whole-column scroll with the button at its end.
+    - "Označi sve" switches the active teams on the list on or off, as in the design: it shows on when all of them
+      play, and an inactive team is added only with its own switch. Before, an inactive team kept it off and one click
+      paired the teams that stopped coming.
+    - While the Pušački raspored is open, Tab and screen readers can't reach the Novo kolo view under it; closing it
+      puts the focus back on the button that opened it.
+    - "Pušiš li?" is asked once, as the handoff says: "Preskoči", the backdrop or Escape save Ne (and that it was
+      answered), and the Pušač switch on Moj profil changes it; the sheet's line already ends "Možeš promijeniti na
+      profilu.". Before, "Kasnije" asked again every time the app was opened. If saving Ne fails, the sheet comes back
+      the next time the app opens. Alternative: keep "Kasnije". Reason: "Kasnije" (later) promises another chance to
+      answer, but the app never asks again, so a smoker who meant "later" would stay a non-smoker.
+    - Copy the design doesn't have: the button that opens the plan "Pušački raspored · rotacija ›", "Uključi barem
+      dvije ekipe da odabereš stolove.", "Večeras još nema kola · N ekipa s pušačima", "Večeras nema pušačkih stolova ·
+      3 kola · N ekipa s pušačima" (tonight's rounds were made without them), "nijedna ekipa nema pušača" in place of
+      "0 pušača u 0 ekipa" and "0 ekipa s pušačima", "Večerašnja kola još nisu napravljena.", "U ovom kolu nema
+      pušačkih stolova.", "Nijedna ekipa u ovoj ligi još nema pušača.", the dot labels "Kolo N: pušački stol / običan
+      stol / nije za stolom", the chip "Isključena" (design "Off"), and the repeat dialog "Neke ekipe bi se večeras
+      srele dvaput" with "Proširi prozor" and "Kreiraj svejedno" (the Admin upute's words).
