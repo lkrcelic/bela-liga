@@ -36,9 +36,10 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
    motion fall back to the CSS step animations (or none). Other motion (count-up, row-in, badges, trump fill) stays
    CSS keyframes + a small rAF hook. Date and league changes navigate without a transition.
 
-8. **Home shows the "Sljedeći stol" card for anyone who has an open round, and Admin Controls for admins.**
+8. ~~**Home shows the "Sljedeći stol" card for anyone who has an open round, and Admin Controls for admins.**
    The design shows them as alternatives (player vs admin), but admins also play; showing both when both apply loses
-   nothing. The card only appears when `/api/rounds/open` returns a round.
+   nothing. The card only appears when `/api/rounds/open` returns a round.~~ — replaced by One Home, no admin editing
+   on mobile (36).
 
 9. **`GET /api/leagues` is public** (follow-up request): every player sees every league in the pickers, and logged-out
    visitors can open the season table (`/league/<id>/standings`) of any league. Daily standings and round dates need a
@@ -270,3 +271,30 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
       table count it showed before is now only in what screen readers hear ("Parovi, kolo 3, 7 stolova").
     - Moj profil on the desktop scrolls each column on its own (hero, Podaci, Moje ekipe), as the handoff asks
       ("desktop columns never clip"), and the Kola tab's right column scrolls too.
+
+36. **One Home on the phone, and no admin editing on mobile** (handoff §2; replaces #8). Početna is the Burza home of
+    the design: the top card (Započni igru / Nastavi igru with the table on a round night, Sljedeća večer the rest of
+    the week, the grey "Nema otvorene runde" card for players without a team or nights, as in #30), the Burza igrača
+    card and the four tiles. It has no admin rows and no logout.
+    - Admins manage leagues, rounds, nights and teams on the desktop only. On a phone, Novo kolo (`/createRound`),
+      Upravljanje ligom, Nova liga, Ekipe (`/teams`, `/teams/new`, `/teams/add-teammate`), a table's admin scorepad and
+      the admin's lineup step before it show "Ovo se uređuje na računalu." with a Početni zaslon button. The phone
+      versions of these screens are gone, with the league-name card and the smoking plan sheet that only they used, so
+      the phone parts of #23 and #32 no longer apply. On the phone an admin plays and sees the league like any player.
+    - "Phone" means a window narrower than the desktop layout (1024 px), so a narrowed browser window on a computer
+      gets the same note; with a mouse it adds "Prozor preglednika je preuzak, raširi ga.". Crossing that width while
+      editing opens the screen afresh: unsaved input is lost and a team removal waiting for Poništi goes through, as
+      when leaving the page. Accepted, as it needs a deliberate resize; keeping the desktop screen alive would load
+      admin data on phones.
+    - Closing another player's Burza ad ("Zatvori oglas (admin)") stays on the phone: it is moderation of an ad, not
+      editing the league, and should be quick wherever the admin is.
+    - Logout on the phone is an "Odjava" text button at the bottom of Moj profil, under Početni zaslon; the design has
+      none once Home lost "Log Out". Alternative: an icon in the Početna header. Reason: logging out is rare and
+      belongs with the account, and the design keeps Početna's header to the brand and the profile button.
+    - The Burza card always opens Burza on Zamjene, as the handoff says ("opens Burza filtered to substitutes"), also
+      when nobody is asking; the tab then says "Nitko ne traži zamjenu." and Partneri and Dostupni are one tap away.
+      Before, the card opened all ads when nobody was asking. With nobody asking the card now drops its second line
+      ("Pogledaj partnere i dostupne igrače"), which promised what the Zamjene tab doesn't show; it keeps "Nitko ne
+      traži zamjenu" and "Objavi oglas kad tebi zatreba igrač ili partner.".
+    - While Početna asks whether the player has an open round, the top card is a neutral navy frame; before, it showed
+      an active Započni igru for a moment on every visit, also on the days without a round.

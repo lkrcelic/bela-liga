@@ -13,6 +13,7 @@ import {
   buttonBase,
   Card,
   dateInputFix,
+  DesktopOnlyNote,
   DesktopShell,
   ellipsis,
   EmptyState,
@@ -20,20 +21,16 @@ import {
   IconCircleButton,
   LoadingRows,
   PrimaryButton,
-  Screen,
-  ScreenTitle,
   SearchInput,
   SuccessNote,
   TextField,
 } from "@/app/_ui/sp";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
-import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
 import RemoveRoundedIcon from "@mui/icons-material/RemoveRounded";
 import {Box} from "@mui/material";
 import Link from "next/link";
-import {useTransitionRouter} from "@/app/_lib/viewTransitions";
 import React, {useEffect, useMemo, useState} from "react";
 
 const DAYS = ["Pon", "Uto", "Sri", "Čet", "Pet", "Sub", "Ned"];
@@ -41,10 +38,13 @@ const DAY_NAMES = ["ponedjeljak", "utorak", "srijeda", "četvrtak", "petak", "su
 
 type TeamItem = {id: number; name: string; players: string};
 
+// Nova liga is made on the desktop only (handoff §2: no admin editing on mobile); the phone says so
 export default function CreateLeague() {
-  const router = useTransitionRouter();
   const isDesktop = useIsDesktop();
+  return isDesktop ? <CreateLeagueDesktop /> : <DesktopOnlyNote />;
+}
 
+function CreateLeagueDesktop() {
   const [name, setName] = useState("");
   const [season, setSeason] = useState(String(new Date().getFullYear()));
   const [startDate, setStartDate] = useState("");
@@ -141,7 +141,7 @@ export default function CreateLeague() {
   };
 
   const details = (
-    <Box component="form" id="create-league" onSubmit={submit} noValidate sx={{display: "flex", flexDirection: "column", gap: "18px", flex: 1}}>
+    <Box component="form" onSubmit={submit} noValidate sx={{display: "flex", flexDirection: "column", gap: "18px", flex: 1}}>
       <Box component="h2" sx={{m: 0, fontFamily: font.display, fontSize: 24, fontWeight: 800}}>
         League details
       </Box>
@@ -158,8 +158,7 @@ export default function CreateLeague() {
         soft
         inputSx={{height: 52, borderRadius: "14px", fontSize: 16}}
       />
-      {/* the phone puts the end date on its own row */}
-      <Box sx={{display: "grid", gridTemplateColumns: isDesktop ? "minmax(0,.7fr) minmax(0,1fr) minmax(0,1fr)" : "minmax(0,1fr) minmax(0,1fr)", gap: "12px"}}>
+      <Box sx={{display: "grid", gridTemplateColumns: "minmax(0,.7fr) minmax(0,1fr) minmax(0,1fr)", gap: "12px"}}>
         <TextField label="Season" placeholder="2026" inputMode="numeric" value={season} onChange={(e) => setSeason(e.target.value)} soft inputSx={{height: 52, borderRadius: "14px", fontSize: 16}} />
         <TextField label="Start date" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} soft inputSx={{height: 52, borderRadius: "14px", fontSize: 16}} />
         <TextField
@@ -170,7 +169,6 @@ export default function CreateLeague() {
           onChange={(e) => setEndDate(e.target.value)}
           error={endsAfterStart(startDate, endDate) ? undefined : END_DATE_ERROR}
           soft
-          sx={isDesktop ? undefined : {gridColumn: "1 / -1"}}
           inputSx={{height: 52, borderRadius: "14px", fontSize: 16}}
         />
       </Box>
@@ -295,17 +293,11 @@ export default function CreateLeague() {
           </Box>
         </SuccessNote>
       )}
-      {isDesktop && submitButton()}
-    </Box>
-  );
-
-  function submitButton() {
-    return (
-      <PrimaryButton type="submit" form="create-league" disabled={!name.trim() || !endsAfterStart(startDate, endDate)} loading={submitting} sx={{mt: "auto"}}>
+      <PrimaryButton type="submit" disabled={!name.trim() || !endsAfterStart(startDate, endDate)} loading={submitting} sx={{mt: "auto"}}>
         {`Create league${count ? ` · ${count} teams` : ""}`}
       </PrimaryButton>
-    );
-  }
+    </Box>
+  );
 
   const teamList = (
     <>
@@ -388,34 +380,16 @@ export default function CreateLeague() {
     </>
   );
 
-  if (isDesktop) {
-    return (
-      <DesktopShell active="createLeague" eyebrow="Admin" title="Create League">
-        <Box sx={{flex: 1, minHeight: 0, display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,1fr)", gap: "20px"}}>
-          <Box sx={{minHeight: 0, display: "flex", flexDirection: "column", gap: "16px"}}>
-            <Card sx={{flex: 1, p: "26px", display: "flex", flexDirection: "column", borderRadius: "24px", overflowY: "auto"}}>{details}</Card>
-          </Box>
-          <Card component="section" aria-label="Ekipe nove lige" sx={{minHeight: 0, display: "flex", flexDirection: "column", overflow: "hidden", borderRadius: "24px"}}>
-            {teamList}
-          </Card>
-        </Box>
-      </DesktopShell>
-    );
-  }
-
   return (
-    <Screen>
-      <Box>
-        <IconCircleButton label="Nazad" onClick={() => router.push("/", "back")}>
-          <ArrowBackRoundedIcon />
-        </IconCircleButton>
+    <DesktopShell active="createLeague" eyebrow="Admin" title="Create League">
+      <Box sx={{flex: 1, minHeight: 0, display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,1fr)", gap: "20px"}}>
+        <Box sx={{minHeight: 0, display: "flex", flexDirection: "column", gap: "16px"}}>
+          <Card sx={{flex: 1, p: "26px", display: "flex", flexDirection: "column", borderRadius: "24px", overflowY: "auto"}}>{details}</Card>
+        </Box>
+        <Card component="section" aria-label="Ekipe nove lige" sx={{minHeight: 0, display: "flex", flexDirection: "column", overflow: "hidden", borderRadius: "24px"}}>
+          {teamList}
+        </Card>
       </Box>
-      <ScreenTitle eyebrow="Admin" title="Create League" sx={{pt: "4px", pb: "8px"}} />
-      <Card sx={{p: "20px", display: "flex", flexDirection: "column"}}>{details}</Card>
-      <Card component="section" aria-label="Ekipe nove lige" sx={{display: "flex", flexDirection: "column", overflow: "hidden", maxHeight: 520}}>
-        {teamList}
-      </Card>
-      {submitButton()}
-    </Screen>
+    </DesktopShell>
   );
 }

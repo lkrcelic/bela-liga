@@ -6,7 +6,7 @@ import useIsAdmin from "@/app/_hooks/useIsAdmin";
 import useIsDesktop from "@/app/_hooks/useIsDesktop";
 import {blankEntry, EntryState, fromPadHand, toAdminHand} from "@/app/_lib/ui/adminEntry";
 import {color, shadow, teamColor, tint} from "@/app/_styles/tokens";
-import {buttonBase, Card, CenteredSpinner, DesktopShell, EmptyState, ErrorNote, Screen} from "@/app/_ui/sp";
+import {buttonBase, Card, CenteredSpinner, DesktopOnlyNote, DesktopShell, EmptyState, ErrorNote} from "@/app/_ui/sp";
 import {HandList, ScorePanel} from "@/app/ongoing-match/ui/BoardParts";
 import AdminEntryPanel from "@/app/league/[leagueId]/daily-standings/table/AdminEntryPanel";
 import AdminPanelSettingsRoundedIcon from "@mui/icons-material/AdminPanelSettingsRounded";
@@ -19,12 +19,17 @@ import React, {useCallback, useEffect, useState} from "react";
 const THRESHOLD = 1001;
 
 // The admin scorepad of one Dnevni poredak table: every hand of its matches, finished or being played, can be added,
-// changed or deleted, also by entering just the points ("Ručni unos"). Desktop only, like the design.
+// changed or deleted, also by entering just the points ("Ručni unos"). Desktop only, like the design (handoff §2: no
+// admin editing on mobile): the phone gets the note and never loads the pad, nor goes on to the lineup.
 export default function TableScorepad() {
+  const isDesktop = useIsDesktop();
+  return isDesktop ? <TableScorepadDesktop /> : <DesktopOnlyNote />;
+}
+
+function TableScorepadDesktop() {
   const params = useParams<{leagueId: string; roundId: string}>();
   const leagueId = Number(params.leagueId);
   const roundId = Number(params.roundId);
-  const isDesktop = useIsDesktop();
   const isAdmin = useIsAdmin();
   const router = useTransitionRouter();
 
@@ -108,16 +113,6 @@ export default function TableScorepad() {
       await finishTableMatchAPI(roundId);
       setSelected(null); // show the next match (or the last one when the round is over)
     }, "Meč nije završen.");
-
-  if (!isDesktop) {
-    return (
-      <Screen>
-        <Card>
-          <EmptyState>Uređivanje stolova radi na računalu.</EmptyState>
-        </Card>
-      </Screen>
-    );
-  }
 
   const back = pad?.date && pad.roundNumber ? {label: `Kolo ${pad.roundNumber}`, href: `/league/${leagueId}/daily-standings?date=${pad.date}&round=${pad.roundNumber}`} : {label: "Dnevni poredak", href: `/league/${leagueId}/daily-standings`};
   const names: [string, string] = pad ? [pad.team1.name, pad.team2.name] : ["", ""];
