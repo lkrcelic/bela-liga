@@ -472,3 +472,26 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
         game skipped that step).
     - A new team can start in no league (the directory's "Nova ekipa"). A request that names no league still joins
       the league being played now, as before.
+
+42. **The numbers on the Team and Player pages** (handoff §6 "Data / API"; the pages themselves come next). Both pages
+    need a login (Q7); a team or player that doesn't exist, a deleted player and the bye team answer "Ekipa ne
+    postoji." / "Igrač ne postoji.".
+    - A team's place and points in a league are its row in that league's Ukupni poredak (the same order, so teams
+      level on points still get different places, as on the standings page). Before the team has finished a round
+      in a league it has no place there ("–"). Najbolje mjesto is its best place over the leagues it has played in;
+      on a tie the running league, then the newer one.
+    - A league is "U tijeku" until its end date has passed. The older leagues have no end date: they count as ended
+      ("Završeno") once their last night has passed, the same way Raspored says "Sezona je završila". A league with
+      neither is still running. Running leagues are listed first, then the newest.
+    - Zadnje večeri on a Team page are its last 4 nights, one line per night and league, with the rounds won, drawn
+      and lost and the point difference exactly as Dnevni poredak counts them (a round against the bye team is a win).
+      Draws are shown only when there are some: "2 pob · 1 ner · 1 por".
+    - The players of a team are in rating order, with the rating, rounds and Privremeno from Rejting. Their usernames
+      reach only admins and the player themself. A player who isn't on Rejting (never on a team, no rated round) has a
+      page with their rating (1500 for a new player), Privremeno and no place. Rejting has no detail for them, so on
+      their page the rating is not a link (no chevron) instead of opening "Igrač ne postoji". Moj profil keeps its
+      existing fallback for the same case (the rating strip opens the Rejting list).
+    - A team's avatar is the first letter of its name (Q14). On the Player page the teams are in name order, each
+      team's leagues newest first ("Liga A · Liga B +1"), and the chips show every player of the team with their first
+      name in the team's rating order, the order of the Team page's Igrači (frame 13c: Ivan 1712, Marko, Krešimir).
+      Moj profil's chips stay in name order.
