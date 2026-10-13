@@ -167,7 +167,9 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
     - Team names aren't declined or given a verb: "Ekipa Slavonci traži zamjenu", "Taj dan igraš za ekipu
       Dalmatinci", since names like "Barcelona" or "Mujo i Haso" can't follow the design's "Slavonci trebaju
       zamjenu" / "za Dalmatince".
-    - Početna's card counts other teams' substitute ads ("1 ekipa traži igrača"), not the player's own.
+    - Početna's card counts other teams' substitute ads ("1 ekipa traži igrača"), not the player's own. Burza ·
+      Zamjene's date filter counts the same way (#49): other teams only, each team once however many nights it asks
+      for, for "Svi datumi" and for the picked night (it used to count every ad, the player's own included).
     - Croatian addresses, as the links get shared: `/burza`, `/burza/12`, `/burza/novi/zamjena|partner|dostupan`,
       `/raspored`. The design's `front_hand` and `event_upcoming` icons aren't in `@mui/icons-material`; BackHand
       and Event stand in.
@@ -245,7 +247,8 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
     - A request that never reaches the server (no signal at the bar) reads "Provjeri vezu i pokušaj ponovno." (the
       design's sentence for a failed load), never the browser's "Failed to fetch" / "Load failed".
     - An expired session reads "Prijava je istekla. Prijavi se ponovno." A round or match that doesn't exist (also
-      a malformed id) is a 404 with "Runda ne postoji." / "Meč ne postoji.", not a 500.
+      a malformed id) is a 404 with "Runda ne postoji." / "Meč ne postoji.", not a 500; so is a malformed id of an ad,
+      league, team, table or result (#49).
     - A rejected form (zod) answers `{error, issues}`: `error` is the schema's own Croatian message ("Ime lige je
       obavezno."), or the route's sentence ("Liga nije napravljena.") where zod would use its English one.
     - A league's numbered round is "kolo" ("To kolo ne postoji.", "Kolo nije obrisano."); the round a player plays
@@ -254,7 +257,9 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
     - The live pill and label say "UŽIVO" instead of the design's "LIVE". Alternative: keep "LIVE" as in the
       mockups. Reason: the handoff asks for Croatian everywhere, and the Admin upute say "uživo".
     - "Učitaj još · još N ekipa / igrača" under paged lists, and "Pokušaj ponovno" on error notes, as designed.
-    - Not shown to anyone, so left as they are: the bye team's internal name and a developer check in the hand entry.
+    - The bye team's side reads "Slobodna runda" wherever it shows (#49: the round's tables and their search, Parovi,
+      the admin's re-pairing and table scorepad); the team's row in the database keeps its internal name. The hand
+      entry's developer check reads "Prvo odaberi tko je zvao." (#48).
 
 35. **Croatian screen copy** (handoff §1; replaces #14). The desktop menu, Početna, Dnevni poredak, the admin
     scorepad, Započni igru, the pairings, Upravljanje ligom (Ekipe, Kola, Podaci, Bilješke) and Moj profil use the
@@ -414,7 +419,9 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
       player themselves (rosters are in Croatian name order) and a round's teams not at all, Moj profil's team chips show the teammates' first names with both initials (the
       design shows usernames in 13e; the Player page's chips in 13c show first names), Rejting no longer sends them
       and its search looks at names only, and finding a player to add to a team is for admins only. Kept: Tko igra
-      ovu rundu? still shows the usernames under the names to the players of that round, as in design 7c.
+      ovu rundu? still shows the usernames under the names to the players of that round, as in design 7c, while the
+      round is open; a finished round's lineup is for admins only (a player gets 403 "Ova runda je već završena.",
+      #49).
     - "Neaktivan" is shown to everyone, not only to admins: it isn't on the handoff's private list, and it explains why
       a teammate isn't offered any more.
     - A deactivated player can't log in. With a password, after the right password, the form says "Račun je
@@ -621,13 +628,12 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
     - In a window under 800 px high (a 1024×640 laptop) every Team and Player page's header card is smaller (a smaller
       name, and tiles of two lines with the sub line after the number), and in Ekipe / Igrači the header's title too,
       with a back pill in the header row. In a window under 1360 px wide the page next to the list has two columns:
-      Igrači (on a player's page Ekipe) keeps its own, the other two cards share the second column, each still scrolling
-      on its own: the upper one (Lige, Osobni podaci) takes what it needs up to 60% of the height, the lower one (Zadnje
-      večeri) the rest, so both titles are always in view; while the upper card's add field is in use, the lower one
-      gives way down to its title. **Open decision for the user:** the handoff asks for three equal columns, each
-      scrolling on its own; next to the 290 px list a 1024–1359 px window leaves the three columns 8–30 px for names, so
-      this two-column layout is not designed (alternative: three narrow columns with smaller rows, or the list collapsed
-      under 1360 px).
+      Igrači (on a player's page Ekipe) keeps its own scroll, and the other two cards are stacked in the second column,
+      each as tall as its rows, and that column scrolls as a whole (#49; at first each card scrolled on its own, the
+      upper one taking up to 60% of the height). An add field that is open keeps its text and its list when the window
+      crosses 1360 px. **Open decision for the user:** the handoff asks for three equal columns, each scrolling on its
+      own; next to the 290 px list a 1024–1359 px window leaves the three columns 8–30 px for names, so this two-column
+      layout is not designed (alternative: three narrow columns with smaller rows, or the list collapsed under 1360 px).
     - Copy that no design gives (open for review): "Upiši ime ekipe." (empty name); "Upiši ime nove ekipe i spremi ga."
       (under Nova ekipa's field); "Igrače dodaješ kad spremiš ime ekipe." (Nova ekipa's Igrači); "Ekipa ide u ligu
       {liga} kad spremiš ime." / "Ekipa ide u odabranu ligu kad spremiš ime." (Nova ekipa's Lige from Upravljanje
@@ -703,3 +709,44 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
       and its players go onto more lines; a username too long for a player chip ends in "…" and shows whole on hover;
       the league picker gives way to the rounds in Dnevni poredak's header. The last English error ("Trump caller
       team is not set") now reads "Prvo odaberi tko je zvao.".
+
+49. **The last audit pass** (handoff "Done when"; updates #29, #34, #40 and #46).
+    - **Raspored with more than one league:** the switcher shows each league's whole name. Names often differ only at
+      their end ("Pitanik Bela Liga Proljeće 25/26" / "… Jesen 25/26"), and both tabs used to be cut at the shared
+      start. On the phone the tabs share the width and a name wraps onto a second line (after two lines it ends in
+      "…"; the whole name shows on hover); on the desktop the strip is as wide as the names, up to 60% of the window,
+      and gives way to the title by wrapping the same way. The eyebrow then names only the team ("PULENI"), since the
+      league is in the tabs (it used to lose the team at the end of a long league name); with one league it stays
+      "<liga> · <ekipa>".
+    - **Burza · Zamjene** counts the teams looking for a player as Početna does (#29), so "3 ekipe traže igrača" on
+      Početna opens "Svi datumi · 3 ekipe traže igrača". A night with only the player's own ad reads "0 ekipa traži
+      igrača" above that ad.
+    - **Croatian error pages** (not designed; copy open for review). An address the app doesn't have, and a page's own
+      "not found" (/league/current/<page>), shows "Stranica ne postoji" / "Možda je poveznica pogrešna." with Početni
+      zaslon, and the browser tab says "Stranica ne postoji · Piatnik Bela Liga" (before, Next's English "404: This page
+      could not be found."). Logged out, most addresses still go to Prijava first (the middleware), so only the public
+      ones reach it. A page that breaks while it is shown says "Nešto je pošlo po zlu" / "Pokušaj ponovno ili se vrati
+      na početni zaslon." with Pokušaj ponovno (it renders the page again) and Početni zaslon (before, Next's English
+      "Application error"); when the app's frame itself breaks, the same page brings its own theme and fonts, and
+      Početni zaslon loads the app afresh. On the phone Početni zaslon is at the bottom, as on the other screens; on the
+      desktop it is under the message, an outline button under Pokušaj ponovno.
+    - **Moj profil's username hint** reads "Po ovom imenu te administrator pronalazi kad te dodaje u ekipu." (it said
+      teammates find you, but only admins add players to teams now, #46). Upravljanje ligom's Kola tab has a list
+      icon (the design's `event_list`), no longer a calendar like Datumi's next to it.
+    - **Team and Player pages next to the admin's lists** under 1360 px: the stacked second column scrolls as a whole
+      (#46). On the phone a one-word team name never breaks inside the word: the name gets smaller, down to 22 px
+      ("VuglecBrežani" at 320 px); a long word that still doesn't fit breaks as before. A league line breaks before
+      "· Završeno", not inside it. The desktop's round scroll arrows go away when a panel covers the list under them.
+    - **Standings:** Dnevni poredak breaks ties on points and difference by team name, so places no longer swap
+      between loads and live refreshes (Ukupni poredak already did). Phone rows under 390 px have a smaller stats line
+      and closer columns so it never runs under RAZ; under 375 px the "21 OK ·" part is left out (screen readers still
+      read it) and under 340 px RAZ is a size smaller. The phone Dnevni poredak date is smaller under 360 px, so it ends
+      before the arrows. The desktop Dnevni poredak tabs that don't fit fade out at that side, scroll with the mouse
+      wheel, and the open or keyboard-focused tab is kept clear of the fade. Početna's Ukupni poredak card has no
+      labels row, as in 3a.
+    - **The bye** reads "Slobodna runda" (#34). **A finished round's lineup** is for admins only (#40). **A malformed
+      id** in an address of an ad, league, team, table or result answers 404 with its "… ne postoji." (#34; the
+      /burza/<id> page then says "Ovaj oglas ne postoji."). A login sent without a username or password answers "Upiši
+      korisničko ime i lozinku.". API handlers nothing called any more are gone (GET /api/players,
+      /api/teams/add-teammate, /api/session, POST /api/rounds and /api/rounds/[id]/finish, GET /api/roundMatchups, PUT
+      /api/burza/availability); the /teams/add-teammate page address still forwards to Ekipe.

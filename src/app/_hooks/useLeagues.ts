@@ -2,7 +2,7 @@
 
 import {getLeaguesAPI} from "@/app/_fetchers/league/leagues";
 import {LeagueSummary} from "@/app/_interfaces/league";
-import {plural} from "@/app/_lib/ui/text";
+import {count, NOUN} from "@/app/_lib/ui/text";
 import {useEffect, useState} from "react";
 
 export type LeagueOption = {
@@ -33,7 +33,7 @@ let inflight: Promise<LeagueOption[]> | null = null;
 const listeners = new Set<(leagues: LeagueOption[]) => void>();
 
 function leagueMeta(teamCount: number, playDay: number | null | undefined, active: boolean): string {
-  return [`${teamCount} ${plural(teamCount, "ekipa", "ekipe", "ekipa")}`, playDay != null ? PLAY_DAY[playDay] : null, active ? "aktivna" : null]
+  return [count(teamCount, NOUN.ekipa), playDay != null ? PLAY_DAY[playDay] : null, active ? "aktivna" : null]
     .filter(Boolean)
     .join(" · ");
 }
