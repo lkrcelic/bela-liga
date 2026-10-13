@@ -750,3 +750,6 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
       korisničko ime i lozinku.". API handlers nothing called any more are gone (GET /api/players,
       /api/teams/add-teammate, /api/session, POST /api/rounds and /api/rounds/[id]/finish, GET /api/roundMatchups, PUT
       /api/burza/availability); the /teams/add-teammate page address still forwards to Ekipe.
+50. **The play day is optional** (your request). Nova liga and Upravljanje ligom · Podaci show "Dan igranja ·
+    neobavezno": no day is picked at first, and tapping the picked day clears it. With a day, the nights fill in from
+    the start and end as before; without one, the admin adds the exact nights one by one.
