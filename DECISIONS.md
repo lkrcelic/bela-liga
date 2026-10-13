@@ -580,3 +580,60 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
       Početna and Rejting by those words (#43 had "Natrag" for Ukupni poredak and Početna).
     - /league/current/<page> keeps the link's query (`?team=`, `?date=`). Opened from outside the app it only forwards,
       so the page it lands on is a fresh start with no Back (it used to count as a step from the forwarding page).
+
+46. **The admin's Ekipe and Igrači, and the admin controls on a Team page** (handoff §6 "Routes and navigation" and
+    "Admin controls", design 13h, 13j, 13o, the nav of 3a; replaces Manage Team). Desktop only: on the phone an admin
+    gets "Ovo se uređuje na računalu." for /teams and /players and sees the Team and Player pages without controls;
+    anyone who isn't an admin is sent from /teams and /players to Početna.
+    - The menu's ADMIN group is Upravljanje ligom, Nova liga, **Ekipe** and **Igrači** (as 3a). Burza igrača gets a
+      person-with-magnifier icon, so no two items share one. Manage Team and its addresses are gone: /teams/new
+      (?league=) and /teams/add-teammate only forward to Ekipe (a real redirect in next.config.mjs, so an old bookmark
+      opened in a fresh tab lands there too).
+    - Ekipe and Igrači show a 290 px list next to the page of the one picked: every team / every player but the deleted
+      ones, in Croatian alphabetical order, with the count of all of them, 12 at a time ("Učitaj još"). A team is found
+      by its name or a player's name or username, a player by name or username. A team's line is "3 igrača · 2 lige", a
+      player's "@iperic · Dalmatinci" (all their teams; a deactivated player has the small "Neaktivan" tag). /teams and
+      /players open the first one of the list, and the address then names it. The picked one is always in the list, with
+      at least half a page of rows after it (so the list doesn't seem to end there), scrolled into view when the page
+      was opened by a link. The list keeps its search and scroll while the page beside it changes, and Back to it from
+      another page (a league's table, a player's page) brings back its search, its pages and its scroll.
+    - Picking from the list starts afresh, like a menu item: no back pill, and the page crossfades instead of sliding. A
+      link inside the page keeps the page stack: a player opened from a team shows the Igrači list (the menu marks
+      Igrači) with "‹ Puleni".
+    - On a Team page an admin always sees (no edit mode): the pencil next to the name, which turns it into a field (✓ or
+      Enter saves, Escape cancels; an empty name is "Upiši ime ekipe.", another team's name ignoring case "Ekipa s tim
+      imenom već postoji.", in a small white note over the tiles under the field with a red icon and ink text, so the
+      header card keeps its height and the ✓ stays level with the field); "Dodaj igrača · ime ili korisničko ime", which
+      on focus lists the active players who aren't in the team ("Nema takvog igrača." when typing finds none); a remove
+      button on every player row ("Ukloni iz ekipe", at once, no confirmation, as designed); "Dodaj u ligu · ime lige"
+      with the other leagues, running ones first ("Sezona 2026 · U tijeku"; long league names wrap, since they differ
+      only at the end), "Ekipa je već u svim ligama." under it for a team in every league, and "Lige se nisu učitale."
+      with Pokušaj ponovno when the list doesn't load. Every change is saved at once and shows at once, here and in both
+      lists (a player being added shows with a spinner until the server sends their rating); a change the server refuses
+      is undone and its reason shown in that card until the next change. Leaving a league stays in Upravljanje ligom.
+    - "Nova ekipa" (not designed; plan Q13) opens an empty team in the page with its name field ready, the columns as
+      13o ("0 igrača", the labels rows, empty); ✓ makes the team and opens its page, where players and leagues are
+      added. From the list the team is in no league; from Upravljanje ligom's "Nova ekipa" it joins that league, which
+      the empty Lige card names. Escape goes back to Upravljanje ligom, or to the team that was open in the list.
+    - "Pozovi igrača" (not designed; plan Q12) copies the sign-up link (…/signup) and says "Poveznica za registraciju je
+      kopirana." for 4 s on a line over the button; without access to the clipboard it shows the link to copy by hand.
+      Players sign up themselves and are added to teams once they have an account.
+    - In a window under 800 px high (a 1024×640 laptop) every Team and Player page's header card is smaller (a smaller
+      name, and tiles of two lines with the sub line after the number), and in Ekipe / Igrači the header's title too,
+      with a back pill in the header row. In a window under 1360 px wide the page next to the list has two columns:
+      Igrači (on a player's page Ekipe) keeps its own, the other two cards share the second column, each still scrolling
+      on its own: the upper one (Lige, Osobni podaci) takes what it needs up to 60% of the height, the lower one (Zadnje
+      večeri) the rest, so both titles are always in view; while the upper card's add field is in use, the lower one
+      gives way down to its title. **Open decision for the user:** the handoff asks for three equal columns, each
+      scrolling on its own; next to the 290 px list a 1024–1359 px window leaves the three columns 8–30 px for names, so
+      this two-column layout is not designed (alternative: three narrow columns with smaller rows, or the list collapsed
+      under 1360 px).
+    - Copy that no design gives (open for review): "Upiši ime ekipe." (empty name); "Upiši ime nove ekipe i spremi ga."
+      (under Nova ekipa's field); "Igrače dodaješ kad spremiš ime ekipe." (Nova ekipa's Igrači); "Ekipa ide u ligu
+      {liga} kad spremiš ime." / "Ekipa ide u odabranu ligu kad spremiš ime." (Nova ekipa's Lige from Upravljanje
+      ligom); "Dodajem u ekipu…" (a player being added); "Ekipa je već u svim ligama."; "Lige se nisu učitale.";
+      "Nijedna ekipa ne odgovara pretrazi." / "Nijedan igrač ne odgovara pretrazi." / "Još nema ekipa." / "Još nema
+      igrača." (the lists); "Još nema ekipa" + "Napravi prvu ekipu." and "Još nema igrača" + "Pozovi ih poveznicom za
+      registraciju." (/teams and /players with an empty list); "Poveznica za registraciju: {poveznica}" (no clipboard);
+      "Ime ekipe nije spremljeno.", "Igrač nije dodan u ekipu.", "Igrač nije uklonjen iz ekipe.", "Ekipa nije dodana u
+      ligu.", "Ekipa nije napravljena." (when the server gives no reason).
