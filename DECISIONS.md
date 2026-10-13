@@ -770,3 +770,6 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
 53. **"Suigrač" instead of "igra s"** (your request; updates #51). The ad names the player the substitute plays with
     as "Suigrač: Ime Prezime" (card), a "Suigrač" row (ad page) and "suigrač: Ime Prezime" (Moji oglasi), which reads
     naturally without declining the name. The hint under "Tko traži zamjenu?" is gone.
+54. **A substitute ad gives the suigrač's rating, not the team's** (your request; updates #29). The card reads
+    "Suigrač: Marko Blažević · rejting 1335" (nothing after the name before their first rated round), the line under
+    the team name gives only the league, and the ad page's row is "Rejting suigrača" ("Još nema" before a rated round).
