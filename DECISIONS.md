@@ -773,3 +773,15 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
 54. **A substitute ad gives the suigrač's rating, not the team's** (your request; updates #29). The card reads
     "Suigrač: Marko Blažević · rejting 1335" (nothing after the name before their first rated round), the line under
     the team name gives only the league, and the ad page's row is "Rejting suigrača" ("Još nema" before a rated round).
+55. **When a night starts** (your request). Like the play day it is optional: Nova liga and Upravljanje ligom · Podaci
+    have "Početak večeri · neobavezno", a time field with a button that empties it (no time). It is the league's time
+    for every night; Datumi has a Početak column with each night's time ("20:00 zadano" for the league's, bold for the
+    night's own, "—" without one), and a night still to be played (no rounds, not past) gets a pencil to set its own
+    time and a button back to the league's ("Vrati zadani početak (20:00)"). Dodaj večer takes an optional time too; a
+    time equal to the league's isn't kept as the night's own, so the night follows a later change in Podaci. The server
+    refuses another night's change with "Početak se mijenja samo večerima koje još nisu odigrane." and a wrong time
+    with "Početak večeri mora biti vrijeme od 00:00 do 23:59.". Players see it after the date in Raspored ("sri 14. 10.
+    · 19:00", in the list and on the Sljedeća večer card) and on Početna's Sljedeća večer card; a night without a time
+    shows only its date, as before. League.start_time and LeagueNight.start_time are "HH:MM" text (migration
+    20261013150000_night_start_time), not a Postgres TIME, which Prisma would read as a date and time that a time zone
+    can shift.
