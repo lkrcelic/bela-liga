@@ -5,6 +5,7 @@ import useIsDesktop from "@/app/_hooks/useIsDesktop";
 import useLeagues, {useLeagueList} from "@/app/_hooks/useLeagues";
 import useMyTeams from "@/app/_hooks/useMyTeams";
 import useNavStack from "@/app/_hooks/useNavStack";
+import useShortWindow from "@/app/_hooks/useShortWindow";
 import {useLeagueStandings} from "@/app/_hooks/useStandings";
 import {leagueDateString} from "@/app/_lib/dates";
 import {leagueEnded} from "@/app/_lib/league";
@@ -29,7 +30,7 @@ import {
   StandingsGrid,
   StandingsRows,
 } from "@/app/_ui/sp";
-import {DesktopFrame, useShortWindow} from "@/app/_ui/profiles/PageParts";
+import {DesktopFrame} from "@/app/_ui/profiles/PageParts";
 import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
 import LoginRoundedIcon from "@mui/icons-material/LoginRounded";
 import useAuthStore from "@/app/_store/authStore";

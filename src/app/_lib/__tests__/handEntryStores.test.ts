@@ -4,7 +4,7 @@ import {beforeEach, test} from "node:test";
 import {BelaPlayerAnnouncementResponse, BelaPlayerAnnouncementsRequest} from "@/app/_interfaces/belaPlayerAnnouncement";
 import {BelaResultResponse} from "@/app/_interfaces/belaResult";
 import useAnnouncementStore from "@/app/_store/bela/announcementStore";
-import useResultStore from "@/app/_store/bela/resultStore";
+import useResultStore, {CALLER_MISSING} from "@/app/_store/bela/resultStore";
 import {resetHand} from "./helpers/handEntry";
 
 // The keypad and zvanja logic behind the scoreboard's hand entry (phone wizard and desktop panel)
@@ -59,7 +59,7 @@ test("a saved hand opened for editing is replaced by the first digit, not append
 
 test("Štiglja gives the active team 252 to 0 and needs a trump caller first", () => {
   result().setActiveTeam("team2");
-  assert.throws(() => result().setCompleteVictory(), /Trump caller/);
+  assert.throws(() => result().setCompleteVictory(), {message: CALLER_MISSING});
 
   result().setTrumpCallerTeam(1);
   result().setCompleteVictory();
@@ -85,7 +85,7 @@ test("clearing the points keeps the announcements and drops Štiglja", () => {
 test("totals can't be computed before the trump caller is chosen", () => {
   result().setActiveTeam("team1");
   type("92");
-  assert.throws(() => result().setTotalPoints(), /Trump caller/);
+  assert.throws(() => result().setTotalPoints(), {message: CALLER_MISSING});
 });
 
 test("totals follow the rules: the caller falls when not ahead", () => {

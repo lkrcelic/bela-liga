@@ -4,6 +4,7 @@ import {addHandAPI, deleteHandAPI, finishTableMatchAPI, getTablePadAPI, HandTarg
 import {PadHand, PadMatch, TablePad} from "@/app/_interfaces/adminHand";
 import useIsAdmin from "@/app/_hooks/useIsAdmin";
 import useIsDesktop from "@/app/_hooks/useIsDesktop";
+import useShortWindow from "@/app/_hooks/useShortWindow";
 import {blankEntry, EntryState, fromPadHand, toAdminHand} from "@/app/_lib/ui/adminEntry";
 import {color, shadow, teamColor, tint} from "@/app/_styles/tokens";
 import {buttonBase, Card, CenteredSpinner, DesktopOnlyNote, DesktopShell, EmptyState, ErrorNote} from "@/app/_ui/sp";
@@ -32,6 +33,8 @@ function TableScorepadDesktop() {
   const roundId = Number(params.roundId);
   const isAdmin = useIsAdmin();
   const router = useTransitionRouter();
+  // a short window (1024×640): a smaller header, so the entry panel needs less scrolling
+  const short = useShortWindow();
 
   const [pad, setPad] = useState<TablePad | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -121,6 +124,7 @@ function TableScorepadDesktop() {
   return (
     <DesktopShell
       active="daily"
+      compact={short}
       back={back}
       eyebrow={pad ? `Stol ${pad.table ?? "–"} · Kolo ${pad.roundNumber ?? "–"} · ${state}` : "Admin"}
       title={pad ? `${pad.team1.name} vs ${pad.team2.name}` : "Stol"}

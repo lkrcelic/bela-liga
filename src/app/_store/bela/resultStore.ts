@@ -6,6 +6,9 @@ import {BelaPlayerAnnouncementsRequest, TeamSide} from "@/app/_interfaces/belaPl
 import {createJSONStorage, persist} from "zustand/middleware";
 import {COMPLETE_VICTORY_POINTS, computeHandTotals, HAND_POINTS} from "@/app/_lib/bela/scoring";
 
+// a hand is counted only once it is known who called trumps (the screens ask for it first; this is the last guard)
+export const CALLER_MISSING = "Prvo odaberi tko je zvao.";
+
 type BelaResultTypeExtended = BelaResultResponse & {
   activeTeam: "team1" | "team2";
 }
@@ -126,7 +129,7 @@ const useResultStore = create<ResultState>()(persist<ResultState>((set) => ({
       } = state;
 
       if (trump_caller_team !== 1 && trump_caller_team !== 2) {
-        throw new Error("Trump caller team is not set");
+        throw new Error(CALLER_MISSING);
       }
 
       const totals = computeHandTotals({
@@ -169,7 +172,7 @@ const useResultStore = create<ResultState>()(persist<ResultState>((set) => ({
         }
       } = state;
       if (trump_caller_team == null) {
-        throw new Error("Trump caller team is not set");
+        throw new Error(CALLER_MISSING);
       }
 
       if (activeTeam === "team1") {

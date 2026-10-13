@@ -21,6 +21,7 @@ import {
   LeagueMenuButton,
   LoadMoreButton,
   LoadingRows,
+  NARROW_DESKTOP,
   OutlineButton,
   PlayerChip,
   SearchInput,
@@ -57,7 +58,10 @@ type Team = NonNullable<ReturnType<typeof useLeagueTeams>["teams"]>[number];
 type PendingRemoval = {team: Team; index: number; timer: number};
 
 const UNDO_MS = 8000;
-const TEAM_GRID = "minmax(0,1.1fr) minmax(0,1.4fr) 80px 170px 44px";
+// Under 1280 px wide (1024×640) the "Dodaj ekipu" column and the number columns are narrower, a team's name wraps and
+// its players go onto more lines; a username too long for the column still ends in "…" (the chip shows it whole on
+// hover)
+const TEAM_GRID = {gridTemplateColumns: "minmax(0,1.1fr) minmax(0,1.4fr) 80px 170px 44px", [NARROW_DESKTOP]: {gridTemplateColumns: "minmax(0,1.1fr) minmax(0,1.4fr) 72px 150px 44px"}} as const;
 
 function removalNote(played: number | null): string {
   const stay = "Ekipa i igrači ostaju u aplikaciji.";
@@ -283,13 +287,13 @@ function ManageLeagueDesktop() {
       ) : view === "dates" ? (
         <DatesView leagueId={leagueId} data={leagueNights} />
       ) : (
-        <Box sx={{flex: 1, minHeight: 0, display: "grid", gridTemplateColumns: "minmax(0,1fr) 380px", gap: "20px"}}>
+        <Box sx={{flex: 1, minHeight: 0, display: "grid", gridTemplateColumns: "minmax(0,1fr) 380px", [NARROW_DESKTOP]: {gridTemplateColumns: "minmax(0,1fr) 320px"}, gap: "20px"}}>
           <Card component="section" aria-label={`Ekipe lige ${leagueName}`} sx={{minHeight: 0, display: "flex", flexDirection: "column", overflow: "hidden", borderRadius: "24px"}}>
             {toolbar}
             {actionError && <ErrorNote sx={{m: "12px 14px 0"}}>{actionError}</ErrorNote>}
             <Box
               aria-hidden
-              sx={{flex: "none", height: 40, display: "grid", gridTemplateColumns: TEAM_GRID, gap: "12px", alignItems: "center", px: "20px", background: color.paper2, borderBottom: `1px solid ${tint.navy[10]}`, fontSize: 12, fontWeight: 600, letterSpacing: ".08em", textTransform: "uppercase", color: color.muted}}
+              sx={{flex: "none", height: 40, display: "grid", ...TEAM_GRID, gap: "12px", alignItems: "center", px: "20px", background: color.paper2, borderBottom: `1px solid ${tint.navy[10]}`, fontSize: 12, fontWeight: 600, letterSpacing: ".08em", textTransform: "uppercase", color: color.muted}}
             >
               <span>Ekipa</span>
               <span>Igrači</span>
@@ -311,7 +315,7 @@ function ManageLeagueDesktop() {
                     sx={{
                       minHeight: 60,
                       display: "grid",
-                      gridTemplateColumns: TEAM_GRID,
+                      ...TEAM_GRID,
                       gap: "0 12px",
                       alignItems: "center",
                       px: "20px",
@@ -320,10 +324,10 @@ function ManageLeagueDesktop() {
                       animation: r.id === justAdded ? "spRowIn 420ms cubic-bezier(.2,.8,.2,1) both" : "none",
                     }}
                   >
-                    <Box component="span" sx={{fontSize: 16, fontWeight: 600, color: r.active ? color.ink : color.muted, ...ellipsis}}>
+                    <Box component="span" sx={{fontSize: 16, fontWeight: 600, color: r.active ? color.ink : color.muted, ...ellipsis, [NARROW_DESKTOP]: {whiteSpace: "normal", overflowWrap: "anywhere", py: "8px"}}}>
                       {r.name}
                     </Box>
-                    <Box component="span" sx={{display: "flex", gap: "6px", minWidth: 0, overflow: "hidden", opacity: r.active ? 1 : 0.55}}>
+                    <Box component="span" sx={{display: "flex", gap: "6px", minWidth: 0, overflow: "hidden", opacity: r.active ? 1 : 0.55, [NARROW_DESKTOP]: {flexWrap: "wrap", py: "8px"}}}>
                       {r.players.map((p) => (
                         <PlayerChip key={p} name={p} size="sm" />
                       ))}

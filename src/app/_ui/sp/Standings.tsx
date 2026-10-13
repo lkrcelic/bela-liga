@@ -4,7 +4,7 @@ import {count, NOUN, plural} from "@/app/_lib/ui/text";
 import {TransitionLink} from "@/app/_lib/viewTransitions";
 import {Box, SxProps, Theme} from "@mui/material";
 import React from "react";
-import {ellipsis, mergeSx, rowFocus, stretchedArea, tabular} from "./base";
+import {ellipsis, mergeSx, rowFocus, stretchedArea, tabular, visuallyHidden} from "./base";
 import {RankBadge} from "./Live";
 
 // Where a row (or podium card) leads: its team's page; null or no function = the row is not a link (the public
@@ -177,7 +177,7 @@ export function VisuallyHidden({children}: {children: React.ReactNode}) {
   return (
     <Box
       component="span"
-      sx={{position: "absolute", width: 1, height: 1, p: 0, m: -1, overflow: "hidden", clip: "rect(0,0,0,0)", whiteSpace: "nowrap", border: 0}}
+      sx={visuallyHidden}
     >
       {children}
     </Box>
@@ -362,7 +362,7 @@ export function StandingsGrid({
   const keepClear = {top: headHeight + rowHeight / 2, bottom: rowHeight / 2};
   return (
     <Box component="table" role="table" sx={mergeSx({width: "100%", borderCollapse: "collapse", display: "block"}, sx)}>
-      <Box component="caption" sx={{position: "absolute", width: 1, height: 1, overflow: "hidden", clip: "rect(0,0,0,0)"}}>
+      <Box component="caption" sx={visuallyHidden}>
         {caption}
       </Box>
       <Box component="thead" role="rowgroup" data-pinned="" sx={{display: "block", position: "sticky", top: 0, zIndex: 1}}>

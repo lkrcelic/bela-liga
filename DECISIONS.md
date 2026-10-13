@@ -674,3 +674,32 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
       spremljena." and "Igrač nije obrisan." (when the server gives no reason).
     - The round scroll arrows of the desktop lists now go away when the list under a still pointer does (they stayed
       over the page after the panel was closed with Escape).
+
+48. **Rejting in pages, the picked player in the address, and the last fixes before release** (handoff §7 and "Done
+    when"; design 8a–8m; adds to #45).
+    - Rejting shows 50 players at a time, with "Učitaj još · još 77 igrača" as the last row of the list (phone and
+      desktop). Without a search the first page reaches down to your own row by its place on the list, rounded up to
+      ten (the 141st row → 150 rows; players with the same rating share a #, so the place counts, not the #), so your
+      highlighted row is always in the list; on the desktop it also reaches the player a /ratings/<id> link opened, and
+      the list opens with that row (else your own) in the middle. A search matches names only (usernames are private)
+      and keeps each player's place on the whole list; it starts again at the first page and at the top of the list.
+      The whole list still comes in one request (a few hundred players at most), so no server paging was needed. When
+      "Učitaj još" loads the last page with the keyboard, the focus moves to the first new row (also in the Ekipe and
+      Igrači lists).
+    - Desktop: picking a row puts the player in the address (/ratings/<id>) without loading a new page, so the search
+      and the scroll stay; a reload or a shared link opens that player, and Back from the Player page opened from the
+      detail comes back to them. The phone and desktop searches look as designed (white without a border on the
+      phone, paper on the desktop) and have an "Očisti" button, as does the Ekipe and Igrači search. While the list or
+      a player's detail loads, grey placeholders breathe instead of a spinner. On the desktop, the "no rounds yet" card
+      has no icon and no shadow.
+    - Under 1280 px wide (1024×640) the desktop list has narrower number columns and a 360 px detail, and "Privremeno"
+      moves next to the team under the name, so the names stay readable (they were 2 px wide). On a phone under 380 px
+      the detail's rating is a size smaller so "+15 zadnja večer" fits beside it (under 340 px it goes under it).
+    - Final pass over every screen at 375×812, 1440×900 and 1024×640: the phone rating detail no longer scrolls
+      sideways (a hidden screen-reader text was as wide as the card); on a short window (under 800 px high) the
+      desktop scorepad's hand entry and the admin's table scorepad are a little smaller and their keys never squeeze
+      into each other, and the admin's panel fits whole at 1024×640, "Spremi igru" included (it scrolls only with an
+      error note); Upravljanje ligom · Ekipe has a narrower "Dodaj ekipu" column under 1280 px, a team's name wraps
+      and its players go onto more lines; a username too long for a player chip ends in "…" and shows whole on hover;
+      the league picker gives way to the rounds in Dnevni poredak's header. The last English error ("Trump caller
+      team is not set") now reads "Prvo odaberi tko je zvao.".

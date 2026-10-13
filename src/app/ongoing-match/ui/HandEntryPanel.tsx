@@ -2,9 +2,9 @@
 
 import {TeamSide} from "@/app/_interfaces/belaPlayerAnnouncement";
 import useAnnouncementStore from "@/app/_store/bela/announcementStore";
-import useResultStore from "@/app/_store/bela/resultStore";
+import useResultStore, {CALLER_MISSING} from "@/app/_store/bela/resultStore";
 import {color, font, teamColor, tint} from "@/app/_styles/tokens";
-import {buttonBase, Card, ErrorNote, PrimaryButton, tabular} from "@/app/_ui/sp";
+import {buttonBase, Card, ErrorNote, PrimaryButton, SHORT_WINDOW, tabular} from "@/app/_ui/sp";
 import AddCircleRoundedIcon from "@mui/icons-material/AddCircleRounded";
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
 import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
@@ -100,7 +100,7 @@ export default function HandEntryPanel({
 
   const stiglja = () => {
     if (caller !== 1 && caller !== 2) {
-      setError("Prvo odaberi tko je zvao.");
+      setError(CALLER_MISSING);
       return;
     }
     setError(null);
@@ -115,7 +115,7 @@ export default function HandEntryPanel({
     fontFamily: font.display,
     fontSize: 26,
     fontWeight: 700,
-    minHeight: 44,
+    minHeight: 40,
     "&:active:not(:disabled)": {transform: "scale(.96)", background: color.lineFill},
     "&:disabled": {opacity: 0.35},
   } as const;
@@ -124,7 +124,18 @@ export default function HandEntryPanel({
     <Card
       component="section"
       aria-labelledby="entry-title"
-      sx={{minHeight: 0, borderRadius: "24px", p: "20px", display: "flex", flexDirection: "column", gap: "14px"}}
+      sx={{
+        minHeight: 0,
+        borderRadius: "24px",
+        p: "20px",
+        display: "flex",
+        flexDirection: "column",
+        gap: "14px",
+        // a short window (1024×640): everything a little smaller, and if it still doesn't fit the panel scrolls (the keys
+        // never squeeze into each other)
+        overflowY: "auto",
+        [SHORT_WINDOW]: {p: "16px", gap: "8px"},
+      }}
     >
       <Box sx={{display: "flex", alignItems: "center", justifyContent: "space-between"}}>
         <Box component="h2" id="entry-title" sx={{m: 0, fontFamily: font.display, fontSize: 24, fontWeight: 800}}>
@@ -158,6 +169,7 @@ export default function HandEntryPanel({
                 sx={{
                   ...buttonBase,
                   height: 52,
+                  [SHORT_WINDOW]: {height: 44},
                   borderRadius: "14px",
                   border: `2px solid ${teamColor[i]}`,
                   background: on ? teamColor[i] : color.white,
@@ -199,6 +211,7 @@ export default function HandEntryPanel({
               sx={{
                 ...buttonBase,
                 height: 84,
+                [SHORT_WINDOW]: {height: 68},
                 borderRadius: "16px",
                 border: `2px solid ${teamColor[i]}`,
                 background: on ? teamColor[i] : color.white,
@@ -232,6 +245,7 @@ export default function HandEntryPanel({
                 ...buttonBase,
                 position: "relative",
                 height: 52,
+                [SHORT_WINDOW]: {height: 44},
                 borderRadius: "14px",
                 background: color.cream,
                 color: color.navy,
@@ -282,6 +296,7 @@ export default function HandEntryPanel({
           sx={{
             ...buttonBase,
             height: 52,
+            [SHORT_WINDOW]: {height: 44},
             borderRadius: "14px",
             border: `2px solid ${tint.navy[25]}`,
             color: color.navy,
@@ -297,7 +312,7 @@ export default function HandEntryPanel({
       <Box
         role="group"
         aria-label="Bodovi igre"
-        sx={{flex: 1, minHeight: 0, display: "grid", gridTemplateColumns: "repeat(3, minmax(0,1fr))", gridAutoRows: "minmax(0,1fr)", gap: "8px"}}
+        sx={{flex: "1 0 auto", display: "grid", gridTemplateColumns: "repeat(3, minmax(0,1fr))", gridAutoRows: "minmax(40px,1fr)", gap: "8px"}}
       >
         {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((d) => (
           <Box key={d} component="button" type="button" onClick={() => setGamePoints(d)} disabled={result.complete_victory} sx={key}>
