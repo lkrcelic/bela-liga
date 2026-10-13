@@ -21,6 +21,7 @@ import {
   LeagueEyebrowButton,
   LeagueMenuButton,
   LoadingRows,
+  MovementNote,
   Podium,
   PrimaryButton,
   Screen,
@@ -61,7 +62,7 @@ function LeagueStandings() {
   const leagues = useLeagues(leagueId);
   const {teams} = useMyTeams();
   const myTeamNames = useMemo(() => teams.map((t) => t.team_name), [teams]);
-  const {standings, loading, error, reload} = useLeagueStandings(leagueId);
+  const {standings, movement, loading, error, reload} = useLeagueStandings(leagueId);
   const rows = useMemo(() => toStandingsRows(standings, {myTeamNames, highlightTeamId}), [standings, myTeamNames, highlightTeamId]);
   const {podium, rest} = splitPodium(rows);
   const leagueName = leagues.find((l) => l.id === leagueId)?.name ?? "";
@@ -119,24 +120,39 @@ function LeagueStandings() {
       );
     }
     if (desktop) {
+      // the +/− (since the league's previous night) is a column after "#", a pill on the podium and a note under the
+      // table, which stays put while the rows scroll
+      const grid = (
+        <StandingsGrid
+          rows={podium.length ? rest : rows}
+          columns={["played", "wins", "draws", "losses"]}
+          showLive={false}
+          showMovement={movement.show}
+          caption={`Ukupni poredak: ${leagueName}`}
+          rowHref={rowHref}
+        />
+      );
       return (
         <>
-          <Podium rows={podium} rowHref={rowHref} />
-          <Card ref={scroller.ref} sx={{flex: 1, minHeight: 0, overflowY: "auto", borderRadius: "24px"}}>
-            <StandingsGrid
-              rows={podium.length ? rest : rows}
-              columns={["played", "wins", "draws", "losses"]}
-              showLive={false}
-              caption={`Ukupni poredak: ${leagueName}`}
-              rowHref={rowHref}
-            />
-          </Card>
+          <Podium rows={podium} showMovement={movement.show} rowHref={rowHref} />
+          {movement.show && movement.since ? (
+            <Card sx={{flex: 1, minHeight: 0, display: "flex", flexDirection: "column", overflow: "hidden", borderRadius: "24px"}}>
+              <Box ref={scroller.ref} sx={{flex: 1, minHeight: 0, overflowY: "auto"}}>
+                {grid}
+              </Box>
+              <MovementNote since={movement.since} />
+            </Card>
+          ) : (
+            <Card ref={scroller.ref} sx={{flex: 1, minHeight: 0, overflowY: "auto", borderRadius: "24px"}}>
+              {grid}
+            </Card>
+          )}
         </>
       );
     }
     return (
       <ScrollCard ref={scroller.ref} aria-label={`Ukupni poredak: ${leagueName}`}>
-        <StandingsRows rows={podium.length ? rest : rows} podium={podium} withPlayed head rowHref={rowHref} />
+        <StandingsRows rows={podium.length ? rest : rows} podium={podium} withPlayed head showMovement={movement.show} rowHref={rowHref} />
       </ScrollCard>
     );
   };

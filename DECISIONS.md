@@ -829,3 +829,32 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
     - **Colours:** the publish button switched off is lineFill (the design's #E3DED3 isn't a token); the ring of the
       last card is a new tint.green[35] (the design's value), next to tint.red[35].
     - prisma/usefulQueries/round/insertRound.sql inserts its round published, as it was meant to be live.
+
+58. **Promjena mjesta (+/−) on Ukupni poredak** (your request, design is.league). Each team's change of place since
+    the league's previous night: green ▲ and the places gained, red ▼ and the places lost, grey "–" for the same place.
+    - **Worked out with the standings, no new table.** The server ranks the table as it was after the previous night
+      (the published rounds closed by then, counted as update_team_score counts them) and compares it with the table
+      now; one query over a season's rounds takes milliseconds. A StandingsSnapshot table would have to be rewritten
+      whenever an admin corrects an old result, and the computed table can't drift from the standings. Checked on the
+      production copy of 13.10.: the computed table matches TeamScore for every team.
+    - **Which nights:** the league's nights with published rounds. The change counts from the night before the last
+      one played, so on tonight's night it is "since last week" and moves with every finished table; the note under
+      the desktop table names that night ("… od prošle večeri lige (07.10.2026).").
+    - **Places:** both tables rank the league's teams now, in Ukupni poredak's order (points, difference, name), so a
+      team that joined later doesn't move the others. A team that hadn't played by the previous night wasn't in that
+      table: "–", "Prošle večeri još nije bila u poretku".
+    - **Not shown** (showMovement false: no column, pills, chips or note, the table as before) on the league's first
+      night and once the league is over. Over is the app's "Završeno" (the status line on Ukupni poredak and the Team
+      page): the end date has passed or, for a league without one, its last night in Datumi has. The older leagues
+      have no end date, so the end date alone would show last April's change on them forever. **Piatnik Bela Liga
+      Jesen 2026 has no end date and Datumi has only its played nights**, so between nights it counts as over (and
+      the Team pages already say "Završeno"): set its Kraj in Podaci, or its nights in Datumi, and +/− shows between
+      nights too.
+    - **Desktop:** a "+/−" column right after "#" (tooltip "Promjena mjesta od prošle večeri lige", like the other
+      headers), a pill next to each medal and the note under the table; each mark's tooltip is "Gore 2 od prošle
+      večeri", "Dolje 1 od prošle večeri" or "Isto mjesto kao prošle večeri", and a click on it opens the team like
+      the rest of the row. **Phone:** a chip after the team's name, in the pinned top three too. The arrows are the
+      filled icons, not the Rounded ones (#4), whose triangle is a third smaller than the design's.
+    - GET /api/leagues/:id/standings answers {standings, showMovement, movementSince}, every row with its movement.
+    - The design's presentation view (Prezentacija on Dnevni poredak) isn't in the app, so there is nothing more to
+      follow these rules.
