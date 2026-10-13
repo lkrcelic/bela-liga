@@ -767,3 +767,6 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
 52. **Mobitel on Moj profil** (your request). Podaci has a Mobitel row between Prezime and Datum rođenja, edited in
     place like the birth date (typed "091 234 5678", saved "+385 91 234 5678", an empty field removes it). Burza fills it
     into new ads, and an availability ad without a number now points to Moj profil instead of the Dostupan sam form.
+53. **"Suigrač" instead of "igra s"** (your request; updates #51). The ad names the player the substitute plays with
+    as "Suigrač: Ime Prezime" (card), a "Suigrač" row (ad page) and "suigrač: Ime Prezime" (Moji oglasi), which reads
+    naturally without declining the name. The hint under "Tko traži zamjenu?" is gone.
