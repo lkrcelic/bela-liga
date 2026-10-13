@@ -385,7 +385,7 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
       team, player, note and phone number, to pick a new night; the old ad then stays in Prošli, and the form's back
       (and the chevron on "Oglas je objavljen") returns to Aktivni, where the new ad is. An old availability ad without
       any phone number opens Dostupan sam the same way (Burza lists no ad without a number; the server refuses it with
-      "Oglas nema broja mobitela. Upiši ga u obrascu Dostupan sam."). A partner ad whose league has ended can't go up
+      "Oglas nema broja mobitela. Upiši ga na Moj profil."; the profile has had a Mobitel row since #52). A partner ad whose league has ended can't go up
       again: instead of the button its card says "Liga je završila" (the server would answer "Ova liga je završila.").
       When the same ad is already open (an availability ad, a partner ad for the same league, a substitute ad for the
       same team, night and player), that one comes up first in Aktivni with "Već imaš ovakav oglas" instead of a copy;
@@ -764,3 +764,6 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
     player (names aren't declined, #29). This replaces "umjesto" in #39 and #41. MarketPost.out_player_id is renamed to
     with_player_id (migration 20261013120000_burza_with_player; ads already up keep their player, now read as "igra s"),
     and Objavi ponovno fills in the form with &with= instead of &out=.
+52. **Mobitel on Moj profil** (your request). Podaci has a Mobitel row between Prezime and Datum rođenja, edited in
+    place like the birth date (typed "091 234 5678", saved "+385 91 234 5678", an empty field removes it). Burza fills it
+    into new ads, and an availability ad without a number now points to Moj profil instead of the Dostupan sam form.
