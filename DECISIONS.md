@@ -637,3 +637,40 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
       registraciju." (/teams and /players with an empty list); "Poveznica za registraciju: {poveznica}" (no clipboard);
       "Ime ekipe nije spremljeno.", "Igrač nije dodan u ekipu.", "Igrač nije uklonjen iz ekipe.", "Ekipa nije dodana u
       ligu.", "Ekipa nije napravljena." (when the server gives no reason).
+
+47. **The admin's controls on a Player page, and "Uredi osobne podatke"** (handoff §6 "Admin controls", design 13j;
+    adds to #41 and #46). Desktop only, always visible; on the phone an admin sees the Player page without them.
+    - Ekipe: "Dodaj u ekipu · ime ekipe" lists, on focus, the teams the player isn't in ("3 igrača · 2 lige"; "Nema
+      takve ekipe." when typing finds none), and every team row has a remove button ("Ukloni iz ekipe", at once, no
+      confirmation, as on the Team page). A change shows at once on the page and in the Igrači and Ekipe lists; one the
+      server refuses is undone and its reason shown in the card. For a deactivated player the field is greyed with
+      "Deaktivirani igrač se ne može dodati u ekipu." (the server refuses it, #41). A team removed with the keyboard
+      moves the focus to the next row's remove button (the one before, for the last row; "Dodaj u ekipu" when no team
+      is left).
+    - "Uredi podatke" opens the panel over the page; the list next to it stays as it is, and picking another player
+      closes the panel. Spremi sends only the fields that were changed (a Spremi with no change just closes), so an
+      old username that breaks today's rules stays as it is until someone edits it. What is wrong is said under its
+      field before anything is sent, in the server's words; a username or email another player has is said under
+      that field (both at once). Odustani, Zatvori, Escape and a click on the dimmed page close the panel and drop
+      what was typed; while Spremi or a Račun action is on its way they do nothing (Odustani and Zatvori are greyed),
+      so the answer, a refusal included, is always seen in the panel. The birth date is a date picker (the mockup has a
+      text field); a date with a part missing ("dd.01.1993.") is "Neispravan datum rođenja." under the field, not a
+      removal (only a date picker emptied of every part removes the date). The phone is saved as "+385 91 234 5678".
+      The panel has its own scrollbar and none of the desktop's round scroll arrows (they covered its switches and
+      buttons).
+    - An admin editing themself: the Admin switch can't be changed, its note adds "Svoja administratorska prava ne
+      možeš ukloniti." to the designed one, and there is no Račun section (the server refuses all three for yourself,
+      #41).
+    - Račun: each button opens its confirmation in its place (Odustani or Escape cancel only the confirmation). A
+      confirmed action applies at once, apart from Spremi. After Deaktiviraj the page and the list show "Neaktivan"
+      at once and the buttons read "Aktiviraj račun". After Obriši trajno the next player the list shows opens in the
+      page's place (the one before, when it was the last), as if picked from the list (no back pill), and the
+      player is gone from the list and from their teams. With a search on, it is the next player the search shows; a
+      search that shows no other player is cleared, and the next player of the whole list opens, so the page and the
+      selected row are always together. An admin who picked another player while the delete was on its way stays
+      there. The plan had Igrači open its first player instead, which would lose the admin's place in a long list.
+    - Copy no design gives (open for review): "Deaktivirani igrač se ne može dodati u ekipu.", "Igrač je već u svim
+      ekipama." (a player in every team), "Svoja administratorska prava ne možeš ukloniti." (yourself), "Promjena nije
+      spremljena." and "Igrač nije obrisan." (when the server gives no reason).
+    - The round scroll arrows of the desktop lists now go away when the list under a still pointer does (they stayed
+      over the page after the panel was closed with Escape).
