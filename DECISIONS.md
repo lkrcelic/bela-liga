@@ -785,3 +785,9 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
     shows only its date, as before. League.start_time and LeagueNight.start_time are "HH:MM" text (migration
     20261013150000_night_start_time), not a Postgres TIME, which Prisma would read as a date and time that a time zone
     can shift.
+
+56. **A deactivated smoker doesn't count for smoking tables** (found while checking round creation; adds to #32 and
+    #40). Novo kolo, Pušački raspored and a table changed on Dnevni poredak count a team's smokers among its active
+    players only. A deactivated player stays on the team (#40) but can't play, so their Pušač no longer sends the
+    team's match to a smoking table or shows in the team's smokers. A table already seated keeps the smokers it was
+    seated with (#32). A deleted player had already left every team.
