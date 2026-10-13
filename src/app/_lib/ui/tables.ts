@@ -1,4 +1,4 @@
-import {isByeTeam} from "@/app/_lib/bye";
+import {isByeTeam, teamLabel} from "@/app/_lib/bye";
 import {matchesQuery} from "./text";
 
 // One table (round) of a round number on a given night, flattened for display
@@ -50,8 +50,9 @@ export function toTableRows(rounds: RoundLike[], myTeamNames: string[] = []): Ta
     .map((r, i) => {
       const live = !!r.active;
       const om = r.ongoingMatches && r.ongoingMatches.length ? r.ongoingMatches[r.ongoingMatches.length - 1] : null;
-      const teamA = r.team1?.team_name ?? `Ekipa ${r.team1_id}`;
-      const teamB = r.team2?.team_name ?? `Ekipa ${r.team2_id}`;
+      // the bye's side reads "Slobodna runda" (its team row is still called "Bye"), also in the search
+      const teamA = teamLabel(r.team1_id, r.team1?.team_name ?? `Ekipa ${r.team1_id}`);
+      const teamB = teamLabel(r.team2_id, r.team2?.team_name ?? `Ekipa ${r.team2_id}`);
       return {
         id: r.id ?? i,
         table: r.table_number || i + 1,

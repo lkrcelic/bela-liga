@@ -2,6 +2,7 @@
 
 import {getRoundsByRoundNumber} from "@/app/_fetchers/round/getRoundsByRoundNumber";
 import useIsDesktop from "@/app/_hooks/useIsDesktop";
+import {teamLabel} from "@/app/_lib/bye";
 import type {RoundMatchup} from "@/app/_lib/service/round/getRoundMatchups";
 import {count, displayDate, NOUN} from "@/app/_lib/ui/text";
 import {color, font} from "@/app/_styles/tokens";
@@ -38,7 +39,13 @@ export default function RoundPairings() {
       setDate(night ? displayDate(String(night)).slice(0, 6) : null);
       setPairs(
         (data ?? [])
-          .map((r: RoundMatchup, i: number) => ({id: r.id, table: r.table_number || i + 1, smoking: !!r.smoking_table, a: r.team1?.team_name ?? "", b: r.team2?.team_name ?? ""}))
+          .map((r: RoundMatchup, i: number) => ({
+            id: r.id,
+            table: r.table_number || i + 1,
+            smoking: !!r.smoking_table,
+            a: teamLabel(r.team1?.team_id, r.team1?.team_name ?? ""),
+            b: teamLabel(r.team2?.team_id, r.team2?.team_name ?? ""),
+          }))
           .sort((x, y) => x.table - y.table)
       );
     } catch {
