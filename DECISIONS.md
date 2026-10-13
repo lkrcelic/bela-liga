@@ -753,3 +753,14 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
 50. **The play day is optional** (your request). Nova liga and Upravljanje ligom · Podaci show "Dan igranja ·
     neobavezno": no day is picked at first, and tapping the picked day clears it. With a day, the nights fill in from
     the start and end as before; without one, the admin adds the exact nights one by one.
+51. **Trebam zamjenu asks who the substitute plays with** (your request). Step 3 was "Tko ne može?", but a team has up
+    to six players, so who can't come told the substitute nothing. It is now "Tko traži zamjenu?" with "Zamjena igra s
+    tim igračem." under it: the same list of the team's players, the logged-in player first as "Ja · Ime Prezime" and
+    already picked (mostly they ask for themselves); a teammate can be picked instead. Deactivated teammates aren't
+    offered, and the server refuses one that isn't an active player of the team ("Igrač s kojim zamjena igra mora biti
+    u ekipi.", or "… više nije u ekipi." when publishing again). The ad says who the substitute plays with where it
+    said whom they replace: "Igra s: Ivan Perić · rejting ekipe oko 1550" on the Burza card, an "Igra s" row on the ad's
+    page, "Liga Utorak · uto 13. 10. · igra s: Ivan Perić" on Moji oglasi, and "igra s: Obrisani igrač" for a deleted
+    player (names aren't declined, #29). This replaces "umjesto" in #39 and #41. MarketPost.out_player_id is renamed to
+    with_player_id (migration 20261013120000_burza_with_player; ads already up keep their player, now read as "igra s"),
+    and Objavi ponovno fills in the form with &with= instead of &out=.
