@@ -1,9 +1,10 @@
 PREPARE insert_round(int, int, int) AS
 WITH new_round AS (
   INSERT INTO "Round" (
-    round_number, round_date, team1_id, team2_id, team1_wins, team2_wins, open, active, table_number
+    round_number, round_date, team1_id, team2_id, team1_wins, team2_wins, open, active, table_number, status, published_at
   )
-  VALUES ($1, CURRENT_DATE, $2, $3, 0, 0, TRUE, FALSE, NULL)
+  -- published at once: a round added by hand doesn't wait in Upravljanje ligom · Skica
+  VALUES ($1, CURRENT_DATE, $2, $3, 0, 0, TRUE, FALSE, NULL, 'PUBLISHED', now())
   RETURNING id
 )
 INSERT INTO "LeagueRound" (league_id, round_id)

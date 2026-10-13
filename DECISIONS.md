@@ -791,3 +791,41 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
     players only. A deactivated player stays on the team (#40) but can't play, so their Pušač no longer sends the
     team's match to a smoking table or shows in the team's smokers. A table already seated keeps the smokers it was
     seated with (#32). A deleted player had already left every team.
+
+57. **Rounds are published after an admin approves them** (your request, design mDraftView). Desktop only, as all of
+    Upravljanje ligom: on the phone it still says "Ovo se uređuje na računalu." (you didn't want approving there).
+    - **Data:** Round.status (DRAFT, APPROVED, PUBLISHED) and published_at (migration 20261014120000_round_status:
+      the rounds that exist become PUBLISHED, without a publish time; a CHECK keeps the time on published rounds only).
+      A Round row is one table, and a round ("Kolo 4") is a round number on a night, so every table of a round carries
+      the round's status; a table added later takes it from the others. PATCH /api/rounds/:id/approve and /unapprove
+      take any table of the round and change all of them. Rounds are created by POST /api/rounds/generate-multiple
+      (the old POST /api/rounds went in #49), now as drafts; a bye table is still settled 2:0 at once and counts in
+      the standings when its round is published.
+    - **Who sees what:** everything players and visitors read takes published rounds only, filtered on the server:
+      Dnevni poredak (nights, tables, the night's table), Ukupni poredak and the +/−, Početna (the open table, its
+      opponent, Započni igru), the menu's live dot, Raspored's played nights, the Team page's last nights, Rejting and
+      which league is the active one. A player gets 404 for an unpublished table (GET /api/rounds/:id and its matches)
+      and can't start, confirm the lineup of or enter results in one; an admin is refused too, with "Ovo kolo još nije
+      objavljeno.". Admins see unpublished rounds only in Skica and Kola: Dnevni poredak shows them what players see.
+    - **Skica:** Kreiraj kolo opens it for tonight's new rounds; it is also there while the league has a night with
+      rounds not published yet (the latest such night). The tab counts them and turns into "Objavljeno" with a check
+      once they are all out, until the page is left. As designed: the round on the left with its status, its tables
+      and "Odobri ovo kolo" / "Odobreno" (a second click takes it back); on the right the night's rounds with their
+      approvals, "Odobri sva kola", "Objavi odobrena kola · X/Y" (X approved, Y not published yet; off at X = 0; only
+      the approved ones go out, in one transaction) with its note, and "Nešto ne valja?" with "Odbaci skicu", which
+      asks first and deletes only the rounds not published yet. When every round is out: "Sva kola su objavljena" with
+      the time and Otvori Dnevni poredak.
+    - **Round numbers count up through the season** (the second night plays Kolo 4–6, as Dnevni poredak's tabs say),
+      so the title is "Kolo 4" and the date line says where it is in the night ("Srijeda · 14.10.2026 · 1. od 3"),
+      instead of the design's "Kolo 1 od 3", which would read "Kolo 4 od 6".
+    - **Words:** the design's "Igrači i prezentacija vide …" says "Igrači i Dnevni poredak vide …", and the last card
+      "… a Dnevni poredak prikazuje sva kola ove večeri." (the app has no presentation view, #58). With some rounds
+      already out, "Nešto ne valja?" says "Odbaci neobjavljena kola i vrati se na Novo kolo. Objavljena kola ostaju.".
+    - **Kola** shows "Skica" and "Odobreno" for rounds not published yet, then "Nije počelo", "U tijeku" and
+      "Odigrano" as before. **Datumi** won't remove a night that has only a draft: "Ova večer ima skicu kola. Prvo je
+      odbaci na kartici Skica.".
+    - **Gone:** the pairings page shown after Kreiraj kolo (/round/pairings/N) and GET /api/roundMatchups/N: Skica
+      shows the tables now, and nothing else linked there.
+    - **Colours:** the publish button switched off is lineFill (the design's #E3DED3 isn't a token); the ring of the
+      last card is a new tint.green[35] (the design's value), next to tint.red[35].
+    - prisma/usefulQueries/round/insertRound.sql inserts its round published, as it was meant to be live.

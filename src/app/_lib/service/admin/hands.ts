@@ -11,6 +11,7 @@ import {updateOngoingBelaResult} from "@/app/_lib/service/ongoingBelaResult/upda
 import {createOngoingMatch} from "@/app/_lib/service/ongoingMatch/create";
 import {finishOngoingMatch, FinishMatchOutcome} from "@/app/_lib/service/match/finishOngoingMatch";
 import {lockRound} from "@/app/_lib/service/round/finish";
+import {ROUND_NOT_PUBLISHED} from "@/app/_lib/roundStatus";
 import {isRatedRound, recalcTeamScores, replayRatings} from "./recalc";
 import {NotFoundError} from "./tables";
 
@@ -129,9 +130,11 @@ export async function getTablePad(roundId: number): Promise<TablePad> {
 }
 
 async function assertEditableTable(roundId: number) {
-  const round = await prisma.round.findUnique({where: {id: roundId}, select: {team1_id: true, team2_id: true}});
+  const round = await prisma.round.findUnique({where: {id: roundId}, select: {team1_id: true, team2_id: true, status: true}});
   if (!round) throw new NotFoundError("Stol ne postoji.");
   if (isByeTeam(round.team1_id) || isByeTeam(round.team2_id)) throw new InvalidResultError("Za stolom sa slobodnom rundom nema igara za uređivanje.");
+  // nothing is played in a round before it is published
+  if (round.status !== "PUBLISHED") throw new InvalidResultError(ROUND_NOT_PUBLISHED);
 }
 
 // After a finished match's hands changed: its score, the round's wins, and for a finished round the standings
