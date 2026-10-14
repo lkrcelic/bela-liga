@@ -151,8 +151,8 @@ function ManageLeagueDesktop() {
   const onAdd = async (t: TeamOption) => {
     setActionError(null);
     try {
-      await addTeamToLeagueAPI(leagueId, t.id);
-      setTeams((prev) => [...(prev ?? []), {id: t.id, name: t.title, players: t.players, active: true}]);
+      const {smokers} = await addTeamToLeagueAPI(leagueId, t.id);
+      setTeams((prev) => [...(prev ?? []), {id: t.id, name: t.title, players: t.players, active: true, smokers}]);
       setJustAdded(t.id);
       if (filter === "inactive") setFilter("all");
     } catch (e) {
@@ -319,7 +319,10 @@ function ManageLeagueDesktop() {
         </Card>
       ) : shown === "create" ? (
         <CreateRoundView
+          key={leagueId}
           leagueId={leagueId}
+          // the teams of Ekipe, so one added there is here at once
+          teams={{teams, error, loading, reload}}
           onCreated={(date) => {
             // Skica waits for the list with the new rounds (a loading card), instead of showing the old one
             leagueRounds.setRounds(null);
