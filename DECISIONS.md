@@ -948,3 +948,39 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
       switch (saved at once here, with the form's Spremi on the desktop; not for oneself) and Račun: "Deaktivirati
       račun?" / "Aktivirati račun?" and "Obrisati igrača?" in sheets with the design's text; after a delete Igrači
       opens.
+60. **Ekstra navigacija: a table and a team open from the round** (your request of 15.10., Claude Design "Mobilni
+    ekrani" 14a–14ab, komponente/ScorepadScreens, StolPregled and ScorepadPhone admin-edit; admin-mobile 23–25;
+    preparation in the untracked KLIKOVI_UPUTE.md). Phone only: the desktop's frames aren't drawn yet, so the desktop
+    round view and the admin's desktop "Uredi" stay as they were.
+    - **Kolo N card, two targets (14a–14g):** a team's name opens the team, the rest of the card the table. The name's
+      area is its text only, 44 px high and at least 44 px wide, so the space beside a short name opens the table. No
+      link inside another: the table's link is a layer under the card's content and the names are links over it.
+      Pressing a name tints the name (#EFEBE1), pressing the card darkens the card; the keyboard reaches the table's
+      link, then both names, with a visible ring. A › at the end of the "Stol N" line, Završeno / Nije počelo next to
+      it (– for the wins of a table not started); a bye card is "Bez stola" · Slobodna runda, without a table link and
+      with only the real team's name linked. Signed out: nothing opens. In "Uredi" (admin) nothing opens either.
+    - **Who gets what for a table:** the player whose open table it is (the one Početna offers) gets the navy pill
+      "Nastavi igru ›" / "Započni igru ›" and goes straight into the game as from Početna; a shared link to that table
+      goes there too (replacing the link). Anyone else signed in gets **Pregled stola** (14h–14n), and the admin on the
+      phone the table's **scorepad** (an admin in Prikaz igrača is a player here). The admin's desktop is unchanged.
+    - **Pregled stola** (`GET /api/rounds/:id/overview`, signed in, published rounds only, else 404 "Stol ne
+      postoji."; each hand's totals, nothing about callers or zvanja): ‹ STOL ⌂, "Kolo 3 · uto 17. 02.", Stol N with
+      the smoking mark and Uživo / Završeno / Nije počelo, the two boards with the wins in the round and the name as a
+      link (the viewer's own team cream with a navy ring), Meč 1 · Meč 2 ("1034 : 748 · Purgeri", "u tijeku · 312 :
+      480", "nije počeo"), the chosen match's hands read-only, no button at the bottom. A live table refreshes every
+      15 s and when the app is back in front ("Osvježava se samo · prije 5 s"). Loading, "Stol se nije učitao" with
+      Pokušaj ponovno, and "Stol ne postoji" with Natrag na Kolo N. A team opened from it says "‹ Stol 4".
+    - **The admin's scorepad on the phone** (14s–14ab; replaces #59's "Stol · mečevi" centre, which is no longer in
+      the flow): the table opens on its board, the current match. ‹ goes back to the round, the shield sits in "Stol 2 ·
+      Kolo 3", and Tko igra is the button on the right (confirming there comes back to the board). Meč 1 · Meč 2 once
+      the second match is there; a finished match and a finished table say "… je završen(a). Izmjene mijenjaju
+      rezultat i poredak." and have no buttons at the bottom. A tap on a hand opens its sheet: both teams' points,
+      Ispravi korak po korak (the players' three steps; a hand entered by points starts afresh), Ručni unos, and Obriši
+      igru with "Obriši igru 2?" ("Igra 72 : 110 briše se iz Meča 2. …"). Next to Upiši igru / Završi meč, "Ručno"
+      opens Ručni unos for a new hand: each team's points 0–9999 typed in two fields, no zvanja, no 162 limit, Spremi
+      igru / Spremi ispravak, and "Spremanje nije uspjelo. …" when it fails. A table not started still goes to Tko igra
+      first.
+    - **Back** follows the existing patterns: the round's tab is in the address, the round's list keeps its scroll
+      (as the night's table did), and the Dnevni poredak entry is called "Kolo N" while a round's tab is open, so a
+      team's page says "‹ Kolo 3". Tablica okupljanja and Ukupni poredak rows already opened their team (#45) and
+      already darken when pressed.

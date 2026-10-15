@@ -127,3 +127,13 @@ export function fromPadHand(h: PadHand): EntryState {
   }
   return {...blankEntry("std"), caller: h.caller, points: [h.game1, h.game2], stiglja: h.completeVictory, zvanja};
 }
+
+// Ručni unos on the admin's phone (Mobilni ekrani 14u, 14v): each team's points as typed, 0 to 9999. bad: a field
+// holds something that isn't such a number ("Upiši broj od 0 do 9999."); points: both fields are numbers and at
+// least one isn't 0, so the hand can be saved.
+export function manualFields(a: string, b: string): {bad: boolean; points: [number, number] | null} {
+  const ok = (v: string) => /^\d{1,4}$/.test(v) && Number(v) <= MANUAL_HAND_MAX;
+  const bad = (a !== "" && !ok(a)) || (b !== "" && !ok(b));
+  const points: [number, number] | null = ok(a) && ok(b) && Number(a) + Number(b) > 0 ? [Number(a), Number(b)] : null;
+  return {bad, points};
+}
