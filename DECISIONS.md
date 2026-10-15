@@ -935,3 +935,16 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
     - **Nova liga (13)**: the same fields, then the league's nights as chips with × (filled in from the dates and the
       play day, one can be added); Kreiraj ligu makes it the picked league and opens its Ekipe. Teams are added there
       (the desktop's Nova liga picks them in the form).
+    - **Rejting, Ekipe and Igrači (30–39).** Rejting is the players' list with the bottom bar instead of Početni
+      zaslon. **Ekipe** and **Igrači** are the phone's lists (search, 12 at a time with "Učitaj još", the search and
+      scroll back with Back): a team's line is "2 igrača · Liga Utorak, Liga Četvrtak", a player's "Dalmatinci ·
+      rejting 1712" with Admin or Neaktivan (GET /api/admin/players now says admin and rating). Ekipe has + for Nova
+      ekipa, Igrači "Pozovi igrača" (the desktop's login link, your answer). **Nova ekipa** is a screen of its own
+      (×): the name (not another team's), at least two players found by name (your answer; the desktop and the server
+      still allow fewer), and the leagues to join, the picked league ticked (the API takes one league, the others are
+      added after). **The Team page** gives the admin the desktop's pencil, "Dodaj igrača" with a remove button per
+      player (44 px) and "Dodaj u ligu" (useTeamAdmin). **The Player page** gives "Uredi podatke" (the desktop panel's
+      fields in a sheet, usePlayerForm), the teams with "Dodaj u ekipu" and their remove buttons, the Administrator
+      switch (saved at once here, with the form's Spremi on the desktop; not for oneself) and Račun: "Deaktivirati
+      račun?" / "Aktivirati račun?" and "Obrisati igrača?" in sheets with the design's text; after a delete Igrači
+      opens.
