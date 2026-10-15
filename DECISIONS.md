@@ -858,3 +858,24 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
     - GET /api/leagues/:id/standings answers {standings, showMovement, movementSince}, every row with its movement.
     - The design's presentation view (Prezentacija on Dnevni poredak) isn't in the app, so there is nothing more to
       follow these rules.
+
+59. **Admin na mobitelu** (your request of 15.10., Claude Design "Admin mobilni ekrani", komponente/AdminMobile; plan in
+    ADMIN_MOBILNI_PLAN.md). An admin runs the league from the phone too. **This replaces #36 and #57**: the phone no
+    longer says "Ovo se uređuje na računalu." to an admin. It is built screen group by screen group; this entry grows
+    with each.
+    - **Who gets it:** an admin below 1024 px (the app's one breakpoint, #5; the prompt's "< 900 px" would leave
+      900–1023 with neither layout). The same addresses as the desktop: a screen is the phone version of its page, so a
+      link works on both and crossing 1024 only changes the layout. The server checks every admin call as before.
+    - **Prikaz igrača:** Večer lige switches to the app as players see it; Početna then has an "Admin" button next to
+      Moj profil that switches back. Kept for the browser tab (sessionStorage), so a reload keeps it.
+    - **Bottom bar:** Večer · Rejting · Ekipe · Igrači (the design's four, your answer), on those four screens only;
+      the screens under them have Back. A tab starts the page stack afresh, like the desktop menu.
+    - **Večer lige (01) is the admin's Početna on the phone.** The league is picked in the eyebrow (the sheet says it
+      holds for every screen and ends with "Nova liga"). The navy card follows tonight (the night Novo kolo is for,
+      until 06:00 the evening before): "Kolo 1 od 3 · u tijeku" with "7 / 10 stolova završeno" and Dnevni poredak; a
+      finished night ("3 / 3 kola odigrano"); a night without published rounds ("Kola još nisu kreirana" with Novo
+      kolo, or "Kola čekaju objavu" with Skica kola); a day without a night shows the next one. "od 19:00" is the
+      night's start time (the app keeps no time for a round). "Skica čeka objavu" is the latest night with rounds not
+      published yet, and it isn't repeated when the navy card already says so. "Još igraju" lists the current
+      round's open tables, live points or "Uživo" / "Nije počelo", refreshed every 30 s and with Osvježi. "Bilješke
+      lige" are the league notes of Novo kolo (#47), on Večer too as designed.
