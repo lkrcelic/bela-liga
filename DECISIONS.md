@@ -906,3 +906,17 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
     - **No drop-down for a team any more** (your answer): Uredi par picks each team by searching, on the phone in the
       sheet's own list with the search last (above the keyboard), on the desktop in a field that lists the teams on
       focus and narrows them while typing. It was the app's only <select>.
+    - **Stol, Tko igra and Meč (23–29)** are the admin's phone screens at the desktop scorepad's address
+      (/league/:id/daily-standings/table/:roundId), using its calls (the server recounts standings and ratings, so a
+      finished match can be corrected too; this is #59's part of KLIKOVI's §3.3). Stol: both teams with their wins in
+      the round, Meč 1 and Meč 2 (Završen / U tijeku / Nije počeo, a tap opens one; the next one only after the one
+      before), who plays (or "Nije potvrđeno") with Promijeni igrače, and Nastavi meč N / Potvrdi igrače i počni. A
+      table not started doesn't jump to Tko igra by itself as on the desktop: the button says so. Tko igra is the
+      players' screen with the admin's shield, and Back to the table; confirming opens Meč 1. Meč is the players'
+      scoreboard (?mec=N) with Back to the table and the shield; a hand is entered or corrected in the players' three
+      steps (&igra=new|id&korak=1|2|3, so the phone's Back steps back), which now draw with the same parts as the
+      players' (WizardParts), and Spremi returns to the board. Added on the admin's steps, as your answer to P3:
+      **Ručni unos** on step 1 (each team's points only, no zvanja, not limited to 162; a manual hand opens straight
+      in it) and **Obriši igru** with "Obrisati igru?" when correcting. Završi meč (in the winner's colour) after the
+      first match opens Meč 2, after the second Kraj kola (?kraj=1, the players' cards, RoundResultCards) with
+      Natrag na stol. While the table is played it refreshes every 15 s and when the app comes back to the front.

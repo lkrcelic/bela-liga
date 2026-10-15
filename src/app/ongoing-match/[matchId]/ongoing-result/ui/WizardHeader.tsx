@@ -2,8 +2,8 @@
 
 import useAnnouncementStore from "@/app/_store/bela/announcementStore";
 import useResultStore from "@/app/_store/bela/resultStore";
-import {color, font, teamColor} from "@/app/_styles/tokens";
-import {buttonBase, Eyebrow, tabular} from "@/app/_ui/sp";
+import {Eyebrow} from "@/app/_ui/sp";
+import {TeamValueBoxes} from "@/app/ongoing-match/ui/WizardParts";
 import useMatchSides from "@/app/ongoing-match/ui/useMatchSides";
 import {Box} from "@mui/material";
 import {useEffect} from "react";
@@ -29,50 +29,14 @@ export default function WizardHeader({step}: {step: number}) {
   return (
     <Box component="header" sx={{display: "flex", flexDirection: "column", gap: "12px", pb: "12px", flex: "none", viewTransitionName: "team-header"}}>
       <Eyebrow sx={{px: "4px"}}>Korak {step + 1} od 3</Eyebrow>
-      <Box role="radiogroup" aria-label={`${label}: upis za ekipu`} sx={{display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px"}}>
-        {sides.sides.map((side, i) => {
-          const on = active === side;
-          const value = isScore ? gp(side) : zv(side);
-          return (
-            <Box key={side} sx={{display: "flex", flexDirection: "column", gap: "6px", minWidth: 0}}>
-              <Box
-                component="button"
-                type="button"
-                role="radio"
-                aria-checked={on}
-                aria-label={`${sides.names[i]}: ${label.toLowerCase()} ${value}`}
-                onClick={() => setActiveTeam(sides.key(side))}
-                sx={{
-                  ...buttonBase,
-                  height: 92,
-                  borderRadius: "20px",
-                  border: `2.5px solid ${teamColor[i]}`,
-                  background: on ? teamColor[i] : color.white,
-                  color: on ? color.white : teamColor[i],
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "flex-start",
-                  justifyContent: "center",
-                  gap: "2px",
-                  px: "16px",
-                  transition: "background 200ms ease, color 200ms ease",
-                  minWidth: 0,
-                }}
-              >
-                <Box component="span" sx={{fontSize: 12, fontWeight: 600, letterSpacing: ".08em", textTransform: "uppercase", maxWidth: "100%", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap"}}>
-                  {label} · {sides.names[i]}
-                </Box>
-                <Box component="span" sx={{fontFamily: font.display, fontSize: 38, fontWeight: 800, lineHeight: 1, ...tabular}}>
-                  {value}
-                </Box>
-              </Box>
-              <Box aria-live="polite" sx={{height: 18, pl: "8px", fontSize: 14, fontWeight: 600, color: color.muted, ...tabular}}>
-                {isScore ? `Σ ${gp(side) + zv(side)}` : ""}
-              </Box>
-            </Box>
-          );
-        })}
-      </Box>
+      <TeamValueBoxes
+        names={sides.names}
+        label={label}
+        values={[isScore ? gp(sides.sides[0]) : zv(sides.sides[0]), isScore ? gp(sides.sides[1]) : zv(sides.sides[1])]}
+        sums={isScore ? [gp(sides.sides[0]) + zv(sides.sides[0]), gp(sides.sides[1]) + zv(sides.sides[1])] : null}
+        active={sides.sides.indexOf(active) === 1 ? 1 : 0}
+        onPick={(i) => setActiveTeam(sides.key(sides.sides[i]))}
+      />
     </Box>
   );
 }

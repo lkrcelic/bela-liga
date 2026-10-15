@@ -2,12 +2,10 @@
 
 import useResultStore from "@/app/_store/bela/resultStore";
 import useRoundStore from "@/app/_store/RoundStore";
-import {color, ease, font, teamColor} from "@/app/_styles/tokens";
-import {ActionPair, buttonBase, ScreenTitle} from "@/app/_ui/sp";
+import {ActionPair, ScreenTitle} from "@/app/_ui/sp";
 import {discardHand} from "@/app/ongoing-match/ui/handFlow";
 import useMatchSides from "@/app/ongoing-match/ui/useMatchSides";
-import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
-import {Box} from "@mui/material";
+import {CallerCards} from "@/app/ongoing-match/ui/WizardParts";
 import {useParams} from "next/navigation";
 import {useTransitionRouter} from "@/app/_lib/viewTransitions";
 
@@ -36,78 +34,12 @@ export default function TrumpCallerPage({actionType}: ActionProps) {
   return (
     <>
       <ScreenTitle eyebrow="Korak 1 od 3" title="Izaberi tko je zvao" sx={{pt: 0}} />
-      <Box
-        role="radiogroup"
-        aria-label="Tko je zvao"
-        sx={{flex: 1, display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px", alignContent: "center", py: "16px"}}
-      >
-        {sides.sides.map((side, i) => {
-          const on = caller === side;
-          return (
-            <Box
-              key={side}
-              component="button"
-              type="button"
-              role="radio"
-              aria-checked={on}
-              disabled={!roundLoaded}
-              onClick={() => setTrumpCallerTeam(side)}
-              sx={{
-                ...buttonBase,
-                position: "relative",
-                height: 200,
-                borderRadius: "24px",
-                border: `2.5px solid ${teamColor[i]}`,
-                background: color.white,
-                overflow: "hidden",
-                animation: on ? "spSel 420ms cubic-bezier(.3,1.4,.5,1)" : "none",
-              }}
-            >
-              <Box
-                aria-hidden
-                sx={{
-                  position: "absolute",
-                  left: "50%",
-                  top: "50%",
-                  width: 270,
-                  height: 270,
-                  borderRadius: "50%",
-                  background: teamColor[i],
-                  transform: `translate(-50%,-50%) scale(${on ? 1 : 0})`,
-                  transition: `transform 360ms ${ease}`,
-                }}
-              />
-              <Box
-                sx={{
-                  position: "relative",
-                  height: "100%",
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: "10px",
-                  px: "10px",
-                  color: on ? color.white : teamColor[i],
-                  transition: "color 200ms ease",
-                }}
-              >
-                <CheckCircleRoundedIcon
-                  aria-hidden
-                  sx={{
-                    fontSize: 34,
-                    opacity: on ? 1 : 0,
-                    transform: on ? "scale(1)" : "scale(.4)",
-                    transition: "opacity 200ms ease 120ms, transform 300ms cubic-bezier(.3,1.5,.5,1) 120ms",
-                  }}
-                />
-                <Box component="span" sx={{fontFamily: font.display, fontSize: 22, fontWeight: 700, overflowWrap: "anywhere", textAlign: "center"}}>
-                  {sides.names[i]}
-                </Box>
-              </Box>
-            </Box>
-          );
-        })}
-      </Box>
+      <CallerCards
+        names={sides.names}
+        caller={caller != null && sides.sides.includes(caller) ? (sides.sides.indexOf(caller) as 0 | 1) : null}
+        onPick={(i) => setTrumpCallerTeam(sides.sides[i])}
+        disabled={!roundLoaded}
+      />
       <ActionPair onBack={back} nextLabel="Dalje" onNext={() => router.push(`${base}/announcement`)} nextDisabled={caller == null} />
     </>
   );

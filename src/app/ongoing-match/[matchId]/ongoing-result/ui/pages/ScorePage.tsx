@@ -1,10 +1,9 @@
 "use client";
 
 import useResultStore from "@/app/_store/bela/resultStore";
-import {color, font, shadow} from "@/app/_styles/tokens";
-import {ActionPair, buttonBase, ErrorNote} from "@/app/_ui/sp";
+import {ActionPair, ErrorNote} from "@/app/_ui/sp";
 import {saveHand, takeWizardOrigin} from "@/app/ongoing-match/ui/handFlow";
-import {Box} from "@mui/material";
+import {PointsKeypad} from "@/app/ongoing-match/ui/WizardParts";
 import {useParams} from "next/navigation";
 import {navigateWithTransition, useTransitionRouter} from "@/app/_lib/viewTransitions";
 import {useState} from "react";
@@ -36,53 +35,9 @@ export default function ScorePage({actionType}: ActionProps) {
     }
   };
 
-  const key = {
-    ...buttonBase,
-    height: 66,
-    borderRadius: "16px",
-    background: color.white,
-    color: color.ink,
-    fontFamily: font.display,
-    fontSize: 30,
-    fontWeight: 700,
-    boxShadow: shadow.card,
-    transition: "transform 100ms ease, opacity 200ms ease",
-    "&:active:not(:disabled)": {transform: "scale(.95)", background: color.lineFill},
-    "&:disabled": {opacity: 0.35},
-  } as const;
-
   return (
     <>
-      <Box sx={{flex: 1, display: "flex", flexDirection: "column", justifyContent: "flex-end", pb: "16px"}}>
-        <Box role="group" aria-label="Bodovi igre" sx={{display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "10px"}}>
-          {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((d) => (
-            <Box key={d} component="button" type="button" onClick={() => setGamePoints(d)} disabled={keysOff} sx={key}>
-              {d}
-            </Box>
-          ))}
-          <Box
-            component="button"
-            type="button"
-            onClick={setCompleteVictory}
-            aria-pressed={keysOff}
-            sx={{...key, background: color.cream, color: color.navy, fontFamily: font.body, fontSize: 17, boxShadow: "none"}}
-          >
-            Štiglja
-          </Box>
-          <Box component="button" type="button" onClick={() => setGamePoints(0)} disabled={keysOff} sx={key}>
-            0
-          </Box>
-          <Box
-            component="button"
-            type="button"
-            onClick={resetScore}
-            aria-label="Obriši bodove"
-            sx={{...key, background: "transparent", border: `2px solid ${color.borderStrong}`, color: color.navy, fontSize: 26, boxShadow: "none"}}
-          >
-            X
-          </Box>
-        </Box>
-      </Box>
+      <PointsKeypad onDigit={setGamePoints} onStiglja={setCompleteVictory} stiglja={keysOff} onClear={resetScore} keysOff={keysOff} />
       {error && <ErrorNote sx={{mb: "10px"}}>{error}</ErrorNote>}
       <ActionPair onBack={() => router.back()} nextLabel="Spremi" onNext={save} nextDisabled={empty} nextLoading={saving} />
     </>
