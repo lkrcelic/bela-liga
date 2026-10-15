@@ -879,3 +879,19 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
       published yet, and it isn't repeated when the navy card already says so. "Još igraju" lists the current
       round's open tables, live points or "Uživo" / "Nije počelo", refreshed every 30 s and with Osvježi. "Bilješke
       lige" are the league notes of Novo kolo (#47), on Večer too as designed.
+    - **Novo kolo (06, 07, 07b)** is the desktop's Novo kolo (useCreateRound: the same saved choice for tonight, the
+      same rules) laid out for the phone: Broj kola večeras 1–5 (the desktop's limit, your answer; the design has
+      1–3), Veličina prozora − 8 +, "20 / 20 ekipa igra večeras" with Promijeni and the teams that sit out (a tap
+      puts one back), Pušački stolovi (44 px table buttons, no Pušački raspored, which is a desktop overlay), Bilješke
+      lige and "Kreiraj 3 kola · 10 stolova". There is no pairing mode: neither the design nor the app has one.
+      "Tko igra večeras?" is a sheet 88% of the screen high whose search field is its last part, kept above the
+      on-screen keyboard (visualViewport). An inactive team can be switched on for tonight there, as on the desktop,
+      so its note says "Neaktivnu ekipu možeš uključiti samo za večeras." instead of the design's "Neaktivne mijenjaš
+      u Upravljanju ligom.".
+    - **Skica kola (14–17)** uses the desktop's calls and texts ("Objavi odobrena kola · 1/3", publishNote): Kolo 1 ·
+      Kolo 2 · Kolo 3 with their status icons, the round's status, Odobri / Odobreno, its tables, Odobri sva, and the
+      bin for "Odbaciti skicu?". Once every round is out: "Sva kola su objavljena · Igrači vide svoje stolove od
+      18:42." and Otvori Dnevni poredak. Creating rounds opens Skica in Novo kolo's place, and discarding goes back to
+      Novo kolo.
+    - **Odobri sva is one request now**, POST /api/leagues/:id/nights/:date/approve (admin, one transaction under the
+      league's lock), on the desktop too: a loop of PATCHes could stop halfway on a phone's connection.
