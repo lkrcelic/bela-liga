@@ -895,3 +895,14 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
       Novo kolo.
     - **Odobri sva is one request now**, POST /api/leagues/:id/nights/:date/approve (admin, one transaction under the
       league's lock), on the desktop too: a loop of PATCHes could stop halfway on a phone's connection.
+    - **Dnevni poredak (18–22)** is the players' phone screen with, for the admin: Back instead of Početni zaslon,
+      "Osvježeno 19:42" with Osvježi, and on a round's tab the pencil (a check while editing). A table's card opens
+      the table (not the slobodna runda). Editing gives "Dodaj stol s dvije ekipe" and Uredi par / Ukloni stol on
+      every card, with the desktop's rules (useTableEdits, planSeats on the server: a team taken from another table
+      swaps with the one it replaces) and its notes ("Alz Menš igra za stolom 4. Zamijenit će mjesto s ekipom …").
+      The round's eyebrow counts the tables ("Kolo 2 · 10 stolova"). The date arrows stay (the design has none, but
+      without them an earlier night can't be reached). The open tab is in the address (?round=), for everyone, so
+      Back from a table or a team comes back to it.
+    - **No drop-down for a team any more** (your answer): Uredi par picks each team by searching, on the phone in the
+      sheet's own list with the search last (above the keyboard), on the desktop in a field that lists the teams on
+      focus and narrows them while typing. It was the app's only <select>.
