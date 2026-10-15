@@ -42,3 +42,5 @@ tsconfig.tsbuildinfo
 *.zip
 tmp-file.ts
 **/.idea/
+/.claude/
+skills-lock.json
