@@ -920,3 +920,18 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
       in it) and **Obriši igru** with "Obrisati igru?" when correcting. Završi meč (in the winner's colour) after the
       first match opens Meč 2, after the second Kraj kola (?kraj=1, the players' cards, RoundResultCards) with
       Natrag na stol. While the table is played it refreshes every 15 s and when the app comes back to the front.
+    - **Upravljanje ligom (05, 08–12)** on the phone: the league in the eyebrow, + for Nova liga, the navy Novo kolo
+      card ("čet 15. 10. · 20 ekipa igra": the admin's choice for tonight, else the active teams), then Ekipe · Kola
+      · Datumi · Postavke (the tab in the address). The desktop's state and rules moved into hooks both use
+      (useLeagueDetails, useLeagueDates). **Ekipe:** "Dodaj ekipu · ime ekipe" lists the teams outside the league on
+      focus, each team's switch (active) and its bin, asked in "Obrisati ekipu iz lige?" (the desktop keeps its 8 s
+      Poništi). **Kola:** the nights latest first, each round with its tables and status (the desktop's Skica,
+      Odobreno, Nije počelo, U tijeku, Odigrano; the design shows Objavljeno for all published ones), the bin asks
+      "Obrisati kolo?". **Datumi:** Sljedeća večer, a date with Dodaj, and the nights; a night still to come opens a
+      sheet with its own start time (your answer: Datumi and Postavke have the start time too) and "Makni večer" when
+      it has no rounds (removing an empty night isn't asked, as in the design). **Postavke** is the desktop's Podaci:
+      name, season, dates, the play day (optional, a second press takes it back), Početak večeri, Kola po večeri 1–6
+      and Spremi promjene ("Spremljeno" after it).
+    - **Nova liga (13)**: the same fields, then the league's nights as chips with × (filled in from the dates and the
+      play day, one can be added); Kreiraj ligu makes it the picked league and opens its Ekipe. Teams are added there
+      (the desktop's Nova liga picks them in the form).
