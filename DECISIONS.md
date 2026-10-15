@@ -984,3 +984,28 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
       (as the night's table did), and the Dnevni poredak entry is called "Kolo N" while a round's tab is open, so a
       team's page says "‹ Kolo 3". Tablica okupljanja and Ukupni poredak rows already opened their team (#45) and
       already darken when pressed.
+
+61. **Lokacija okupljanja** (your request of 15.10., Claude Design "Claude Code - lokacija okupljanja.md": Desktop
+    ekrani 11b, Admin mobilni ekrani 11–13b, Mobilni ekrani Početna and Raspored). Next to its start time a league
+    has an optional place: Ime mjesta, Adresa and Link na Google Mape (League.location_*, migration
+    20261015120000_night_location), and a night still to be played can have its own (LeagueNight.location_*; a night
+    has its own place when its location_name is set, and then all three are the night's). Nova liga (desktop and
+    phone) and Podaci / Postavke have a section **Okupljanje** with "Vrijeme okupljanja · neobavezno" and the three
+    fields, saved with the rest of the form. Datumi shows "19:30 · Caffe bar Kartaš" under each date (the night's own
+    bold, the league's muted, a gold "!" for a night with its own time or place); a click on a night still to be
+    played opens it in **Okupljanje večeri** (desktop card, phone sheet) with Zadano lige · Drugo mjesto, Vrati na
+    zadano and Spremi, which sends only what changed (PATCH /api/leagues/:id/nights/:date takes start_time and/or
+    location; null goes back to the league's). The link is only checked to be http(s), so a "javascript:" link can't
+    run; a wrong one is said in the form's error note. Players see the place on Početna's Sljedeća večer card (Karta
+    opens the link in a new tab) and in Raspored (the card's pill, a line under each night, a map button for nights
+    to come). A league without a place looks as before. Where the handoff and the mockups differed:
+    - With a place, Početna's date pill and Raspored's first line show only the date, as in the mockups, because the
+      time is on the place's line; without a place they keep "sri 14. 10. · 19:00" as before (the handoff said to keep
+      nightTimeLabel and add the line, which would show the time twice).
+    - Raspored's "!" says "Drugo vrijeme ili mjesto": mySchedule's ownPlace (as the handoff defines it) doesn't say
+      which of the two differs.
+    - The phone sheet keeps Makni večer under Vrati na zadano · Spremi (the mockup 11b doesn't show it, but it was the
+      only way to remove a night on the phone).
+    - "Kreiraj ligu" already had flex: none (PrimaryButton), so it stays 60 px high when the form scrolls; nothing to
+      change there.
+    - A league address or link without a name is saved but not shown anywhere (a place needs a name).

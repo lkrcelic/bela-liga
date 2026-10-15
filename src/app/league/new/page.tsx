@@ -3,6 +3,7 @@
 import useAdminPhone from "@/app/_hooks/useAdminPhone";
 import useIsDesktop from "@/app/_hooks/useIsDesktop";
 import NewLeaguePhone from "@/app/_ui/admin/NewLeaguePhone";
+import {EMPTY_PLACE, PlaceDraft, PlaceFields, placePayload, TIME_LABEL} from "@/app/_ui/admin/GatheringForm";
 import {TeamExtendedResponse} from "@/app/_interfaces/team";
 import {isByeTeam} from "@/app/_lib/bye";
 import {count, matchesQuery, NOUN} from "@/app/_lib/ui/text";
@@ -59,6 +60,8 @@ function CreateLeagueDesktop() {
   const [playDay, setPlayDay] = useState<number | null>(null);
   // optional too: when the nights start, "HH:MM" ("": no time)
   const [startTime, setStartTime] = useState("");
+  // where they are played, optional too
+  const [place, setPlace] = useState<PlaceDraft>(EMPTY_PLACE);
   const [roundsPerNight, setRoundsPerNight] = useState(3);
   // the nights filled in from the dates and the play day, minus the removed ones, plus the added ones
   const [removedNights, setRemovedNights] = useState<string[]>([]);
@@ -135,6 +138,7 @@ function CreateLeagueDesktop() {
         end_date: endDate || null,
         play_day: playDay,
         start_time: startTime || null,
+        ...placePayload(place),
         rounds_per_night: roundsPerNight,
         team_ids: Array.from(selected),
         nights,
@@ -147,12 +151,14 @@ function CreateLeagueDesktop() {
           count(league.team_count, NOUN.ekipa),
           playDay != null ? DAY_NAMES[playDay] : null,
           startTime ? `u ${startTime}` : null,
+          place.name.trim() || null,
           count(nights.length, NOUN.večer),
         ]
           .filter(Boolean)
           .join(", ")}).`,
       });
       setName("");
+      setPlace(EMPTY_PLACE);
       setSelected(new Set());
       setRemovedNights([]);
       setExtraNights([]);
@@ -239,15 +245,6 @@ function CreateLeagueDesktop() {
           ))}
         </Box>
       </Box>
-      <TimeField
-        label="Početak večeri · neobavezno"
-        value={startTime}
-        onChange={setStartTime}
-        clearLabel="Ukloni početak večeri"
-        soft
-        sx={{maxWidth: "calc(50% - 6px)"}}
-        inputSx={{height: 52, borderRadius: "14px", fontSize: 16}}
-      />
       <Box role="group" aria-labelledby="league-nights" sx={{display: "flex", flexDirection: "column", gap: "10px"}}>
         <Box sx={{display: "flex", alignItems: "baseline", justifyContent: "space-between", px: "4px"}}>
           <Box id="league-nights" sx={{fontSize: 14, fontWeight: 600, color: color.ink2}}>
@@ -331,6 +328,24 @@ function CreateLeagueDesktop() {
             <AddRoundedIcon />
           </IconCircleButton>
         </Box>
+      </Box>
+      <Box role="group" aria-labelledby="gathering" sx={{display: "flex", flexDirection: "column", gap: "14px", pt: "18px", borderTop: `1px solid ${color.divider}`}}>
+        <Box sx={{display: "flex", flexDirection: "column", gap: "2px"}}>
+          <Box component="h3" id="gathering" sx={{m: 0, fontFamily: font.display, fontSize: 20, fontWeight: 800}}>
+            Okupljanje
+          </Box>
+          <Box sx={{fontSize: 13, lineHeight: 1.45, color: color.muted}}>Zadano vrijeme i mjesto za sve večeri lige.</Box>
+        </Box>
+        <TimeField
+          label={TIME_LABEL}
+          value={startTime}
+          onChange={setStartTime}
+          clearLabel="Ukloni vrijeme okupljanja"
+          soft
+          sx={{maxWidth: "calc(50% - 6px)"}}
+          inputSx={{height: 52, borderRadius: "14px", fontSize: 16}}
+        />
+        <PlaceFields value={place} onChange={setPlace} inputSx={{height: 52, borderRadius: "14px", fontSize: 16}} />
       </Box>
       {submitError && <ErrorNote>{submitError}</ErrorNote>}
       {created && (
