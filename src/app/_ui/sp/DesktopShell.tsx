@@ -22,6 +22,7 @@ import LibraryAddRoundedIcon from "@mui/icons-material/LibraryAddRounded";
 import LoginRoundedIcon from "@mui/icons-material/LoginRounded";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import MenuRoundedIcon from "@mui/icons-material/MenuRounded";
+import HandshakeRoundedIcon from "@mui/icons-material/HandshakeRounded";
 import PersonRoundedIcon from "@mui/icons-material/PersonRounded";
 import PersonSearchRoundedIcon from "@mui/icons-material/PersonSearchRounded";
 import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
@@ -51,6 +52,7 @@ export type NavKey =
   | "createLeague"
   | "teams"
   | "players"
+  | "sponsors"
   | "profile";
 
 // Desktop page frame: menu button + eyebrow/title header, right-hand controls, content filling the viewport. Without a
@@ -65,6 +67,7 @@ export function DesktopShell({
   back,
   lead,
   compact = false,
+  footer,
   children,
   sx,
 }: {
@@ -77,6 +80,8 @@ export function DesktopShell({
   // any other control next to the menu button (a stacked page's BackPill in a short window)
   lead?: React.ReactNode;
   compact?: boolean;
+  // a strip along the bottom of the window, edge to edge under the content (the sponsors of a live round)
+  footer?: React.ReactNode;
   children: React.ReactNode;
   sx?: SxProps<Theme>;
 }) {
@@ -157,6 +162,7 @@ export function DesktopShell({
       <Box component="main" sx={mergeSx({flex: 1, minHeight: 0, display: "flex", flexDirection: "column", gap: "20px"}, sx)}>
         {children}
       </Box>
+      {footer && <Box sx={{flex: "none", mx: "-36px", mb: compact ? "-20px" : "-28px"}}>{footer}</Box>}
       <NavDrawer open={navOpen} onClose={() => setNavOpen(false)} active={active} />
       {scroll.arrows}
     </Box>
@@ -178,6 +184,7 @@ const NAV: NavItem[] = [
   {key: "createLeague", label: "Nova liga", icon: <LibraryAddRoundedIcon />, href: "/league/new", adminOnly: true},
   {key: "teams", label: "Ekipe", icon: <GroupsRoundedIcon />, href: "/teams", adminOnly: true},
   {key: "players", label: "Igrači", icon: <PersonRoundedIcon />, href: "/players", adminOnly: true},
+  {key: "sponsors", label: "Sponzori", icon: <HandshakeRoundedIcon />, href: "/sponzori", adminOnly: true},
   {key: "profile", label: "Moj profil", icon: <AccountCircleRoundedIcon />, href: "/profile", head: "Račun"},
 ];
 
