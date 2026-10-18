@@ -13,7 +13,7 @@ import {Brand} from "@/app/_ui/auth/AuthFrame";
 import {BurzaHomeCard, HomeTile, NextNightCard, NextNightPlaceholder, nextNight} from "@/app/_ui/home/HomeCards";
 import InstallSheet from "@/app/_ui/install/InstallSheet";
 import {SmokingMark} from "@/app/_ui/smoking/SmokingParts";
-import {buttonBase, ellipsis, ErrorNote, IconCircleButton, Screen, Spinner} from "@/app/_ui/sp";
+import {buttonBase, ellipsis, ErrorNote, IconCircleButton, Screen, Spinner, visuallyHidden} from "@/app/_ui/sp";
 import AccountCircleRoundedIcon from "@mui/icons-material/AccountCircleRounded";
 import AdminPanelSettingsRoundedIcon from "@mui/icons-material/AdminPanelSettingsRounded";
 import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
@@ -24,6 +24,9 @@ import LockRoundedIcon from "@mui/icons-material/LockRounded";
 import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
 import {Box} from "@mui/material";
 import {useTransitionRouter} from "@/app/_lib/viewTransitions";
+
+// under 400 px the header holds the brand (with its bell) next to an admin's Admin button only as an icon
+const narrowPhone = "@media (max-width: 399.98px)";
 
 // Početna on the phone, the only Home (handoff §2; Claude Design "Burza v2" screen "home"): the top card, the Burza
 // igrača card and the 2×2 tiles. Nothing is edited here. An admin sees it after "Prikaz igrača" on Večer lige
@@ -43,7 +46,8 @@ export default function PhoneHome() {
     <Screen gap={12}>
       {/* 4 px more under the header than between the cards, as designed */}
       <Box component="header" sx={{display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: "12px", px: "4px", pb: "4px"}}>
-        <Box component="h1" sx={{m: 0, fontWeight: "inherit"}}>
+        {/* minWidth 0: on a narrow phone the brand's bell gives way to the buttons */}
+        <Box component="h1" sx={{m: 0, fontWeight: "inherit", minWidth: 0}}>
           <Brand variant="home" />
         </Box>
         <Box sx={{flex: "none", display: "flex", alignItems: "center", gap: "8px"}}>
@@ -67,10 +71,14 @@ export default function PhoneHome() {
                 fontWeight: 700,
                 boxShadow: shadow.raised,
                 "& svg": {fontSize: 20},
+                // a phone under 400 px has no room for the label next to the brand's bell: the icon alone
+                [narrowPhone]: {width: 44, p: 0, justifyContent: "center"},
               }}
             >
               <AdminPanelSettingsRoundedIcon aria-hidden />
-              Admin
+              <Box component="span" sx={{[narrowPhone]: visuallyHidden}}>
+                Admin
+              </Box>
             </Box>
           )}
           <IconCircleButton label="Moj profil" onClick={() => router.push("/profile")}>
