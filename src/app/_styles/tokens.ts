@@ -79,6 +79,7 @@ export const color = {
   green: "#386641", // team 1, positive change
   red: "#BC4749", // team 2, negative change, destructive, live
   white: "#FFFFFF", // cards; text and icons on navy, green and red
+  logoPlate: "#15181F", // the dark plate under a light sponsor logo without a background
   medal: ["#B8901C", "#8A9099", "#A0643A"],
   medalBg: ["rgba(212,168,44,.26)", "rgba(160,166,176,.26)", "rgba(176,112,64,.24)"],
   // lines and borders (navy alphas)
@@ -87,6 +88,18 @@ export const color = {
   border: tint.navy[18], // inputs
   borderControl: tint.navy[20], // 1.5px control borders, a switch that is off
   borderStrong: tint.navy[30],
+} as const;
+
+// The logo cropper (Claude Design "Profilna slika · dijalog", for sponsor logos): the black stage on the phone and the
+// grey one in the computer's dialog, the shade around the frame, its white rim, the grid while dragging and the buttons
+// on black.
+export const crop = {
+  stage: "#000000",
+  stageSoft: "#4D4D4D",
+  shade: "rgba(0,0,0,.62)",
+  rim: "rgba(255,255,255,.9)",
+  grid: "rgba(255,255,255,.45)",
+  pill: "rgba(255,255,255,.12)",
 } as const;
 
 // Left team is always green, right team red (the left side is the viewer's own team).
