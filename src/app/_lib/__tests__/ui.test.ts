@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import {test} from "node:test";
 import {count, displayDate, initials, loadMoreLabel, matchesQuery, NOUN, plural, weekdayDate} from "../ui/text";
-import {highlightParam, splitPodium, standingsTeamHref, statsLine, statsParts, toStandingsRows} from "../ui/standings";
+import {highlightParam, rankTone, splitPodium, standingsTeamHref, statsLine, statsParts, toStandingsRows} from "../ui/standings";
 import {filterTables, liveCount, splitColumns, tableColumns, toTableRows} from "../ui/tables";
 import {BYE_TEAM_ID, teamLabel} from "../bye";
 
@@ -112,6 +112,17 @@ test("round tables are sorted by table and carry live match points", () => {
   assert.equal(liveCount(rows), 1);
 });
 
+test("a published round's tables carry the teams' photos for the avatars; rows without them (Skica) have none", () => {
+  const published = rounds.map((r) => ({...r, team1: {...r.team1, photo_url: r.id === 10 ? "/api/teams/1/photo?v=7" : null}, team2: {...r.team2, photo_url: null}}));
+  const rows = toTableRows(published);
+  assert.equal(rows[0].photoA, "/api/teams/1/photo?v=7");
+  assert.equal(rows[0].photoB, null);
+  // no photo_url from the API: no avatars at all, not the teams' letters
+  const plain = toTableRows(rounds);
+  assert.equal("photoA" in plain[0], false);
+  assert.equal("photoB" in plain[0], false);
+});
+
 test("table filters by status, team name and table number", () => {
   const rows = toTableRows(rounds);
   assert.equal(filterTables(rows, "all").length, 4);
@@ -217,4 +228,16 @@ test("a match's date and time of day combine into one timestamp", () => {
   assert.equal(combineDateAndTime(date, time)?.toISOString(), "2026-10-04T19:42:05.120Z");
   assert.equal(combineDateAndTime(date, null), null);
   assert.equal(combineDateAndTime(null, time)?.toISOString(), time.toISOString());
+});
+
+test("a place's tone: playing beats mine, mine beats the top three, and Rejting has no top three", () => {
+  const row = (rank: number, live = false, highlight = false) => ({rank, live, highlight});
+  assert.equal(rankTone(row(1, true, true), {teams: true}), "live");
+  assert.equal(rankTone(row(5, true), {teams: true}), "live");
+  assert.equal(rankTone(row(2, false, true), {teams: true}), "me");
+  assert.equal(rankTone(row(3), {teams: true}), "top");
+  assert.equal(rankTone(row(4), {teams: true}), "plain");
+  // Rejting: the first places look like the rest, the player's own row is still navy
+  assert.equal(rankTone(row(1), {teams: false}), "plain");
+  assert.equal(rankTone(row(1, false, true), {teams: false}), "me");
 });

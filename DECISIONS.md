@@ -1009,3 +1009,44 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
     - "Kreiraj ligu" already had flex: none (PrimaryButton), so it stays 60 px high when the form scrolls; nothing to
       change there.
     - A league address or link without a name is saved but not shown anywhere (a place needs a name).
+
+62. **Skica: more Kola, no numbers on drafts, seating, Slobodna runda** (your request of 18.10.; desktop first, then the
+    admin's phone once you approved it on 19.10.).
+    - **One draft at a time.** While tonight's rounds wait in Skica (drafts or approved), Novo kolo shows "Večeras čeka
+      skica" with Otvori skicu instead of Kreiraj kolo, and the server refuses a creation (409 DRAFT_WAITING; the page
+      then reloads its rounds and shows the note). Once they are published or discarded, Kreiraj kolo works again for
+      the same teams: the old guard that took the same teams for a double click (and handed back tonight's rounds not
+      started yet, published ones too) is gone, as the draft rule now stops a second click. A draft left from an
+      earlier night doesn't block tonight. The phone's Novo kolo shows the same note in place of Kreiraj.
+    - **No numbers until publishing.** A round waiting in Skica is Skica A, B, C… (Round.draft_order, migration
+      20261019120000_draft_order, which letters the drafts already waiting); its round_number only keeps its tables
+      together. Objavi odobrena kola numbers the approved ones after the league's last published round in letter order,
+      so publishing only Skica C makes it the next Kolo with no gap; the drafts left keep their letters. Skica (and the
+      phone's Skica kola), the Kola list (both) and the smoking plan say Skica A for a draft; the "2. od 3" under the
+      date is gone. Skica keeps showing the round it showed after publishing moves it.
+    - **Uredi stolove in Skica**, on a round not published yet: the same dialog as Dnevni poredak (a click on a table
+      re-pairs it, a team taken from another table swaps places), Novi stol and the bin. Editing an approved round
+      leaves it approved; Odobri is hidden while editing. Under 1280 px wide the tables are one column, so names fit.
+      On the phone's Skica kola it is the pencil beside the bin, as on Dnevni poredak's phone: the round's tables become
+      the edit cards (Uredi par, Ukloni stol, Dodaj stol s dvije ekipe) with the pair sheet; the bin and the publish
+      buttons wait until the check ends the editing. A bye table reads 2:0 in the round's list there as on desktop.
+    - **Slobodna runda** is first in the team picker of both dialogs (Dnevni poredak and Skica), for an existing table
+      or a Novi stol: that table is closed at once 2:0 (two 301:0 matches, as a bye table made by Novo kolo) and a
+      published round counts it in the standings straight away. Picking it never takes it from another table: several
+      teams can have it in one round, and the team it replaces sits the round out, which the dialog says. A team taken
+      from a bye table leaves its opponent the bye; a bye table left with no team is removed.
+    - The dialog's notes now come from the same seating plan as the server (_lib/tableSeats.ts), which also fixes a
+      re-pairing where one team stays and the other comes from another table ("A vs B" → "B vs C"): B was seated twice
+      and A dropped; now A takes C's old seat.
+
+63. **A night runs until 06:00** (found while doing #62; your choice of 19.10.: the 06:00 rule for tonight's rounds).
+    Until now two rules lived side by side: Večer lige, the phone's Novo kolo and the saved Novo kolo settings took
+    the night until 06:00, but the server put a round created after midnight on the next date, and the repeat check,
+    the draft lock, the smoking plan, Dnevni poredak's "večeras" (and its medals), the desktop's live dot and Početna's
+    "Večeras" switched at midnight. Now one helper, leagueNightString / leagueNight in _lib/dates.ts (createRoundNight
+    is gone), decides tonight's night everywhere a round's night matters: a round created at 00:30 goes on the
+    evening's date, the repeat check sees the pairs played before midnight, and the night stays one rating period. A
+    bye table's matches take the table's own night (before, the day it was edited). Plain calendar days stay on
+    leagueDateString: birth dates, Burza, sponsors, Raspored, Datumi, a league's end. Your real nights (the backup of
+    13.10.) never had a match start after midnight, the latest 23:52, so nothing stored needs moving. A test reads the
+    round files and fails if one goes back to the midnight day.

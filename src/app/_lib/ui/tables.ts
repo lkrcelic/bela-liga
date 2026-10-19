@@ -1,3 +1,4 @@
+import {DraftRound} from "@/app/_interfaces/round";
 import {isByeTeam, teamLabel} from "@/app/_lib/bye";
 import {matchesQuery} from "./text";
 
@@ -24,6 +25,10 @@ export type TableRow = {
   bye: boolean;
   // smoking is allowed at the table
   smoking: boolean;
+  // the teams' photos for the avatars of a published round (null: the team's letter); absent where the rows don't come
+  // from the night's published rounds (Skica), which show no avatars
+  photoA?: string | null;
+  photoB?: string | null;
 };
 
 export type TableFilter = "all" | "live" | "done";
@@ -35,8 +40,8 @@ type RoundLike = {
   smoking_table?: boolean | null;
   team1_id?: number;
   team2_id?: number;
-  team1?: {team_name?: string} | null;
-  team2?: {team_name?: string} | null;
+  team1?: {team_name?: string; photo_url?: string | null} | null;
+  team2?: {team_name?: string; photo_url?: string | null} | null;
   team1_wins?: number;
   team2_wins?: number;
   active?: boolean;
@@ -70,9 +75,37 @@ export function toTableRows(rounds: RoundLike[], myTeamNames: string[] = []): Ta
         started: live || r.open === false || (r.team1_wins ?? 0) + (r.team2_wins ?? 0) > 0 || !!om,
         bye: isByeTeam(r.team1_id ?? -1) || isByeTeam(r.team2_id ?? -1),
         smoking: !!r.smoking_table,
+        ...(r.team1 && "photo_url" in r.team1 && {photoA: r.team1.photo_url ?? null}),
+        ...(r.team2 && "photo_url" in r.team2 && {photoB: r.team2.photo_url ?? null}),
       };
     })
     .sort((a, b) => a.table - b.table);
+}
+
+// A round still in Skica as table rows (its Uredi stolove, desktop and phone): nothing is played before a round is
+// published; a bye table is settled 2:0 from the start
+export function draftTableRows(round: DraftRound): TableRow[] {
+  return round.tables.map((t, i) => {
+    const bye = isByeTeam(t.team1.id) || isByeTeam(t.team2.id);
+    return {
+      id: t.id,
+      table: t.table ?? i + 1,
+      teamA: t.team1.name,
+      teamB: t.team2.name,
+      teamAId: t.team1.id,
+      teamBId: t.team2.id,
+      winsA: bye && !isByeTeam(t.team1.id) ? 2 : 0,
+      winsB: bye && !isByeTeam(t.team2.id) ? 2 : 0,
+      live: false,
+      done: bye,
+      pointsA: null,
+      pointsB: null,
+      mine: false,
+      started: false,
+      bye,
+      smoking: t.smoking,
+    };
+  });
 }
 
 // Filter by status and by a search on team name or exact table number
