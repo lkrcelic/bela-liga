@@ -1053,7 +1053,8 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
 
 64. **Pairing by the teams' average age** (your request of 21.10.: the weakest factor of the pairing, but a factor).
     - A team's age is the average of its active roster players' ages on the night of the pairing (_lib/matching/
-      teamAges.ts, service/team/ages.ts); players without a birth date don't count, and a team with none has no age.
+      teamAges.ts, service/team/ages.ts); a player without a birth date counts as 24 (your choice of 21.10.), so only
+      a team without players has no age.
     - The order of the factors is unchanged and the age comes last: the standings make the windows, then the fewest
       earlier meetings (squared) and no pair twice tonight, the bye as before; only between pairings equal in all of
       that do teams of a similar average age meet. Inside the blossom a pair's price is meetings² × ageScale + the age
@@ -1061,4 +1062,9 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
     - The gap is in whole years, at most 40 (past that, teams are simply far apart). Two teams without an age are 0
       apart, one without an age is 20 from every team with one. Alternative: 0 from everyone. Reason: a team without an
       age then became a wildcard that split two teams of the same age (a test shows the case).
+    - `npm run ages:report` (scripts/ageReport.ts, reads only) shows it on a database such as a backup: the ages as
+      entered (average, median, by decade, how many players have none), every active team's average, and the next
+      rounds planned with and without the ages side by side (earlier meetings, repeats, age gaps, the tables that
+      differ). The rounds are planned one after another, so the first round takes the closest pairs and a later one
+      can get a wider gap; the night's average gap still goes down.
     - Smoking tables and table numbers don't change: they are decided after the pairing, as before.
