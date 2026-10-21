@@ -1050,3 +1050,15 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
     leagueDateString: birth dates, Burza, sponsors, Raspored, Datumi, a league's end. Your real nights (the backup of
     13.10.) never had a match start after midnight, the latest 23:52, so nothing stored needs moving. A test reads the
     round files and fails if one goes back to the midnight day.
+
+64. **Pairing by the teams' average age** (your request of 21.10.: the weakest factor of the pairing, but a factor).
+    - A team's age is the average of its active roster players' ages on the night of the pairing (_lib/matching/
+      teamAges.ts, service/team/ages.ts); players without a birth date don't count, and a team with none has no age.
+    - The order of the factors is unchanged and the age comes last: the standings make the windows, then the fewest
+      earlier meetings (squared) and no pair twice tonight, the bye as before; only between pairings equal in all of
+      that do teams of a similar average age meet. Inside the blossom a pair's price is meetings² × ageScale + the age
+      gap, where ageScale is above the age gaps of a whole night, so no age difference ever buys an extra meeting.
+    - The gap is in whole years, at most 40 (past that, teams are simply far apart). Two teams without an age are 0
+      apart, one without an age is 20 from every team with one. Alternative: 0 from everyone. Reason: a team without an
+      age then became a wildcard that split two teams of the same age (a test shows the case).
+    - Smoking tables and table numbers don't change: they are decided after the pairing, as before.
