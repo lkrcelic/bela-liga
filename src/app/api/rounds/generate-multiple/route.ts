@@ -10,6 +10,7 @@ import {errorResponse} from "@/app/_lib/apiErrors";
 import {seatRounds} from "@/app/_lib/matching/smokingTables";
 import {smokingSetup} from "@/app/_lib/service/round/smoking";
 import {teamSmokers} from "@/app/_lib/service/team/smokers";
+import {teamAverageAges} from "@/app/_lib/service/team/ages";
 
 // the pairing stops searching after a few seconds; this leaves room for the database around it
 export const maxDuration = 30;
@@ -28,7 +29,11 @@ export async function POST(request: NextRequest) {
     const windowSize = parsed.windowSize ?? 8;
 
     const teamsWithScores = await getLeagueTeamsWithScores(league_id);
-    const filteredTeams = teamsWithScores.filter((team) => present_teams.includes(team.id));
+    // the average age is the pairing's weakest factor: it only decides between otherwise equal pairings
+    const ages = await teamAverageAges(present_teams);
+    const filteredTeams = teamsWithScores
+      .filter((team) => present_teams.includes(team.id))
+      .map((team) => ({...team, average_age: ages.get(team.id) ?? null}));
 
     // the pairing rejects impossible settings (odd window, more rounds than teams, ...) with an InvalidResultError: a 400
     const playedToday = await pairsPlayedToday(league_id);
