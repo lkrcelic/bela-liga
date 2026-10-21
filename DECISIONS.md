@@ -1054,7 +1054,9 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
 64. **Pairing by the teams' average age** (your request of 21.10.: the weakest factor of the pairing, but a factor).
     - A team's age is the average of its active roster players' ages on the night of the pairing (_lib/matching/
       teamAges.ts, service/team/ages.ts); a player without a birth date counts as 24 (your choice of 21.10.), so only
-      a team without players has no age.
+      a team without players has no age. So does a player whose birth date makes them younger than 18 (your choice
+      of 22.10.): the backup of 22.10. had one born that very day (the date field allows today) and one aged 2, which
+      put a team at 12. With it entered: average 27.9, median 24.8, 167 of 338 active players without a date.
     - The order of the factors is unchanged and the age comes last: the standings make the windows, then the fewest
       earlier meetings (squared) and no pair twice tonight, the bye as before; only between pairings equal in all of
       that do teams of a similar average age meet. Inside the blossom a pair's price is meetings² × ageScale + the age
