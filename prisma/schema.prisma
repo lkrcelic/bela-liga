@@ -594,3 +594,13 @@ model OngoingBelaPlayerAnnouncement {
 
   result OngoingBelaResult @relation(fields: [result_id], references: [result_id], onDelete: Cascade)
 }
+
+// Failed logins per account from any address, so every serverless instance sees the same count (accountLimiting.ts).
+// The key is "player:<id>", or "login:<name>" for a name with no account.
+model LoginFailure {
+  key           String   @id @db.VarChar(200)
+  count         Int
+  first_failure DateTime
+
+  @@index([first_failure])
+}
