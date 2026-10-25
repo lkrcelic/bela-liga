@@ -29,13 +29,15 @@ test("a tied hand has no winner and a level match no leader", () => {
   assert.equal(b.leadPct, 0);
 });
 
-test("the lead bar fills its half at LEAD_BAR_FULL and stops there", () => {
-  const [half, full, over] = runningHands([
-    {left: LEAD_BAR_FULL / 2, right: 0},
-    {left: LEAD_BAR_FULL / 2, right: 0},
+test("the lead bar fills its half at a lead of 1001 and stops there", () => {
+  assert.equal(LEAD_BAR_FULL, 1001);
+  const [some, full, over] = runningHands([
+    {left: 300, right: 0},
+    {left: 701, right: 0},
     {left: 200, right: 0},
   ]);
-  assert.equal(half.leadPct, 50);
+  // a lead of 300 is under a third of the bar, not a full one
+  assert.ok(some.leadPct > 29 && some.leadPct < 30);
   assert.equal(full.leadPct, 100);
   assert.equal(over.leadPct, 100);
 });
