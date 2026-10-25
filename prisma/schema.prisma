@@ -92,6 +92,7 @@ model Player {
   createRoundDrafts              CreateRoundDraft[]
   photo                          PlayerPhoto?
   teamPhotosUpdated              Team[]                          @relation("TeamPhotoUpdater")
+  tournamentEntries              TournamentTeam[]                @relation("TournamentRegistrar")
 }
 
 // A player's profile photo: a 512×512 WebP or PNG cropped in the browser, up to 512 KB (CHECK in the migration script).
@@ -146,14 +147,56 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
+// A one-day event teams sign up for (Turniri). It is played in Kolos: Kolo N is the tables (Round rows, linked by
+// TournamentRound) with round_number N, all on the tournament's date, so the whole tournament is one rating period.
+// Kolo 1 is paired at random, the later ones by the standings (Swiss). It starts when Kolo 1 is published; a
+// started one takes no sign-ups and can't be cancelled (CHECKs in the migration script).
 model Tournament {
-  tournament_id   Int      @id @default(autoincrement())
-  tournament_name String   @db.VarChar(100)
+  tournament_id      Int       @id @default(autoincrement())
+  tournament_name    String    @db.VarChar(100)
+  // the day it is played; every Kolo's tables carry it as their round_date
+  date               DateTime  @db.Date
+  // "HH:MM" (CHECK constraints in the migration script); Okupljanje and Početak, both optional
+  gathering_time     String?   @db.VarChar(5)
+  start_time         String?   @db.VarChar(5)
+  location_name      String?   @db.VarChar(100)
+  location_address   String?   @db.VarChar(200)
+  location_url       String?   @db.VarChar(500) // a Google Maps share link
+  // Broj kola (1-20)
+  rounds             Int       @default(9)
+  // Partija po kolu: the matches a table plays (1 or 2)
+  matches_per_round  Int       @default(2)
+  // Zvanja: false = "bez zvanja", only bela (20) is entered
+  declarations       Boolean   @default(true)
+  // Najveći broj ekipa; null = no limit. Teams over it wait on the waiting list
+  max_teams          Int?
+  // Kotizacija po igraču in whole euros; 0 = "Bez stresa, bez obveza"
+  entry_fee          Int       @default(0)
+  rules_url          String?   @db.VarChar(500)
+  // the admin's Prijave otvorene; closed by itself when the tournament starts
+  registrations_open Boolean   @default(true)
+  // when Kolo 1 was published
+  started_at         DateTime?
+  cancelled_at       DateTime?
+  created_at         DateTime  @default(now())
 
   // Relationships
   tournamentTeams  TournamentTeam[]
   tournamentRounds TournamentRound[]
   teamScore        TeamScore[]
+  prizes           TournamentPrize[]
+}
+
+// Nagrade: what each place gets, in order (place 1 = first)
+model TournamentPrize {
+  tournament_id Int
+  place         Int
+  prize         String @db.VarChar(100)
+  description   String @default("") @db.VarChar(200)
+
+  tournament Tournament @relation(fields: [tournament_id], references: [tournament_id], onDelete: Cascade)
+
+  @@id([tournament_id, place])
 }
 
 model League {
@@ -399,14 +442,27 @@ model TeamPlayer {
   @@id([team_id, player_id])
 }
 
+// A team's entry in a tournament: in it, or on its waiting list. The waiting list goes in the order the teams signed up
+// (registered_at); when a team leaves, the first one waiting comes in. registered_by: the player who signed it up
+// (null: an admin added it).
 model TournamentTeam {
   tournament_id Int
   team_id       Int
+  status        TournamentEntryStatus @default(REGISTERED)
+  registered_at DateTime              @default(now())
+  registered_by Int?
 
   tournament Tournament @relation(fields: [tournament_id], references: [tournament_id], onDelete: Cascade)
   team       Team       @relation(fields: [team_id], references: [team_id], onDelete: Cascade)
+  registrar  Player?    @relation("TournamentRegistrar", fields: [registered_by], references: [id], onDelete: SetNull)
 
   @@id([tournament_id, team_id])
+  @@index([team_id])
+}
+
+enum TournamentEntryStatus {
+  REGISTERED
+  WAITING
 }
 
 model LeagueTeam {
@@ -448,6 +504,10 @@ model Round {
   // round_number only keeps its tables together until publishing numbers it after the league's last published round
   // (CHECK constraint in the migration script: only an unpublished round has it)
   draft_order   Int?
+  // the matches the table plays: 2 in a league, 1 or 2 in a tournament (its Partija po kolu; CHECK in the migration)
+  matches_per_round Int @default(2)
+  // zvanja are entered at the table; false (a tournament "bez zvanja"): only bela (20)
+  declarations      Boolean @default(true)
 
   team1            Team             @relation("RoundTeam1", fields: [team1_id], references: [team_id], onDelete: Cascade)
   team2            Team              @relation("RoundTeam2", fields: [team2_id], references: [team_id], onDelete: Cascade)
@@ -499,6 +559,7 @@ model TournamentRound {
   round      Round      @relation(fields: [round_id], references: [id], onDelete: Cascade)
 
   @@id([tournament_id, round_id])
+  @@index([round_id])
 }
 
 model LeagueRound {
