@@ -18,6 +18,10 @@ export const RoundResponseValidation = z.object({
   table_number: z.number().int().optional(),
   // smoking is allowed at the table
   smoking_table: z.boolean().optional(),
+  // the matches the table plays (2 in a league; a tournament's Partija po kolu, 1 or 2)
+  matches_per_round: z.number().int().optional(),
+  // zvanja are entered; false (a tournament "bez zvanja"): only bela (20)
+  declarations: z.boolean().optional(),
 });
 
 export const RoundExtendedResponseValidation = RoundResponseValidation.extend({

@@ -138,6 +138,7 @@ test("the player-facing reads of rounds filter out the unpublished ones", () => 
     "_lib/service/league/leagues.ts": "which league is being played",
     "_lib/service/league/getStandings.ts": "the +/− table after the previous night",
     "_lib/service/team/overview.ts": "a team's last nights",
+    "_lib/service/tournament/load.ts": "a tournament's Kolos, standings and results (players and visitors)",
   };
   const marker = /PUBLISHED_ROUND|visibleRounds\(|status = 'PUBLISHED'/;
   for (const [file, why] of Object.entries(reads)) assert.match(read(file), marker, `${file} (${why})`);

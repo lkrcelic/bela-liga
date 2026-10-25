@@ -2,7 +2,7 @@ import {prisma} from "@/app/_lib/prisma";
 import {BelaMatchAllIncluded, transformBelaMatch} from "@/app/_lib/helpers/databaseHelpers";
 import {matchWinner} from "@/app/_lib/bela/scoring";
 import {InvalidResultError} from "@/app/_lib/validation/validateResult";
-import {closeRound, lockRound, MATCHES_PER_ROUND} from "@/app/_lib/service/round/finish";
+import {closeRound, lockRound} from "@/app/_lib/service/round/finish";
 import {combineDateAndTime} from "@/app/_lib/dates";
 
 export class MatchAlreadyFinishedError extends Error {
@@ -19,7 +19,8 @@ export type FinishMatchOutcome = {
 };
 
 // Stores a finished match and moves the round on: starts the next match, or closes the round and updates the
-// standings and ratings once both matches are played. Everything happens in one transaction holding a lock on the
+// standings and ratings once its matches are played (both in a league; a tournament's table may play one). Everything
+// happens in one transaction holding a lock on the
 // match, so when two phones tap "Završi meč" at the same time only the first one counts.
 export async function finishOngoingMatch(ongoingMatchId: number): Promise<FinishMatchOutcome> {
   return prisma.$transaction(async (tx) => {
@@ -55,14 +56,14 @@ export async function finishOngoingMatch(ongoingMatchId: number): Promise<Finish
       return {roundId: null, roundFinished: false, nextOngoingMatchId: null};
     }
 
-    await lockRound(tx, roundId);
+    const round = await lockRound(tx, roundId);
     await tx.round.update({
       where: {id: roundId},
       data: winner === 1 ? {team1_wins: {increment: 1}} : {team2_wins: {increment: 1}},
     });
 
     const playedMatches = await tx.match.count({where: {round_id: roundId}});
-    if (playedMatches >= MATCHES_PER_ROUND) {
+    if (playedMatches >= round.matches_per_round) {
       await closeRound(tx, roundId);
       return {roundId, roundFinished: true, nextOngoingMatchId: null};
     }

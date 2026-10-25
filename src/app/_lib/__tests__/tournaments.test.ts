@@ -243,3 +243,21 @@ test("a tournament's status in the admin's list", () => {
   assert.equal(tournamentStatus("finished", false, 0).label, "Završeno");
   assert.equal(tournamentStatus("cancelled", false, 0).label, "Otkazan");
 });
+
+test("a table bez zvanja takes only one bela (20) a hand; with zvanja anything goes", async () => {
+  const {declarationsError, BELA_ONLY_ERROR, ONE_BELA_ERROR} = await import("@/app/_lib/validation/validateResult");
+  const z = (team: 1 | 2, announcement_type: string) => ({team, announcement_type});
+  assert.equal(declarationsError(false, []), null);
+  assert.equal(declarationsError(false, undefined), null);
+  assert.equal(declarationsError(false, [z(1, "TWENTY")]), null);
+  assert.equal(declarationsError(false, [z(1, "FIFTY")]), BELA_ONLY_ERROR);
+  assert.equal(declarationsError(false, [z(1, "TWENTY"), z(2, "TWENTY")]), ONE_BELA_ERROR);
+  assert.equal(declarationsError(true, [z(1, "FIFTY"), z(2, "TWO_HUNDRED")]), null);
+});
+
+test("a tournament's table of one match shows only Meč 1", async () => {
+  const {matchSlots, currentMatchNumber} = await import("@/app/_lib/tableOverview");
+  assert.equal(matchSlots([], 1).length, 1);
+  assert.equal(matchSlots([]).length, 2);
+  assert.equal(currentMatchNumber([{number: 1, kind: "finished"}], 1), 1);
+});

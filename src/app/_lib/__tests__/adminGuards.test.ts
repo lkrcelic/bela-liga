@@ -68,6 +68,8 @@ const ALLOWED_WITHOUT_ADMIN: Record<string, string> = {
   "teams/[id]/route.ts PATCH": "any player of the team chooses who sees its photo; renaming and blocking photos check the admin role in the handler",
   "teams/[id]/photo/route.ts PUT": "any player of the team sets its photo (teamPhotoChangeError); an admin may not",
   "teams/[id]/photo/route.ts DELETE": "a player of the team or an admin removes its photo (teamPhotoChangeError)",
+  "tournaments/[id]/registrations/route.ts POST": "a player signs up a team they play in, or a new one with a partner (signUp checks it)",
+  "tournaments/[id]/registrations/[teamId]/route.ts DELETE": "a player of the team signs it off before the start (signOff checks it)",
 };
 
 type Handler = {file: string; method: string; body: string};
@@ -166,6 +168,7 @@ test("every admin endpoint calls requireAdmin", () => {
     leagues: routeFiles(join(API, "leagues")),
     rounds: routeFiles(join(API, "rounds")),
     matches: routeFiles(join(API, "matches")),
+    tournaments: routeFiles(join(API, "tournaments")),
   };
   // a moved folder must not make this pass with nothing to check
   assert.ok(routeFiles(join(API, "admin")).length > 0, "no routes found under api/admin");

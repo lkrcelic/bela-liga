@@ -1,7 +1,7 @@
 import {BelaResultCreateRequest} from "@/app/_interfaces/belaResult";
 import {prisma} from "@/app/_lib/prisma";
 import {transformBelaResult} from "@/app/_lib/helpers/databaseHelpers";
-import {InvalidResultError, normalizeBelaResult} from "@/app/_lib/validation/validateResult";
+import {declarationsError, InvalidResultError, normalizeBelaResult} from "@/app/_lib/validation/validateResult";
 import {matchWinner} from "@/app/_lib/bela/scoring";
 
 // Saves a hand and adds it to the match score in one transaction, so the score can't drift from the hands.
@@ -14,15 +14,18 @@ export async function createBelaResult(
 
     await prisma.$transaction(async (tx) => {
         // Lock the match row so two phones saving at the same time are applied one after the other
-        const [match] = await tx.$queryRaw<{player_pair1_score: number, player_pair2_score: number, score_threshold: number | null}[]>`
-            SELECT player_pair1_score, player_pair2_score, score_threshold
-            FROM "OngoingMatch" WHERE id = ${result.match_id} FOR UPDATE`;
+        const [match] = await tx.$queryRaw<{player_pair1_score: number, player_pair2_score: number, score_threshold: number | null, declarations: boolean | null}[]>`
+            SELECT om.player_pair1_score, om.player_pair2_score, om.score_threshold, r.declarations
+            FROM "OngoingMatch" om LEFT JOIN "Round" r ON r.id = om.round_id
+            WHERE om.id = ${result.match_id} FOR UPDATE OF om`;
         if (!match) {
             throw new InvalidResultError("Ovaj meč je već završen.");
         }
         if (matchWinner(match.player_pair1_score, match.player_pair2_score, match.score_threshold ?? 1001) !== null) {
             throw new InvalidResultError("Meč je gotov – završi ga umjesto da dodaješ igru.");
         }
+        const zvanja = declarationsError(match.declarations ?? true, result.announcements);
+        if (zvanja) throw new InvalidResultError(zvanja);
 
         await tx.ongoingBelaResult.create({data: transformBelaResult(result)});
         await tx.ongoingMatch.update({

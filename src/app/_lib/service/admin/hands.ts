@@ -4,7 +4,7 @@ import {AdminHand, HandKind, PadHand, PadMatch, TablePad} from "@/app/_interface
 import {BelaResultCreateRequest} from "@/app/_interfaces/belaResult";
 import {isByeTeam, teamLabel} from "@/app/_lib/bye";
 import {matchWinner} from "@/app/_lib/bela/scoring";
-import {InvalidResultError, normalizeBelaResult} from "@/app/_lib/validation/validateResult";
+import {declarationsError, InvalidResultError, normalizeBelaResult} from "@/app/_lib/validation/validateResult";
 import {transformBelaResult} from "@/app/_lib/helpers/databaseHelpers";
 import {createBelaResult} from "@/app/_lib/service/ongoingBelaResult/create";
 import {updateOngoingBelaResult} from "@/app/_lib/service/ongoingBelaResult/update";
@@ -79,6 +79,7 @@ export async function getTablePad(roundId: number): Promise<TablePad> {
       team1: {select: {team_id: true, team_name: true}},
       team2: {select: {team_id: true, team_name: true}},
       leagueRounds: {select: {league_id: true}},
+      tournamentRounds: {select: {tournament_id: true}},
       matches: {orderBy: {id: "asc"}, include: {belaResults: {orderBy: {result_id: "asc"}, include: handInclude}}},
       ongoingMatches: {orderBy: {id: "desc"}, take: 1, include: {belaResults: {orderBy: {result_id: "asc"}, include: handInclude}}},
       _count: {select: {roundPlayers: true}},
@@ -117,6 +118,9 @@ export async function getTablePad(roundId: number): Promise<TablePad> {
   return {
     roundId: round.id,
     leagueId: round.leagueRounds[0]?.league_id ?? 0,
+    tournamentId: round.tournamentRounds[0]?.tournament_id ?? null,
+    matchesPerRound: round.matches_per_round,
+    declarations: round.declarations,
     roundNumber: round.round_number,
     date: round.round_date ? round.round_date.toISOString().slice(0, 10) : null,
     table: round.table_number,
@@ -130,12 +134,20 @@ export async function getTablePad(roundId: number): Promise<TablePad> {
   };
 }
 
-async function assertEditableTable(roundId: number) {
-  const round = await prisma.round.findUnique({where: {id: roundId}, select: {team1_id: true, team2_id: true, status: true}});
+async function assertEditableTable(roundId: number): Promise<{declarations: boolean}> {
+  const round = await prisma.round.findUnique({where: {id: roundId}, select: {team1_id: true, team2_id: true, status: true, declarations: true}});
   if (!round) throw new NotFoundError("Stol ne postoji.");
   if (isByeTeam(round.team1_id) || isByeTeam(round.team2_id)) throw new InvalidResultError("Za stolom sa slobodnom rundom nema igara za uređivanje.");
   // nothing is played in a round before it is published
   if (round.status !== "PUBLISHED") throw new InvalidResultError(ROUND_NOT_PUBLISHED);
+  return {declarations: round.declarations};
+}
+
+// A finished match's hand at a table of a tournament "bez zvanja" takes only bela (the running match's hands are
+// checked where they are saved, createBelaResult and updateOngoingBelaResult)
+function assertDeclarations(declarations: boolean, result: BelaResultCreateRequest) {
+  const error = declarationsError(declarations, result.announcements);
+  if (error) throw new InvalidResultError(error);
 }
 
 // After a finished match's hands changed: its score, the round's wins, and for a finished round the standings
@@ -198,7 +210,7 @@ async function changeFinishedMatch(matchId: number, change: (tx: Tx) => Promise<
 export type HandTarget = {kind: "ongoing"} | {kind: "finished"; matchId: number};
 
 export async function addHand(roundId: number, target: HandTarget, hand: AdminHand): Promise<void> {
-  await assertEditableTable(roundId);
+  const {declarations} = await assertEditableTable(roundId);
   if (target.kind === "ongoing") {
     // a table that hasn't started gets its first match here (refused when the round is over)
     const ongoing =
@@ -212,6 +224,7 @@ export async function addHand(roundId: number, target: HandTarget, hand: AdminHa
   const match = await prisma.match.findUnique({where: {id: target.matchId}, select: {round_id: true}});
   if (!match || match.round_id !== roundId) throw new NotFoundError("Taj meč nije za ovim stolom.");
   const result = adminHandToResult(hand, target.matchId);
+  assertDeclarations(declarations, result);
   await changeFinishedMatch(target.matchId, async (tx) => {
     await tx.belaResult.create({data: transformBelaResult(result)});
   });
@@ -226,9 +239,14 @@ export async function updateHand(kind: HandKind, resultId: number, hand: AdminHa
     return;
   }
 
-  const stored = await prisma.belaResult.findUnique({where: {result_id: resultId}, select: {match_id: true}});
+  const stored = await prisma.belaResult.findUnique({
+    where: {result_id: resultId},
+    select: {match_id: true, match: {select: {round: {select: {declarations: true}}}}},
+  });
   if (!stored) throw new NotFoundError("Igra ne postoji.");
-  const {announcements, match_id: _matchId, ...data} = adminHandToResult(hand, stored.match_id);
+  const result = adminHandToResult(hand, stored.match_id);
+  assertDeclarations(stored.match.round?.declarations ?? true, result);
+  const {announcements, match_id: _matchId, ...data} = result;
   void _matchId;
   await changeFinishedMatch(stored.match_id, async (tx) => {
     await tx.belaResult.update({where: {result_id: resultId}, data});

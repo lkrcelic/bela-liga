@@ -6,6 +6,7 @@ import {STATUS} from "@/app/_lib/statusCodes";
 import {getTablePad} from "@/app/_lib/service/admin/hands";
 import {editTablePair, removeTable} from "@/app/_lib/service/admin/tables";
 import {isDbId} from "@/app/_lib/helpers/query/dbId";
+import {ensureNextKoloDraft} from "@/app/_lib/service/tournament/kola";
 
 type Params = {params: {roundId: string}};
 
@@ -49,7 +50,9 @@ export async function DELETE(request: NextRequest, {params}: Params) {
   const roundId = Number(params.roundId);
   if (!isDbId(roundId)) return tableNotFound();
   try {
-    await removeTable(roundId);
+    const competition = await removeTable(roundId);
+    // the last open table of a tournament's Kolo gone: the next Kolo's draft
+    if (competition.kind === "tournament") await ensureNextKoloDraft(competition.id);
     return new NextResponse(null, {status: STATUS.NoContent});
   } catch (error) {
     return errorResponse(error, "Stol nije uklonjen.");
