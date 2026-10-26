@@ -2,12 +2,12 @@
 
 import {addKoloTableAPI, makeKoloAPI, publishKoloAPI} from "@/app/_fetchers/tournament";
 import {LeagueTeam} from "@/app/_hooks/useLeagueTeams";
-import {AdminTournament} from "@/app/_interfaces/tournament";
+import {AdminTournament, KoloView} from "@/app/_interfaces/tournament";
 import {isByeTeam} from "@/app/_lib/bye";
 import {KoloPair} from "@/app/_lib/matching/tournamentPairing";
 import {nightLabel} from "@/app/_lib/nights";
 import {koloSteps} from "@/app/_lib/tournaments";
-import {filterTables, TableFilter, tableColumns, toTableRows} from "@/app/_lib/ui/tables";
+import {filterTables, TableFilter, tableColumns, TableRow, toTableRows} from "@/app/_lib/ui/tables";
 import useElementHeight from "@/app/_hooks/useElementHeight";
 import {count, NOUN} from "@/app/_lib/ui/text";
 import {useTransitionRouter} from "@/app/_lib/viewTransitions";
@@ -52,6 +52,12 @@ export const STEP_LOOK = {
   waiting: {label: "Čeka", ink: color.muted, bg: color.lineFill, icon: null},
 } as const;
 
+// A Kolo's tables as table rows, without the teams' photos at the admin's rows (Skica lige has none either), so the
+// names fit
+export function koloRows(view: KoloView): TableRow[] {
+  return toTableRows(view.tables.map((x) => ({...x, team1: {team_name: x.team1.team_name}, team2: {team_name: x.team2.team_name}})));
+}
+
 // The teams a table can seat, in the shape the pair dialog takes
 export function tableTeams(t: AdminTournament): LeagueTeam[] {
   return t.entries.map((e) => ({id: e.team_id, name: e.team_name, players: e.players.map((p) => p.username ?? p.name), active: true, smokers: 0}));
@@ -62,8 +68,7 @@ export default function KolaDesktop({t, kolo, onKolo, onChanged, reload}: Props)
   const steps = koloSteps(t.rounds, t.results.kolos.map((k) => ({number: k.number, published: k.published, tables: k.tables.length, done: k.tables.filter((x) => !x.open).length, live: 0})));
   const view = t.results.kolos.find((k) => k.number === kolo) ?? null;
   const step = steps.find((s) => s.number === kolo)?.step ?? "waiting";
-  // no avatars at the admin's rows (Skica lige has none either), so the names fit
-  const rows = view ? toTableRows(view.tables.map((x) => ({...x, team1: {team_name: x.team1.team_name}, team2: {team_name: x.team2.team_name}}))) : [];
+  const rows = view ? koloRows(view) : [];
   const [areaRef, areaHeight] = useElementHeight<HTMLDivElement>();
   // one column while every table fits the card's height, as Dnevni poredak; else two
   const twoColumns = tableColumns(rows.length, areaHeight == null ? undefined : Math.floor(areaHeight / TABLE_ROW_HEIGHT)) > 1;

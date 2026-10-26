@@ -7,7 +7,7 @@ import useNightDraft from "@/app/_hooks/useNightDraft";
 import {DraftRound} from "@/app/_interfaces/round";
 import {nightLabel} from "@/app/_lib/nights";
 import {draftCounts, publishedTimeLabel, publishLabel, publishNote, roundName, RoundStatus} from "@/app/_lib/roundStatus";
-import {draftTableRows} from "@/app/_lib/ui/tables";
+import {draftTableRows, TableRow} from "@/app/_lib/ui/tables";
 import {isByeTeam} from "@/app/_lib/bye";
 import {count, NOUN} from "@/app/_lib/ui/text";
 import {useTransitionRouter} from "@/app/_lib/viewTransitions";
@@ -15,7 +15,7 @@ import {color, shadow, tint} from "@/app/_styles/tokens";
 import {SmokingMark} from "@/app/_ui/smoking/SmokingParts";
 import {PhoneRoundTables} from "@/app/league/[leagueId]/daily-standings/ui/RoundTables";
 import {PairSheet, useTableEdits} from "@/app/league/[leagueId]/daily-standings/ui/RoundEditing";
-import {buttonBase, ConfirmSheet, ellipsis, ErrorNote, IconCircleButton, LoadingRows, PrimaryButton, Screen, ScrollArea, tabular, TopBar} from "@/app/_ui/sp";
+import {buttonBase, ConfirmSheet, ErrorNote, IconCircleButton, LoadingRows, PrimaryButton, Screen, ScrollArea, tabular, TopBar} from "@/app/_ui/sp";
 import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
 import CheckCircleOutlineRoundedIcon from "@mui/icons-material/CheckCircleOutlineRounded";
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
@@ -162,36 +162,7 @@ export default function DraftPhone({leagueId, date}: {leagueId: number; date: st
                 />
               </>
             ) : (
-              <Box component="ol" aria-label={`${roundName(round)}, stolovi`} sx={{flex: "none", listStyle: "none", m: 0, p: 0, background: color.white, borderRadius: "22px", overflow: "hidden", boxShadow: shadow.card}}>
-                {rows.map((t, i) => (
-                  <Box
-                    component="li"
-                    key={t.id}
-                    sx={{minHeight: 64, display: "grid", gridTemplateColumns: "36px minmax(0,1fr) auto minmax(0,1fr) 24px", alignItems: "center", gap: "10px", p: "8px 14px", borderTop: i ? `1px solid ${color.line}` : "none"}}
-                  >
-                    <Box component="span" sx={{width: 36, height: 36, borderRadius: "10px", background: color.lineFill, color: color.navy, fontSize: 14, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center", ...tabular}}>
-                      {t.table}
-                    </Box>
-                    <Box component="span" sx={{fontSize: 15.5, fontWeight: 600, textAlign: "right", ...ellipsis, ...(isByeTeam(t.teamAId) && {color: color.muted})}}>
-                      {t.teamA}
-                    </Box>
-                    {/* a bye table is settled 2:0 from the start */}
-                    {t.bye ? (
-                      <Box component="span" sx={{fontSize: 12, color: color.faint, ...tabular}}>
-                        {t.winsA}:{t.winsB}
-                      </Box>
-                    ) : (
-                      <Box component="span" aria-label="protiv" sx={{fontSize: 12, color: color.faint}}>
-                        vs
-                      </Box>
-                    )}
-                    <Box component="span" sx={{fontSize: 15.5, fontWeight: 600, ...ellipsis, ...(isByeTeam(t.teamBId) && {color: color.muted})}}>
-                      {t.teamB}
-                    </Box>
-                    {t.smoking ? <SmokingMark /> : <span />}
-                  </Box>
-                ))}
-              </Box>
+              <DraftTableList rows={rows} label={`${roundName(round)}, stolovi`} />
             )}
           </ScrollArea>
 
@@ -267,6 +238,55 @@ export default function DraftPhone({leagueId, date}: {leagueId: number; date: st
         error={askDiscard ? d.actionError : null}
       />
     </Screen>
+  );
+}
+
+// a team's name at a draft's table: up to two lines, so a long name (a tournament's) isn't cut after a few letters
+const twoLines = {display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden", overflowWrap: "anywhere", lineHeight: 1.25} as const;
+
+// A draft's tables (Skica kola; Skica of a tournament's Kolo): the table's number, the two teams with "vs" between them
+// (a bye's table already 2:0) and the smoking mark (its column only when a table is a smoking one)
+export function DraftTableList({rows, label}: {rows: TableRow[]; label: string}) {
+  const smoking = rows.some((t) => t.smoking);
+  return (
+    <Box component="ol" aria-label={label} sx={{flex: "none", listStyle: "none", m: 0, p: 0, background: color.white, borderRadius: "22px", overflow: "hidden", boxShadow: shadow.card}}>
+      {rows.map((t, i) => (
+        <Box
+          component="li"
+          key={t.id}
+          sx={{
+            minHeight: 64,
+            display: "grid",
+            gridTemplateColumns: smoking ? "36px minmax(0,1fr) auto minmax(0,1fr) 24px" : "36px minmax(0,1fr) auto minmax(0,1fr)",
+            alignItems: "center",
+            gap: "10px",
+            p: "8px 14px",
+            borderTop: i ? `1px solid ${color.line}` : "none",
+          }}
+        >
+          <Box component="span" sx={{width: 36, height: 36, borderRadius: "10px", background: color.lineFill, color: color.navy, fontSize: 14, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center", ...tabular}}>
+            {t.table}
+          </Box>
+          <Box component="span" sx={{fontSize: 15.5, fontWeight: 600, textAlign: "right", ...twoLines, ...(isByeTeam(t.teamAId) && {color: color.muted})}}>
+            {t.teamA}
+          </Box>
+          {/* a bye table is settled 2:0 from the start */}
+          {t.bye ? (
+            <Box component="span" sx={{fontSize: 12, color: color.faint, ...tabular}}>
+              {t.winsA}:{t.winsB}
+            </Box>
+          ) : (
+            <Box component="span" aria-label="protiv" sx={{fontSize: 12, color: color.faint}}>
+              vs
+            </Box>
+          )}
+          <Box component="span" sx={{fontSize: 15.5, fontWeight: 600, ...twoLines, ...(isByeTeam(t.teamBId) && {color: color.muted})}}>
+            {t.teamB}
+          </Box>
+          {smoking && (t.smoking ? <SmokingMark /> : <span />)}
+        </Box>
+      ))}
+    </Box>
   );
 }
 

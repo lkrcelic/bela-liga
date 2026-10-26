@@ -220,10 +220,9 @@ function EntryRow({
   );
 }
 
-// Dodaj ekipu: teams not signed up yet by name or a player's name or username (from 2 letters), with why one can't
-// be added; Nova ekipa goes to the league's Nova ekipa
-function AddTeamCard({t, onAdded}: {t: AdminTournament; onAdded: (t: AdminTournament) => void}) {
-  const router = useTransitionRouter();
+// Dodaj ekipu's search, on the computer's card and the phone's sheet: teams not signed up yet by name or a player's
+// name or username (from 2 letters), each with why it can't be added; add() signs one up and drops it from the hits
+export function useCandidateSearch(t: AdminTournament, onAdded: (t: AdminTournament) => void) {
   const [query, setQuery] = useState("");
   const [hits, setHits] = useState<CandidateTeam[] | null>(null);
   const [loading, setLoading] = useState(false);
@@ -267,6 +266,13 @@ function AddTeamCard({t, onAdded}: {t: AdminTournament; onAdded: (t: AdminTourna
     }
     setAdding(null);
   };
+  return {query, setQuery, hits, loading, adding, error, add};
+}
+
+// Dodaj ekipu on the computer; Nova ekipa goes to the league's Nova ekipa
+function AddTeamCard({t, onAdded}: {t: AdminTournament; onAdded: (t: AdminTournament) => void}) {
+  const router = useTransitionRouter();
+  const {query, setQuery, hits, loading, adding, error, add} = useCandidateSearch(t, onAdded);
 
   const full = t.max_teams != null && t.teams >= t.max_teams;
   return (
