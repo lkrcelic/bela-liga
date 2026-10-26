@@ -8,7 +8,7 @@ import {useTournament, useTournaments} from "@/app/_hooks/useTournaments";
 import {leagueDateString} from "@/app/_lib/dates";
 import useAuthStore from "@/app/_store/authStore";
 import {color, font, shadow} from "@/app/_styles/tokens";
-import {StartCard} from "@/app/_ui/home/PhoneHome";
+import {StartCard} from "@/app/_ui/home/StartCard";
 import {buttonBase, Card, ConfirmSheet, EmptyState, ErrorNote, LoadingRows, StackTopBar} from "@/app/_ui/sp";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import {Box} from "@mui/material";

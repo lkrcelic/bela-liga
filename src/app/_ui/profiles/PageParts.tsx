@@ -4,6 +4,7 @@ import type {Overview} from "@/app/_hooks/useOverview";
 import type {NavStackControls} from "@/app/_lib/navStack";
 import {type HeroTile, longestWord} from "@/app/_lib/ui/profiles";
 import {TransitionLink} from "@/app/_lib/viewTransitions";
+import {APP_NAME} from "@/app/_ui/sp/brand";
 import {color, font, tint} from "@/app/_styles/tokens";
 import {
   BackPill,
@@ -77,7 +78,7 @@ export function useDirectoryFrame(): DirectoryFrame | null {
 }
 
 // The desktop page (P:145-171): the back pill naming the page it returns to, then the page. Alone it sits in the
-// desktop frame under the eyebrow "Piatnik Bela Liga" (13f, 13g); embedded, the admin directory's frame holds it.
+// desktop frame under the eyebrow "Belatronika" (13f, 13g); embedded, the admin directory's frame holds it.
 // short (a short window, see useShortWindow): the back pill moves up into the frame's header row next to the menu
 // button, so the columns get its height. active: the nav drawer's item (a league's table opened from a team).
 export function DesktopFrame({
@@ -106,7 +107,7 @@ export function DesktopFrame({
   );
   if (embedded) return page;
   return (
-    <DesktopShell active={active} eyebrow="Piatnik Bela Liga" lead={inHeader ? headerPill : undefined}>
+    <DesktopShell active={active} eyebrow={APP_NAME} lead={inHeader ? headerPill : undefined}>
       {page}
     </DesktopShell>
   );

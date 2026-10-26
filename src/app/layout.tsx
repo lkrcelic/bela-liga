@@ -25,7 +25,7 @@ export default function RootLayout({children}: Readonly<{children: React.ReactNo
         {/* installable from the browser ("Add to Home Screen" / "Install app"); no service worker, nothing offline */}
         <link rel="manifest" href="/manifest.webmanifest" />
         <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
-        <meta name="apple-mobile-web-app-title" content="Bela Liga" />
+        <meta name="apple-mobile-web-app-title" content="Belatronika" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
@@ -36,7 +36,7 @@ export default function RootLayout({children}: Readonly<{children: React.ReactNo
           rel="stylesheet"
           href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Instrument+Sans:wght@400;500;600;700&display=swap"
         />
-        <title>Piatnik Bela Liga</title>
+        <title>Belatronika</title>
       </head>
       <body style={{margin: 0, padding: 0, backgroundColor: color.paper, overflowX: "hidden"}}>
         <ThemeProvider theme={theme}>

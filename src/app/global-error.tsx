@@ -23,7 +23,7 @@ export default function GlobalError({reset}: {error: Error & {digest?: string}; 
           rel="stylesheet"
           href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Instrument+Sans:wght@400;500;600;700&display=swap"
         />
-        <title>Piatnik Bela Liga</title>
+        <title>Belatronika</title>
       </head>
       <body style={{margin: 0, padding: 0, backgroundColor: color.paper, overflowX: "hidden"}}>
         <ThemeProvider theme={theme}>

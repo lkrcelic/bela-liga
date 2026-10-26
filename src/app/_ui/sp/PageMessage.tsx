@@ -9,6 +9,7 @@ import SearchOffRoundedIcon from "@mui/icons-material/SearchOffRounded";
 import {Box} from "@mui/material";
 import React from "react";
 import {OutlineButton, PrimaryButton} from "./Buttons";
+import {APP_NAME} from "./brand";
 import {Screen} from "./Screen";
 import {MessageState} from "./States";
 
@@ -16,7 +17,7 @@ import {MessageState} from "./States";
 // (app/error, app/global-error). The brand on top, the message in the middle (with Pokušaj ponovno when the page can
 // be tried again, as ErrorState) and Početni zaslon: at the bottom on the phone, as on the other phone screens, and
 // under the message on the desktop (an outline button under Pokušaj ponovno). The tab's title says it too: React puts a rendered <title> first in <head>, ahead
-// of the root layout's "Piatnik Bela Liga" (a `metadata` title would come after it and lose), and takes it out again
+// of the root layout's "Belatronika" (a `metadata` title would come after it and lose), and takes it out again
 // when the page goes. Imported by its path, not from the kit's index, since app/not-found is a server component.
 export function PageMessage({
   icon,
@@ -48,7 +49,7 @@ export function PageMessage({
       sx={{p: isDesktop && onRetry ? "24px 8px 2px" : "24px 8px"}}
     />
   );
-  const pageTitle = <title>{`${title} · Piatnik Bela Liga`}</title>;
+  const pageTitle = <title>{`${title} · ${APP_NAME}`}</title>;
 
   if (isDesktop) {
     // the brand where the desktop pages have their header; under Pokušaj ponovno the way home is the quieter button

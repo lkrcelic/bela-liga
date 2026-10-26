@@ -5,6 +5,7 @@ import {chromeIntentUrl, installEnvLabel, type InstallEnv} from "@/app/_lib/inst
 import {useInstallPrompt} from "@/app/_lib/installPrompt";
 // osBlue: the system blue of each OS, as in its own menus
 import {color, ease, font, platform as osBlue, shadow, tint} from "@/app/_styles/tokens";
+import {APP_NAME} from "@/app/_ui/sp/brand";
 import {buttonBase} from "@/app/_ui/sp";
 import AddBoxRoundedIcon from "@mui/icons-material/AddBoxRounded";
 import AddToHomeScreenRoundedIcon from "@mui/icons-material/AddToHomeScreenRounded";
@@ -92,7 +93,7 @@ const ANDROID_INAPP_STEPS: Step[] = [
   {text: "U Chromeu dobiješ gumb Instaliraj", icon: <InstallMobileRoundedIcon />},
 ];
 
-const TITLE = "Bela Liga radi bolje kao aplikacija";
+const TITLE = `${APP_NAME} radi bolje kao aplikacija`;
 const BODY = "Otvara se preko cijelog zaslona, bez trake preglednika, i pokreće se ravno s početnog zaslona.";
 
 // What the sheet offers in each browser (the frames of the design). `main` is what comes after the text: the install
@@ -429,7 +430,7 @@ function Installed() {
                 <AppIcon size={52} radius="50%" />
               </Box>
               <Box component="span" sx={{fontSize: 11, fontWeight: 700, whiteSpace: "nowrap"}}>
-                Bela Liga
+                {APP_NAME}
               </Box>
             </Box>
           ) : (

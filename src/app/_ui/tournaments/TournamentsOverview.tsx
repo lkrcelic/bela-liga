@@ -7,11 +7,11 @@ import {useTournaments} from "@/app/_hooks/useTournaments";
 import {TournamentCard} from "@/app/_interfaces/tournament";
 import {color} from "@/app/_styles/tokens";
 import {BurzaHomeCard, NextNightPlaceholder} from "@/app/_ui/home/HomeCards";
-import {StartCard} from "@/app/_ui/home/PhoneHome";
+import {StartCard} from "@/app/_ui/home/StartCard";
 import {ErrorNote} from "@/app/_ui/sp";
 import {Box} from "@mui/material";
 import React from "react";
-import {FinishedRow, NextTournamentCard, NoTournamentCard, ResultsButton, UpcomingCard} from "./PlayerParts";
+import {FinishedRow, NextTournamentCard, NoTournamentCard, ResultsButton, TodayCard, UpcomingCard} from "./PlayerParts";
 
 // Početna · Turniri (Claude Design "Natjecanja" S2–S4), also /turniri on its own: the card on top (the player's table
 // on the day, else the next tournament: the one they signed up for when two are on the same day), Burza igrača,
@@ -52,7 +52,10 @@ export default function TournamentsOverview({withBurza = false}: {withBurza?: bo
           <NextNightPlaceholder />
         </Box>
       ) : main?.phase === "active" ? (
-        <ResultsButton t={main} />
+        <>
+          <TodayCard t={main} />
+          <ResultsButton t={main} />
+        </>
       ) : main ? (
         <NextTournamentCard t={main} />
       ) : (

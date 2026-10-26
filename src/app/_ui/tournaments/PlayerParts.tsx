@@ -572,6 +572,42 @@ export function NextTournamentCard({t}: {t: TournamentCard}) {
   );
 }
 
+// On the day, between the player's tables (S4 without a table to play): the tournament, the team and what comes next
+export function TodayCard({t}: {t: TournamentCard}) {
+  return (
+    <Box
+      component={TransitionLink}
+      href={tournamentHref(t.id)}
+      aria-label={`Turnir danas: ${t.name}`}
+      sx={{flex: "none", borderRadius: "24px", background: color.navy, color: color.white, p: "18px", display: "flex", flexDirection: "column", gap: "8px", boxShadow: shadow.hero, textDecoration: "none"}}
+    >
+      <Box sx={{display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px"}}>
+        <Box component="span" sx={{...eyebrowSx, color: color.cream}}>
+          Turnir danas
+        </Box>
+        {t.live_kolo && (
+          <Box component="span" sx={{display: "flex", alignItems: "center", gap: "6px", fontSize: 13, fontWeight: 700, color: color.white}}>
+            <LiveDot size={7} />
+            Kolo {t.live_kolo}
+          </Box>
+        )}
+      </Box>
+      <Box sx={{fontFamily: font.display, fontSize: 28, fontWeight: 800, lineHeight: 1.05, overflowWrap: "anywhere"}}>{t.name}</Box>
+      {t.me && (
+        <Box component="span" sx={{fontSize: 15}}>
+          Tvoja ekipa ·{" "}
+          <Box component="strong" sx={{fontWeight: 700}}>
+            {t.me.team_name}
+          </Box>
+        </Box>
+      )}
+      <Box component="span" sx={{fontSize: 14, lineHeight: 1.45, color: color.cream}}>
+        {t.live_kolo ? `Vaš stol u Kolu ${t.live_kolo} je odigran. Sljedeće kolo kreće kad svi stolovi završe.` : "Sljedeće kolo uskoro: stol će se pojaviti ovdje."}
+      </Box>
+    </Box>
+  );
+}
+
 // No tournament coming: what the Turniri tab says instead of the card
 export function NoTournamentCard() {
   return (
