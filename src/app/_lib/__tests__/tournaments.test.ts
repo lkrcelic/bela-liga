@@ -75,6 +75,14 @@ test("Swiss: the lowest team without a bye gets the bye, never a second one whil
   assert.deepEqual(again.repeats, []);
 });
 
+test("Swiss: the bye goes to the lowest team even when that keeps the leaders apart", () => {
+  // after Kolo 1 of the click-through of 26.10.: the two teams on 2 points met, so with the bye on the last team the
+  // leaders can't meet each other; the bye still goes to the last team, not to the one on 2 points
+  const plan = swissPairs([swiss(1, 4, 602, [BYE_TEAM_ID]), swiss(2, 4, 532, [5]), swiss(3, 2, 20, [4]), swiss(4, 2, -20, [3]), swiss(5, 0, -532, [2])]);
+  assert.deepEqual(plan.pairs, [[1, 3], [2, 4], [5, BYE_TEAM_ID]]);
+  assert.deepEqual(plan.repeats, []);
+});
+
 test("Swiss: a meeting nobody can avoid is made and reported", () => {
   // three teams that all met: someone meets again (or takes a second bye)
   const plan = swissPairs([swiss(1, 2, 0, [2, 3]), swiss(2, 2, 0, [1, 3]), swiss(3, 2, 0, [1, 2, BYE_TEAM_ID])]);

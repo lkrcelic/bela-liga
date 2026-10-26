@@ -100,13 +100,18 @@ export function PlayersCount({t, onNavy = false}: {t: Pick<TournamentCard, "avat
   );
 }
 
-// The team and its players on the navy card (the viewer marked "(ti)")
+// the viewer first among a team's players, as the sign-up sheet lists them
+function meFirst<P extends {id: number}>(players: P[], meId: number | null): P[] {
+  return meId == null ? players : [...players].sort((a, b) => Number(b.id === meId) - Number(a.id === meId));
+}
+
+// The team and its players on the navy card (the viewer first, marked "(ti)")
 function TeamOnNavy({name, players, meId}: {name: string; players: {id: number; name: string; photo_url: string | null}[]; meId: number | null}) {
   return (
     <>
       <Box sx={{fontFamily: font.display, fontSize: 30, fontWeight: 800, lineHeight: 1, overflowWrap: "anywhere"}}>{name}</Box>
       <Box component="ul" aria-label="Igrači" sx={{listStyle: "none", m: 0, p: 0, display: "flex", flexDirection: "column", gap: "8px"}}>
-        {players.map((p) => (
+        {meFirst(players, meId).map((p) => (
           <Box component="li" key={p.id} sx={{display: "flex", alignItems: "center", gap: "10px", fontSize: 15, minWidth: 0}}>
             <InitialsAvatar name={p.name} src={p.photo_url} size={32} sx={{fontSize: 11}} />
             <Box component="span" sx={ellipsis}>
@@ -315,7 +320,7 @@ export function EntryLine({e, meId, last = false}: {e: TournamentEntryView; meId
           {e.team_name}
         </Box>
         <Box component="span" sx={{fontSize: 13, color: color.muted, ...ellipsis}}>
-          {e.players.map((p) => (p.id === meId ? `${p.name} (ti)` : p.name)).join(" · ")}
+          {meFirst(e.players, meId).map((p) => (p.id === meId ? `${p.name} (ti)` : p.name)).join(" · ")}
         </Box>
       </Box>
       {e.rating != null && (

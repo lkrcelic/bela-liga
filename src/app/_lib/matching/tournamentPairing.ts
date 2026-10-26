@@ -39,9 +39,18 @@ export type SwissPlan = {
   repeats: KoloPair[];
 };
 
-// An earlier meeting (or a second bye) costs more than everything the standings order can add up to, so the pairing
-// takes one only when nothing else is possible; two earlier meetings cost four times as much.
-const REPEAT = 10_000_000;
+// What the pairing of n teams weighs, each far above everything after it, so no amount of a later one buys an
+// earlier one: an earlier meeting (or a second bye; two earlier meetings cost four times as much), then the bye going
+// to a team above the lowest one that can take it (per place), then the gaps between the places of the teams that
+// meet. A repeat is made only when nothing else is possible, and the lowest team without a bye gets it even when
+// that keeps the leaders apart, as in the Swiss rules.
+function weights(n: number) {
+  // more than every pair's gap² together
+  const byePlace = n * (n - 1) ** 2 + 1;
+  // more than the bye at the top of the table plus every gap
+  const repeat = byePlace * n + 1;
+  return {byePlace, repeat};
+}
 
 // The next Kolo by the standings. standings: the teams in standings order (points, then difference, then the table's
 // own tie-break); they are sorted again only by points and difference, keeping that order for ties.
@@ -55,10 +64,11 @@ export function swissPairs(standings: SwissTeam[]): SwissPlan {
   const byes = (a: number) => teams[a].opponents.filter(isByeTeam).length;
   // vertex n is the bye when the number of teams is odd
   const odd = n % 2 === 1;
+  const {byePlace, repeat} = weights(n);
   const cost = (a: number, b: number) =>
     b === n
-      ? byes(a) ** 2 * REPEAT + (n - 1 - a) ** 2 // the lower a team is, the cheaper its bye
-      : meetings(a, b) ** 2 * REPEAT + (a - b) ** 2; // neighbours in the standings are the cheapest pair
+      ? byes(a) ** 2 * repeat + (n - 1 - a) * byePlace // the lowest team that hasn't had one takes the bye
+      : meetings(a, b) ** 2 * repeat + (a - b) ** 2; // neighbours in the standings are the cheapest pair
   const vertices = odd ? n + 1 : n;
   const costs: [number, number, number][] = [];
   for (let a = 0; a < vertices; a++) {

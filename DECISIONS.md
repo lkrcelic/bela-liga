@@ -1095,13 +1095,15 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
       with 409 STALE_DRAFT ("složi ponovo") if the teams in changed after the draft was made. Alternative: draw while
       sign-ups are open. Reason: a team signing up late would be left out of a draft the admin already checked.
     - **Pairing.** Kolo 1 at random. From Kolo 2 the Swiss system: one maximum-weight matching (the blossom the league
-      uses) over all teams, plus the bye when their number is odd. A pair costs its earlier meetings² × 10,000,000 plus
-      the gap between the two places², and the bye goes to the lowest team without one. So teams with similar points
-      meet, nobody meets twice while any other pairing works, and the Skica names a repeat it couldn't avoid. The bye
-      is a win, 2:0 (1:0 at a table of one match), as in the league. No smoking tables or age factor (stated with the
-      defaults, not objected to). A test plays 23 teams through 9 Kolos with no repeat and no second bye.
-      Alternative: the league's windows. Reason: they have no rank distance, so a Kolo could pair the first with the
-      tenth.
+      uses) over all teams, plus the bye when their number is odd. What counts, in this order, each far above all of
+      the next: no earlier meeting (and no second bye), then the bye on the lowest team without one, then neighbours
+      in the standings (the gap between their places, squared). So nobody meets twice while any other pairing works
+      (the Skica names a repeat it couldn't avoid), the last team gets the bye even when that keeps the leaders apart,
+      and otherwise 1st meets 2nd, 3rd meets 4th: the Monrad kind of Swiss (FIDE's Dutch rule pairs the top half of a
+      points group with its bottom half). The bye is a win, 2:0 (1:0 at a table of one match), as in the league. No
+      smoking tables or age factor (stated with the defaults, not objected to). A test plays 23 teams through 9 Kolos
+      with no repeat and no second bye. Alternative: the league's windows. Reason: they have no rank distance, so a
+      Kolo could pair the first with the tenth.
     - **The next Kolo is drafted by itself** once the last table of a Kolo closes (also when the admin opens the
       tournament, if that was missed); the admin checks it and publishes it. The last Kolo played makes the tournament
       Završen.
@@ -1171,3 +1173,11 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
     - **Skica kola's list:** a long team name takes up to two lines instead of being cut after a few letters, and the
       smoking column is there only when a table is a smoking one.
     - **The switch on a navy card** (Prijave otvorene) has a light track when off; on navy the grey one disappeared.
+    - **Found by clicking a whole tournament through** (26.10., your request: five teams, a waiting list and Odjavi
+      se, two Kolos, one table played hand by hand on a player's phone, the rest by Ručni unos on the admin's):
+      - Tko igra on the admin's phone (and computer) sent the admin back to itself instead of on to a tournament
+        table's scorepad: the pass to the scorepad knew only the league table's address. Now both.
+      - The bye went to the team above the last one when that let the leaders meet (2nd on 2 points instead of the
+        last on 0). The pairing now puts the bye on the lowest team without one ahead of the neighbours rule (#65).
+      - Kraj kola of a tournament's table also opens Poredak i rezultati (the league's only goes home, as before).
+      - A team's players list the viewer first on the tournament's pages, as the sign-up sheet does.
