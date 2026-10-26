@@ -2,6 +2,8 @@
 
 import {TeamSide} from "@/app/_interfaces/belaPlayerAnnouncement";
 import useAnnouncementStore from "@/app/_store/bela/announcementStore";
+import useRoundStore from "@/app/_store/RoundStore";
+import {zvanjaChoices, zvanjeBlocked, zvanjeLabel} from "@/app/_lib/bela/declarations";
 import useResultStore, {CALLER_MISSING} from "@/app/_store/bela/resultStore";
 import {color, font, teamColor, tint} from "@/app/_styles/tokens";
 import {buttonBase, Card, ErrorNote, PrimaryButton, SHORT_WINDOW, tabular} from "@/app/_ui/sp";
@@ -12,7 +14,6 @@ import {Box} from "@mui/material";
 import {useEffect, useState} from "react";
 import {discardHand, saveHand} from "./handFlow";
 
-const ZVANJA = [20, 50, 100, 150, 200];
 
 // Desktop: caller, zvanja and keypad in one panel next to the scoreboard
 export default function HandEntryPanel({
@@ -45,6 +46,9 @@ export default function HandEntryPanel({
   const caller = result.trump_caller_team;
   const canSave = (caller === 1 || caller === 2) && (gp(1) > 0 || gp(2) > 0);
   const counts = teamsAnnouncements[activeSide]?.announcementCounts ?? {};
+  // a tournament "bez zvanja": only one bela a hand
+  const declarations = useRoundStore((s) => s.roundData?.declarations) ?? true;
+  const twenties = (teamsAnnouncements[1]?.announcementCounts?.[20] ?? 0) + (teamsAnnouncements[2]?.announcementCounts?.[20] ?? 0);
   const activeIndex = sides.indexOf(activeSide) as 0 | 1;
 
   // a fresh hand starts with the viewer's team active. Depends on the side itself, not the sides array (a new array
@@ -232,7 +236,7 @@ export default function HandEntryPanel({
       </Box>
 
       <Box sx={{display: "grid", gridTemplateColumns: "repeat(6, minmax(0,1fr))", gap: "8px"}}>
-        {ZVANJA.map((v) => {
+        {zvanjaChoices(declarations).map((v) => {
           const cnt = counts[v] ?? 0;
           return (
             <Box
@@ -240,8 +244,11 @@ export default function HandEntryPanel({
               component="button"
               type="button"
               onClick={() => setAnnouncement(activeSide, v)}
-              aria-label={`Zvanje ${v}${cnt ? `, upisano ${cnt}` : ""}`}
+              disabled={zvanjeBlocked(declarations, twenties)}
+              aria-label={`${declarations ? "Zvanje" : "Zvanje bela"} ${v}${cnt ? `, upisano ${cnt}` : ""}`}
               sx={{
+                ...(!declarations && {gridColumn: "span 2"}),
+                "&:disabled": {opacity: cnt ? 1 : 0.45},
                 ...buttonBase,
                 position: "relative",
                 height: 52,
@@ -255,7 +262,7 @@ export default function HandEntryPanel({
                 "&:active": {transform: "scale(.95)"},
               }}
             >
-              {v}
+              {zvanjeLabel(v, declarations)}
               <Box
                 key={cnt}
                 component="span"

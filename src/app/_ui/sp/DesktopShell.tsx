@@ -20,6 +20,7 @@ import LeaderboardRoundedIcon from "@mui/icons-material/LeaderboardRounded";
 import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
 import LibraryAddRoundedIcon from "@mui/icons-material/LibraryAddRounded";
 import LoginRoundedIcon from "@mui/icons-material/LoginRounded";
+import MilitaryTechRoundedIcon from "@mui/icons-material/MilitaryTechRounded";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import MenuRoundedIcon from "@mui/icons-material/MenuRounded";
 import HandshakeRoundedIcon from "@mui/icons-material/HandshakeRounded";
@@ -39,6 +40,7 @@ import {useScrollArrows} from "./ScrollArrows";
 import {Spinner} from "./States";
 import {InitialsAvatar} from "./Surface";
 import {Eyebrow} from "./Text";
+import {APP_NAME} from "./brand";
 
 export type NavKey =
   | "home"
@@ -48,6 +50,8 @@ export type NavKey =
   | "ratings"
   | "raspored"
   | "burza"
+  | "tournaments"
+  | "manageTournaments"
   | "manageLeague"
   | "createLeague"
   | "teams"
@@ -179,8 +183,10 @@ const NAV: NavItem[] = [
   {key: "league", label: "Ukupni poredak", icon: <EmojiEventsRoundedIcon />, leaguePage: "standings"},
   {key: "ratings", label: "Rejting", icon: <LeaderboardRoundedIcon />, href: "/ratings"},
   {key: "raspored", label: "Raspored", icon: <EventRoundedIcon />, href: "/raspored"},
+  {key: "tournaments", label: "Turniri", icon: <MilitaryTechRoundedIcon />, href: "/turniri"},
   {key: "burza", label: "Burza igrača", icon: <PersonSearchRoundedIcon />, href: "/burza"},
-  {key: "manageLeague", label: "Upravljanje ligom", icon: <TuneRoundedIcon />, leaguePage: "manage", head: "Admin", adminOnly: true},
+  {key: "manageTournaments", label: "Turniri", icon: <MilitaryTechRoundedIcon />, href: "/turniri/upravljanje", head: "Admin", adminOnly: true},
+  {key: "manageLeague", label: "Upravljanje ligom", icon: <TuneRoundedIcon />, leaguePage: "manage", adminOnly: true},
   {key: "createLeague", label: "Nova liga", icon: <LibraryAddRoundedIcon />, href: "/league/new", adminOnly: true},
   {key: "teams", label: "Ekipe", icon: <GroupsRoundedIcon />, href: "/teams", adminOnly: true},
   {key: "players", label: "Igrači", icon: <PersonRoundedIcon />, href: "/players", adminOnly: true},
@@ -213,8 +219,8 @@ export function NavDrawer({open, onClose, active}: {open: boolean; onClose: () =
     };
   }, [open, signedIn, leagueId]);
 
-  // signed out, only the public season table and Burza igrača are available
-  const items = NAV.filter((n) => (signedIn ? isAdmin || !n.adminOnly : n.key === "league" || n.key === "burza")).map((n) =>
+  // signed out, only the public season table, the tournaments and Burza igrača are available
+  const items = NAV.filter((n) => (signedIn ? isAdmin || !n.adminOnly : n.key === "league" || n.key === "tournaments" || n.key === "burza")).map((n) =>
     n.leaguePage ? {...n, href: currentLeagueHref(n.leaguePage, leagueId)} : n
   );
   const itemSx = (on: boolean) => ({
@@ -260,10 +266,7 @@ export function NavDrawer({open, onClose, active}: {open: boolean; onClose: () =
       }}
     >
       <Box sx={{display: "flex", alignItems: "flex-start", justifyContent: "space-between", pl: "12px", pb: "22px"}}>
-        <Box sx={{display: "flex", flexDirection: "column", gap: "2px"}}>
-          <Box sx={{fontSize: 12, fontWeight: 600, letterSpacing: ".14em", textTransform: "uppercase", color: color.muted}}>Piatnik</Box>
-          <Box sx={{fontFamily: font.display, fontSize: 30, fontWeight: 800, lineHeight: 0.95, letterSpacing: "-.03em"}}>Bela Liga</Box>
-        </Box>
+        <Box sx={{fontFamily: font.display, fontSize: 30, fontWeight: 800, lineHeight: 1, letterSpacing: "-.03em", pt: "4px"}}>{APP_NAME}</Box>
         <GhostIconButton label="Zatvori izbornik" onClick={onClose} sx={{borderRadius: "50%"}}>
           <CloseRoundedIcon />
         </GhostIconButton>

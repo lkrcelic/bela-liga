@@ -1,0 +1,76 @@
+import {apiFetch, responseErrorMessage} from "@/app/_fetchers/errorMessage";
+import {
+  AdminTournament,
+  CandidateTeam,
+  RegistrationRequest,
+  TournamentCard,
+  TournamentDetail,
+  TournamentRequest,
+  TournamentResults,
+} from "@/app/_interfaces/tournament";
+import type {KoloPair} from "@/app/_lib/matching/tournamentPairing";
+
+// Turniri: the public reads, a player's sign-up, and the admin's tournament management (see /api/tournaments and
+// /api/admin/tournaments)
+
+async function send<T>(url: string, method: string, body: unknown, fallback: string): Promise<T> {
+  const response = await apiFetch(url, {
+    method,
+    cache: method === "GET" ? "no-store" : undefined,
+    headers: body === undefined ? undefined : {"Content-Type": "application/json"},
+    body: body === undefined ? undefined : JSON.stringify(body),
+  });
+  if (!response.ok) throw new TournamentError(await responseErrorMessage(response, fallback), response.status, await codeOf(response));
+  return (response.status === 204 ? null : await response.json()) as T;
+}
+
+async function codeOf(response: Response): Promise<string | null> {
+  try {
+    const body = await response.clone().json();
+    return typeof body?.code === "string" ? body.code : null;
+  } catch {
+    return null;
+  }
+}
+
+// a refusal with its status (404: the tournament doesn't exist) and code (STALE_DRAFT)
+export class TournamentError extends Error {
+  constructor(message: string, readonly status: number, readonly code: string | null) {
+    super(message);
+    this.name = "TournamentError";
+  }
+}
+
+// ---------- players and visitors ----------
+
+export const getTournamentsAPI = () => send<TournamentCard[]>("/api/tournaments", "GET", undefined, "Turniri se nisu učitali.");
+export const getTournamentAPI = (id: number) => send<TournamentDetail>(`/api/tournaments/${id}`, "GET", undefined, "Turnir se nije učitao.");
+export const getTournamentResultsAPI = (id: number) => send<TournamentResults>(`/api/tournaments/${id}/results`, "GET", undefined, "Poredak se nije učitao.");
+
+export const signUpAPI = (id: number, body: RegistrationRequest) =>
+  send<{teamId: number; status: "REGISTERED" | "WAITING"}>(`/api/tournaments/${id}/registrations`, "POST", body, "Ekipa nije prijavljena.");
+export const signOffAPI = (id: number, teamId: number) => send<null>(`/api/tournaments/${id}/registrations/${teamId}`, "DELETE", undefined, "Ekipa nije odjavljena.");
+
+export type TeammateHit = {id: number; name: string; photo_url: string | null};
+export const searchTeammatesAPI = (q: string) => send<TeammateHit[]>(`/api/players/search?q=${encodeURIComponent(q)}`, "GET", undefined, "Igrači se nisu učitali.");
+
+// ---------- admin ----------
+
+const admin = (id: number) => `/api/admin/tournaments/${id}`;
+
+export const getAdminTournamentsAPI = () => send<TournamentCard[]>("/api/admin/tournaments", "GET", undefined, "Turniri se nisu učitali.");
+export const createTournamentAPI = (body: TournamentRequest) => send<{id: number}>("/api/admin/tournaments", "POST", body, "Turnir nije kreiran.");
+export const getAdminTournamentAPI = (id: number) => send<AdminTournament>(admin(id), "GET", undefined, "Turnir se nije učitao.");
+export const updateTournamentAPI = (id: number, body: TournamentRequest) => send<AdminTournament>(admin(id), "PATCH", body, "Promjene nisu spremljene.");
+export const deleteTournamentAPI = (id: number) => send<null>(admin(id), "DELETE", undefined, "Turnir nije obrisan.");
+export const cancelTournamentAPI = (id: number) => send<AdminTournament>(`${admin(id)}/cancel`, "POST", undefined, "Turnir nije otkazan.");
+export const setRegistrationsOpenAPI = (id: number, open: boolean) => send<AdminTournament>(`${admin(id)}/registrations`, "PATCH", {open}, "Prijave nisu promijenjene.");
+export const candidateTeamsAPI = (id: number, q: string) => send<CandidateTeam[]>(`${admin(id)}/candidates?q=${encodeURIComponent(q)}`, "GET", undefined, "Ekipe se nisu učitale.");
+export const addTournamentTeamAPI = (id: number, teamId: number) => send<AdminTournament>(`${admin(id)}/teams`, "POST", {team_id: teamId}, "Ekipa nije dodana.");
+export const removeTournamentTeamAPI = (id: number, teamId: number) => send<AdminTournament>(`${admin(id)}/teams/${teamId}`, "DELETE", undefined, "Ekipa nije maknuta.");
+export const admitTournamentTeamAPI = (id: number, teamId: number) => send<AdminTournament>(`${admin(id)}/teams/${teamId}/admit`, "POST", undefined, "Ekipa nije ubačena.");
+export const makeKoloAPI = (id: number, redo = false) =>
+  send<{made: {number: number; tables: number; repeats: KoloPair[]}; tournament: AdminTournament}>(`${admin(id)}/kola`, "POST", {redo}, "Kolo nije složeno.");
+export const publishKoloAPI = (id: number, kolo: number) => send<AdminTournament>(`${admin(id)}/kola/${kolo}/publish`, "POST", undefined, "Kolo nije objavljeno.");
+export const addKoloTableAPI = (id: number, kolo: number, team1Id: number, team2Id: number) =>
+  send<{id: number}>(`${admin(id)}/kola/${kolo}/tables`, "POST", {team1_id: team1Id, team2_id: team2Id}, "Stol nije dodan.");

@@ -18,12 +18,14 @@ import AdminPanelSettingsRoundedIcon from "@mui/icons-material/AdminPanelSetting
 import HistoryEduRoundedIcon from "@mui/icons-material/HistoryEduRounded";
 import {Box} from "@mui/material";
 import {useParams} from "next/navigation";
+import {adminLineupHref, roundHref, scopeHomeLabel, tableScopeOf} from "@/app/_lib/ui/tableScope";
 import {useTransitionRouter} from "@/app/_lib/viewTransitions";
 import React, {useCallback, useEffect, useState} from "react";
 
 const THRESHOLD = 1001;
 
-// One Dnevni poredak table. For an admin it is the table's scorepad: every hand of its matches, finished or being
+// One Dnevni poredak table (and a tournament's Kolo's: /turniri/<id>/stol/<roundId> shows this page). For an admin it
+// is the table's scorepad: every hand of its matches, finished or being
 // played, can be added, changed or deleted, also by entering just the points ("Ručni unos"); the admin's phone has
 // its own layout of it (TablePhone, DECISIONS #59). Anyone else gets Pregled stola, read-only (DECISIONS #60), and
 // the player whose own table it is, still to be played, goes into the game.
@@ -36,8 +38,8 @@ export default function TableScorepad() {
 }
 
 function TableScorepadDesktop() {
-  const params = useParams<{leagueId: string; roundId: string}>();
-  const leagueId = Number(params.leagueId);
+  const params = useParams<{leagueId?: string; id?: string; roundId: string}>();
+  const scope = tableScopeOf(params);
   const roundId = Number(params.roundId);
   const isAdmin = useIsAdmin();
   const router = useTransitionRouter();
@@ -66,14 +68,15 @@ function TableScorepadDesktop() {
 
   // every time the table is opened, who plays (or played) it first, as players do on Započni igru (the ratings need it)
   const needsLineup = pad != null && !pad.bye && !lineupPassed(roundId);
+  const lineupHref = adminLineupHref(scope, roundId);
   useEffect(() => {
-    if (needsLineup) router.replace(`/round/lineup/${roundId}?league=${leagueId}`);
-  }, [needsLineup, router, roundId, leagueId]);
+    if (needsLineup) router.replace(lineupHref);
+  }, [needsLineup, router, lineupHref]);
   useEffect(() => () => leaveRoundPages(roundId), [roundId]);
 
   // the matches to choose from; a table still in play without a match running gets the next one to start
   const matches: PadMatch[] = pad ? [...pad.matches] : [];
-  if (pad && !pad.done && !matches.some((m) => m.kind === "ongoing") && matches.length < 2) {
+  if (pad && !pad.done && !matches.some((m) => m.kind === "ongoing") && matches.length < pad.matchesPerRound) {
     matches.push({kind: "ongoing", id: 0, number: matches.length + 1, score1: 0, score2: 0, threshold: THRESHOLD, winner: null, hands: []});
   }
   const match = matches.find((m) => m.number === selected) ?? matches[matches.length - 1] ?? null;
@@ -126,13 +129,15 @@ function TableScorepadDesktop() {
       setSelected(null); // show the next match (or the last one when the round is over)
     }, "Meč nije završen.");
 
-  const back = pad?.date && pad.roundNumber ? {label: `Kolo ${pad.roundNumber}`, href: `/league/${leagueId}/daily-standings?date=${pad.date}&round=${pad.roundNumber}`} : {label: "Dnevni poredak", href: `/league/${leagueId}/daily-standings`};
+  const back = pad?.roundNumber && (pad.date || scope.kind === "tournament")
+    ? {label: `Kolo ${pad.roundNumber}`, href: roundHref(scope, {date: pad.date, roundNumber: pad.roundNumber, admin: true})}
+    : {label: scopeHomeLabel(scope), href: roundHref(scope, {date: null, roundNumber: null, admin: true})};
   const names: [string, string] = pad ? [pad.team1.name, pad.team2.name] : ["", ""];
   const state = !pad ? "" : pad.done ? `Meč ${match?.number ?? 1} · završeno` : match?.kind === "ongoing" && match.id === 0 && match.number === 1 ? "nije počelo" : "uživo";
 
   return (
     <DesktopShell
-      active="daily"
+      active={scope.kind === "league" ? "daily" : "manageTournaments"}
       compact={short}
       back={back}
       eyebrow={pad ? `Stol ${pad.table ?? "–"} · Kolo ${pad.roundNumber ?? "–"} · ${state}` : "Admin"}
@@ -211,6 +216,7 @@ function TableScorepadDesktop() {
                   index={i}
                   name={names[i]}
                   wins={wins[i]}
+                  of={pad.matchesPerRound}
                   total={i ? match.score2 : match.score1}
                   threshold={match.threshold}
                   celebrate={match.winner === i + 1}
@@ -226,6 +232,7 @@ function TableScorepadDesktop() {
             />
           </Box>
           <AdminEntryPanel
+            declarations={pad.declarations}
             entry={entry}
             onChange={setEntry}
             names={names}

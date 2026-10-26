@@ -3,6 +3,7 @@
 import {color, ease, font, shadow, teamColor} from "@/app/_styles/tokens";
 import {buttonBase, tabular} from "@/app/_ui/sp";
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
+import {zvanjaChoices, zvanjeBlocked, zvanjeLabel} from "@/app/_lib/bela/declarations";
 import {Box} from "@mui/material";
 import React from "react";
 
@@ -150,11 +151,30 @@ export function TeamValueBoxes({
   );
 }
 
-// Step 2: the zvanja of the team picked above, with how many of each (in the team's colour) and Obriši zvanja
-export function ZvanjaButtons({label, counts, team, onAdd, onClear}: {label: string; counts: Partial<Record<number, number>>; team: 0 | 1; onAdd: (v: (typeof ZVANJA_VALUES)[number]) => void; onClear: () => void}) {
+// Step 2: the zvanja of the team picked above, with how many of each (in the team's colour) and Obriši zvanja.
+// declarations false (a tournament "bez zvanja"): only Bela (20), and no more once one team has it (twenties: the 20s
+// of both teams)
+export function ZvanjaButtons({
+  label,
+  counts,
+  team,
+  onAdd,
+  onClear,
+  declarations = true,
+  twenties = 0,
+}: {
+  label: string;
+  counts: Partial<Record<number, number>>;
+  team: 0 | 1;
+  onAdd: (v: (typeof ZVANJA_VALUES)[number]) => void;
+  onClear: () => void;
+  declarations?: boolean;
+  twenties?: number;
+}) {
+  const blocked = zvanjeBlocked(declarations, twenties);
   return (
     <Box role="group" aria-label={label} sx={{flex: 1, display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "12px", alignContent: "center", py: "16px"}}>
-      {ZVANJA_VALUES.map((v) => {
+      {zvanjaChoices(declarations).map((v) => {
         const cnt = counts[v] ?? 0;
         return (
           <Box
@@ -162,7 +182,8 @@ export function ZvanjaButtons({label, counts, team, onAdd, onClear}: {label: str
             component="button"
             type="button"
             onClick={() => onAdd(v)}
-            aria-label={`Zvanje ${v}${cnt ? `, upisano ${cnt}` : ""}`}
+            disabled={blocked}
+            aria-label={`${declarations ? "Zvanje" : "Zvanje bela"} ${v}${cnt ? `, upisano ${cnt}` : ""}`}
             sx={{
               ...buttonBase,
               position: "relative",
@@ -175,9 +196,11 @@ export function ZvanjaButtons({label, counts, team, onAdd, onClear}: {label: str
               fontWeight: 800,
               transition: "transform 120ms ease",
               "&:active": {transform: "scale(.95)"},
+              "&:disabled": {opacity: cnt ? 1 : 0.45},
+              ...(!declarations && {gridColumn: "span 2"}),
             }}
           >
-            {v}
+            {zvanjeLabel(v, declarations)}
             <Box
               key={`${team}-${cnt}`}
               component="span"

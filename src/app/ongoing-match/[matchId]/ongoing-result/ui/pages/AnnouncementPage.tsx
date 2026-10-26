@@ -2,6 +2,7 @@
 
 import useAnnouncementStore from "@/app/_store/bela/announcementStore";
 import useResultStore from "@/app/_store/bela/resultStore";
+import useRoundStore from "@/app/_store/RoundStore";
 import {ActionPair} from "@/app/_ui/sp";
 import useMatchSides from "@/app/ongoing-match/ui/useMatchSides";
 import {ZvanjaButtons} from "@/app/ongoing-match/ui/WizardParts";
@@ -20,6 +21,9 @@ export default function AnnouncementPage({actionType}: ActionProps) {
   const noAnnouncements = useAnnouncementStore((s) => s.noAnnouncements);
   const {setAnnouncement, resetTeamAnnouncements} = useAnnouncementStore.getState();
 
+  // a tournament "bez zvanja": only one bela a hand
+  const declarations = useRoundStore((s) => s.roundData?.declarations) ?? true;
+  const twenties = ([1, 2] as const).reduce((n, t) => n + (teamsAnnouncements[t]?.announcementCounts?.[20] ?? 0), 0);
   const side = activeTeam === "team2" ? 2 : 1;
   const index = sides.sides.indexOf(side);
   const counts = teamsAnnouncements[side]?.announcementCounts ?? {};
@@ -33,6 +37,8 @@ export default function AnnouncementPage({actionType}: ActionProps) {
         team={index === 1 ? 1 : 0}
         onAdd={(v) => setAnnouncement(side, v)}
         onClear={() => resetTeamAnnouncements(side)}
+        declarations={declarations}
+        twenties={twenties}
       />
       <ActionPair
         onBack={() => router.back()}

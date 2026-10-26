@@ -2,7 +2,8 @@
 
 import {addHandAPI, deleteHandAPI, finishTableMatchAPI, getTablePadAPI, HandTarget, updateHandAPI} from "@/app/_fetchers/admin/daily";
 import {PadHand, PadMatch, TablePad} from "@/app/_interfaces/adminHand";
-import {currentMatchNumber, matchSlots, matchTabSub, roundWins, TABLE_MATCHES} from "@/app/_lib/tableOverview";
+import {currentMatchNumber, matchSlots, matchTabSub, roundWins} from "@/app/_lib/tableOverview";
+import {adminLineupHref, roundHref, tableHref, tableScopeOf} from "@/app/_lib/ui/tableScope";
 import {
   addZvanje,
   blankEntry,
@@ -84,8 +85,8 @@ function matchSlot(pad: TablePad, n: number): PadMatch | null {
 // Every change goes through the admin's calls (the server recounts the standings and the ratings), so finished
 // matches can be corrected too.
 export default function TablePhone() {
-  const params = useParams<{leagueId: string; roundId: string}>();
-  const leagueId = Number(params.leagueId);
+  const params = useParams<{leagueId?: string; id?: string; roundId: string}>();
+  const scope = tableScopeOf(params);
   const roundId = Number(params.roundId);
   const router = useTransitionRouter();
   const search = useSearchParams();
@@ -128,7 +129,7 @@ export default function TablePhone() {
 
   // every time the table is opened, who plays (or played) it first, as players do on Započni igru (the ratings need it)
   const needsLineup = pad != null && !pad.bye && !lineupPassed(roundId);
-  const lineupHref = `/round/lineup/${roundId}?league=${leagueId}`;
+  const lineupHref = adminLineupHref(scope, roundId);
   useEffect(() => {
     if (needsLineup) router.replace(lineupHref);
   }, [needsLineup, router, lineupHref]);
@@ -148,10 +149,10 @@ export default function TablePhone() {
       </Screen>
     );
   }
-  const base = `/league/${leagueId}/daily-standings/table/${roundId}`;
-  const roundHref = `/league/${leagueId}/daily-standings${pad.date ? `?date=${pad.date}${pad.roundNumber ? `&round=${pad.roundNumber}` : ""}` : ""}`;
+  const base = tableHref(scope, roundId);
+  const round = roundHref(scope, {date: pad.date, roundNumber: pad.roundNumber, admin: true});
   // back to the round the table was opened from (or, opened directly, to that night's round)
-  const toRound = () => (window.history.length > 1 ? router.back() : router.push(roundHref, "back"));
+  const toRound = () => (window.history.length > 1 ? router.back() : router.push(round, "back"));
   if (kraj) return <RoundEnd pad={pad} onBack={() => router.replace(base, "back")} />;
   if (pad.bye) {
     return (
@@ -161,7 +162,7 @@ export default function TablePhone() {
       </Screen>
     );
   }
-  const number = mec ?? currentMatchNumber(pad.matches);
+  const number = mec ?? currentMatchNumber(pad.matches, pad.matchesPerRound);
   return (
     <MatchPhone
       key={number}
@@ -339,7 +340,15 @@ function MatchPhone({
             <Eyebrow sx={{px: "4px"}}>Korak 2 od 3</Eyebrow>
             <TeamValueBoxes names={names} label="Zvanja" values={zv} active={active} onPick={(i) => setEntry((s) => setActive(s, i === 1 ? 2 : 1))} />
           </Box>
-          <ZvanjaButtons label={`Zvanja: ${names[active]}`} counts={entry.zvanja[entry.active]} team={active} onAdd={(v) => setEntry((s) => addZvanje(s, v))} onClear={() => setEntry((s) => clearZvanja(s))} />
+          <ZvanjaButtons
+            label={`Zvanja: ${names[active]}`}
+            counts={entry.zvanja[entry.active]}
+            team={active}
+            onAdd={(v) => setEntry((s) => addZvanje(s, v))}
+            onClear={() => setEntry((s) => clearZvanja(s))}
+            declarations={pad.declarations}
+            twenties={entry.zvanja[1][20] + entry.zvanja[2][20]}
+          />
           <ActionPair onBack={stepBack} nextLabel={zv[0] + zv[1] === 0 ? "Nema zvanja" : "Dalje"} onNext={() => step("3")} />
         </>
       );
@@ -365,7 +374,7 @@ function MatchPhone({
 
   // ---------- the board ----------
   const wins = roundWins(pad.matches);
-  const slots = matchSlots(pad.matches);
+  const slots = matchSlots(pad.matches, pad.matchesPerRound);
   // Meč 1 · Meč 2 once the second match is there (or the round is over)
   const showTabs = pad.done || pad.matches.some((m) => m.kind === "finished");
   const viewDone = match.kind === "finished";
@@ -377,7 +386,7 @@ function MatchPhone({
       await finishTableMatchAPI(pad.roundId);
       await reload();
       // after the second match: Kraj kola; after the first: the next match's board
-      router.replace(number >= TABLE_MATCHES ? `${base}?kraj=1` : `${base}?mec=${number + 1}`);
+      router.replace(number >= pad.matchesPerRound ? `${base}?kraj=1` : `${base}?mec=${number + 1}`);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Meč nije završen.");
     }
@@ -405,7 +414,7 @@ function MatchPhone({
         <BoardTop pad={pad} onBack={onBack} onLineup={onLineup} />
         <Box sx={{display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,1fr)", gap: "12px"}}>
           {([0, 1] as const).map((i) => (
-            <ScorePanel key={i} index={i} name={names[i]} wins={wins[i]} total={i ? match.score2 : match.score1} threshold={match.threshold} celebrate={match.winner === i + 1 && !viewDone} />
+            <ScorePanel key={i} index={i} name={names[i]} wins={wins[i]} of={pad.matchesPerRound} total={i ? match.score2 : match.score1} threshold={match.threshold} celebrate={match.winner === i + 1 && !viewDone} />
           ))}
         </Box>
         {showTabs && (

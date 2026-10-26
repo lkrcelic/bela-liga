@@ -112,8 +112,9 @@ export function ConfirmRemove({t, busy, onCancel, onConfirm}: {t: TableRow; busy
   );
 }
 
-// Where a round's tables are edited (a night of a league), and what to reload after a change
-export type RoundAdmin = {leagueId: number; date: string; roundNumber: number; onChanged: () => void};
+// Where a round's tables are edited (a night of a league), and what to reload after a change. addTable: how Novi stol
+// adds a table where it isn't a league's night (a tournament's Kolo)
+export type RoundAdmin = {leagueId: number; date: string; roundNumber: number; onChanged: () => void; addTable?: (team1Id: number, team2Id: number) => Promise<unknown>};
 
 // The edit actions of a round's tables, for the desktop's edit mode and the admin's phone: the pair being edited (or
 // the new table), the table asked to be removed, and the calls. freshTable: the number of the table added last.
@@ -141,7 +142,8 @@ export function useTableEdits(admin: RoundAdmin | null) {
     if (!admin || !pair) return;
     if (pair.kind === "edit") await setTablePairAPI(pair.row.id, team1Id, team2Id);
     else {
-      await addTableAPI(admin.leagueId, admin.date, admin.roundNumber, team1Id, team2Id);
+      if (admin.addTable) await admin.addTable(team1Id, team2Id);
+      else await addTableAPI(admin.leagueId, admin.date, admin.roundNumber, team1Id, team2Id);
       setFreshTable(pair.tableNumber);
     }
     setPair(null);
@@ -172,8 +174,9 @@ type PairOption = {id: number; name: string; sub?: string};
 // Seating two teams at a table (edit) or adding a table (new), for the desktop dialog and the phone sheet. Picking a
 // team that sits at another table swaps it with the team it replaces; a table where something was played loses those
 // hands. A new table lists only the teams that don't play in the round. Slobodna runda (the bye) is always on the
-// list, first: a team seated with it wins the table 2:0 without playing.
-function usePairForm(target: PairTarget, rows: TableRow[], teams: LeagueTeam[], onSave: (team1Id: number, team2Id: number) => Promise<void>) {
+// list, first: a team seated with it wins the table 2:0 without playing (byeWins: 1:0 at a tournament's table of one
+// match).
+function usePairForm(target: PairTarget, rows: TableRow[], teams: LeagueTeam[], onSave: (team1Id: number, team2Id: number) => Promise<void>, byeWins = 2) {
   const isNew = target.kind === "new";
   const row = target.kind === "edit" ? target.row : null;
   const [a, setA] = useState<number | "">(row ? row.teamAId : "");
@@ -194,7 +197,7 @@ function usePairForm(target: PairTarget, rows: TableRow[], teams: LeagueTeam[], 
     .filter((o) => !isNew || !seatOf(o.id))
     .sort((x, y) => Number(isByeTeam(y.id)) - Number(isByeTeam(x.id)) || x.name.localeCompare(y.name, "hr"))
     .map((o) => {
-      if (isByeTeam(o.id)) return {...o, sub: "2 : 0 bez igre"};
+      if (isByeTeam(o.id)) return {...o, sub: `${byeWins} : 0 bez igre`};
       const seat = seatOf(o.id);
       return seat && seat.id !== row?.id ? {...o, sub: `stol ${seat.table}`} : o;
     });
@@ -215,7 +218,7 @@ function usePairForm(target: PairTarget, rows: TableRow[], teams: LeagueTeam[], 
         const text = isByeTeam(now)
           ? isByeTeam(other)
             ? `${nameOf(was)} igra za stolom ${r.table}. Taj stol ostaje bez ekipe i uklanja se.`
-            : `${nameOf(was)} igra za stolom ${r.table}. Ondje ostaje ${nameOf(other)} sa slobodnom rundom (2 : 0).`
+            : `${nameOf(was)} igra za stolom ${r.table}. Ondje ostaje ${nameOf(other)} sa slobodnom rundom (${byeWins} : 0).`
           : `${nameOf(was)} igra za stolom ${r.table}. Zamijenit će mjesto s ekipom ${nameOf(now)}.`;
         notes.push({kind: "swap", text});
       });
@@ -229,7 +232,7 @@ function usePairForm(target: PairTarget, rows: TableRow[], teams: LeagueTeam[], 
     if (row.started) notes.push({kind: "warn", text: `Za stolom ${row.table} već se igralo. Promjena para briše te igre i mijenja poredak.`});
   }
   if (picked && (isByeTeam(a) || isByeTeam(b))) {
-    notes.push({kind: "info", text: `${nameOf(isByeTeam(a) ? (b as number) : (a as number))} dobiva slobodnu rundu: stol se odmah zatvara 2 : 0.`});
+    notes.push({kind: "info", text: `${nameOf(isByeTeam(a) ? (b as number) : (a as number))} dobiva slobodnu rundu: stol se odmah zatvara ${byeWins} : 0.`});
   }
   const same = a !== "" && a === b;
   if (same) notes.push({kind: "error", text: isByeTeam(a) ? "Za stolom mora biti barem jedna ekipa." : "Ekipa ne može igrati sama protiv sebe."});
@@ -394,6 +397,7 @@ export function PairDialog({
   roundLabel,
   onClose,
   onSave,
+  byeWins = 2,
 }: {
   target: PairTarget;
   rows: TableRow[];
@@ -401,8 +405,10 @@ export function PairDialog({
   roundLabel: string;
   onClose: () => void;
   onSave: (team1Id: number, team2Id: number) => Promise<void>;
+  // the bye's win at this round's tables (1 at a tournament's table of one match)
+  byeWins?: number;
 }) {
-  const f = usePairForm(target, rows, teams, onSave);
+  const f = usePairForm(target, rows, teams, onSave, byeWins);
   const titleId = useId();
   return (
     <Dialog
@@ -449,14 +455,16 @@ export function PairSheet({
   teams,
   onClose,
   onSave,
+  byeWins = 2,
 }: {
   target: PairTarget;
   rows: TableRow[];
   teams: LeagueTeam[];
   onClose: () => void;
   onSave: (team1Id: number, team2Id: number) => Promise<void>;
+  byeWins?: number;
 }) {
-  const f = usePairForm(target, rows, teams, onSave);
+  const f = usePairForm(target, rows, teams, onSave, byeWins);
   const [picking, setPicking] = useState<0 | 1 | null>(null);
   const [query, setQuery] = useState("");
   const title = f.isNew ? "Novi stol" : `Stol ${f.row!.table} · uredi par`;
@@ -550,7 +558,7 @@ export function PairSheet({
         <PairNotes notes={f.notes} />
       ) : (
         <Box component="p" sx={{m: 0, fontSize: 14, lineHeight: 1.45, color: color.ink2}}>
-          Ako ekipa već igra za drugim stolom, ta dva stola zamijene ekipe. Uz slobodnu rundu ekipa pobjeđuje 2 : 0.
+          Ako ekipa već igra za drugim stolom, ta dva stola zamijene ekipe. Uz slobodnu rundu ekipa pobjeđuje {byeWins} : 0.
         </Box>
       )}
       {f.error && <ErrorNote>{f.error}</ErrorNote>}

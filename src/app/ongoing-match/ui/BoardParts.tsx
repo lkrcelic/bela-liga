@@ -23,6 +23,7 @@ export function ScorePanel({
   size = "phone",
   href,
   mine = false,
+  of = 2,
 }: {
   index: 0 | 1;
   name: string;
@@ -36,6 +37,8 @@ export function ScorePanel({
   size?: "phone" | "desktop";
   href?: string;
   mine?: boolean;
+  // the matches the table plays: a win pip each (2 in a league, a tournament's table can play 1)
+  of?: number;
 }) {
   const c = teamColor[index];
   const desk = size === "desktop";
@@ -91,8 +94,8 @@ export function ScorePanel({
             </Box>
           )}
         </Box>
-        <Box role="img" aria-label={`${wins} od 2 pobjede u kolu`} sx={{display: "flex", gap: desk ? "6px" : "5px", flex: "none"}}>
-          {[0, 1].map((k) => (
+        <Box role="img" aria-label={`${wins} od ${of} ${of === 1 ? "pobjede" : "pobjede"} u kolu`} sx={{display: "flex", gap: desk ? "6px" : "5px", flex: "none"}}>
+          {Array.from({length: of}, (_, k) => k).map((k) => (
             <Box
               key={k}
               sx={{
