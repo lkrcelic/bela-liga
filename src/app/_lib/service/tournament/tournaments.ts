@@ -56,9 +56,13 @@ export async function createTournament(request: TournamentRequest): Promise<numb
   });
 }
 
-// The tables of a Kolo not published yet (a draft), deleted with what hangs on them (a bye table's matches)
-export async function dropDrafts(tx: Tx, tournamentId: number) {
-  const drafts = await tx.round.findMany({where: {tournamentRounds: {some: {tournament_id: tournamentId}}, status: {not: "PUBLISHED"}}, select: {id: true}});
+// The tables of a Kolo not published yet (a draft), deleted with what hangs on them (a bye table's matches). above: only
+// the drafts of Kolos after that one
+export async function dropDrafts(tx: Tx, tournamentId: number, above = 0) {
+  const drafts = await tx.round.findMany({
+    where: {tournamentRounds: {some: {tournament_id: tournamentId}}, status: {not: "PUBLISHED"}, round_number: {gt: above}},
+    select: {id: true},
+  });
   if (drafts.length === 0) return;
   const ids = drafts.map((d) => d.id);
   await tx.ongoingMatch.deleteMany({where: {round_id: {in: ids}}});
@@ -91,6 +95,8 @@ export async function updateTournament(id: number, request: TournamentRequest): 
       });
       const played = published._max.round_number ?? 0;
       if (next.rounds < played) throw new InvalidResultError(`Objavljeno je već ${played} kola: broj kola ne može biti manji.`);
+      // a draft of a Kolo the tournament no longer has goes (it would be published as a Kolo past the last)
+      if (next.rounds < t.rounds) await dropDrafts(tx, id, next.rounds);
     } else {
       if (next.matches_per_round !== t.matches_per_round) await dropDrafts(tx, id);
       const drafts = {tournamentRounds: {some: {tournament_id: id}}, status: {not: "PUBLISHED" as const}};

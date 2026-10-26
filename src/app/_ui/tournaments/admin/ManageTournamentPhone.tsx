@@ -1,9 +1,11 @@
 "use client";
 
 import {
+  addKoloAPI,
   addKoloTableAPI,
   admitTournamentTeamAPI,
   cancelTournamentAPI,
+  deleteKoloAPI,
   deleteTournamentAPI,
   makeKoloAPI,
   publishKoloAPI,
@@ -17,7 +19,7 @@ import {AdminTournament, TournamentEntryView} from "@/app/_interfaces/tournament
 import {isByeTeam} from "@/app/_lib/bye";
 import {KoloPair} from "@/app/_lib/matching/tournamentPairing";
 import {nightLabel} from "@/app/_lib/nights";
-import {koloSteps} from "@/app/_lib/tournaments";
+import {koloSteps, removesResults} from "@/app/_lib/tournaments";
 import {standingsTeamHref, toStandingsRows} from "@/app/_lib/ui/standings";
 import {TableRow} from "@/app/_lib/ui/tables";
 import {count, NOUN} from "@/app/_lib/ui/text";
@@ -52,6 +54,7 @@ import {
   tabular,
   TopBar,
 } from "@/app/_ui/sp";
+import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
 import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
@@ -78,7 +81,7 @@ import React, {useEffect, useState} from "react";
 import {draftOf, draftPayload, TournamentFields, useTournamentForm} from "../TournamentForm";
 import {FillBar} from "../TournamentParts";
 import {useCandidateSearch} from "./EntriesDesktop";
-import {koloRows, STEP_LOOK, tableTeams} from "./KolaDesktop";
+import {canAddKolo, koloRemoval, koloRemovalAction, koloRemovalText, koloRemovalTitle, koloRows, STEP_LOOK, tableTeams} from "./KolaDesktop";
 import {defaultView, MANAGE_VIEWS, ManageView} from "./ManageTournamentDesktop";
 
 // Upravljanje turnirom on the admin's phone (Claude Design "Turniri admin" M2–M9, M11–M13), as Upravljanje ligom: the
@@ -485,25 +488,41 @@ function AddTeamSheet({t, onClose, onAdded}: {t: AdminTournament; onClose: () =>
 // ---------- Kola (M5) ----------
 
 function KolaTab({t, onOpen, onChanged}: {t: AdminTournament; onOpen: (kolo: number) => void; onChanged: (t: AdminTournament) => void}) {
-  const [busy, setBusy] = useState(false);
+  const [busy, setBusy] = useState<"make" | "add" | "delete" | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [asking, setAsking] = useState(false);
   const steps = koloSteps(t.rounds, t.results.kolos.map((k) => ({number: k.number, published: k.published, tables: k.tables.length, done: k.tables.filter((x) => !x.open).length, live: 0})));
   const next = t.next_kolo;
   // the Kolo to make by hand: Kolo 1 (once sign-ups are closed; until then why not), or a later one the app didn't
   // make by itself when its Kolo before was played
   const toMake = next != null && !t.results.kolos.some((k) => k.number === next.number) && (next.number === 1 || next.ready) ? next : null;
+  // Obriši kolo: the last Kolo, while nobody has played at it; Dodaj kolo: one more, up to 20
+  const removal = koloRemoval(t);
+  const canAdd = canAddKolo(t);
 
-  const make = async () => {
-    setBusy(true);
+  const run = async (what: "make" | "add" | "delete", call: () => Promise<AdminTournament>, then?: () => void) => {
+    setBusy(what);
     setError(null);
     try {
-      const r = await makeKoloAPI(t.id);
-      onChanged(r.tournament);
-      onOpen(r.made.number);
+      onChanged(await call());
+      setAsking(false);
+      then?.();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Kolo nije složeno.");
+      setError(e instanceof Error ? e.message : "Nije uspjelo.");
     }
-    setBusy(false);
+    setBusy(null);
+  };
+  const make = () => {
+    let made = 0;
+    run(
+      "make",
+      async () => {
+        const r = await makeKoloAPI(t.id);
+        made = r.made.number;
+        return r.tournament;
+      },
+      () => onOpen(made)
+    );
   };
 
   return (
@@ -516,12 +535,12 @@ function KolaTab({t, onOpen, onChanged}: {t: AdminTournament; onOpen: (kolo: num
           <Box component="span" sx={{fontSize: 15, lineHeight: 1.45}}>
             {toMake.reason ?? (toMake.number === 1 ? "Prijave su zatvorene: Kolo 1 se slaže nasumično." : `Kolo ${toMake.number - 1} je odigrano.`)}
           </Box>
-          <PrimaryButton icon={<AutoAwesomeRoundedIcon />} loading={busy} disabled={!toMake.ready} onClick={make} height={56}>
+          <PrimaryButton icon={<AutoAwesomeRoundedIcon />} loading={busy === "make"} disabled={!toMake.ready || busy != null} onClick={make} height={56}>
             Složi Kolo {toMake.number}
           </PrimaryButton>
         </Box>
       )}
-      {error && <ErrorNote>{error}</ErrorNote>}
+      {error && !asking && <ErrorNote>{error}</ErrorNote>}
       <Box component="ul" aria-label="Kola turnira" sx={{flex: "none", listStyle: "none", m: 0, p: 0, background: color.white, borderRadius: "22px", overflow: "hidden", boxShadow: shadow.card}}>
         {steps.map((s, i) => {
           const view = t.results.kolos.find((k) => k.number === s.number);
@@ -548,26 +567,70 @@ function KolaTab({t, onOpen, onChanged}: {t: AdminTournament; onOpen: (kolo: num
               </Box>
             </>
           );
+          // the bin of the last Kolo that can still go
+          const bin = removal?.number === s.number && (
+            <Box
+              component="button"
+              type="button"
+              aria-label={`Obriši Kolo ${s.number}`}
+              onClick={() => {
+                setError(null);
+                setAsking(true);
+              }}
+              disabled={busy != null}
+              sx={{...buttonBase, width: 44, height: 44, flex: "none", mr: "6px", borderRadius: "12px", color: color.faint, display: "flex", alignItems: "center", justifyContent: "center", "& svg": {fontSize: 22}, "&:active": {color: color.red}}}
+            >
+              <DeleteRoundedIcon />
+            </Box>
+          );
           return (
-            <Box component="li" key={s.number} sx={{borderTop: i ? `1px solid ${color.line}` : "none"}}>
+            <Box component="li" key={s.number} sx={{display: "flex", alignItems: "center", borderTop: i ? `1px solid ${color.line}` : "none"}}>
               {view ? (
                 <Box
                   component="button"
                   type="button"
                   onClick={() => onOpen(s.number)}
                   aria-label={`Kolo ${s.number}, ${label.toLowerCase()}`}
-                  sx={{...buttonBase, width: "100%", minHeight: 58, display: "flex", alignItems: "center", gap: "10px", pl: "16px", pr: "10px", textAlign: "left", "&:active": {background: tint.navy[7]}}}
+                  sx={{...buttonBase, flex: 1, minWidth: 0, minHeight: 58, display: "flex", alignItems: "center", gap: "10px", pl: "16px", pr: bin ? "4px" : "10px", textAlign: "left", "&:active": {background: tint.navy[7]}}}
                 >
                   {line}
                   <ChevronRightRoundedIcon aria-hidden sx={{flex: "none", fontSize: 24, color: color.navy}} />
                 </Box>
               ) : (
-                <Box sx={{minHeight: 58, display: "flex", alignItems: "center", gap: "10px", pl: "16px", pr: "44px"}}>{line}</Box>
+                // a Kolo still to come: in the list, but nothing to open yet
+                <Box aria-disabled="true" sx={{flex: 1, minWidth: 0, minHeight: 58, display: "flex", alignItems: "center", gap: "10px", pl: "16px", pr: bin ? "4px" : "44px", opacity: 0.6}}>
+                  {line}
+                </Box>
               )}
+              {bin}
             </Box>
           );
         })}
       </Box>
+      {canAdd && (
+        <Box
+          component="button"
+          type="button"
+          onClick={() => run("add", () => addKoloAPI(t.id, t.rounds + 1))}
+          disabled={busy != null}
+          sx={{...buttonBase, flex: "none", height: 56, borderRadius: "18px", border: `1.5px dashed ${tint.navy[35]}`, color: color.navy, display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", fontSize: 16, fontWeight: 600, "& svg": {fontSize: 22}}}
+        >
+          {busy === "add" ? <Spinner size={20} /> : <AddRoundedIcon aria-hidden />}
+          Dodaj kolo
+        </Box>
+      )}
+      {/* a Kolo with results warns that they go too (and only then are they deleted) */}
+      <ConfirmSheet
+        open={asking && removal != null}
+        onClose={() => setAsking(false)}
+        onConfirm={() => removal && run("delete", () => deleteKoloAPI(t.id, removal.number, removesResults(removal)))}
+        title={removal ? koloRemovalTitle(removal) : ""}
+        text={removal ? koloRemovalText(removal) : ""}
+        action={removal ? koloRemovalAction(removal) : ""}
+        icon={removal && removesResults(removal) ? <WarningRoundedIcon /> : <DeleteRoundedIcon />}
+        busy={busy === "delete"}
+        error={asking ? error : null}
+      />
     </>
   );
 }

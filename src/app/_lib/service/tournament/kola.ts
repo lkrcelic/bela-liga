@@ -3,9 +3,10 @@ import {prisma} from "@/app/_lib/prisma";
 import {isByeTeam} from "@/app/_lib/bye";
 import {InvalidResultError} from "@/app/_lib/validation/validateResult";
 import {addCompetitionTable, NotFoundError} from "@/app/_lib/service/admin/tables";
+import {replayRatings} from "@/app/_lib/service/admin/recalc";
 import {createByeMatches} from "@/app/_lib/service/round/insertPairRounds";
 import {firstKoloPairs, KoloPair, swissPairs} from "@/app/_lib/matching/tournamentPairing";
-import {opponentsOf, rankTeams, TableResult, tournamentTotals} from "@/app/_lib/tournaments";
+import {KOLO_MAX, opponentsOf, rankTeams, TableResult, tournamentTotals} from "@/app/_lib/tournaments";
 import {lockTournament} from "./lock";
 import {TOURNAMENT_NOT_FOUND} from "./tournaments";
 
@@ -174,6 +175,53 @@ export async function ensureNextKoloDraft(tournamentId: number): Promise<void> {
     // another request made it first, or the admin changed something meanwhile: the page shows what is there
     if (!(error instanceof InvalidResultError)) throw error;
   }
+}
+
+// Dodaj kolo (Kola's +): the tournament gets Kolo n, one more than it had. A second tap that finds Kolo n already there
+// changes nothing. A tournament played to the end goes on: its next Kolo's draft comes as after any other Kolo.
+export async function addKolo(tournamentId: number, n: number): Promise<void> {
+  await prisma.$transaction(async (tx) => {
+    await lockTournament(tx, tournamentId);
+    const t = await tx.tournament.findUnique({where: {tournament_id: tournamentId}, select: {rounds: true, cancelled_at: true}});
+    if (!t) throw new NotFoundError(TOURNAMENT_NOT_FOUND);
+    if (t.cancelled_at) throw new InvalidResultError("Turnir je otkazan.");
+    if (n === t.rounds) return;
+    if (n !== t.rounds + 1) throw new InvalidResultError(`Turnir ima ${t.rounds} kola: novo je Kolo ${t.rounds + 1}.`);
+    if (n > KOLO_MAX) throw new InvalidResultError(`Turnir ima najviše ${KOLO_MAX} kola.`);
+    await tx.tournament.update({where: {tournament_id: tournamentId}, data: {rounds: n}});
+  });
+  await ensureNextKoloDraft(tournamentId);
+}
+
+// Obriši kolo (the bin on Kola's last Kolo): the tournament is one Kolo shorter, but keeps at least one. Only the last
+// Kolo goes (the ones after a Kolo were paired by its results): a Kolo still to come, a draft, or a Kolo out, its
+// tables going with it (the bye's too). A Kolo someone has played at goes only with withResults (the admin saw the
+// warning): its games, the ones being played too, go, and ratings are counted again without them. A second tap that
+// finds it gone changes nothing. A tournament whose Kolos are then all played is over.
+export async function deleteKolo(tournamentId: number, n: number, {withResults = false}: {withResults?: boolean} = {}): Promise<void> {
+  await prisma.$transaction(
+    async (tx) => {
+      await lockTournament(tx, tournamentId);
+      const t = await tx.tournament.findUnique({where: {tournament_id: tournamentId}, select: {rounds: true, cancelled_at: true}});
+      if (!t) throw new NotFoundError(TOURNAMENT_NOT_FOUND);
+      if (t.cancelled_at) throw new InvalidResultError("Turnir je otkazan.");
+      if (n > t.rounds) return;
+      if (n !== t.rounds) throw new InvalidResultError(`Briše se samo zadnje kolo, Kolo ${t.rounds}.`);
+      if (t.rounds <= 1) throw new InvalidResultError("Turnir mora imati barem jedno kolo.");
+      const tables = await tx.round.findMany({
+        where: {round_number: n, tournamentRounds: {some: {tournament_id: tournamentId}}},
+        select: {id: true, team1_id: true, team2_id: true, open: true, status: true, _count: {select: {matches: true, ongoingMatches: true}}},
+      });
+      const real = tables.filter((r) => !isByeTeam(r.team1_id) && !isByeTeam(r.team2_id));
+      const played = real.some((r) => !r.open || r._count.matches > 0 || r._count.ongoingMatches > 0);
+      if (played && !withResults) throw new InvalidResultError(`Za stolovima Kola ${n} se već igra ili je odigrano: brisanje briše i rezultate. Otvori kolo ponovo pa potvrdi.`);
+      await dropTables(tx, tables.map((r) => r.id));
+      await tx.tournament.update({where: {tournament_id: tournamentId}, data: {rounds: n - 1}});
+      // a table played to the end changed ratings: count them again without it
+      if (real.some((r) => !r.open && r.status === "PUBLISHED")) await replayRatings(tx);
+    },
+    {timeout: 60_000}
+  );
 }
 
 // The tournament a table belongs to (null for a league's table)

@@ -1,12 +1,12 @@
 "use client";
 
-import {addKoloTableAPI, makeKoloAPI, publishKoloAPI} from "@/app/_fetchers/tournament";
+import {addKoloAPI, addKoloTableAPI, deleteKoloAPI, makeKoloAPI, publishKoloAPI} from "@/app/_fetchers/tournament";
 import {LeagueTeam} from "@/app/_hooks/useLeagueTeams";
 import {AdminTournament, KoloView} from "@/app/_interfaces/tournament";
 import {isByeTeam} from "@/app/_lib/bye";
 import {KoloPair} from "@/app/_lib/matching/tournamentPairing";
 import {nightLabel} from "@/app/_lib/nights";
-import {koloSteps} from "@/app/_lib/tournaments";
+import {KOLO_MAX, KoloRemoval, koloSteps, lastKoloRemoval, removesResults} from "@/app/_lib/tournaments";
 import {filterTables, TableFilter, tableColumns, TableRow, toTableRows} from "@/app/_lib/ui/tables";
 import useElementHeight from "@/app/_hooks/useElementHeight";
 import {count, NOUN} from "@/app/_lib/ui/text";
@@ -14,9 +14,11 @@ import {useTransitionRouter} from "@/app/_lib/viewTransitions";
 import {color, font, shadow, tint} from "@/app/_styles/tokens";
 import {ConfirmRemove, EditToggle, NewTableButton, PairDialog, RowActions, useTableEdits} from "@/app/league/[leagueId]/daily-standings/ui/RoundEditing";
 import {DesktopTableRow, TABLE_ROW_HEIGHT} from "@/app/league/[leagueId]/daily-standings/ui/RoundTables";
-import {buttonBase, Card, EmptyState, ErrorNote, InfoNote, LiveDot, NARROW_DESKTOP, OutlineButton, PrimaryButton, Segmented} from "@/app/_ui/sp";
+import {buttonBase, Card, EmptyState, ErrorNote, IconCircleButton, InfoNote, LiveDot, NARROW_DESKTOP, OutlineButton, PrimaryButton, Segmented, Spinner} from "@/app/_ui/sp";
+import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
 import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
+import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
 import EditRoundedIcon from "@mui/icons-material/EditRounded";
 import EmojiEventsRoundedIcon from "@mui/icons-material/EmojiEventsRounded";
 import InfoRoundedIcon from "@mui/icons-material/InfoRounded";
@@ -25,8 +27,8 @@ import RadioButtonCheckedRoundedIcon from "@mui/icons-material/RadioButtonChecke
 import RefreshRoundedIcon from "@mui/icons-material/RefreshRounded";
 import VisibilityRoundedIcon from "@mui/icons-material/VisibilityRounded";
 import WarningRoundedIcon from "@mui/icons-material/WarningRounded";
-import {Box} from "@mui/material";
-import React, {useEffect, useState} from "react";
+import {Box, Dialog} from "@mui/material";
+import React, {useEffect, useId, useState} from "react";
 
 // Upravljanje turnirom · Kola (Claude Design "Turniri admin" C1–C4): one Kolo's tables on the left with the Kolos 1…N
 // above them (✓ played, a red dot live, the pencil a draft); on the right what comes next. Kolo 1 is drawn at random
@@ -57,6 +59,37 @@ export const STEP_LOOK = {
 export function koloRows(view: KoloView): TableRow[] {
   return toTableRows(view.tables.map((x) => ({...x, team1: {team_name: x.team1.team_name}, team2: {team_name: x.team2.team_name}})));
 }
+
+// Obriši kolo: the tournament's last Kolo while nobody has played at it (null: it can't go, or the tournament is
+// cancelled)
+export function koloRemoval(t: AdminTournament): KoloRemoval | null {
+  if (t.phase === "cancelled") return null;
+  return lastKoloRemoval(
+    t.rounds,
+    t.results.kolos.map((k) => {
+      const rows = koloRows(k);
+      return {number: k.number, published: k.published, played: rows.some((r) => !r.bye && r.started), done: rows.length > 0 && rows.every((r) => r.done)};
+    })
+  );
+}
+
+// What deleting the last Kolo does, for its confirmation (a warning when results go too)
+export function koloRemovalText(r: KoloRemoval): string {
+  const what = {
+    waiting: "",
+    draft: `Skica Kola ${r.number} se briše. `,
+    out: `Stolovi Kola ${r.number} se brišu i igrači ih više ne vide. `,
+    live: `Za stolovima Kola ${r.number} se igra: igre koje traju se prekidaju, a svi rezultati tog kola se brišu. Poredak i rejting se računaju ponovo. `,
+    played: `Kolo ${r.number} je odigrano: svi njegovi rezultati se brišu, a poredak i rejting se računaju ponovo. `,
+  }[r.step];
+  return `${what}Turnir će imati ${count(r.number - 1, NOUN.kolo)}.${r.ends ? " Sva kola prije njega su odigrana, pa je turnir time završen." : ""}`;
+}
+
+export const koloRemovalTitle = (r: KoloRemoval) => (removesResults(r) ? `Obrisati Kolo ${r.number} s rezultatima?` : `Obrisati Kolo ${r.number}?`);
+export const koloRemovalAction = (r: KoloRemoval) => (removesResults(r) ? "Obriši s rezultatima" : "Obriši kolo");
+
+// Dodaj kolo: up to 20, not for a cancelled tournament
+export const canAddKolo = (t: AdminTournament) => t.phase !== "cancelled" && t.rounds < KOLO_MAX;
 
 // The teams a table can seat, in the shape the pair dialog takes
 export function tableTeams(t: AdminTournament): LeagueTeam[] {
@@ -113,10 +146,28 @@ export default function KolaDesktop({t, kolo, onKolo, onChanged, reload}: Props)
       (next) => onKolo(defaultKolo(next))
     );
   const publish = () => run("publish", () => publishKoloAPI(t.id, kolo), () => setRepeats([]));
+  // Dodaj kolo: one more at the end (a finished tournament's new Kolo is drafted at once, so it opens); Obriši kolo:
+  // the last one, its results too after the warning
+  const removal = koloRemoval(t);
+  const addable = canAddKolo(t);
+  const [askDelete, setAskDelete] = useState(false);
+  const add = () =>
+    run("add", () => addKoloAPI(t.id, t.rounds + 1), (next) => {
+      const draft = next.results.kolos.find((k) => !k.published);
+      if (draft && !t.results.kolos.some((k) => !k.published)) onKolo(draft.number);
+    });
+  const remove = () =>
+    removal &&
+    run("delete", () => deleteKoloAPI(t.id, removal.number, removesResults(removal)), (next) => {
+      setAskDelete(false);
+      if (kolo > next.rounds) onKolo(defaultKolo(next));
+    });
 
   const chip = (n: number, s: keyof typeof STEP_LOOK) => {
     const on = n === kolo;
     const look = STEP_LOOK[s];
+    // a Kolo still to come is in the row but has nothing to open
+    const off = s === "waiting" && !on;
     return (
       <Box
         key={n}
@@ -126,8 +177,10 @@ export default function KolaDesktop({t, kolo, onKolo, onChanged, reload}: Props)
         aria-selected={on}
         aria-label={`Kolo ${n}, ${look.label.toLowerCase()}`}
         onClick={() => onKolo(n)}
+        disabled={off}
         sx={{
           ...buttonBase,
+          ...(off && {cursor: "default", opacity: 0.55}),
           flex: "none",
           minWidth: 44,
           height: 40,
@@ -176,6 +229,29 @@ export default function KolaDesktop({t, kolo, onKolo, onChanged, reload}: Props)
           <Box role="tablist" aria-label="Kola turnira" sx={{flex: "0 1 auto", minWidth: 0, display: "flex", gap: "4px", p: "4px", borderRadius: "14px", background: color.lineFill, overflowX: "auto", scrollbarWidth: "none"}}>
             {steps.map((s) => chip(s.number, s.step))}
           </Box>
+          {(addable || removal) && (
+            <Box sx={{flex: "none", display: "flex", gap: "6px"}}>
+              {addable && (
+                <IconCircleButton label="Dodaj kolo" size={40} onClick={add} disabled={busy != null} sx={{borderRadius: "12px", boxShadow: "none", background: color.lineFill, "& svg": {fontSize: 22}}}>
+                  {busy === "add" ? <Spinner size={18} /> : <AddRoundedIcon />}
+                </IconCircleButton>
+              )}
+              {removal && (
+                <IconCircleButton
+                  label={`Obriši Kolo ${removal.number}`}
+                  size={40}
+                  onClick={() => {
+                    setError(null);
+                    setAskDelete(true);
+                  }}
+                  disabled={busy != null}
+                  sx={{borderRadius: "12px", boxShadow: "none", background: color.lineFill, color: color.red, "& svg": {fontSize: 20}}}
+                >
+                  <DeleteRoundedIcon />
+                </IconCircleButton>
+              )}
+            </Box>
+          )}
         </Box>
         {view && (
           <Box sx={{flex: "none", display: "flex", alignItems: "center", gap: "10px", p: "0 18px 14px", flexWrap: "wrap"}}>
@@ -272,6 +348,9 @@ export default function KolaDesktop({t, kolo, onKolo, onChanged, reload}: Props)
           </Box>
         )}
         </Box>
+        {askDelete && removal && (
+          <DeleteKoloDialog removal={removal} busy={busy === "delete"} error={error} onClose={() => setAskDelete(false)} onConfirm={remove} />
+        )}
         {editing && edits.pair && (
           <PairDialog
             target={edits.pair}
@@ -415,5 +494,38 @@ function SideCard({
         </PrimaryButton>
       )}
     </Card>
+  );
+}
+
+// Obriši kolo on the computer: what goes (a warning when results go too), Odustani and the red action
+function DeleteKoloDialog({removal, busy, error, onClose, onConfirm}: {removal: KoloRemoval; busy: boolean; error: string | null; onClose: () => void; onConfirm: () => void}) {
+  const titleId = useId();
+  return (
+    <Dialog
+      open
+      onClose={busy ? undefined : onClose}
+      aria-labelledby={titleId}
+      slotProps={{backdrop: {sx: {background: tint.scrim[32]}}}}
+      PaperProps={{sx: {width: 520, maxWidth: "calc(100% - 32px)", borderRadius: "24px", p: "24px", display: "flex", flexDirection: "column", gap: "16px", boxShadow: shadow.dialog}}}
+    >
+      <Box component="h2" id={titleId} sx={{m: 0, fontFamily: font.display, fontSize: 26, fontWeight: 800, letterSpacing: "-.01em", lineHeight: 1.15}}>
+        {koloRemovalTitle(removal)}
+      </Box>
+      <Box sx={{display: "flex", gap: "12px", alignItems: "flex-start", p: "14px", borderRadius: "16px", background: tint.red[8], "& > svg": {fontSize: 26, color: color.red, flex: "none"}}}>
+        {removesResults(removal) ? <WarningRoundedIcon aria-hidden /> : <DeleteRoundedIcon aria-hidden />}
+        <Box component="p" sx={{m: 0, fontSize: 15, lineHeight: 1.5, color: color.ink}}>
+          {koloRemovalText(removal)}
+        </Box>
+      </Box>
+      {error && <ErrorNote>{error}</ErrorNote>}
+      <Box sx={{display: "flex", gap: "10px"}}>
+        <OutlineButton height={52} onClick={onClose} disabled={busy} sx={{flex: 1, fontSize: 16, border: `1.5px solid ${tint.navy[25]}`}}>
+          Odustani
+        </OutlineButton>
+        <PrimaryButton height={52} bg={color.red} onClick={onConfirm} loading={busy} sx={{flex: 1, fontSize: 16, borderRadius: "16px", boxShadow: "none"}}>
+          {koloRemovalAction(removal)}
+        </PrimaryButton>
+      </Box>
+    </Dialog>
   );
 }

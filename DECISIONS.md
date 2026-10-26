@@ -1181,3 +1181,24 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
         last on 0). The pairing now puts the bye on the lowest team without one ahead of the neighbours rule (#65).
       - Kraj kola of a tournament's table also opens Poredak i rezultati (the league's only goes home, as before).
       - A team's players list the viewer first on the tournament's pages, as the sign-up sheet does.
+
+68. **Kola: every Kolo, Dodaj kolo and Obriši kolo; Početna's Vidi stranicu** (your requests of 26.10.).
+    - **Every Kolo is in the list** (the phone's Kola, the computer's chips). The ones still to come are greyed and
+      can't be opened.
+    - **Dodaj kolo** (the dashed + under the phone's list, the + beside the computer's chips) adds one Kolo at the end
+      in a single tap, up to 20, and Broj kola goes up with it. A tournament played to the end goes on: the new
+      Kolo's Skica is drawn at once.
+    - **Obriši kolo** (the bin on the last Kolo; on the computer beside the +) makes the tournament one Kolo shorter,
+      Broj kola going down with it, but at least one Kolo stays. Only the last Kolo goes. Alternative: any Kolo.
+      Reason: every later Kolo was paired by the standings after it, so they would no longer add up.
+    - **Before it goes**, a sheet (phone) or a dialog (computer) says what goes: a Kolo still to come, a Skica, or a
+      Kolo out with nobody playing yet. A Kolo being played or played gets a warning: its results go too, games
+      being played are stopped, and the standings and ratings are counted again. The server deletes results only when
+      the request says the admin saw that warning (?rezultati=1), so a screen out of date can't. If every Kolo before
+      it is played, the tournament is then over.
+    - **Podaci's Broj kola**, when it goes down after the start, now also drops a Skica of a Kolo past the new count.
+      Before, it stayed and could be published as a Kolo after the last.
+    - **Početna · Turniri says Vidi stranicu**, never Prijavi se: the tournament's page is read first, and Prijavi se
+      is on it. A visitor who presses Prijavi se there logs in and comes back with the sign-up sheet open. A
+      tournament's card shows two photos and +N, so Vidi stranicu fits beside the players; on a phone under 375 px it
+      goes under them.

@@ -72,5 +72,10 @@ export const admitTournamentTeamAPI = (id: number, teamId: number) => send<Admin
 export const makeKoloAPI = (id: number, redo = false) =>
   send<{made: {number: number; tables: number; repeats: KoloPair[]}; tournament: AdminTournament}>(`${admin(id)}/kola`, "POST", {redo}, "Kolo nije složeno.");
 export const publishKoloAPI = (id: number, kolo: number) => send<AdminTournament>(`${admin(id)}/kola/${kolo}/publish`, "POST", undefined, "Kolo nije objavljeno.");
+// Dodaj kolo: kolo is the new last one (the count + 1); Obriši kolo: kolo is the last one, withResults once the admin
+// saw the warning that its results go too
+export const addKoloAPI = (id: number, kolo: number) => send<AdminTournament>(`${admin(id)}/kola/${kolo}`, "PUT", undefined, "Kolo nije dodano.");
+export const deleteKoloAPI = (id: number, kolo: number, withResults = false) =>
+  send<AdminTournament>(`${admin(id)}/kola/${kolo}${withResults ? "?rezultati=1" : ""}`, "DELETE", undefined, "Kolo nije obrisano.");
 export const addKoloTableAPI = (id: number, kolo: number, team1Id: number, team2Id: number) =>
   send<{id: number}>(`${admin(id)}/kola/${kolo}/tables`, "POST", {team1_id: team1Id, team2_id: team2Id}, "Stol nije dodan.");

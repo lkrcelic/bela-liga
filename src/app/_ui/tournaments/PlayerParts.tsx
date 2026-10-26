@@ -72,13 +72,15 @@ export function TournamentHead({t, today}: {t: TournamentCard; today: string}) {
 }
 
 // The bubbles of a few players and "44 igrača" (on navy or on a light band)
-export function PlayersCount({t, onNavy = false}: {t: Pick<TournamentCard, "avatars" | "players">; onNavy?: boolean}) {
-  const more = t.players - t.avatars.length;
+// max: at most that many photos, the rest in the +N circle (a card row that shares the line with a button)
+export function PlayersCount({t, onNavy = false, max}: {t: Pick<TournamentCard, "avatars" | "players">; onNavy?: boolean; max?: number}) {
+  const avatars = max == null ? t.avatars : t.avatars.slice(0, max);
+  const more = t.players - avatars.length;
   return (
     <Box sx={{display: "flex", alignItems: "center", gap: "10px", minWidth: 0}}>
-      {t.avatars.length > 0 && (
+      {avatars.length > 0 && (
         <Box aria-hidden sx={{display: "flex", flex: "none"}}>
-          {t.avatars.map((a, i) => (
+          {avatars.map((a, i) => (
             <Box key={i} component="span" sx={{ml: i ? "-9px" : 0, display: "flex", borderRadius: "50%", boxShadow: `0 0 0 2.5px ${onNavy ? color.navy : color.paper2}`}}>
               <InitialsAvatar name={a.name} src={a.photo_url} size={30} sx={{fontSize: 11}} />
             </Box>
@@ -174,7 +176,7 @@ export function SignUpCard({t, meId, onSignUp, signedIn}: {t: TournamentDetail; 
           {full && <Box sx={{fontSize: 14, lineHeight: 1.45, color: color.cream}}>Turnir je pun: nova prijava ide na listu čekanja.</Box>}
           <Box
             component={signedIn ? "button" : TransitionLink}
-            {...(signedIn ? {type: "button", onClick: onSignUp} : {href: `/login?next=${encodeURIComponent(tournamentHref(t.id))}`})}
+            {...(signedIn ? {type: "button", onClick: onSignUp} : {href: `/login?next=${encodeURIComponent(`${tournamentHref(t.id)}?prijava=1`)}`})}
             sx={{...buttonBase, height: 56, borderRadius: "16px", background: color.white, color: color.navy, display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", fontSize: 17, fontWeight: 700, textDecoration: "none", "& svg": {fontSize: 22}}}
           >
             <HowToRegRoundedIcon aria-hidden />
@@ -511,7 +513,7 @@ export function MyMatchesCard({matches, tournamentId}: {matches: MyMatch[]; tour
 // ---------- Početna · Turniri ----------
 
 // The navy card of the next tournament (S2, S3): signed up (the team, where and when, Stranica turnira), waiting, or
-// how many have signed up and Prijavi se
+// how many have signed up and Vidi stranicu (the page is read first, Prijavi se is on it)
 export function NextTournamentCard({t}: {t: TournamentCard}) {
   const place = t.location.name ? {name: t.location.name, address: t.location.address, url: t.location.url} : null;
   return (
@@ -565,10 +567,10 @@ export function NextTournamentCard({t}: {t: TournamentCard}) {
           </Box>
           <Box
             component={TransitionLink}
-            href={t.registrations_open ? `${tournamentHref(t.id)}?prijava=1` : tournamentHref(t.id)}
+            href={tournamentHref(t.id)}
             sx={{...buttonBase, height: 48, display: "flex", alignItems: "center", gap: "4px", pl: "18px", pr: "10px", borderRadius: "14px", background: color.white, color: color.navy, fontSize: 16, fontWeight: 700, textDecoration: "none", "& svg": {fontSize: 22}}}
           >
-            {t.registrations_open ? "Prijavi se" : "Stranica turnira"}
+            Vidi stranicu
             <ChevronRightRoundedIcon aria-hidden />
           </Box>
         </Box>
@@ -624,7 +626,7 @@ export function NoTournamentCard() {
 }
 
 // A tournament coming up (S2–S4, D1): the date tile, its name, time, place and Bez zvanja; under it the players
-// signed up and Prijavi se (or that the viewer is in it)
+// signed up and Vidi stranicu (the page first, Prijavi se is there), or that the viewer is in it
 export function UpcomingCard({t}: {t: TournamentCard}) {
   return (
     <Card component="li" sx={{p: "14px", display: "flex", flexDirection: "column", gap: "12px", borderRadius: "22px"}}>
@@ -655,8 +657,9 @@ export function UpcomingCard({t}: {t: TournamentCard}) {
           </Box>
         </Box>
       </Box>
-      <Box sx={{display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px", p: "8px 8px 8px 12px", borderRadius: "16px", background: color.paper2}}>
-        <PlayersCount t={t} />
+      {/* on a narrow phone Vidi stranicu goes under the players, on the right */}
+      <Box sx={{display: "flex", alignItems: "center", flexWrap: "wrap", justifyContent: "space-between", gap: "8px 10px", p: "8px 8px 8px 12px", borderRadius: "16px", background: color.paper2}}>
+        <PlayersCount t={t} max={2} />
         {t.me ? (
           <Box component="span" sx={{display: "flex", alignItems: "center", gap: "5px", fontSize: 14, fontWeight: 700, color: t.me.status === "WAITING" ? color.medal[0] : color.green, "& svg": {fontSize: 19}}}>
             {t.me.status === "WAITING" ? <HourglassTopRoundedIcon aria-hidden /> : <CheckCircleRoundedIcon aria-hidden />}
@@ -665,10 +668,10 @@ export function UpcomingCard({t}: {t: TournamentCard}) {
         ) : t.registrations_open ? (
           <Box
             component={TransitionLink}
-            href={`${tournamentHref(t.id)}?prijava=1`}
-            sx={{...buttonBase, flex: "none", height: 44, display: "flex", alignItems: "center", gap: "2px", pl: "14px", pr: "8px", borderRadius: "12px", background: color.navy, color: color.white, fontSize: 15, fontWeight: 700, textDecoration: "none", "& svg": {fontSize: 20}}}
+            href={tournamentHref(t.id)}
+            sx={{...buttonBase, flex: "none", ml: "auto", height: 44, display: "flex", alignItems: "center", gap: "2px", pl: "12px", pr: "6px", borderRadius: "12px", background: color.navy, color: color.white, fontSize: 15, fontWeight: 700, textDecoration: "none", "& svg": {fontSize: 20}}}
           >
-            Prijavi se
+            Vidi stranicu
             <ChevronRightRoundedIcon aria-hidden />
           </Box>
         ) : (

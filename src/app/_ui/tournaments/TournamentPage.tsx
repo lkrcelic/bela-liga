@@ -22,7 +22,7 @@ import SignUpSheet from "./SignUpSheet";
 // sign-ups (Prijavi se, or the team signed up or waiting), the details, the prizes and the teams signed up. On the
 // day: the player's table (Nastavi igru / Započni igru) and Poredak i rezultati. Once it is over: Pobjednici, the
 // results, and for a player who played Vaš rezultat and Vaši mečevi. Public: a visitor sees it read-only.
-// ?prijava=1 (Prijavi se on Početna) opens the sign-up sheet at once.
+// ?prijava=1 (a visitor's Prijavi se, back from logging in) opens the sign-up sheet at once.
 export default function TournamentPage({id}: {id: number}) {
   const meId = useAuthStore((s) => s.user?.id ?? null);
   const signedIn = meId != null;

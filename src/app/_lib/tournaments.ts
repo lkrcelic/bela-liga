@@ -30,6 +30,28 @@ export function liveKolo(kolos: KoloSummary[]): number | null {
   return published.length > 0 && !kolosDone(published[0]) ? published[0].number : null;
 }
 
+// The most Kolos a tournament has (Tournament_rounds_check)
+export const KOLO_MAX = 20;
+
+// Obriši kolo on the admin's Kola: the last Kolo can go, as long as one Kolo stays (the Kolos after one were paired by
+// its results, so they go from the end). Its step: still to come, a draft, out with nobody playing yet, or with
+// results (being played or played: they go too, after a warning). played: someone sat down at one of its tables (the
+// bye's aside); done: every table of it is over. ends: every Kolo before it is played to the end, so deleting it ends
+// the tournament. null: the last Kolo can't go.
+export type KoloRemoval = {number: number; step: "waiting" | "draft" | "out" | "live" | "played"; ends: boolean};
+
+export function lastKoloRemoval(rounds: number, kolos: {number: number; published: boolean; played: boolean; done: boolean}[]): KoloRemoval | null {
+  if (rounds <= 1) return null;
+  const byNumber = new Map(kolos.map((k) => [k.number, k]));
+  const last = byNumber.get(rounds);
+  const ends = Array.from({length: rounds - 1}, (_, i) => byNumber.get(i + 1)).every((k) => k != null && k.published && k.done);
+  const step = !last ? "waiting" : !last.published ? "draft" : !last.played ? "out" : last.done ? "played" : "live";
+  return {number: rounds, step, ends};
+}
+
+// Deleting this Kolo deletes results too (the warning)
+export const removesResults = (r: KoloRemoval) => r.step === "live" || r.step === "played";
+
 // Each of the tournament's Kolos as the admin's list shows it (Kola): played, being played, a draft waiting to be
 // published, or still to come
 export type KoloStep = "played" | "live" | "draft" | "waiting";

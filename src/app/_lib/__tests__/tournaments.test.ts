@@ -17,6 +17,8 @@ import {
   rulesLabel,
   TableResult,
   tournamentPhase,
+  lastKoloRemoval,
+  removesResults,
   tournamentStatus,
   tournamentTotals,
 } from "@/app/_lib/tournaments";
@@ -90,6 +92,24 @@ test("Swiss: a meeting nobody can avoid is made and reported", () => {
   assert.equal(plan.repeats.length, 1);
   assert.deepEqual(swissPairs([swiss(9, 0, 0)]).pairs, [[9, BYE_TEAM_ID]]);
   assert.deepEqual(swissPairs([]).pairs, []);
+});
+
+test("Obriši kolo: only the last Kolo, one Kolo stays, and one with results says so", () => {
+  const kolo = (number: number, published: boolean, played: boolean, done: boolean) => ({number, published, played, done});
+  assert.equal(lastKoloRemoval(1, []), null);
+  // before the start: one Kolo less
+  assert.deepEqual(lastKoloRemoval(3, []), {number: 3, step: "waiting", ends: false});
+  // Kolo 2 being played, Kolo 3 to come
+  assert.deepEqual(lastKoloRemoval(3, [kolo(1, true, true, true), kolo(2, true, true, false)]), {number: 3, step: "waiting", ends: false});
+  // the last Kolo is a draft, or out but not started: it goes with its tables and the tournament is over
+  assert.deepEqual(lastKoloRemoval(2, [kolo(1, true, true, true), kolo(2, false, false, false)]), {number: 2, step: "draft", ends: true});
+  assert.deepEqual(lastKoloRemoval(2, [kolo(1, true, true, true), kolo(2, true, false, false)]), {number: 2, step: "out", ends: true});
+  // someone plays at it, or it is played: it goes with its results
+  const live = lastKoloRemoval(2, [kolo(1, true, true, true), kolo(2, true, true, false)]);
+  assert.deepEqual(live, {number: 2, step: "live", ends: true});
+  assert.equal(removesResults(live!), true);
+  assert.deepEqual(lastKoloRemoval(2, [kolo(1, true, true, true), kolo(2, true, true, true)]), {number: 2, step: "played", ends: true});
+  assert.equal(removesResults(lastKoloRemoval(3, [])!), false);
 });
 
 test("a whole tournament: 23 teams over 9 Kolos, nobody meets twice and no team has two byes", () => {
