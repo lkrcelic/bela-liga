@@ -1070,3 +1070,104 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
       differ). The rounds are planned one after another, so the first round takes the closest pairs and a later one
       can get a wider gap; the night's average gap still goes down.
     - Smoking tables and table numbers don't change: they are decided after the pairing, as before.
+
+65. **Turniri** (your request of 25.10., Claude Design "Natjecanja" and "Turniri admin"; your answers and the plan of
+    26.10.). One-day tournaments: teams sign up (with a waiting list), Kolo 1 is drawn at random, every later Kolo is
+    paired by the standings, a table plays one or two matches, and the standings are points then difference.
+    - **A tournament's table is a league table.** Every table of a Kolo is an ordinary Round (round_number = the Kolo)
+      linked through TournamentRound, so the scorepad, Tko igra, Pregled stola, the admin's scorepad, Uredi stolove and
+      the rating work as they are. Migration 20261026120000_tournaments fills the empty Tournament tables (date, times,
+      place, Kolos, matches per table, zvanja, limit, fee, rules link, sign-ups open, started, cancelled), adds the
+      entries' status (REGISTERED, WAITING) with who signed up and when, the prizes (TournamentPrize), and on Round
+      matches_per_round (1 or 2) and declarations (false = bela only), copied from the tournament when a Kolo is made.
+      Every league table keeps 2 and true. On a copy of the backup of 25.10. only this migration was waiting; the
+      1,210 rounds came out at 2 and true, nothing else changed, and a full rating replay gave every rating, deviation,
+      volatility and the whole rating history byte for byte as before.
+    - **One rating period** (your choice of 25.10.). Every Kolo's tables have the tournament's date as round_date, so
+      the replay (which goes by date) rates the whole tournament as one night with no change to the rating code. A
+      league night on the same date would fall into the same period. Alternative: a period per Kolo. Reason: your
+      answer.
+    - **Publishing Kolo 1 starts the tournament** (your choice). It sets started_at and closes sign-ups. Until then
+      everything can change. After it, Prijave don't change any more, the date, Partija po kolu and Zvanja are locked,
+      and Broj kola can still go down to the Kolos already out, so the admin can end early. Otkaži and Obriši are there
+      only before the start; a cancelled tournament stays under Završeni as Otkazan.
+    - **Kolo 1 needs sign-ups closed** (C1 shows that state). Reopening sign-ups drops a draft. Objavi refuses Kolo 1
+      with 409 STALE_DRAFT ("složi ponovo") if the teams in changed after the draft was made. Alternative: draw while
+      sign-ups are open. Reason: a team signing up late would be left out of a draft the admin already checked.
+    - **Pairing.** Kolo 1 at random. From Kolo 2 the Swiss system: one maximum-weight matching (the blossom the league
+      uses) over all teams, plus the bye when their number is odd. A pair costs its earlier meetings² × 10,000,000 plus
+      the gap between the two places², and the bye goes to the lowest team without one. So teams with similar points
+      meet, nobody meets twice while any other pairing works, and the Skica names a repeat it couldn't avoid. The bye
+      is a win, 2:0 (1:0 at a table of one match), as in the league. No smoking tables or age factor (stated with the
+      defaults, not objected to). A test plays 23 teams through 9 Kolos with no repeat and no second bye.
+      Alternative: the league's windows. Reason: they have no rank distance, so a Kolo could pair the first with the
+      tenth.
+    - **The next Kolo is drafted by itself** once the last table of a Kolo closes (also when the admin opens the
+      tournament, if that was missed); the admin checks it and publishes it. The last Kolo played makes the tournament
+      Završen.
+    - **Standings** are counted from the tables when they are read (TeamScore is the league's): points (a win 2, a
+      draw 1), then the difference over every match played (the bye's 301:0 included), then the team's name, the
+      league's order.
+    - **Sign-ups.** One team per player in a tournament, the waiting list included. The waiting list goes in sign-up
+      order. When a team signs off, is removed or the limit grows, the first team waiting comes in by itself, with no
+      notice (the design's rule). Ubaci u turnir lets a waiting team in and raises the limit by one; a lower limit
+      sends the last ones signed up to the waiting list. A team needs two active players with an account. A player
+      signs up one of their teams, or makes a new one with a teammate found by name (names only, as usernames stay
+      private, #40); for a teammate without an account Pošalji poziv shares the sign-up link. A waiting team's players
+      see "Na listi čekanja · N." (no frame for it; drawn on R2).
+    - **Teams of three or more** say Tko igra before every Kolo, as in the league (your choice).
+    - **Bez zvanja means only bela (20)** (your choice of 26.10.). The scorepad has a single Bela button, once a hand
+      (the phone's steps, the computer's hand entry and the admin's), and the server refuses 50 to 200 and a second
+      bela. A table of one match says Meč, not Meč 1 od 2, has one win circle per team and closes after its match.
+    - **Burza igrača stays one board** (your answer): no tournament ads; anyone can post, signed up or not. Početna ·
+      Turniri shows its card as Liga does.
+    - **Public, read-only pages** (your choice): Turniri, Završeni turniri, a tournament's page, Poredak i rezultati
+      and its teams open without logging in, with no ratings, photos or usernames; Prijavi se goes to the login and
+      back. The tables' pages stay for players who are logged in.
+    - **Players on the computer** get the phone's pages in a centred column inside the menu (your choice).
+    - **Početna** has the switch Turniri · Liga under the header, remembered on the phone (bela.homeTab). The first
+      time it opens on Liga, or on Turniri for a player in no league or playing a tournament today; while the player's
+      tournament is live and Liga is shown, Turniri has a red dot. Liga is the old Početna, its Započni igru for a
+      league's table only (the menu's Započni igru takes any). Turniri: the player's table on the day, else the next
+      tournament, then Burza igrača, Nadolazeći turniri and Završeni turniri. The rating sits next to the profile and
+      opens Rejting. The computer's Početna shows the next tournament above the tables.
+    - **The app is Belatronika** (your choice of 26.10.): the header, the page titles, the install sheet and the
+      installed app's name. The bell stays as the icon and on the sign-in pages; the leagues' names don't change.
+
+66. **Turniri: where the screens follow the league instead of the frames** (your rule of 26.10.: use the league's
+    components and patterns where a frame drifts from them).
+    - **Computer, Kola (C1–C4):** the tables are Dnevni poredak's rows without photos (Skica lige has none), so the
+      names fit; one column while they fit the card, else two, as Dnevni poredak. Uredi stolove is the league's (the
+      pair dialog, Novi stol, the bin) on a draft and on a published Kolo. A table opens the league's admin scorepad
+      and Pregled stola, whose links lead back to the tournament. Confirmations are inline, as in Upravljanje ligom.
+    - **Phone, Upravljanje turnirom (M2–M9):** as Upravljanje ligom on the phone: the back button, the header, the navy
+      card (before the start the card itself is the Prijave otvorene switch; after it the Kolo being played, which it
+      opens) and the tabs inside the scrolling column. Dodaj ekipu is the dashed field opening a sheet (M13), since
+      the teams come from the server's search with the reason one can't come in (the league's field filters a list it
+      already has). Removals, Otkaži and Obriši are asked in sheets (M4, M11, M12).
+    - **Phone, Skica (M6)** is the league's Skica kola: the list of tables, and the pencil for Uredi stolove (the edit
+      cards and the pair sheet) instead of a ⇄ on every row. The bin (Odbaci skicu) is Složi ponovo, since the app
+      drafts a tournament's next Kolo by itself. Long team names take two lines there, in the league too (#67).
+    - **Phone, a published Kolo (M7)** is Dnevni poredak's round on the admin's phone: Osvježi, the pencil, the table
+      cards with wins and the points of the match being played, each opening the admin scorepad. The ratings in
+      brackets beside the teams aren't shown (Dnevni poredak has none).
+    - **Phone, Kola (M5):** a played Kolo says Odigrano (the frame has Objavljeno), as on the computer; a published one
+      says Objavljeno until a table starts, then Uživo. Složi Kolo 1 sits above the list once sign-ups are closed, the
+      only Kolo made by hand.
+    - **Phone, Podaci (M9):** the computer's form in one card with its sections (Osnovno, Mjesto, Format i prijave,
+      Nagrade), then Spremi promjene and Odbaci promjene and the Turnir card (Kopiraj, Otkaži, Obriši), as Upravljanje
+      ligom · Postavke. The frame's cards per section and the Spremi fixed at the bottom aren't used.
+    - **The bottom bar** has six tabs (Večer · Turniri · Rejting · Ekipe · Igrači · Sponzori), its pill narrower so they
+      fit at 360 px.
+    - **Players' pages:** Poredak i rezultati is Dnevni poredak (Poredak and the Kolos as chips, the standings with the
+      player's team marked, the player's table first). Vaš rezultat (W1) takes the rating over the day from the rating
+      history on the tournament's date.
+
+67. **Fixes found while doing #65.**
+    - **A page's tab in its address** (?view= in Upravljanje ligom on the phone, ?round= on Dnevni poredak, and now the
+      tournaments' ?view=, ?kolo=): since 13.10. the address helper wrote nothing when only the query changed, so a
+      reload and Back came to the first tab, though the pages said otherwise. It now always writes the address and
+      swaps the page stack's entry only when the path changes.
+    - **Skica kola's list:** a long team name takes up to two lines instead of being cut after a few letters, and the
+      smoking column is there only when a table is a smoking one.
+    - **The switch on a navy card** (Prijave otvorene) has a light track when off; on navy the grey one disappeared.
