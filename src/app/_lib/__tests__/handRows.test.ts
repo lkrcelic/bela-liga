@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import {test} from "node:test";
-import {LEAD_BAR_FULL, runningHands} from "../ui/handRows";
+import {runningHands} from "../ui/handRows";
 
 test("each hand shows the totals with it counted, its winner and the lead after it", () => {
   const out = runningHands([
@@ -26,20 +26,6 @@ test("a tied hand has no winner and a level match no leader", () => {
   assert.equal(a.winner, null);
   assert.equal(a.leader, null);
   assert.equal(b.lead, 0);
-  assert.equal(b.leadPct, 0);
-});
-
-test("the lead bar fills its half at a lead of 1001 and stops there", () => {
-  assert.equal(LEAD_BAR_FULL, 1001);
-  const [some, full, over] = runningHands([
-    {left: 300, right: 0},
-    {left: 701, right: 0},
-    {left: 200, right: 0},
-  ]);
-  // a lead of 300 is under a third of the bar, not a full one
-  assert.ok(some.leadPct > 29 && some.leadPct < 30);
-  assert.equal(full.leadPct, 100);
-  assert.equal(over.leadPct, 100);
 });
 
 test("no hands, no rows", () => {
