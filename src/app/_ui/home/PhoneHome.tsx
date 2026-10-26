@@ -130,7 +130,7 @@ export default function PhoneHome() {
 
 // Započni igru: the player's table of the open round (table number, the smoking mark, both teams, and the score once
 // a match is running, when it reads Nastavi igru)
-function StartCard({table, starting, onStart, errorId}: {table: OpenTable; starting: boolean; onStart: () => void; errorId?: string}) {
+export function StartCard({table, starting, onStart, errorId}: {table: OpenTable; starting: boolean; onStart: () => void; errorId?: string}) {
   const live = table.score != null;
   return (
     <Box
