@@ -18,6 +18,10 @@ export type TableRow = {
   // current match points while live, e.g. 724 and 588
   pointsA: number | null;
   pointsB: number | null;
+  // each team's point difference over the round's matches once it is closed, e.g. 286 and -286 (null: still being
+  // played, or the bye)
+  diffA: number | null;
+  diffB: number | null;
   mine: boolean;
   // something was played at the table (a match running or finished)
   started: boolean;
@@ -47,6 +51,7 @@ type RoundLike = {
   active?: boolean;
   open?: boolean;
   ongoingMatches?: {player_pair1_score?: number; player_pair2_score?: number}[] | null;
+  matches?: {player_pair1_score?: number; player_pair2_score?: number}[] | null;
 };
 
 export function toTableRows(rounds: RoundLike[], myTeamNames: string[] = []): TableRow[] {
@@ -58,6 +63,8 @@ export function toTableRows(rounds: RoundLike[], myTeamNames: string[] = []): Ta
       // the bye's side reads "Slobodna runda" (its team row is still called "Bye"), also in the search
       const teamA = teamLabel(r.team1_id, r.team1?.team_name ?? `Ekipa ${r.team1_id}`);
       const teamB = teamLabel(r.team2_id, r.team2?.team_name ?? `Ekipa ${r.team2_id}`);
+      const bye = isByeTeam(r.team1_id ?? -1) || isByeTeam(r.team2_id ?? -1);
+      const diff = r.open === false && !bye && r.matches ? r.matches.reduce((d, m) => d + (m.player_pair1_score ?? 0) - (m.player_pair2_score ?? 0), 0) : null;
       return {
         id: r.id ?? i,
         table: r.table_number || i + 1,
@@ -71,9 +78,12 @@ export function toTableRows(rounds: RoundLike[], myTeamNames: string[] = []): Ta
         done: r.open === false,
         pointsA: live && om ? om.player_pair1_score ?? 0 : null,
         pointsB: live && om ? om.player_pair2_score ?? 0 : null,
+        // the other side of the same difference (0, not -0, for an even round)
+        diffA: diff,
+        diffB: diff == null ? null : diff ? -diff : 0,
         mine: mine.has(teamA) || mine.has(teamB),
         started: live || r.open === false || (r.team1_wins ?? 0) + (r.team2_wins ?? 0) > 0 || !!om,
-        bye: isByeTeam(r.team1_id ?? -1) || isByeTeam(r.team2_id ?? -1),
+        bye,
         smoking: !!r.smoking_table,
         ...(r.team1 && "photo_url" in r.team1 && {photoA: r.team1.photo_url ?? null}),
         ...(r.team2 && "photo_url" in r.team2 && {photoB: r.team2.photo_url ?? null}),
@@ -100,6 +110,8 @@ export function draftTableRows(round: DraftRound): TableRow[] {
       done: bye,
       pointsA: null,
       pointsB: null,
+      diffA: null,
+      diffB: null,
       mine: false,
       started: false,
       bye,
