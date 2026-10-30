@@ -185,3 +185,12 @@ export function nightsLeftLabel(left: number): string {
 export function nightsCountLabel(total: number, played: number): string {
   return `${count(total, NOUN.večer)} · ${count(played, NOUN.odigrana)}`;
 }
+
+// A guest's Početna · Liga ("Gost i poziv" G2): which night of the season comes next ("Večer 9 od 14", tonight counts)
+// and when it is; after the last night, "Sezona je završila" and no next night
+export function seasonGlance(nights: {date: string; time: string | null}[], today: string): {label: string; next: {date: string; time: string | null} | null} {
+  if (nights.length === 0) return {label: "Još nema večeri", next: null};
+  const i = nextNightIndex(nights.map((n) => n.date), today);
+  if (i < 0) return {label: "Sezona je završila", next: null};
+  return {label: `Večer ${i + 1} od ${nights.length}`, next: nights[i]};
+}

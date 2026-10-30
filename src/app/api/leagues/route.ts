@@ -8,7 +8,7 @@ import {NextRequest, NextResponse} from "next/server";
 // never cached at build time: the list changes when an admin creates a league
 export const dynamic = "force-dynamic";
 
-// Every league, for the league pickers. Public: league standings can be viewed without logging in.
+// Every league, for the league pickers. Public: a guest's Početna · Liga shows the league's name and its next night.
 export async function GET() {
   try {
     return NextResponse.json(await listLeagues(), {status: STATUS.OK});

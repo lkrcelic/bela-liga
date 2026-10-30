@@ -125,11 +125,11 @@ export default function PhoneHome() {
   );
 }
 
-type HomeTab = "turniri" | "liga";
+export type HomeTab = "turniri" | "liga";
 const HOME_TAB_KEY = "bela.homeTab";
 
 // the tab picked last on this phone (none the first time, or where storage isn't available)
-function readHomeTab(): HomeTab | null {
+export function readHomeTab(): HomeTab | null {
   try {
     const v = window.localStorage.getItem(HOME_TAB_KEY);
     return v === "turniri" || v === "liga" ? v : null;
@@ -138,7 +138,7 @@ function readHomeTab(): HomeTab | null {
   }
 }
 
-function saveHomeTab(t: HomeTab) {
+export function saveHomeTab(t: HomeTab) {
   try {
     window.localStorage.setItem(HOME_TAB_KEY, t);
   } catch {

@@ -1382,3 +1382,28 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
       (21 tables) came out as before: no two teams there are level on both points and difference. On a made-up night
       where two teams ended on 2 points and −50, the winner of their table was placed above the other in Dnevni and
       Ukupni poredak, though by name it came second.
+
+75. **Gost i poziv** (your request of 30.10. "implementirati page Gost i poziv", Claude Design "Gost i poziv" G1–G4 and
+    S1–S3, "Claude Code - Turniri.md" §7).
+    - **What a guest sees**: Početna (`/` is public now) with Prijava instead of the rating and the profile, Turniri
+      first, the tournaments and their pages as before, and **Burza igrača open** (your answer: "only burza", so it
+      stays public as #29 decided). Locked: Početna · Liga's night, Raspored, Dnevni poredak, **Ukupni poredak** and
+      Rejting. The season table was public until now; its page and `GET /api/leagues/{id}/standings` need a login now.
+      A shared link to a locked page goes to Prijava and back (the middleware's `next` covers every page now).
+    - **"Sjedni za stol."** is one navy sheet mounted in the layout (`useGuestSheet`); Prijavi se (the tournament's
+      page, an upcoming card) and every locked item open it. Napravi račun and Prijavi se carry `next`, Registracija
+      passes it on to Prijava, and Prijava opens it: a guest who signs up from a tournament lands on its sign-up sheet.
+    - **The locked text**: the design has the tournament's line only ("Za prijavu na turnir treba ti račun…"). For a
+      locked page the sheet says "Ovo vide samo igrači s računom…" instead. Reason: the tournament line reads wrong
+      on Rejting.
+    - **Deviations, league patterns kept** ([[design-league-patterns]]): Liga's tiles stay the league's 2×2 (Raspored,
+      Dnevni, Ukupni, Rejting), dimmed with a lock, where G2 draws three in a row; Burza's card is the usual one, open.
+      The main tournament card keeps "Stranica turnira ›" for a guest as for a player who isn't in (G1 draws Prijavi
+      se there); the upcoming cards' Prijavi se opens the sheet. The computer shows the guest's Početna in the
+      phone-wide column, as the player's tournament pages, with the locked items in the menu.
+    - **Nova ekipa (S1–S3)**: before a name is typed, "Igrač 2 · S kim igraš?" with the rules and WhatsApp · Ostalo;
+      nobody found, the navy "Nema računa" card; once sent, "Poziv je poslan" ("Poveznica je kopirana" where the browser
+      can't share and copies it). The first rule says "Upiši ime i prezime suigrača." where the design says "ime ili
+      korisničko ime": usernames stay private (#40), the search is by name. The invitation's link is Registracija with
+      `next` set to the tournament. WhatsApp opens `wa.me` with the text and no number.
+    - **Server**: every action already needs a login (requireUser); nothing changed there but the season table.

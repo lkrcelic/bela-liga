@@ -1,6 +1,7 @@
 "use client";
 
 import BirthDatePrompt from "@/app/_bootstrap/BirthDatePrompt";
+import GuestSheet from "@/app/_ui/auth/GuestSheet";
 import SmokerPrompt from "@/app/_bootstrap/SmokerPrompt";
 import TournamentAttention from "@/app/_bootstrap/TournamentAttention";
 import UserBootstrapper from "@/app/_bootstrap/UserBootstrapper";
@@ -50,6 +51,8 @@ export default function RootLayout({children}: Readonly<{children: React.ReactNo
           {mounted && <SmokerPrompt />}
           {/* Nedolazak za stol: "Jesu li … za stolom?" over every screen on a tournament day */}
           {mounted && <TournamentAttention />}
+          {/* "Sjedni za stol.": a guest's Prijavi se and locked items */}
+          {mounted && <GuestSheet />}
         </ThemeProvider>
       </body>
     </html>

@@ -9,7 +9,7 @@ import GoogleLoginButton from "@/app/login/ui/GoogleLoginButton";
 import LogInForm from "@/app/login/ui/LogInForm";
 import {Box} from "@mui/material";
 import {useTransitionRouter} from "@/app/_lib/viewTransitions";
-import {safeNextPath} from "@/app/_lib/publicPaths";
+import {authHref, safeNextPath} from "@/app/_lib/publicPaths";
 import {useSearchParams} from "next/navigation";
 import {loginErrorMessage} from "@/app/_interfaces/login";
 import {useEffect, useState} from "react";
@@ -35,7 +35,7 @@ export default function LogIn() {
   const errorNote = error && <ErrorNote>{error}</ErrorNote>;
 
   const signupLink = (
-    <TextButton onClick={() => router.push("/signup")} sx={{alignSelf: "center", fontWeight: 500, color: color.ink2}}>
+    <TextButton onClick={() => router.push(authHref("/signup", next))} sx={{alignSelf: "center", fontWeight: 500, color: color.ink2}}>
       Nemaš profil?{" "}
       <Box component="span" sx={{fontWeight: 700, color: color.navy}}>
         Registriraj se

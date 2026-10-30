@@ -8,18 +8,22 @@ import SignUpForm from "@/app/signup/ui/SignUpForm";
 import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import {Box} from "@mui/material";
 import {useTransitionRouter} from "@/app/_lib/viewTransitions";
+import {authHref} from "@/app/_lib/publicPaths";
+import {useSearchParams} from "next/navigation";
 import {useEffect, useState} from "react";
 
 export default function SignUp() {
   const router = useTransitionRouter();
   const isDesktop = useIsDesktop();
   const [created, setCreated] = useState(false);
+  // ?next=: the page a guest came from ("Sjedni za stol."), passed on to Prijava, which opens it after logging in
+  const login = authHref("/login", useSearchParams().get("next"));
 
   useEffect(() => {
     if (!created) return;
-    const t = setTimeout(() => router.push("/login", "back"), 1800);
+    const t = setTimeout(() => router.push(login, "back"), 1800);
     return () => clearTimeout(t);
-  }, [created, router]);
+  }, [created, router, login]);
 
   const done = created && <SuccessNote>Profil je napravljen! Preusmjeravamo te na prijavu…</SuccessNote>;
 
@@ -29,7 +33,7 @@ export default function SignUp() {
         <Box sx={{width: 520, display: "flex", flexDirection: "column", gap: "16px"}}>
           <ScreenTitle eyebrow="Novi igrač" title="Registracija" size={44} sx={{px: 0}} />
           {done || <SignUpForm onSuccess={() => setCreated(true)} twoColumn />}
-          <TextButton onClick={() => router.push("/login", "back")} sx={{alignSelf: "center", fontWeight: 500, color: color.ink2}}>
+          <TextButton onClick={() => router.push(login, "back")} sx={{alignSelf: "center", fontWeight: 500, color: color.ink2}}>
             Već imaš profil?{" "}
             <Box component="span" sx={{fontWeight: 700, color: color.navy}}>
               Prijavi se
@@ -43,7 +47,7 @@ export default function SignUp() {
   return (
     <AuthFrame phoneBrand={false}>
       <Box sx={{display: "flex", alignItems: "center"}}>
-        <IconCircleButton label="Nazad na prijavu" onClick={() => router.push("/login", "back")}>
+        <IconCircleButton label="Nazad na prijavu" onClick={() => router.push(login, "back")}>
           <ArrowBackRoundedIcon />
         </IconCircleButton>
       </Box>

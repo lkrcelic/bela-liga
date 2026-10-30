@@ -3,6 +3,8 @@
 import {searchTeammatesAPI, signUpAPI, TeammateHit} from "@/app/_fetchers/tournament";
 import {MyTeamOption, TournamentDetail} from "@/app/_interfaces/tournament";
 import {nightLabel} from "@/app/_lib/nights";
+import {authHref} from "@/app/_lib/publicPaths";
+import {tournamentHref} from "@/app/_ui/tournaments/PlayerParts";
 import {teamInitial} from "@/app/_lib/ui/profiles";
 import {color, font, shadow, tint} from "@/app/_styles/tokens";
 import {BottomSheet, buttonBase, ellipsis, ErrorNote, InitialsAvatar, PrimaryButton, SearchInput, Spinner, TextField} from "@/app/_ui/sp";
@@ -11,8 +13,11 @@ import BlockRoundedIcon from "@mui/icons-material/BlockRounded";
 import ChevronLeftRoundedIcon from "@mui/icons-material/ChevronLeftRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import HowToRegRoundedIcon from "@mui/icons-material/HowToRegRounded";
-import InfoRoundedIcon from "@mui/icons-material/InfoRounded";
-import PersonOffRoundedIcon from "@mui/icons-material/PersonOffRounded";
+import PersonAddRoundedIcon from "@mui/icons-material/PersonAddRounded";
+import MarkEmailReadRoundedIcon from "@mui/icons-material/MarkEmailReadRounded";
+import ChatRoundedIcon from "@mui/icons-material/ChatRounded";
+import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
+import VerifiedUserRoundedIcon from "@mui/icons-material/VerifiedUserRounded";
 import RadioButtonCheckedRoundedIcon from "@mui/icons-material/RadioButtonCheckedRounded";
 import RadioButtonUncheckedRoundedIcon from "@mui/icons-material/RadioButtonUncheckedRounded";
 import ShareRoundedIcon from "@mui/icons-material/ShareRounded";
@@ -21,8 +26,8 @@ import React, {useEffect, useState} from "react";
 
 // Prijava ekipe (Claude Design "Natjecanja" F1–F4): the player picks one of their teams (each with all its players: who
 // of them plays is picked on Tko igra before every Kolo), or makes a new team with a teammate who has an account and
-// signs it up in the same step. A teammate without an account gets an invitation link instead. The search finds
-// players by name only (usernames are private, DECISIONS #40).
+// signs it up in the same step. A teammate without an account gets an invitation link instead, by WhatsApp or the
+// phone's sharing ("Gost i poziv" S1–S3). The search finds players by name only (usernames are private, DECISIONS #40).
 
 type Props = {t: TournamentDetail; open: boolean; onClose: () => void; onDone: (status: "REGISTERED" | "WAITING", team: string) => void};
 
@@ -65,6 +70,7 @@ export default function SignUpSheet({t, open, onClose, onDone}: Props) {
         )}
         <NewTeamForm
           me={t.my_teams.flatMap((m) => m.players).find((p) => p.me) ?? null}
+          tournament={t}
           full={t.max_teams != null && t.teams >= t.max_teams}
           busy={busy}
           error={error}
@@ -171,31 +177,39 @@ function TeamOption({m, on, onPick}: {m: MyTeamOption; on: boolean; onPick: () =
   );
 }
 
-// Pošalji poziv: the app's sign-up link, shared (or copied where the phone can't share)
-async function shareInvite(name: string): Promise<"shared" | "copied" | "failed"> {
-  const url = `${window.location.origin}/signup`;
-  const text = `${name ? `${name}, ` : ""}napravi račun u Belatronici pa se zajedno prijavimo na turnir: ${url}`;
+// The invitation: Registracija's link, which comes back to the tournament after logging in, with a line to the teammate
+function inviteText(teammate: string, t: Pick<TournamentDetail, "id" | "name">): string {
+  const url = `${window.location.origin}${authHref("/signup", tournamentHref(t.id))}`;
+  return `${teammate ? `${teammate}, ` : ""}napravi račun u Belatronici pa se zajedno prijavimo na turnir ${t.name}: ${url}`;
+}
+
+// Ostalo: the phone's sharing, or the link copied where the browser can't share
+async function shareInvite(text: string): Promise<"shared" | "copied" | "cancelled" | "failed"> {
   try {
     if (navigator.share) {
-      await navigator.share({title: "Belatronika", text, url});
+      await navigator.share({title: "Belatronika", text});
       return "shared";
     }
     await navigator.clipboard.writeText(text);
     return "copied";
   } catch (e) {
-    return e instanceof Error && e.name === "AbortError" ? "shared" : "failed";
+    return e instanceof Error && e.name === "AbortError" ? "cancelled" : "failed";
   }
 }
 
-// F2–F4: the player (fixed), the teammate picked by searching for a name, the team's name, Kreiraj ekipu i prijavi
+// F2–F4 ("Gost i poziv" S1–S3): the player (fixed), the teammate picked by searching for a name, the team's name,
+// Kreiraj ekipu i prijavi. Before a name is typed, "S kim igraš?" with the rules and the invitation; when nobody is
+// found, the navy "Nema računa" card with it; once it is sent, "Poziv je poslan".
 function NewTeamForm({
   me,
+  tournament,
   full,
   busy,
   error,
   onSubmit,
 }: {
   me: {name: string; photo_url: string | null} | null;
+  tournament: Pick<TournamentDetail, "id" | "name">;
   full: boolean;
   busy: boolean;
   error: string | null;
@@ -206,10 +220,14 @@ function NewTeamForm({
   const [loading, setLoading] = useState(false);
   const [partner, setPartner] = useState<TeammateHit | null>(null);
   const [name, setName] = useState("");
-  const [invite, setInvite] = useState<string | null>(null);
+  // the invitation went out (WhatsApp opened or the phone shared it), or the link was copied; null: not yet
+  const [sent, setSent] = useState<"sent" | "copied" | null>(null);
+  const [inviteError, setInviteError] = useState<string | null>(null);
 
   useEffect(() => {
     const q = query.trim();
+    setSent(null);
+    setInviteError(null);
     if (partner || q.length < 2) {
       setHits(null);
       return;
@@ -230,26 +248,32 @@ function NewTeamForm({
 
   const missing = hits != null && hits.length === 0 && query.trim().length >= 3 && !loading;
   const ready = partner != null && name.trim().length > 0;
-  const hint = !partner ? (missing ? "Oba igrača moraju imati račun." : "Prvo odaberi suigrača.") : !name.trim() ? "Upiši ime ekipe." : null;
+  const hint = !partner ? "Oba igrača moraju imati račun." : !name.trim() ? "Upiši ime ekipe." : null;
   const slot = {display: "flex", alignItems: "center", gap: "12px", minHeight: 56, px: "14px"} as const;
+  const teammate = missing ? (query.trim().split(/\s+/)[0] ?? "") : "";
+
+  const viaWhatsApp = () => {
+    window.open(`https://wa.me/?text=${encodeURIComponent(inviteText(teammate, tournament))}`, "_blank", "noopener,noreferrer");
+    setSent("sent");
+  };
+  const viaShare = async () => {
+    const r = await shareInvite(inviteText(teammate, tournament));
+    if (r === "shared") setSent("sent");
+    else if (r === "copied") setSent("copied");
+    else if (r === "failed") setInviteError("Poveznica se nije mogla podijeliti.");
+  };
+  const invite = {onWhatsApp: viaWhatsApp, onShare: viaShare};
 
   return (
     <>
       {/* the column scrolls; its parts keep their height (a long list of hits would squeeze the players' box) */}
       <Box sx={{flex: 1, minHeight: 0, overflowY: "auto", overscrollBehavior: "contain", display: "flex", flexDirection: "column", gap: "14px", p: "2px", "& > *": {flex: "none"}}}>
-        <Box sx={{display: "flex", gap: "10px", p: "12px 14px", borderRadius: "16px", background: tint.gold[16], fontSize: 14, lineHeight: 1.45, "& svg": {flex: "none", fontSize: 20, color: color.medal[0]}}}>
-          <InfoRoundedIcon aria-hidden />
-          Oba igrača moraju imati račun u Belatronici. Bez toga ekipa se ne može napraviti ni prijaviti.
-        </Box>
-        <Box component="span" sx={{fontSize: 11.5, fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", color: color.muted, mb: "-6px"}}>
-          Igrači
-        </Box>
-        <Box sx={{borderRadius: "16px", background: color.white, border: `1px solid ${color.line}`, overflow: "hidden"}}>
-          <Box sx={{...slot, borderBottom: `1px solid ${color.line}`}}>
+        <Box sx={{borderRadius: "20px", background: color.white, border: `1px solid ${color.line}`, overflow: "hidden"}}>
+          <Box sx={{...slot, minHeight: 60, borderBottom: `1px solid ${color.line}`}}>
             <Box component="span" sx={{width: 18, fontFamily: font.display, fontWeight: 800, color: color.muted}}>
               1
             </Box>
-            {me && <InitialsAvatar name={me.name} src={me.photo_url} size={34} sx={{fontSize: 12}} />}
+            {me && <InitialsAvatar name={me.name} src={me.photo_url} size={36} sx={{fontSize: 12}} />}
             <Box component="span" sx={{fontSize: 16, fontWeight: 600, ...ellipsis}}>
               {me ? me.name : "Ti"}
             </Box>
@@ -264,7 +288,7 @@ function NewTeamForm({
               <Box component="span" sx={{width: 18, fontFamily: font.display, fontWeight: 800, color: color.muted}}>
                 2
               </Box>
-              <InitialsAvatar name={partner.name} src={partner.photo_url} size={34} sx={{fontSize: 12}} />
+              <InitialsAvatar name={partner.name} src={partner.photo_url} size={36} sx={{fontSize: 12}} />
               <Box component="span" sx={{flex: 1, minWidth: 0, fontSize: 16, fontWeight: 600, ...ellipsis}}>
                 {partner.name}
               </Box>
@@ -273,14 +297,15 @@ function NewTeamForm({
               </Box>
             </Box>
           ) : (
-            <Box sx={{display: "flex", alignItems: "center", gap: "10px", p: "8px 10px 8px 14px"}}>
+            <Box sx={{display: "flex", alignItems: "center", gap: "10px", p: "8px 10px 12px 14px"}}>
               <Box component="span" sx={{width: 18, fontFamily: font.display, fontWeight: 800, color: color.muted}}>
                 2
               </Box>
-              <SearchInput variant="paper" height={46} placeholder="Ime i prezime suigrača" aria-label="Traži suigrača" value={query} onChange={(e) => setQuery(e.target.value)} onClear={() => setQuery("")} sx={{flex: 1}} />
+              <SearchInput variant="paper" height={50} placeholder="Ime i prezime suigrača" aria-label="Traži suigrača" value={query} onChange={(e) => setQuery(e.target.value)} onClear={() => setQuery("")} sx={{flex: 1}} />
             </Box>
           )}
         </Box>
+        {!partner && !query.trim() && <TeammateRules {...invite} />}
         {!partner && hits != null && hits.length > 0 && (
           <Box component="ul" aria-label="Igrači u aplikaciji" sx={{listStyle: "none", m: 0, p: 0, borderRadius: "16px", background: color.white, border: `1px solid ${color.line}`, overflow: "hidden"}}>
             {hits.map((h, i) => (
@@ -301,38 +326,9 @@ function NewTeamForm({
             <Spinner size={18} /> Tražim…
           </Box>
         )}
-        {!partner && missing && (
-          <Box role="status" sx={{display: "flex", flexDirection: "column", gap: "10px", p: "14px", borderRadius: "16px", background: color.paper, border: `1px solid ${color.line}`}}>
-            <Box sx={{display: "flex", alignItems: "flex-start", gap: "10px", "& svg": {flex: "none", fontSize: 24, color: color.navy}}}>
-              <PersonOffRoundedIcon aria-hidden />
-              <Box sx={{display: "flex", flexDirection: "column", gap: "4px"}}>
-                <Box component="span" sx={{fontSize: 15, fontWeight: 700}}>
-                  „{query.trim()}” nema račun u aplikaciji
-                </Box>
-                <Box component="span" sx={{fontSize: 14, lineHeight: 1.45, color: color.ink2}}>
-                  Ekipu možeš napraviti i prijaviti tek kad se suigrač registrira. Pošalji mu poveznicu, a kad napravi račun, potraži ga ponovo.
-                </Box>
-              </Box>
-            </Box>
-            <Box
-              component="button"
-              type="button"
-              onClick={async () => {
-                const r = await shareInvite(query.trim().split(/\s+/)[0] ?? "");
-                setInvite(r === "copied" ? "Poveznica je kopirana." : r === "failed" ? "Poveznica se nije mogla podijeliti." : null);
-              }}
-              sx={{...buttonBase, alignSelf: "flex-start", height: 44, display: "flex", alignItems: "center", gap: "8px", px: "16px", borderRadius: "14px", background: color.navy, color: color.white, fontSize: 15, fontWeight: 700, "& svg": {fontSize: 20}}}
-            >
-              <ShareRoundedIcon aria-hidden />
-              Pošalji poziv
-            </Box>
-            {invite && (
-              <Box component="span" sx={{fontSize: 13, color: color.ink2}}>
-                {invite}
-              </Box>
-            )}
-          </Box>
-        )}
+        {!partner && missing && !sent && <NoAccountCard query={query.trim()} {...invite} />}
+        {!partner && sent && <InviteSentCard copied={sent === "copied"} />}
+        {!partner && inviteError && <ErrorNote>{inviteError}</ErrorNote>}
         {partner && <TextField label="Ime ekipe" placeholder="npr. Kvartovski" maxLength={100} value={name} onChange={(e) => setName(e.target.value)} />}
         {full && <Box sx={{fontSize: 13, color: color.ink2}}>Turnir je pun: nova ekipa ide na listu čekanja.</Box>}
       </Box>
@@ -348,5 +344,106 @@ function NewTeamForm({
         )}
       </Box>
     </>
+  );
+}
+
+type InviteActions = {onWhatsApp: () => void; onShare: () => void};
+
+// WhatsApp · Ostalo: on white (S1) or on the navy card (S2)
+function InviteButtons({onWhatsApp, onShare, onNavy = false}: InviteActions & {onNavy?: boolean}) {
+  const button = {...buttonBase, height: onNavy ? 52 : 48, borderRadius: onNavy ? "15px" : "14px", display: "flex", alignItems: "center", justifyContent: "center", gap: "7px", fontSize: 15, fontWeight: 700, "& svg": {fontSize: 20}} as const;
+  return (
+    <Box sx={{display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: "8px"}}>
+      <Box component="button" type="button" onClick={onWhatsApp} sx={{...button, background: onNavy ? color.white : color.navy, color: onNavy ? color.navy : color.white}}>
+        <ChatRoundedIcon aria-hidden />
+        WhatsApp
+      </Box>
+      <Box component="button" type="button" onClick={onShare} sx={{...button, background: onNavy ? tint.creamOnNavy[16] : color.paper, color: onNavy ? color.white : color.navy}}>
+        <ShareRoundedIcon aria-hidden />
+        Ostalo
+      </Box>
+    </Box>
+  );
+}
+
+// S1: before a name is typed, what to type and that the teammate needs an account, and the invitation right away
+function TeammateRules(invite: InviteActions) {
+  const rule = {display: "flex", alignItems: "flex-start", gap: "10px", fontSize: 14.5, lineHeight: 1.4, color: color.ink2} as const;
+  const icon = {width: 28, height: 28, flex: "none", borderRadius: "9px", background: color.paper, color: color.navy, display: "flex", alignItems: "center", justifyContent: "center", "& svg": {fontSize: 17}} as const;
+  return (
+    <Box sx={{borderRadius: "22px", background: color.white, p: "18px", display: "flex", flexDirection: "column", gap: "14px"}}>
+      <Box sx={{display: "flex", flexDirection: "column", gap: "4px"}}>
+        <Box component="span" sx={{fontSize: 12.5, fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", color: color.navy}}>
+          Igrač 2
+        </Box>
+        <Box component="span" sx={{fontFamily: font.display, fontSize: 24, fontWeight: 800, lineHeight: 1.1}}>
+          S kim igraš?
+        </Box>
+      </Box>
+      <Box sx={{display: "flex", flexDirection: "column", gap: "10px"}}>
+        <Box sx={rule}>
+          <Box component="span" aria-hidden sx={icon}>
+            <SearchRoundedIcon />
+          </Box>
+          Upiši ime i prezime suigrača.
+        </Box>
+        <Box sx={rule}>
+          <Box component="span" aria-hidden sx={icon}>
+            <VerifiedUserRoundedIcon />
+          </Box>
+          Suigrač mora imati račun u Belatronici.
+        </Box>
+      </Box>
+      <Box sx={{display: "flex", flexDirection: "column", gap: "8px", pt: "14px", borderTop: `1px solid ${color.line}`}}>
+        <Box component="span" sx={{fontSize: 14, fontWeight: 700}}>
+          Suigrač nema račun? Pozovi ga odmah.
+        </Box>
+        <InviteButtons {...invite} />
+      </Box>
+    </Box>
+  );
+}
+
+// S2: nobody by that name has an account: invite them
+function NoAccountCard({query, ...invite}: InviteActions & {query: string}) {
+  return (
+    <Box role="status" sx={{borderRadius: "24px", background: color.navy, color: color.white, p: "20px 18px 18px", display: "flex", flexDirection: "column", gap: "14px", boxShadow: shadow.hero}}>
+      <Box sx={{display: "flex", alignItems: "center", gap: "12px"}}>
+        <Box component="span" aria-hidden sx={{width: 48, height: 48, flex: "none", borderRadius: "15px", background: color.cream, color: color.navy, display: "flex", alignItems: "center", justifyContent: "center", "& svg": {fontSize: 28}}}>
+          <PersonAddRoundedIcon />
+        </Box>
+        <Box sx={{display: "flex", flexDirection: "column", gap: "2px", minWidth: 0}}>
+          <Box component="span" sx={{fontSize: 12.5, fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", color: color.cream}}>
+            Nema računa
+          </Box>
+          <Box component="span" sx={{fontFamily: font.display, fontSize: 22, fontWeight: 800, lineHeight: 1.1, overflowWrap: "anywhere"}}>
+            „{query}” još nije u Belatronici
+          </Box>
+        </Box>
+      </Box>
+      <Box component="span" sx={{fontSize: 15, lineHeight: 1.45, color: color.cream, textWrap: "pretty"}}>
+        Pozovi suigrača. Kad napravi račun, potraži ga ponovo i prijavite ekipu.
+      </Box>
+      <InviteButtons {...invite} onNavy />
+    </Box>
+  );
+}
+
+// S3: the invitation went out (or its link was copied)
+function InviteSentCard({copied}: {copied: boolean}) {
+  return (
+    <Box role="status" sx={{borderRadius: "24px", background: color.white, p: "18px", display: "flex", alignItems: "center", gap: "12px", boxShadow: `inset 0 0 0 1.5px ${tint.navy[18]}`}}>
+      <Box component="span" aria-hidden sx={{width: 44, height: 44, flex: "none", borderRadius: "14px", background: tint.green[13], color: color.green, display: "flex", alignItems: "center", justifyContent: "center", "& svg": {fontSize: 26}}}>
+        <MarkEmailReadRoundedIcon />
+      </Box>
+      <Box sx={{flex: 1, display: "flex", flexDirection: "column", gap: "2px"}}>
+        <Box component="span" sx={{fontSize: 16, fontWeight: 700}}>
+          {copied ? "Poveznica je kopirana" : "Poziv je poslan"}
+        </Box>
+        <Box component="span" sx={{fontSize: 13.5, lineHeight: 1.4, color: color.ink2}}>
+          {copied ? "Pošalji je suigraču. Kad se registrira, potraži ga ovdje ponovo." : "Kad se suigrač registrira, potraži ga ovdje ponovo."}
+        </Box>
+      </Box>
+    </Box>
   );
 }

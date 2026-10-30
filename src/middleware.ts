@@ -14,9 +14,8 @@ export async function middleware(req: NextRequest) {
       req.nextUrl.pathname.startsWith("/api") ||
       req.nextUrl.pathname.startsWith("/login") ||
       req.nextUrl.pathname.startsWith("/signup") ||
-      // the season table of any league, the ads of Burza igrača and the tournaments are public; everything else needs
-      // a login
-      /^\/league\/(\d+|current)\/standings\/?$/.test(req.nextUrl.pathname) ||
+      // Početna (a guest's), the ads of Burza igrača and the tournaments are public; everything else needs a login
+      req.nextUrl.pathname === "/" ||
       isPublicBurzaPath(req.nextUrl.pathname) ||
       isPublicTournamentPath(req.nextUrl.pathname) ||
       req.nextUrl.pathname.startsWith("/_next/") ||
@@ -41,11 +40,11 @@ export async function middleware(req: NextRequest) {
   return NextResponse.next();
 }
 
-// The login page; someone opening a Burza form or a tournament's page that needs a login comes back to it after
-// logging in
+// The login page; someone opening a page that needs a login (a Burza form, Rejting, a shared link) comes back to it
+// after logging in
 function loginUrl(req: NextRequest): URL {
   const url = new URL("/login", req.url);
-  if (req.nextUrl.pathname.startsWith("/burza") || req.nextUrl.pathname.startsWith("/turniri")) url.searchParams.set("next", req.nextUrl.pathname + req.nextUrl.search);
+  url.searchParams.set("next", req.nextUrl.pathname + req.nextUrl.search);
   return url;
 }
 

@@ -1,6 +1,8 @@
 "use client";
 
 import {MyMatch, MyResult, TournamentCard, TournamentDetail, TournamentEntryView, TournamentPrizeView, TournamentWinner} from "@/app/_interfaces/tournament";
+import useAuthStore from "@/app/_store/authStore";
+import useGuestSheet from "@/app/_store/guestSheetStore";
 import {isSafeUrl, nightLabel} from "@/app/_lib/nights";
 import {daysUntilLabel, feeLabel, formatLabel, prizeSummary, rulesLabel} from "@/app/_lib/tournaments";
 import {teamInitial} from "@/app/_lib/ui/profiles";
@@ -135,6 +137,7 @@ function TeamOnNavy({name, players, meId}: {name: string; players: {id: number; 
 // The navy card of a tournament before it starts (R1–R4): signed up (the team, its players, where and when), on the
 // waiting list, open for sign-ups (Prijavi se), or closed
 export function SignUpCard({t, meId, onSignUp, signedIn}: {t: TournamentDetail; meId: number | null; onSignUp: () => void; signedIn: boolean}) {
+  const showGuestSheet = useGuestSheet((s) => s.show);
   const card = {flex: "none", borderRadius: "24px", background: color.navy, color: color.white, p: "18px", display: "flex", flexDirection: "column", gap: "14px", boxShadow: shadow.hero} as const;
   const place = t.location.name ? {name: t.location.name, address: t.location.address, url: t.location.url} : null;
   if (t.me) {
@@ -177,15 +180,16 @@ export function SignUpCard({t, meId, onSignUp, signedIn}: {t: TournamentDetail; 
       ) : open ? (
         <>
           {full && <Box sx={{fontSize: 14, lineHeight: 1.45, color: color.cream}}>Turnir je pun: nova prijava ide na listu čekanja.</Box>}
+          {/* a guest gets "Sjedni za stol." ("Gost i poziv" G3, G4), and comes back to the sign-up after logging in */}
           <Box
-            component={signedIn ? "button" : TransitionLink}
-            {...(signedIn ? {type: "button", onClick: onSignUp} : {href: `/login?next=${encodeURIComponent(`${tournamentHref(t.id)}?prijava=1`)}`})}
+            component="button"
+            type="button"
+            onClick={signedIn ? onSignUp : () => showGuestSheet(`${tournamentHref(t.id)}?prijava=1`, "signup")}
             sx={{...buttonBase, height: 56, borderRadius: "16px", background: color.white, color: color.navy, display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", fontSize: 17, fontWeight: 700, textDecoration: "none", "& svg": {fontSize: 22}}}
           >
             <HowToRegRoundedIcon aria-hidden />
             {full ? "Prijavi se na listu čekanja" : "Prijavi se"}
           </Box>
-          {!signedIn && <Box sx={{mt: "-4px", fontSize: 13, color: color.cream, textAlign: "center"}}>Za prijavu se prvo prijavi u aplikaciju.</Box>}
         </>
       ) : (
         <Box sx={{fontSize: 14, lineHeight: 1.45, color: color.cream}}>Prijave su zatvorene. Turnir možeš pratiti ovdje: poredak i rezultati bit će vidljivi od prvog kola.</Box>
@@ -653,6 +657,9 @@ export function NoTournamentCard() {
 // A tournament coming up (S2–S4, D1): the date tile, its name, time, place and Bez zvanja; under it the players
 // signed up and Vidi stranicu (the page first, Prijavi se is there), or that the viewer is in it
 export function UpcomingCard({t}: {t: TournamentCard}) {
+  // a guest's Prijavi se opens "Sjedni za stol." ("Gost i poziv" G1); a player's opens the tournament's page first
+  const guest = useAuthStore((s) => s.user == null);
+  const showGuestSheet = useGuestSheet((s) => s.show);
   return (
     <Card component="li" sx={{p: "14px", display: "flex", flexDirection: "column", gap: "12px", borderRadius: "22px"}}>
       <Box component={TransitionLink} href={tournamentHref(t.id)} sx={{display: "flex", alignItems: "center", gap: "12px", color: color.ink, textDecoration: "none", minWidth: 0}}>
@@ -692,8 +699,7 @@ export function UpcomingCard({t}: {t: TournamentCard}) {
           </Box>
         ) : t.registrations_open ? (
           <Box
-            component={TransitionLink}
-            href={tournamentHref(t.id)}
+            {...(guest ? {component: "button", type: "button", onClick: () => showGuestSheet(`${tournamentHref(t.id)}?prijava=1`, "signup")} : {component: TransitionLink, href: tournamentHref(t.id)})}
             sx={{...buttonBase, flex: "none", ml: "auto", height: 44, display: "flex", alignItems: "center", gap: "2px", pl: "12px", pr: "6px", borderRadius: "12px", background: color.navy, color: color.white, fontSize: 15, fontWeight: 700, textDecoration: "none", "& svg": {fontSize: 20}}}
           >
             Prijavi se

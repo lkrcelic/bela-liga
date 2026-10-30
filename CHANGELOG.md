@@ -2,6 +2,20 @@
 
 What the commits changed for the people using the app, newest first. The reasons and details are in DECISIONS.md.
 
+## 30.10.2026 · Gost i poziv
+
+On development, not live yet (DECISIONS #75).
+
+### Added for players
+- Without an account: **Početna** opens with **Prijava** in the header, the tournaments and **Burza igrača**.
+- Liga, **Raspored**, **Dnevni** and **Ukupni poredak** and **Rejting** show locked; a tap opens **Sjedni za stol.** with **Napravi račun** and **Prijavi se**.
+- After making an account and logging in, the app goes back to where you started (a tournament's sign-up included).
+- Nova ekipa: **S kim igraš?**, **Nema računa** and **Poziv je poslan**, with **WhatsApp** and **Ostalo** to invite a teammate.
+
+### Changed
+- **Ukupni poredak** needs an account now.
+- A link to a page that needs an account goes to Prijava and back to that page.
+
 ## 30.10.2026 · Liga: međusobni omjer
 
 On development, not live yet (DECISIONS #74).

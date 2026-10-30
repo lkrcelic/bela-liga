@@ -12,10 +12,17 @@ export function isPublicTournamentPath(path: string): boolean {
   return /^\/turniri(\/zavrseni|\/\d+(\/poredak|\/ekipe)?)?\/?$/.test(path);
 }
 
-// Pages that work without logging in (the client's session check doesn't send these to /login): Prijava,
-// Registracija, a league's season table, Burza's list and ads, and the tournaments
+// Pages that work without logging in (the client's session check doesn't send these to /login): Početna (a guest's,
+// "Gost i poziv" G1, G2), Prijava, Registracija, Burza's list and ads, and the tournaments. The league's pages, Rejting
+// and the rest show locked to a guest and need a login.
 export function isPublicPagePath(path: string): boolean {
-  return path.startsWith("/login") || path.startsWith("/signup") || /^\/league\/(\d+|current)\/standings\/?$/.test(path) || isPublicBurzaPath(path) || isPublicTournamentPath(path);
+  return path === "/" || path.startsWith("/login") || path.startsWith("/signup") || isPublicBurzaPath(path) || isPublicTournamentPath(path);
+}
+
+// Prijava or Registracija that comes back to next after logging in ("/login?next=%2Fratings"); "/" needs no next
+export function authHref(page: "/login" | "/signup", next: string | null | undefined): string {
+  const back = safeNextPath(next);
+  return back && back !== "/" ? `${page}?next=${encodeURIComponent(back)}` : page;
 }
 
 // Where to go after logging in: only a page of this app ("/burza/novi/zamjena"), never another site ("//evil.example")
