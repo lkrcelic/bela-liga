@@ -2,6 +2,15 @@
 
 What the commits changed for the people using the app, newest first. The reasons and details are in DECISIONS.md.
 
+## 30.10.2026 · Liga: međusobni omjer
+
+On development, not live yet (DECISIONS #74).
+
+### Changed
+- Ukupni and Dnevni poredak: teams level on points and difference are ordered by their tables against each other (points, then difference), then by name, as in tournaments.
+- Ukupni poredak counts every meeting of the season; Dnevni poredak only that night's.
+- The **+/−** compares with the previous night ranked the same way.
+
 ## 30.10.2026 · Liga: Tu smo i zabrane
 
 On development, not live yet (DECISIONS #73).

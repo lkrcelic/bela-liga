@@ -1360,4 +1360,25 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
       otkazujemo, another team's player refused, the admin's switches, a team ban and a player's ban refused at Tu
       smo, Novo kolo, Dodaj ekipu and Uredi stolove, a Skica held by a ban made after it and published after Ukini,
       a night without a start time), and screenshots of the player's card in every state and of Novo kolo on the
-      computer and the phone. **Not checked**: real phones, and the Vercel preview (its deploys are off since 30.10.).
+      computer and the phone. **Not checked**: real phones, and the Vercel preview (it was still building).
+
+74. **The head-to-head tie-break in the league** (your "apply to league also" of 30.10., about #69's tie-break, which
+    only the tournaments had).
+    - **The order** of Ukupni and Dnevni poredak is now a tournament's: points, then the difference, then, among the
+      teams still level, the points and then the difference of only their tables against each other, then the name.
+      It is the same function (rankTeams in tournaments.ts, through leagueOrder.ts), so the two can't drift apart.
+    - **Ukupni poredak** counts every table two level teams played against each other that season (a pair can meet
+      more than once); **Dnevni poredak** only that night's.
+    - **+/−**: the place after the previous night uses the head-to-head of the tables played by then, so a tie decided
+      then doesn't show as a move now.
+    - **The name** stays the last step, in the Croatian alphabet in both. Dnevni poredak used the database's order
+      before, so two level teams whose names start with Č, Ć, Š or Ž can swap there.
+    - **Not changed**: Novo kolo's pairing still ranks by points and difference (a tie only moves a team inside its
+      window). Najbolje mjesto and the team pages take Ukupni poredak's order by themselves.
+    - **Cost**: Ukupni poredak reads the league's tables once more per request (for its +/−); Dnevni poredak only when
+      two teams that have played are level.
+    - **Checked**: unit tests (483 pass; new ones for a pair, a draw, repeat meetings, three level teams and the +/−),
+      tsc, lint, `next build`. On the copy of real data every league's Ukupni poredak and every night's Dnevni poredak
+      (21 tables) came out as before: no two teams there are level on both points and difference. On a made-up night
+      where two teams ended on 2 points and −50, the winner of their table was placed above the other in Dnevni and
+      Ukupni poredak, though by name it came second.
