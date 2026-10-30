@@ -18,6 +18,7 @@ import useNavStack from "@/app/_hooks/useNavStack";
 import {useAdminTournament} from "@/app/_hooks/useTournaments";
 import {AdminTournament, TournamentEntryView} from "@/app/_interfaces/tournament";
 import {isByeTeam} from "@/app/_lib/bye";
+import {leagueDateString} from "@/app/_lib/dates";
 import {KoloPair} from "@/app/_lib/matching/tournamentPairing";
 import {nightLabel} from "@/app/_lib/nights";
 import {koloSteps, removesResults} from "@/app/_lib/tournaments";
@@ -294,7 +295,7 @@ function StatusCard({t, onChanged, onOpen}: {t: AdminTournament; onChanged: (t: 
               Turnir je otkazan
             </Box>
             <Box component="span" sx={{fontSize: 14, color: color.ink2}}>
-              {t.cancelled_at ? `Otkazao ${t.cancelled_by ?? "admin"}, ${nightLabel(t.cancelled_at.slice(0, 10))} · prijave zatvorene` : "Ostaje u popisu kao Otkazan."}
+              {t.cancelled_at ? `Otkazao ${t.cancelled_by ?? "admin"}, ${nightLabel(leagueDateString(new Date(t.cancelled_at)))} · prijave zatvorene` : "Ostaje u popisu kao Otkazan."}
             </Box>
           </Box>
         </Box>

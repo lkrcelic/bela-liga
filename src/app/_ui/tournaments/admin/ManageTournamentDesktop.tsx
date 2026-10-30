@@ -20,6 +20,7 @@ import EntriesDesktop from "./EntriesDesktop";
 import DayEntriesDesktop from "./DayEntriesDesktop";
 import {ArrivalSummaryLine, clockOf, dayOn} from "./DayAdmin";
 import EventBusyRoundedIcon from "@mui/icons-material/EventBusyRounded";
+import {leagueDateString} from "@/app/_lib/dates";
 import {nightLabel} from "@/app/_lib/nights";
 import {tint} from "@/app/_styles/tokens";
 import KolaDesktop, {defaultKolo} from "./KolaDesktop";
@@ -123,7 +124,7 @@ export default function ManageTournamentDesktop({id}: {id: number}) {
                   Turnir je otkazan
                 </Box>
                 <Box component="span" sx={{fontSize: 14, color: color.ink2}}>
-                  {t.cancelled_at ? `Otkazao ${t.cancelled_by ?? "admin"}, ${nightLabel(t.cancelled_at.slice(0, 10))} u ${clockOf(t.cancelled_at)} · prijave zatvorene` : "Prijave zatvorene"}
+                  {t.cancelled_at ? `Otkazao ${t.cancelled_by ?? "admin"}, ${nightLabel(leagueDateString(new Date(t.cancelled_at)))} u ${clockOf(t.cancelled_at)} · prijave zatvorene` : "Prijave zatvorene"}
                 </Box>
               </Box>
               {/* Vrati turnir: back among the upcoming ones, with the sign-ups open */}

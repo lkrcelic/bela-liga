@@ -2,6 +2,15 @@
 
 What the commits changed for the people using the app, newest first. The reasons and details are in DECISIONS.md.
 
+## 31.10.2026 · Datum iza ponoći
+
+On development, not live yet.
+
+### Changed
+- A tournament cancelled between midnight and 01:00 says the right day in **Otkazao …** (Turnir je otkazan and the list of tournaments, computer and phone); it used to say the day before.
+- The same for the times under **Zadnje prijave** on the computer's list of tournaments, and for **Postavio …** on a ban (Ekipa and Igrač).
+- **Postavio …** on a ban no longer ends with two periods after the date.
+
 ## 31.10.2026 · Datumi: premjesti večer, obriši odigranu
 
 On development, not live yet (DECISIONS #78).

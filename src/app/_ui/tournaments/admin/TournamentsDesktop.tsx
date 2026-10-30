@@ -5,6 +5,7 @@ import {useAdminTournament, useAdminTournaments} from "@/app/_hooks/useTournamen
 import {AdminTournament, TournamentCard} from "@/app/_interfaces/tournament";
 import {nightLabel} from "@/app/_lib/nights";
 import {capacityLabel} from "@/app/_lib/tournaments";
+import {dayMonth} from "@/app/_lib/ui/burza";
 import {count, NOUN} from "@/app/_lib/ui/text";
 import {useTransitionRouter} from "@/app/_lib/viewTransitions";
 import {color, font, shadow, tint} from "@/app/_styles/tokens";
@@ -43,7 +44,7 @@ export function tournamentsOf(list: TournamentCard[], tab: ListTab): TournamentC
 
 // "Otkazao Lovro, 22. 10. · 14 ekipa bilo prijavljeno"
 export const cancelledLine = (t: TournamentCard) =>
-  [t.cancelled_info ? `Otkazao ${t.cancelled_info.by ?? "admin"}, ${nightLabel(t.cancelled_info.at.slice(0, 10)).replace(/^\S+ /, "")}` : "Otkazan", `${count(t.teams + t.waiting, NOUN.ekipa)} bilo prijavljeno`].join(" · ");
+  [t.cancelled_info ? `Otkazao ${t.cancelled_info.by ?? "admin"}, ${dayMonth(t.cancelled_info.at)}` : "Otkazan", `${count(t.teams + t.waiting, NOUN.ekipa)} bilo prijavljeno`].join(" · ");
 
 const placeLine = (t: TournamentCard) => [t.location.name, t.location.address].filter(Boolean).join(", ") || "—";
 
@@ -362,7 +363,7 @@ function LatestEntries({full}: {full: AdminTournament | null}) {
                 </Box>
               </Box>
               <Box component="span" sx={{flex: "none", fontSize: 12.5, color: color.muted, textAlign: "right", fontVariantNumeric: "tabular-nums"}}>
-                {nightLabel(e.registered_at.slice(0, 10)).replace(/^\S+ /, "")} {clockOf(e.registered_at)}
+                {dayMonth(e.registered_at)} {clockOf(e.registered_at)}
               </Box>
             </Box>
           ))}
