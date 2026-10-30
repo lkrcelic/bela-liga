@@ -9,6 +9,7 @@ import {draftLetters, RoundStatus, roundStatusOf} from "@/app/_lib/roundStatus";
 import {newTableNumber, planSeats} from "@/app/_lib/tableSeats";
 import {leagueNight} from "@/app/_lib/dates";
 import {lockTournament} from "@/app/_lib/service/tournament/lock";
+import {assertMayPlay} from "@/app/_lib/service/bans/bans";
 
 // Admin edits of a night's tables (a "round number" of a league on a date is a set of tables, one Round row each), and
 // of a tournament's Kolo (its tables with that round number). A table whose teams change loses what was played at it;
@@ -97,12 +98,14 @@ function sameRound(tx: Tx, c: Competition, t: {round_number: number | null; roun
   });
 }
 
-// A league's table seats the league's teams; a tournament's the teams in it (not the ones waiting)
-async function assertTeams(tx: Tx, c: Competition, teamIds: number[]) {
+// A league's table seats the league's teams, and not a banned team it doesn't seat already (seatedHere: the table's
+// teams now); a tournament's the teams in it (not the ones waiting)
+async function assertTeams(tx: Tx, c: Competition, teamIds: number[], seatedHere: number[] = []) {
   const real = teamIds.filter((id) => !isByeTeam(id));
   if (c.kind === "league") {
     const count = await tx.leagueTeam.count({where: {league_id: c.id, team_id: {in: real}}});
     if (count !== new Set(real).size) throw new InvalidResultError("Obje ekipe moraju biti iz ove lige.");
+    await assertMayPlay(real.filter((id) => !seatedHere.includes(id)), tx);
     return;
   }
   const count = await tx.tournamentTeam.count({where: {tournament_id: c.id, team_id: {in: real}, status: "REGISTERED"}});
@@ -154,7 +157,7 @@ export async function editTablePair(roundId: number, team1Id: number, team2Id: n
   if (team1Id === team2Id) throw new InvalidResultError("Ekipa ne može igrati sama protiv sebe.");
   return prisma.$transaction(async (tx) => {
     const {table, competition} = await loadTable(tx, roundId);
-    await assertTeams(tx, competition, [team1Id, team2Id]);
+    await assertTeams(tx, competition, [team1Id, team2Id], [table.team1_id, table.team2_id]);
 
     const tables = await sameRound(tx, competition, table);
     const seats = planSeats(new Map(tables.map((t) => [t.id, [t.team1_id, t.team2_id]])), roundId, [team1Id, team2Id]);

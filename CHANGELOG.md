@@ -2,6 +2,28 @@
 
 What the commits changed for the people using the app, newest first. The reasons and details are in DECISIONS.md.
 
+## 30.10.2026 · Liga: Tu smo i zabrane
+
+On development, not live yet (DECISIONS #73).
+
+### Added for players
+- Početna · Liga, **Večeras**: **Tu smo** from 30 min before the night's start until the night ends.
+- **Ipak otkazujemo** before the start, **Odlazimo** after it (out of the next Novo kolo).
+- After the start, a team that isn't here gets **Tu smo · Želimo uskočiti**.
+- A banned team sees **Zabrana** with the date instead of Tu smo.
+
+### Added for the admin
+- Novo kolo: the teams that pressed Tu smo switch on by themselves; each team shows **Tu · 19:42**, **Otišla · 22:10** or **Nije potvrdila**.
+- Switching a team on in Novo kolo marks it here (a team without a phone); off takes it out of the next Novo kolo.
+- Banned teams show **Zabrana · 8. 11.** in Novo kolo and Uredi stolove and can't be switched on or seated.
+
+### Changed
+- A ban (the team's or one of its players') also keeps the team from league nights: no Tu smo, Novo kolo, Novi stol, Dodaj ekipu or Nova liga.
+- A Skica with a team banned after it was made can't be published until that table is changed.
+- Tables already published and their results stay.
+- The ban card on Ekipa and Igrač says **Ne igra ni u ligi**.
+- A night without a start time works as before: Novo kolo starts from the active teams.
+
 ## 30.10.2026 · Kola: zastarjela skica i automatska kola
 
 On development, not live yet (DECISIONS #71, #72).

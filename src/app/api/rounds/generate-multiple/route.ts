@@ -11,6 +11,7 @@ import {seatRounds} from "@/app/_lib/matching/smokingTables";
 import {smokingSetup} from "@/app/_lib/service/round/smoking";
 import {teamSmokers} from "@/app/_lib/service/team/smokers";
 import {teamAverageAges} from "@/app/_lib/service/team/ages";
+import {assertMayPlay} from "@/app/_lib/service/bans/bans";
 
 // the pairing stops searching after a few seconds; this leaves room for the database around it
 export const maxDuration = 30;
@@ -25,6 +26,8 @@ export async function POST(request: NextRequest) {
     const {league_id, present_teams} = parsed;
     // tonight's rounds still waiting in Skica are published or discarded first (checked again when they are saved)
     if ((await tonightDraftTables(league_id)) > 0) throw new DraftWaitingError();
+    // a banned team doesn't play the league's nights (Novo kolo shows its switch off)
+    await assertMayPlay(present_teams);
     const numberOfRounds = parsed.numberOfRounds ?? 3;
     const windowSize = parsed.windowSize ?? 8;
 

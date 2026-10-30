@@ -4,15 +4,18 @@ import {prisma} from "@/app/_lib/prisma";
 import {leagueDateString} from "@/app/_lib/dates";
 import {displayName} from "@/app/_lib/players/names";
 import {Viewer} from "@/app/_lib/players/privacy";
-import {banActive, banDay} from "@/app/_lib/bans";
+import {banActive, banDay, PlayBan, playBanRefusal, playBanText} from "@/app/_lib/bans";
+import {BYE_TEAM_ID} from "@/app/_lib/bye";
 import {isIsoDate} from "@/app/_lib/nights";
 import {InvalidResultError} from "@/app/_lib/validation/validateResult";
 import {NotFoundError} from "@/app/_lib/service/admin/tables";
 
 // Zabrana prijava (admin's Ekipa and Igrač): a team or a player may not sign up for any tournament while a ban is in
-// force. A team's ban comes with a ban for each player whose box stays ticked ("Vrijedi i za igrače"); a player's ban
-// through the team's shows "preko ekipe" and goes when the team's ban is lifted with "Ukini i igračima" (or changed
-// without that player). A ban runs out by itself; Ukini ends it early. The reason is for admins only.
+// force, and the team doesn't play the league's nights either (no Tu smo; Novo kolo, Novi stol, Uredi stolove and
+// Dodaj ekipu leave it out; DECISIONS #73). A team's ban comes with a ban for each player whose box stays ticked
+// ("Vrijedi i za igrače"); a player's ban through the team's shows "preko ekipe" and goes when the team's ban is lifted
+// with "Ukini i igračima" (or changed without that player). A ban runs out by itself; Ukini ends it early. The reason
+// is for admins only.
 
 type Tx = Prisma.TransactionClient;
 type Db = Tx | typeof prisma;
@@ -114,6 +117,54 @@ export async function banReason(team: {team_id: number; players: {id: number; fi
   const b = players.get(banned.id)!;
   const who = banned.id === viewerId ? "Tebi su" : `Igraču ${displayName(banned)} su`;
   return {text: `${who} prijave zabranjene${b.until ? ` do ${banDay(b.until)}` : ""}.`, until: b.until};
+}
+
+// The bans that keep teams from the league's nights: a team's own, else the longest of its players' (Trajno beats a
+// date). Only the banned teams are in the map.
+export async function teamPlayBans(teamIds: number[], db: Db = prisma): Promise<Map<number, PlayBan>> {
+  const ids = Array.from(new Set(teamIds.filter((id) => id !== BYE_TEAM_ID)));
+  if (ids.length === 0) return new Map();
+  const roster = await db.teamPlayer.findMany({
+    where: {team_id: {in: ids}},
+    select: {team_id: true, player: {select: {id: true, first_name: true, last_name: true}}},
+  });
+  const {teams, players} = await activeBans({teamIds: ids, playerIds: Array.from(new Set(roster.map((r) => r.player.id)))}, db);
+  const bans = new Map<number, PlayBan>();
+  for (const id of ids) {
+    const own = teams.get(id);
+    if (own) {
+      bans.set(id, {until: own.until, player: null, player_id: null});
+      continue;
+    }
+    const held = roster
+      .filter((r) => r.team_id === id && players.has(r.player.id))
+      .map((r) => ({until: players.get(r.player.id)!.until, player: displayName(r.player), player_id: r.player.id}))
+      .sort((a, b) => (a.until == null ? -1 : b.until == null ? 1 : b.until.localeCompare(a.until)) || a.player.localeCompare(b.player, "hr"));
+    if (held.length > 0) bans.set(id, held[0]);
+  }
+  return bans;
+}
+
+// Refuses teams that may not play the league's nights, naming each with its ban (Tu smo, Novo kolo, Novi stol, Uredi
+// stolove, Dodaj ekipu, Nova liga, and publishing a Skica: prefix says what was refused)
+export async function assertMayPlay(teamIds: number[], db: Db = prisma, prefix = ""): Promise<void> {
+  const bans = await teamPlayBans(teamIds, db);
+  if (bans.size === 0) return;
+  const names = await db.team.findMany({where: {team_id: {in: Array.from(bans.keys())}}, select: {team_id: true, team_name: true}});
+  const teams = names.map((t) => ({name: t.team_name, ban: bans.get(t.team_id)!})).sort((a, b) => a.name.localeCompare(b.name, "hr"));
+  throw new InvalidResultError(prefix + playBanRefusal(teams));
+}
+
+// A new team made for a league: none of its players may be banned
+export async function assertPlayersMayPlay(playerIds: number[], db: Db = prisma): Promise<void> {
+  const {players} = await activeBans({playerIds}, db);
+  if (players.size === 0) return;
+  const rows = await db.player.findMany({where: {id: {in: Array.from(players.keys())}}, select: {id: true, first_name: true, last_name: true}});
+  const list = rows
+    .map((p) => playBanText({until: players.get(p.id)!.until, player: displayName(p)}))
+    .sort((a, b) => a.localeCompare(b, "hr"))
+    .join(", ");
+  throw new InvalidResultError(`Ekipa se ne može dodati u ligu jer igrač ima zabranu (${list}).`);
 }
 
 function checkUntil(until: string | null) {

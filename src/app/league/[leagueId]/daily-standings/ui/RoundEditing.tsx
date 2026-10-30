@@ -3,6 +3,7 @@
 import {addTableAPI, removeTableAPI, setTablePairAPI} from "@/app/_fetchers/admin/daily";
 import {LeagueTeam} from "@/app/_hooks/useLeagueTeams";
 import {BYE_LABEL, BYE_TEAM_ID, isByeTeam} from "@/app/_lib/bye";
+import {playBanChip, playBanText} from "@/app/_lib/bans";
 import {planSeats} from "@/app/_lib/tableSeats";
 import {TableRow} from "@/app/_lib/ui/tables";
 import {color, font, shadow, tint} from "@/app/_styles/tokens";
@@ -191,6 +192,8 @@ function usePairForm(target: PairTarget, rows: TableRow[], teams: LeagueTeam[], 
   teams.forEach((t) => names.set(t.id, t.name));
   names.set(BYE_TEAM_ID, BYE_LABEL);
   const nameOf = (id: number) => names.get(id) ?? `#${id}`;
+  // a league's team that a ban keeps from the league's nights (DECISIONS #73)
+  const banOf = (id: number) => teams.find((t) => t.id === id)?.ban ?? null;
   // the bye, the league's teams, and the table's own teams when they aren't (any more) on the list
   const ids = new Set([BYE_TEAM_ID, ...teams.map((t) => t.id), ...(row ? [row.teamAId, row.teamBId] : [])]);
   const options: PairOption[] = Array.from(ids, (id) => ({id, name: nameOf(id)}))
@@ -198,12 +201,17 @@ function usePairForm(target: PairTarget, rows: TableRow[], teams: LeagueTeam[], 
     .sort((x, y) => Number(isByeTeam(y.id)) - Number(isByeTeam(x.id)) || x.name.localeCompare(y.name, "hr"))
     .map((o) => {
       if (isByeTeam(o.id)) return {...o, sub: `${byeWins} : 0 bez igre`};
+      const ban = banOf(o.id);
+      if (ban) return {...o, sub: playBanChip(ban)};
       const seat = seatOf(o.id);
       return seat && seat.id !== row?.id ? {...o, sub: `stol ${seat.table}`} : o;
     });
 
   const notes: Note[] = [];
   if (isNew) notes.push({kind: "info", text: "Prikazane su samo ekipe koje ne igraju u ovom kolu."});
+  // a banned team isn't seated where it doesn't sit already (the server refuses it too)
+  const bannedPicks = Array.from(new Set([a, b])).filter((id): id is number => id !== "" && id !== row?.teamAId && id !== row?.teamBId && banOf(id) != null);
+  bannedPicks.forEach((id) => notes.push({kind: "error", text: `${nameOf(id)}: ${playBanText(banOf(id)!)}. Zabrana se ukida na stranici ekipe.`}));
   const picked = a !== "" && b !== "" && a !== b;
   // the round after saving, as the server will seat it: who moves, who is left without a table
   if (row && picked && (a !== row.teamAId || b !== row.teamBId)) {
@@ -237,7 +245,7 @@ function usePairForm(target: PairTarget, rows: TableRow[], teams: LeagueTeam[], 
   const same = a !== "" && a === b;
   if (same) notes.push({kind: "error", text: isByeTeam(a) ? "Za stolom mora biti barem jedna ekipa." : "Ekipa ne može igrati sama protiv sebe."});
   const unchanged = row != null && a === row.teamAId && b === row.teamBId;
-  const ok = a !== "" && b !== "" && !same && !unchanged;
+  const ok = a !== "" && b !== "" && !same && !unchanged && bannedPicks.length === 0;
 
   const save = async () => {
     if (!ok || saving) return;

@@ -1323,3 +1323,41 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
       Accepted: it only happens when no other pairing is possible.
     - **Two requests at once** (two tables closing together): one makes and publishes it, the other finds it done
       and stays quiet.
+
+73. **Tu smo and bans in the league** (your request of 30.10. "can we implement the tu smo logic for league also. Make
+    the ban work for league also", and your answers: Novo kolo takes the teams that confirmed, no no-show question in
+    the league, a ban stops a team playing the league's nights). Migration 20261031180000_league_arrival only adds
+    the LeagueArrival table.
+    - **When**: on a night of the league that has a start time (the night's own or the league's), Tu smo opens 30
+      minutes before the start and stays open until the night ends at 06:00. A night without a start time has none,
+      and Novo kolo works as before (the active teams, then the admin's own choice). Alternative: open it earlier in
+      the day. Reason: the league has no Okupljanje time, and 30 minutes is the tournament's rule without one.
+    - **The players** (Početna · Liga, the Večeras card, as the tournament's C1–C3 block): before the window the
+      button waits and says when it opens; then Tu smo, by any of the team's players; once confirmed, who and when,
+      Ipak otkazujemo until the start and Odlazimo after it (asked first); after the start a team that isn't here
+      gets Tu smo · Želimo uskočiti. Only the phone's Početna: the computer's has no league card. While the team has
+      a table to play, Početna shows the table, as before.
+    - **Novo kolo** (computer and phone) on such a night: the switches are the arrivals themselves, one record for
+      every admin and the team's phones. A team that pressed Tu smo is on by itself (Novo kolo asks again every 15
+      s, only on such a night); the admin's switch on marks a team here (a team without a phone), off takes it out as
+      if it had left. Each team shows Tu · 19:42, Otišla · 22:10 or Nije potvrdila, and Ne igraju ovo kolo counts
+      "nije tu". Alternative: keep the admin's saved choice and only start it from the arrivals. Reason: that choice
+      is a snapshot taken at the admin's first change, so a team that pressed Tu smo later would stay off, and
+      Odlazimo wouldn't take a team out.
+    - **Odlazimo** takes the team out of the next Novo kolo only: Kolos already made (Skica or published) stay, and
+      the admin moves a team with Uredi stolove. **No no-show question** in the league (your answer).
+    - **Bans** (Zabrana prijava, #69) now also keep a team from the league's nights: its own ban or any of its
+      players' (a team of three too, as for tournament sign-ups). Such a team can't press Tu smo (the card says why),
+      Novo kolo shows it with Zabrana · 8. 11. and its switch stays off, Uredi stolove and Novi stol won't seat it
+      where it doesn't sit already, Dodaj ekipu and Nova liga won't add it, a new team made for a league isn't made
+      with a banned player, and a Skica with a team banned after it was made can't be published until that table is
+      changed or the Skica discarded. Tables already published stay, and so do the results. The ban card on Ekipa
+      and Igrač says "Ne igra ni u ligi."
+    - **Not done**: Dodaj ekipu's list of the other teams doesn't mark banned ones (the refusal names the ban), and
+      the league's Ekipe list shows no Zabrana (Novo kolo and Uredi stolove do).
+    - **Checked**: unit tests (476 pass, new ones for the window, the buttons and the ban texts), tsc, lint, `next
+      build`, an API flow on the local copy (league 3 tonight: Tu smo before, in and after the window, Ipak
+      otkazujemo, another team's player refused, the admin's switches, a team ban and a player's ban refused at Tu
+      smo, Novo kolo, Dodaj ekipu and Uredi stolove, a Skica held by a ban made after it and published after Ukini,
+      a night without a start time), and screenshots of the player's card in every state and of Novo kolo on the
+      computer and the phone. **Not checked**: real phones, and the Vercel preview (its deploys are off since 30.10.).

@@ -166,7 +166,7 @@ function LeagueHome() {
   const leagueId = useSelectedLeagueId();
   const {table: openTable, loading: openTableLoading} = useOpenTable("league");
   const {start, starting, error} = useStartGame({scope: "league"});
-  const {schedule, error: scheduleError} = useMySchedule();
+  const {schedule, error: scheduleError, reload: reloadSchedule} = useMySchedule();
   const next = nextNight(schedule);
   const {posts} = useBurza();
   return (
@@ -180,7 +180,7 @@ function LeagueHome() {
           <NextNightPlaceholder />
         </Box>
       ) : next ? (
-        <NextNightCard league={next.league} night={next.night} today={schedule!.today} />
+        <NextNightCard league={next.league} night={next.night} today={schedule!.today} onArrivalChanged={reloadSchedule} />
       ) : schedule || scheduleError ? (
         <NoRoundCard />
       ) : (

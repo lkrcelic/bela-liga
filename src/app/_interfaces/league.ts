@@ -1,4 +1,5 @@
 import {GAME_MINUTES_DEFAULT, GAME_MINUTES_ERROR, GAME_MINUTES_MAX, GAME_MINUTES_MIN} from "@/app/_lib/gameTime";
+import {PlayBan} from "@/app/_lib/bans";
 import {isIsoDate, isSafeUrl, isStartTime, MAX_NIGHTS, NightLocation} from "@/app/_lib/nights";
 import {count, NOUN} from "@/app/_lib/ui/text";
 import {z} from "zod";
@@ -165,4 +166,6 @@ export type LeagueTeamDetails = {
   players: {id: number; username: string}[];
   // players on the team who smoke
   smokers: number;
+  // the ban that keeps it from the league's nights (its own or a player's), null: none
+  ban: PlayBan | null;
 };

@@ -7,6 +7,7 @@ import {lockRatings} from "@/app/_lib/service/admin/recalc";
 import {InvalidResultError} from "@/app/_lib/validation/validateResult";
 import {isDbId} from "@/app/_lib/helpers/query/dbId";
 import {teamNameTaken} from "./update";
+import {assertPlayersMayPlay} from "@/app/_lib/service/bans/bans";
 
 // Creates a team with its players and adds it to a league, so it can be picked for rounds: the given league, none
 // for league_id null (the admin's "Nova ekipa"), or the league being played now when league_id is left out.
@@ -37,6 +38,8 @@ export async function insertTeam(tx: Prisma.TransactionClient, request: TeamCrea
     throw new InvalidResultError("Svi igrači moraju imati račun.");
   }
   if (players.some((p) => !p.active)) throw new InvalidResultError(PLAYER_DEACTIVATED);
+  // a banned player doesn't play the league's nights, so their new team isn't added to one (DECISIONS #73)
+  if (leagueId != null) await assertPlayersMayPlay(ids, tx);
 
   return tx.team.create({
     data: {

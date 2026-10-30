@@ -72,6 +72,7 @@ const ALLOWED_WITHOUT_ADMIN: Record<string, string> = {
   "tournaments/[id]/registrations/[teamId]/route.ts DELETE": "a player of the team signs it off before the start (signOff checks it)",
   "tournaments/[id]/arrival/route.ts POST": "Tu smo, Ipak otkazujemo, Želimo uskočiti, Odlazimo: a player of an entered team, for the team (arrivalAction checks it)",
   "rounds/[id]/attendance/route.ts POST": "Jesu li … za stolom?: a player of one of the table's teams answers (answerAttendance checks it)",
+  "leagues/[id]/arrival/route.ts POST": "Tu smo, Ipak otkazujemo, Odlazimo on a league night: a player of a team in the league, for the team (teamArrivalAction checks it)",
 };
 
 type Handler = {file: string; method: string; body: string};
@@ -163,6 +164,8 @@ test("every admin endpoint calls requireAdmin", () => {
     join(API, "matches", "route.ts"),
     // Upravljanje ligom · Skica: a night's rounds before they are published, and discarding them
     join(API, "leagues", "[id]", "nights", "[date]", "draft", "route.ts"),
+    // Novo kolo: tonight's arrivals and the admin's switches
+    join(API, "leagues", "[id]", "arrivals", "route.ts"),
   ];
   // the mutations (reads there are for players too); the player ones are in ALLOWED_WITHOUT_ADMIN
   const groups: Record<string, string[]> = {

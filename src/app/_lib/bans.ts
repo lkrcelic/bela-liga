@@ -82,3 +82,24 @@ export function banDaysLeft(until: string, today: string): number {
 export function untilLabel(until: string | null): string {
   return until ? `Do ${banDay(until)}` : "Bez isteka · dok admin ne ukine";
 }
+
+// A ban also keeps a team from the league's nights (DECISIONS #73): its own ban, or one of its players' (player: their
+// name)
+export type PlayBan = {until: string | null; player: string | null; player_id?: number | null};
+
+// "Zabrana do 8. 11. 2026", "Trajna zabrana"; a player's: "Marko Horvat: zabrana do 8. 11. 2026"
+export function playBanText(b: PlayBan): string {
+  const what = b.until ? `zabrana do ${banDay(b.until)}` : "trajna zabrana";
+  return b.player ? `${b.player}: ${what}` : what.charAt(0).toUpperCase() + what.slice(1);
+}
+
+// The admin's chip beside a team: "Zabrana · 8. 11." or "Zabrana · trajno"
+export function playBanChip(b: PlayBan): string {
+  return `Zabrana · ${b.until ? banDayShort(b.until) : "trajno"}`;
+}
+
+// Why the server refuses to seat or add teams: "Ove ekipe imaju zabranu: Kartaši (zabrana do 8. 11. 2026), …"
+export function playBanRefusal(teams: {name: string; ban: PlayBan}[]): string {
+  const list = teams.map((t) => `${t.name} (${playBanText(t.ban).replace(/^Zabrana/, "zabrana").replace(/^Trajna/, "trajna")})`).join(", ");
+  return teams.length === 1 ? `Ekipa ima zabranu: ${list}.` : `Ove ekipe imaju zabranu: ${list}.`;
+}

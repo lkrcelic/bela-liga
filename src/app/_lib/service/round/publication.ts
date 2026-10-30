@@ -4,6 +4,7 @@ import {teamLabel} from "@/app/_lib/bye";
 import {recalcTeamScores} from "@/app/_lib/service/admin/recalc";
 import {NotFoundError} from "@/app/_lib/service/admin/tables";
 import {nightValue} from "@/app/_lib/service/league/nights";
+import {assertMayPlay} from "@/app/_lib/service/bans/bans";
 import {InvalidResultError} from "@/app/_lib/validation/validateResult";
 import {approvalStatus, draftLetters, NO_DRAFT, NOTHING_APPROVED, PUBLISHED_ROUND, publishNumbers, RoundStatus, roundStatusOf, roundsToApprove, roundsToDiscard, roundsToPublish} from "@/app/_lib/roundStatus";
 import {DraftNight, DraftRound} from "@/app/_interfaces/round";
@@ -124,6 +125,8 @@ export async function publishNight(leagueId: number, date: string): Promise<{rou
       });
       const approved = roundsToPublish(tables);
       if (approved.length === 0) throw new InvalidResultError(NOTHING_APPROVED);
+      // a team banned after Novo kolo made the Skica is moved (Uredi stolove) before it goes out
+      await assertMayPlay(approved.flatMap((t) => [t.team1_id, t.team2_id]), tx, "Skica se ne može objaviti. ");
 
       const last = await tx.round.aggregate({
         _max: {round_number: true},

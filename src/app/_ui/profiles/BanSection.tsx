@@ -104,7 +104,7 @@ export default function BanSection({target, desktop = false}: {target: BanTarget
               </Box>
               <Box component="span" sx={{fontSize: 14, lineHeight: 1.45, color: color.ink2}}>
                 {viaTeam
-                  ? `Preko ekipe ${viaTeam.team_name}. Ne može prijaviti nijednu ekipu.`
+                  ? `Preko ekipe ${viaTeam.team_name}. Ne može prijaviti nijednu ekipu, a njegove ekipe ne igraju ni u ligi.`
                   : [
                       ban.until ? `Još ${banDaysLeft(ban.until, today)} ${banDaysLeft(ban.until, today) === 1 ? "dan" : "dana"}.` : null,
                       `${setBy(ban)}.`,
@@ -115,6 +115,8 @@ export default function BanSection({target, desktop = false}: {target: BanTarget
                             ? "Vrijedi i za igrače."
                             : `Vrijedi i za: ${ban.players.map((p) => p.name).join(", ")}.`
                         : "Samo igrač, ne ekipa.",
+                      // DECISIONS #73: a ban keeps the team (a player's: their teams) from the league's nights too
+                      teamBan ? "Ne igra ni u ligi." : "Njegove ekipe ne igraju ni u ligi.",
                     ]
                       .filter(Boolean)
                       .join(" ")}
@@ -174,7 +176,13 @@ export default function BanSection({target, desktop = false}: {target: BanTarget
         onClose={() => setLifting(false)}
         onConfirm={lift}
         title={teamBan ? `Ukinuti zabranu ekipi ${target.name}?` : `Ukinuti zabranu igraču ${target.name}?`}
-        text={teamBan ? "Ekipa se odmah može prijavljivati na turnire." : viaTeam ? `Zabrana preko ekipe ${viaTeam.team_name} prestaje za ovog igrača.` : "Igrač se odmah može prijavljivati na turnire."}
+        text={
+          teamBan
+            ? "Ekipa se odmah može prijavljivati na turnire i igrati u ligi."
+            : viaTeam
+              ? `Zabrana preko ekipe ${viaTeam.team_name} prestaje za ovog igrača.`
+              : "Igrač se odmah može prijavljivati na turnire, a njegove ekipe igrati u ligi."
+        }
         action="Ukini zabranu"
         icon={<LockOpenRoundedIcon />}
         danger={false}
