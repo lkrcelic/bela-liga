@@ -1202,3 +1202,69 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
       is on it. A visitor who presses Prijavi se there logs in and comes back with the sign-up sheet open. A
       tournament's card shows two photos and +N, so Vidi stranicu fits beside the players; on a phone under 375 px it
       goes under them.
+
+69. **Turniri, prva verzija** (your instructions of 30.10. "Upute za Claude Code: Turniri (prva verzija)" and the
+    Claude Design pages Turniri admin, Vrijeme partije, Nedolazak za stol, Zabrana prijava, Potvrda dolaska and
+    Natjecanja; built overnight with no questions asked, so every call below is mine and can be changed). Migration
+    20261030120000_turniri_v1 only adds: game_minutes on League and Tournament, the organizer's phone, who cancelled,
+    the match's started_at / ends_at, Match.time_expired, Round.attendance, TournamentTeam's arrival, Aktivna and
+    exclusion, and SignupBan.
+    - **Nothing runs on a timer.** Vercel has no cron worth the name, so whatever is due happens on the next read of
+      the tournament (its pages, the admin's, the players' check for the question, the scorepads), once, under the
+      tournament's lock: the start time's switch, the skip at 10 minutes, a match out of time, the next Kolo's draft.
+      The players' app asks /api/tournaments/attention on every screen, every 5 s while their table waits for an
+      answer, every 30 s on the day, every 10 min otherwise. Alternative: a scheduled job. Reason: none needed, and a
+      phone asking anyway sees the result at once.
+    - **Vrijeme partije holds for the league too** (your "svaka partija"). A match running when this is deployed has no
+      limit (ends_at null), so nothing in progress closes by surprise. At the deadline the board says the time is up;
+      a hand whose entry started before it (the phone sends when its entry opened) is still taken for 2 minutes, and
+      after those 2 minutes the server closes the match by itself with the team with more points winning (time_expired;
+      it is counted so in admin corrections too). With the score level one more hand is played, then the match closes.
+      An admin's hands don't depend on the time. The 5-minute warning shows the real time left when the board is
+      opened later than at 5:00 ("Još 4:27").
+    - **Potvrda dolaska** opens at Okupljanje (without one, 30 minutes before Početak) and closes at Početak; a
+      tournament without a start time has none. At the start time sign-ups close, teams in that didn't confirm become
+      inactive (still signed up) and the confirmed waiting teams come in, in waiting-list order, up to the limit.
+      Publishing Kolo 1 earlier closes the window too (the draft decided who plays). During the tournament a team that
+      leaves (Odlazimo) or is excluded frees a place for the first confirmed waiting team. **Želimo uskočiti** when the
+      tournament is full puts the team on the waiting list by its sign-up time, so it can be first (as P7 shows).
+    - **Kolos are drawn from the active, not excluded teams** (an inactive team that never played isn't in the
+      standings either). The Aktivna switch on a waiting team lets it in (Ubaci u turnir).
+    - **Nedolazak za stol** applies only to a tournament's tables of its day (the calendar day, or the league night
+      until 06:00) that are published with no game started: a table out from another day is never asked or skipped.
+      Da, tu su ends the question for the table (no skip later even if the game starts after 10 minutes). Ne, nisu
+      došli writes 1001:700 for every match of the table. Both a no-show and a skipped table are left out of the rating
+      replay (a forfeit isn't a game). The question isn't shown to the admin as admin; a player of either team sees it.
+    - **The ban after Kolo 1**: the team that didn't come gets a ban of **one month** (the instructions give no length),
+      as a team ban with all its players ticked, reason "Nedolazak u 1. kolu · <turnir>", set by the app. A **skipped**
+      Kolo-1 table bans **both** teams ("nije za stolom ni 10 minuta nakon početka": the system can't tell which one
+      was missing). Alternative: no ban for a skipped table. The admin lifts any of them on the team's page.
+    - **A team may not sign up when the team or any of its players is banned** (also for a team of three; the message
+      names the player). A banned player can't make a new team in the sign-up sheet, nor be picked as a partner. A ban
+      "do 8. 11." lets them sign up again on 8. 11. Bans already signed up stay (your rule), and the admin's Dodaj
+      ekipu shows a banned team with Zabrana and no Dodaj.
+    - **Standings**: points, difference, then the head-to-head among the teams still level (their mutual tables'
+      points, then difference), then the name. A skipped table counts for nobody; an excluded team keeps its place and
+      Kolos and is listed under the standings with "Isključena nakon Kola N" (the league's rows have no slot for it:
+      a deviation from M8b's dimmed row).
+    - **After the start everything but the date can change** (your rule for a finished tournament, used for a running
+      one too). Partija po kolu and Zvanja then hold for the Kolos made after it (the next Kolo's draft is made again).
+      The organizer's phone is required for a new tournament; an older one without it isn't forced until it gets one.
+    - **Početna**: the main card is a link as a whole (› in its head) and holds Tu smo; the upcoming cards say Prijavi
+      se › again (your new instructions; #68 had Vidi stranicu) and still open the tournament's page. A live
+      tournament the player is in comes before an upcoming one on the card, as before.
+    - **Admin, deviations from the frames** (#66's rule): the Kolo's statuses (M7b, NA1) are a list of the tables
+      whose day went otherwise above the league's table cards (the cards themselves are the league's and stay
+      untouched); the computer's day (AD1) is one table for the teams in and waiting, as the frame, with the tiles;
+      the computer's Kola and the finished tournament (open in the instructions) follow the phone's M7b and M5z in the
+      league's layout: statuses under the side card, "Turnir je završen · nema otvorenih kola" in it.
+    - **Links**: Nazovi is tel:+385… (without the plus a Croatian phone would dial a local number), WhatsApp is
+      wa.me/385… without the plus, as asked. The rules and map links open in a new window.
+    - **Checked**: unit tests (469, new ones for the time limit, the day, the bans, the statuses, the head-to-head),
+      an API flow of a whole tournament day and a league regression on the local copy of 25.10., `next build`, and a
+      click-through on the phone and the computer (sign-ups, P1, Tu smo on Početna and the page, the admin's day,
+      the start time, joining when full, Kolo 1 made and published, the scorepad's timer, Još 5:00, the time up, a
+      match closed by time, the question locked and unlocked, Ne, nisu došli, Pobjeda bez igre, Isključeni ste, a
+      skipped match, Vrati, the statuses, Poredak, the bans on Ekipa and Igrač, Prijava nije moguća, a banned team in
+      the sheet, Otkazan in the lists). **Not checked**: real phones, the Vercel preview, and two phones answering at
+      the same moment (the lock makes the first answer count; untested by hand).
