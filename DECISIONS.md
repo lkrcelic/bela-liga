@@ -1431,3 +1431,28 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
       focus on Korisničko ime, and on the local copy with a made-up Google client the button's redirect to Google
       with the page to come back to (`/`, and an invitation's `/turniri/20`). **Not checked**: a whole sign-up with a
       real Google account (the local copy has no Google keys) and real phones.
+
+77. **The admin's Turniri list and Vrati turnir** (your requests of 31.10.: "kada klikne kao admin na neki turnir otvara se
+    management", "for upcoming put instead of the card the last N teams… leave Stranica… Prijave to jump quickly",
+    "for Aktivni do something smart", "Završeni: Stranica, top 3, bring back a tournament cancelled by accident; the
+    sign-ups open again").
+    - **The card on the right (computer)** shows what each tab needs and opens the tournament: Nadolazeći the sign-up
+      count and the last 5 sign-ups (waiting ones marked) with **Prijave** and **Stranica**; on its day before Kolo 1
+      Tu · Nije potvrdilo · Čeka instead of the count. Aktivni the Kolo being played with how many of its tables are
+      over (or the Kolo waiting to be published) and **Trenutno vode** (the top three so far), with **Kola** and
+      **Stranica**. Završeni the top three (**Pobjednici**) with **Poredak** and **Stranica**; a cancelled one **Vrati
+      turnir** and Stranica. The sign-ups switch, Uredi, Kopiraj, Otkaži and Obriši left the card: they are in
+      Upravljanje turnirom (the header's switch, Podaci).
+    - **Opening a tournament**: a click still picks the row for the card (the card is what you asked to see); the card's
+      Prijave, Kola or Poredak opens Upravljanje turnirom at that tab, and a **double click** on a row opens it too.
+      Alternative: a click opens it at once. Reason: then the card could never show a row.
+    - **Vrati turnir** (`DELETE /api/admin/tournaments/{id}/cancel`) undoes Otkaži: the tournament is upcoming again
+      with the same teams and waiting list and **its sign-ups open**. On the list's card and on the management page's
+      "Turnir je otkazan" card (computer and phone). A deleted tournament (Obriši) is gone and can't come back. One
+      whose date has passed comes back too; change its date in Podaci (players don't see it as coming up until then).
+    - **A finished tournament** keeps its sign-ups and waiting list as they were: Prijave shows the teams without the
+      buttons and says so, and the server refuses Dodaj ekipu, Makni, Ubaci, Označi dolazak, Aktivna, Isključi and
+      Vrati ekipu on it. Its Kola (Dodaj kolo, fixing results), Poredak and Podaci stay as they were. A new Kolo
+      reopens it (it is active again) and the sign-ups' buttons come back with it.
+    - **Natrag na popis**: the management page already has "← Turniri" next to the menu on the computer and ‹ on the
+      phone, so nothing was added.

@@ -41,6 +41,8 @@ function Tile({icon, value, label, tone}: {icon: React.ReactNode; value: string 
 export default function DayEntriesDesktop({t, onChanged}: {t: AdminTournament; onChanged: (t: AdminTournament) => void}) {
   const day = useTeamDay(t, onChanged);
   const started = t.started_at != null;
+  // a finished tournament's teams stay as they were (the server refuses changes too)
+  const done = t.phase === "finished";
   const s = t.arrival_summary;
   const left = useMinutesLeft(t.day?.closes ?? null);
   const rows: {e: TournamentEntryView; waiting: boolean}[] = [...t.entries.map((e) => ({e, waiting: false})), ...t.waiting_list.map((e) => ({e, waiting: true}))];
@@ -104,7 +106,7 @@ export default function DayEntriesDesktop({t, onChanged}: {t: AdminTournament; o
                           </Box>
                         )}
                       </Box>
-                      <Box sx={{display: "flex", alignItems: "center", justifyContent: "flex-end", gap: "4px"}}>
+                      <Box sx={{display: "flex", alignItems: "center", justifyContent: "flex-end", gap: "4px", ...(done && {display: "none"})}}>
                         {waiting && !e.arrival && <ArrivalButton e={e} day={day} />}
                         {!waiting && !e.excluded && !e.active && <ActiveSwitch e={e} day={day} />}
                         {!waiting && <ExcludeControls e={e} day={day} t={t} />}
@@ -129,7 +131,11 @@ export default function DayEntriesDesktop({t, onChanged}: {t: AdminTournament; o
           )}
         </Card>
         <Box sx={{minHeight: 0, overflowY: "auto", display: "flex", flexDirection: "column", gap: "16px"}}>
-          {started ? (
+          {done ? (
+            <InfoNote icon={<InfoRoundedIcon />}>
+              Turnir je završen: prijave i lista čekanja se više ne mijenjaju. Rezultati se ispravljaju u tabu Kola, a podaci u tabu Podaci. Za novo kolo dodaj ga u tabu Kola.
+            </InfoNote>
+          ) : started ? (
             <InfoNote icon={<InfoRoundedIcon />}>
               Turnir je krenuo: ekipa se ne briše nego isključuje. Isključena ekipa ne igra ostala kola, odigrana ostaju u poretku, a dok turnir traje možeš je vratiti.
               Prva potvrđena ekipa s liste čekanja ulazi kad se mjesto oslobodi.

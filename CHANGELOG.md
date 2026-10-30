@@ -2,6 +2,21 @@
 
 What the commits changed for the people using the app, newest first. The reasons and details are in DECISIONS.md.
 
+## 31.10.2026 · Admin: popis turnira i Vrati turnir
+
+On development, not live yet (DECISIONS #77).
+
+### Added for the admin
+- Turniri (computer), Nadolazeći: the card shows the **last 5 sign-ups**, with **Prijave** and **Stranica**.
+- Aktivni: the Kolo being played (**N od M stolova gotovo**) and **Trenutno vode**, with **Kola** and **Stranica**.
+- Završeni: **Pobjednici** (top 3), with **Poredak** and **Stranica**.
+- **Vrati turnir** for a cancelled tournament: back to Nadolazeći with its teams, sign-ups open.
+- A double click on a tournament opens it.
+
+### Changed
+- A finished tournament's **Prijave** and **Lista čekanja** can't be changed any more; Kola, Poredak and Podaci can.
+- The list's card no longer has the sign-ups switch, Uredi, Kopiraj, Otkaži and Obriši: they are in the tournament's page.
+
 ## 30.10.2026 · Registracija s Googleom
 
 On development, not live yet (DECISIONS #76).

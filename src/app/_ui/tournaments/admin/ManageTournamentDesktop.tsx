@@ -1,11 +1,12 @@
 "use client";
 
-import {setRegistrationsOpenAPI} from "@/app/_fetchers/tournament";
+import {restoreTournamentAPI, setRegistrationsOpenAPI} from "@/app/_fetchers/tournament";
 import {useAdminTournament} from "@/app/_hooks/useTournaments";
 import {AdminTournament} from "@/app/_interfaces/tournament";
 import {replaceAddress} from "@/app/_lib/viewTransitions";
 import {color} from "@/app/_styles/tokens";
-import {buttonBase, Card, DesktopShell, EmptyState, ErrorNote, LoadingRows, Spinner, SwitchTrack} from "@/app/_ui/sp";
+import {buttonBase, Card, DesktopShell, EmptyState, ErrorNote, LoadingRows, PrimaryButton, Spinner, SwitchTrack} from "@/app/_ui/sp";
+import RestoreRoundedIcon from "@mui/icons-material/RestoreRounded";
 import EventNoteRoundedIcon from "@mui/icons-material/EventNoteRounded";
 import EmojiEventsRoundedIcon from "@mui/icons-material/EmojiEventsRounded";
 import GroupsRoundedIcon from "@mui/icons-material/GroupsRounded";
@@ -66,6 +67,18 @@ export default function ManageTournamentDesktop({id}: {id: number}) {
     setSwitching(false);
   };
 
+  const restore = async () => {
+    if (!t) return;
+    setSwitching(true);
+    setSwitchError(null);
+    try {
+      setTournament(await restoreTournamentAPI(t.id));
+    } catch (e) {
+      setSwitchError(e instanceof Error ? e.message : "Turnir nije vraćen.");
+    }
+    setSwitching(false);
+  };
+
   const right =
     t && dayOn(t) ? (
       <Box sx={{height: 52, display: "flex", alignItems: "center", gap: "10px", px: "18px", borderRadius: "26px", background: color.navy, color: color.white}}>
@@ -105,7 +118,7 @@ export default function ManageTournamentDesktop({id}: {id: number}) {
           {t.phase === "cancelled" && (
             <Box sx={{flex: "none", display: "flex", alignItems: "center", gap: "14px", p: "16px 20px", borderRadius: "22px", background: color.lineFill, border: `1.5px dashed ${tint.navy[22]}`}}>
               <EventBusyRoundedIcon aria-hidden sx={{fontSize: 28, color: color.red}} />
-              <Box sx={{display: "flex", flexDirection: "column", gap: "2px"}}>
+              <Box sx={{flex: 1, display: "flex", flexDirection: "column", gap: "2px"}}>
                 <Box component="span" sx={{fontSize: 17, fontWeight: 700}}>
                   Turnir je otkazan
                 </Box>
@@ -113,6 +126,10 @@ export default function ManageTournamentDesktop({id}: {id: number}) {
                   {t.cancelled_at ? `Otkazao ${t.cancelled_by ?? "admin"}, ${nightLabel(t.cancelled_at.slice(0, 10))} u ${clockOf(t.cancelled_at)} · prijave zatvorene` : "Prijave zatvorene"}
                 </Box>
               </Box>
+              {/* Vrati turnir: back among the upcoming ones, with the sign-ups open */}
+              <PrimaryButton icon={<RestoreRoundedIcon />} height={46} loading={switching} onClick={restore} sx={{flex: "none", px: "18px", fontSize: 15}}>
+                Vrati turnir
+              </PrimaryButton>
             </Box>
           )}
           <ViewTabs<ManageView>

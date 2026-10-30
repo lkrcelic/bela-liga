@@ -146,6 +146,18 @@ export async function cancelTournament(id: number, by: number | null = null): Pr
   });
 }
 
+// Vrati turnir: a cancelled tournament (by mistake, or put off) is back among the upcoming ones with its sign-ups open
+// again; its teams and waiting list are as they were. A second tap finds it back and changes nothing.
+export async function restoreTournament(id: number): Promise<void> {
+  await prisma.$transaction(async (tx) => {
+    await lockTournament(tx, id);
+    const t = await tx.tournament.findUnique({where: {tournament_id: id}, select: {cancelled_at: true}});
+    if (!t) throw new NotFoundError(TOURNAMENT_NOT_FOUND);
+    if (!t.cancelled_at) return;
+    await tx.tournament.update({where: {tournament_id: id}, data: {cancelled_at: null, cancelled_by: null, registrations_open: true}});
+  });
+}
+
 // Obriši: the tournament and its sign-ups are gone. Only before it starts.
 export async function deleteTournament(id: number): Promise<void> {
   await prisma.$transaction(async (tx) => {

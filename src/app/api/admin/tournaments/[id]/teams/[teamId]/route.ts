@@ -6,7 +6,7 @@ import {z} from "zod";
 import {signOff} from "@/app/_lib/service/tournament/entries";
 import {adminSetActive, adminSetArrival, excludeTeam, restoreTeam} from "@/app/_lib/service/tournament/day";
 import {getAdminTournament} from "@/app/_lib/service/tournament/tournaments";
-import {tournamentIdOf, tournamentNotFound} from "@/app/_lib/service/tournament/routes";
+import {refuseIfFinished, tournamentIdOf, tournamentNotFound} from "@/app/_lib/service/tournament/routes";
 
 const TeamDayValidation = z.object({
   // Označi dolazak / Makni potvrdu
@@ -24,6 +24,7 @@ export async function PATCH(request: NextRequest, {params}: {params: {id: string
   const id = tournamentIdOf(params.id);
   if (id == null) return tournamentNotFound();
   try {
+    await refuseIfFinished(id, auth.user);
     const body = TeamDayValidation.parse(await request.json());
     const teamId = Number(params.teamId);
     if (body.arrived !== undefined) await adminSetArrival(id, teamId, body.arrived);
@@ -42,6 +43,7 @@ export async function DELETE(request: NextRequest, {params}: {params: {id: strin
   const id = tournamentIdOf(params.id);
   if (id == null) return tournamentNotFound();
   try {
+    await refuseIfFinished(id, auth.user);
     await signOff(id, Number(params.teamId), auth.user);
     return NextResponse.json(await getAdminTournament(id, auth.user), {status: STATUS.OK});
   } catch (error) {

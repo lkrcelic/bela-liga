@@ -75,6 +75,8 @@ export const getAdminTournamentAPI = (id: number) => send<AdminTournament>(admin
 export const updateTournamentAPI = (id: number, body: TournamentRequest) => send<AdminTournament>(admin(id), "PATCH", body, "Promjene nisu spremljene.");
 export const deleteTournamentAPI = (id: number) => send<null>(admin(id), "DELETE", undefined, "Turnir nije obrisan.");
 export const cancelTournamentAPI = (id: number) => send<AdminTournament>(`${admin(id)}/cancel`, "POST", undefined, "Turnir nije otkazan.");
+// Vrati turnir: undoes Otkaži, with the sign-ups open
+export const restoreTournamentAPI = (id: number) => send<AdminTournament>(`${admin(id)}/cancel`, "DELETE", undefined, "Turnir nije vraćen.");
 export const setRegistrationsOpenAPI = (id: number, open: boolean) => send<AdminTournament>(`${admin(id)}/registrations`, "PATCH", {open}, "Prijave nisu promijenjene.");
 export const candidateTeamsAPI = (id: number, q: string) => send<CandidateTeam[]>(`${admin(id)}/candidates?q=${encodeURIComponent(q)}`, "GET", undefined, "Ekipe se nisu učitale.");
 export const addTournamentTeamAPI = (id: number, teamId: number) => send<AdminTournament>(`${admin(id)}/teams`, "POST", {team_id: teamId}, "Ekipa nije dodana.");

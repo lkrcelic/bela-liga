@@ -1,19 +1,15 @@
 "use client";
 
-import {cancelTournamentAPI, deleteTournamentAPI, setRegistrationsOpenAPI} from "@/app/_fetchers/tournament";
-import {useAdminTournaments} from "@/app/_hooks/useTournaments";
-import {TournamentCard} from "@/app/_interfaces/tournament";
+import {restoreTournamentAPI} from "@/app/_fetchers/tournament";
+import {useAdminTournament, useAdminTournaments} from "@/app/_hooks/useTournaments";
+import {AdminTournament, TournamentCard} from "@/app/_interfaces/tournament";
 import {nightLabel} from "@/app/_lib/nights";
 import {capacityLabel} from "@/app/_lib/tournaments";
 import {count, NOUN} from "@/app/_lib/ui/text";
 import {useTransitionRouter} from "@/app/_lib/viewTransitions";
 import {color, font, shadow, tint} from "@/app/_styles/tokens";
-import {buttonBase, Card, DesktopShell, ellipsis, EmptyState, ErrorNote, InfoNote, LoadingRows, NARROW_DESKTOP, PrimaryButton, Spinner, SwitchTrack} from "@/app/_ui/sp";
+import {buttonBase, Card, DesktopShell, ellipsis, EmptyState, ErrorNote, InfoNote, LoadingRows, NARROW_DESKTOP, PrimaryButton, Spinner} from "@/app/_ui/sp";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
-import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
-import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
-import EditRoundedIcon from "@mui/icons-material/EditRounded";
-import EventBusyRoundedIcon from "@mui/icons-material/EventBusyRounded";
 import EventListRoundedIcon from "@mui/icons-material/EventNoteRounded";
 import EventUpcomingRoundedIcon from "@mui/icons-material/EventRounded";
 import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
@@ -22,13 +18,15 @@ import InfoRoundedIcon from "@mui/icons-material/InfoRounded";
 import LeaderboardRoundedIcon from "@mui/icons-material/LeaderboardRounded";
 import OpenInNewRoundedIcon from "@mui/icons-material/OpenInNewRounded";
 import PlayCircleRoundedIcon from "@mui/icons-material/PlayCircleRounded";
+import RestoreRoundedIcon from "@mui/icons-material/RestoreRounded";
 import WarningRoundedIcon from "@mui/icons-material/WarningRounded";
 import {Box} from "@mui/material";
 import React, {useState} from "react";
 import {DateTile, FillBar, StatusChip, statusOf, tournamentMeta, ViewTabs} from "../TournamentParts";
+import {clockOf} from "./DayAdmin";
 
 // The admin's Turniri (Claude Design "Turniri admin" A1): the tournaments by phase, Nadolazeći · Aktivni · Završeni,
-// in a table on the left; the picked one on the right with its sign-ups switch and what can be done with it.
+// in a table on the left; the picked one on the right (PickedCard), with Prijave, Kola or Poredak to open it.
 
 export type ListTab = "upcoming" | "active" | "finished";
 
@@ -121,6 +119,8 @@ export default function TournamentsDesktop() {
                       component="button"
                       type="button"
                       onClick={() => setPicked(t.id)}
+                      // a double click opens it (Upravljanje turnirom), as the card's Prijave, Kola or Poredak does
+                      onDoubleClick={() => router.push(`/turniri/${t.id}/upravljanje`)}
                       aria-pressed={on}
                       sx={{
                         ...buttonBase,
@@ -175,36 +175,42 @@ export default function TournamentsDesktop() {
   );
 }
 
-// The right card: the picked tournament, its sign-ups and its actions
+// The picked tournament on the right, by what the admin wants from it in each tab:
+// - Nadolazeći: the latest sign-ups, with Prijave (Upravljanje turnirom · Prijave) and Stranica
+// - Aktivni: on its day before Kolo 1 who is here; once it runs, the Kolo being played and the top three so far, with
+//   Kola and Stranica
+// - Završeni: the top three, Poredak and Stranica; a cancelled one has Vrati turnir (back with its sign-ups open)
+// Kopiraj, Otkaži, Obriši and the sign-ups switch are in Upravljanje turnirom (Podaci, the header).
 function PickedCard({t, onChanged}: {t: TournamentCard; onChanged: () => void}) {
   const router = useTransitionRouter();
-  const [busy, setBusy] = useState<string | null>(null);
-  const [asking, setAsking] = useState<"cancel" | "delete" | null>(null);
+  const {tournament: full, error: loadError} = useAdminTournament(t.id);
+  const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const upcoming = t.phase === "upcoming";
   const manage = (view: string) => router.push(`/turniri/${t.id}/upravljanje?view=${view}`);
+  const today = activeNow(t) && t.phase === "upcoming";
 
-  const run = async (what: string, call: () => Promise<unknown>) => {
-    setBusy(what);
+  const restore = async () => {
+    setBusy(true);
     setError(null);
     try {
-      await call();
-      setAsking(null);
+      await restoreTournamentAPI(t.id);
       onChanged();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Nije uspjelo.");
+      setError(e instanceof Error ? e.message : "Turnir nije vraćen.");
     }
-    setBusy(null);
+    setBusy(false);
   };
 
   const tile = {
     ...buttonBase,
+    flex: 1,
     height: 52,
     borderRadius: "14px",
     background: color.paper2,
     color: color.navy,
     display: "flex",
     alignItems: "center",
+    justifyContent: "center",
     gap: "8px",
     px: "14px",
     fontSize: 15,
@@ -212,7 +218,95 @@ function PickedCard({t, onChanged}: {t: TournamentCard; onChanged: () => void}) 
     "&:hover": {background: color.paper},
     "& svg": {fontSize: 20},
   } as const;
-  const danger = {...buttonBase, flex: 1, height: 46, borderRadius: "13px", border: `1.5px solid ${tint.red[35]}`, color: color.red, display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", fontSize: 15, fontWeight: 700, "& svg": {fontSize: 19}, "&:hover": {background: tint.red[6]}} as const;
+  const primary = {...tile, background: color.navy, color: color.white, "&:hover": {background: color.navy}} as const;
+  const stranica = (
+    <Box component="button" type="button" onClick={() => router.push(`/turniri/${t.id}`)} sx={tile}>
+      <OpenInNewRoundedIcon aria-hidden />
+      Stranica
+    </Box>
+  );
+
+  let body: React.ReactNode;
+  let actions: React.ReactNode;
+  if (t.phase === "cancelled") {
+    body = (
+      <Box sx={{display: "flex", flexDirection: "column", gap: "8px"}}>
+        <StatusChip status={statusOf(t)} sx={{alignSelf: "flex-start"}} />
+        <Box component="span" sx={{fontSize: 14, color: color.ink2}}>
+          {cancelledLine(t)}
+        </Box>
+        <Box component="span" sx={{fontSize: 13.5, lineHeight: 1.45, color: color.muted}}>
+          Otkazan greškom ili odgođen? Vrati ga: ide među nadolazeće s istim ekipama, a prijave se ponovo otvaraju.
+        </Box>
+      </Box>
+    );
+    actions = (
+      <>
+        <Box component="button" type="button" onClick={restore} disabled={busy} aria-busy={busy || undefined} sx={primary}>
+          {busy ? <Spinner size={20} /> : <RestoreRoundedIcon aria-hidden />}
+          Vrati turnir
+        </Box>
+        {stranica}
+      </>
+    );
+  } else if (t.phase === "finished") {
+    body = <TopThree full={full} title="Pobjednici" />;
+    actions = (
+      <>
+        <Box component="button" type="button" onClick={() => manage("poredak")} sx={primary}>
+          <LeaderboardRoundedIcon aria-hidden />
+          Poredak
+        </Box>
+        {stranica}
+      </>
+    );
+  } else if (t.phase === "active") {
+    body = (
+      <>
+        <LiveLine t={t} full={full} />
+        <TopThree full={full} title="Trenutno vode" />
+      </>
+    );
+    actions = (
+      <>
+        <Box component="button" type="button" onClick={() => manage("kola")} sx={primary}>
+          <EventListRoundedIcon aria-hidden />
+          Kola
+        </Box>
+        {stranica}
+      </>
+    );
+  } else {
+    body = (
+      <>
+        {today && full?.arrival_summary ? (
+          <Box sx={{display: "flex", gap: "8px"}}>
+            <Stat value={full.arrival_summary.here} label="Tu" tone={tint.green[12]} />
+            <Stat value={full.arrival_summary.not_confirmed} label="Nije potvrdilo" />
+            <Stat value={full.arrival_summary.waiting} label="Čeka" tone={tint.gold[16]} />
+          </Box>
+        ) : (
+          <Box sx={{display: "flex", flexDirection: "column", gap: "8px"}}>
+            <Box component="span" sx={{fontSize: 14, color: color.ink2}}>
+              {t.registrations_open ? "Prijave otvorene" : "Prijave zatvorene"} · {t.max_teams != null ? `${t.teams} od ${t.max_teams} ekipa` : count(t.teams, NOUN.ekipa)}
+              {t.waiting > 0 ? ` · ${t.waiting} na listi čekanja` : ""}
+            </Box>
+            <FillBar registered={t.teams} max={t.max_teams} />
+          </Box>
+        )}
+        <LatestEntries full={full} />
+      </>
+    );
+    actions = (
+      <>
+        <Box component="button" type="button" onClick={() => manage("prijave")} sx={primary}>
+          <GroupsRoundedIcon aria-hidden />
+          Prijave
+        </Box>
+        {stranica}
+      </>
+    );
+  }
 
   return (
     <Card component="section" aria-labelledby={`t-${t.id}`} sx={{flex: "none", borderRadius: "24px", p: "22px", display: "flex", flexDirection: "column", gap: "14px"}}>
@@ -227,101 +321,120 @@ function PickedCard({t, onChanged}: {t: TournamentCard; onChanged: () => void}) 
           {[t.location.name, tournamentMeta({...t, start_time: null})].filter(Boolean).join(" · ")}
         </Box>
       </Box>
-      {upcoming ? (
-        <Box sx={{display: "flex", flexDirection: "column", gap: "10px", p: "14px", borderRadius: "16px", background: color.paper2}}>
-          <Box
-            component="button"
-            type="button"
-            role="switch"
-            aria-checked={t.registrations_open}
-            disabled={busy != null}
-            onClick={() => run("open", () => setRegistrationsOpenAPI(t.id, !t.registrations_open))}
-            sx={{...buttonBase, display: "flex", alignItems: "center", gap: "12px", textAlign: "left"}}
-          >
-            <Box sx={{flex: 1, minWidth: 0, display: "flex", flexDirection: "column"}}>
-              <Box component="span" sx={{fontSize: 15, fontWeight: 700}}>
-                {t.registrations_open ? "Prijave otvorene" : "Prijave zatvorene"}
-              </Box>
-              <Box component="span" sx={{fontSize: 13, color: color.muted}}>
-                {t.max_teams != null ? `${t.teams} od ${t.max_teams} ekipa` : count(t.teams, NOUN.ekipa)}
-                {t.waiting > 0 ? ` · ${t.waiting} na listi čekanja` : ""}
-              </Box>
-            </Box>
-            {busy === "open" ? <Spinner size={20} /> : <SwitchTrack on={t.registrations_open} onColor={color.green} />}
-          </Box>
-          <FillBar registered={t.teams} max={t.max_teams} />
-        </Box>
-      ) : t.phase === "active" ? (
-        <Box sx={{display: "flex", alignItems: "center", gap: "10px", p: "14px", borderRadius: "16px", background: tint.red[6], color: color.red, fontSize: 15, fontWeight: 700}}>
-          <PlayCircleRoundedIcon aria-hidden />
-          {t.live_kolo ? `Kolo ${t.live_kolo} uživo` : `Odigrano ${t.completed_kolos} od ${t.rounds} kola`}
-        </Box>
-      ) : t.winner ? (
-        <Box sx={{display: "flex", flexDirection: "column", gap: "2px", p: "14px", borderRadius: "16px", background: color.cream}}>
-          <Box component="span" sx={{fontSize: 12, fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", color: color.navy}}>
-            Pobjednici
-          </Box>
-          <Box component="span" sx={{fontSize: 18, fontWeight: 800}}>
-            {t.winner.team_name}
-          </Box>
-          <Box component="span" sx={{fontSize: 13, color: color.ink2}}>
-            {t.winner.players.join(" · ")}
-          </Box>
+      {body}
+      {loadError && !full && <ErrorNote>{loadError}</ErrorNote>}
+      {error && <ErrorNote>{error}</ErrorNote>}
+      <Box sx={{display: "flex", gap: "8px", pt: "4px"}}>{actions}</Box>
+    </Card>
+  );
+}
+
+const LATEST = 5;
+
+// Nadolazeći: the last teams to sign up (the waiting list too), newest first, with their players and when
+function LatestEntries({full}: {full: AdminTournament | null}) {
+  if (!full) return <LoadingRows rows={3} height={48} />;
+  const latest = [...full.entries, ...full.waiting_list].sort((a, b) => b.registered_at.localeCompare(a.registered_at)).slice(0, LATEST);
+  return (
+    <Box component="section" aria-label="Zadnje prijave" sx={{display: "flex", flexDirection: "column", gap: "6px"}}>
+      <Box component="h3" sx={{m: 0, fontSize: 12, fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", color: color.muted}}>
+        Zadnje prijave
+      </Box>
+      {latest.length === 0 ? (
+        <Box component="span" sx={{fontSize: 14, color: color.muted}}>
+          Još se nitko nije prijavio.
         </Box>
       ) : (
-        <StatusChip status={statusOf(t)} />
+        <Box component="ul" sx={{listStyle: "none", m: 0, p: 0, borderRadius: "16px", background: color.paper2, overflow: "hidden"}}>
+          {latest.map((e, i) => (
+            <Box component="li" key={e.team_id} sx={{display: "flex", alignItems: "center", gap: "10px", p: "9px 12px", borderTop: i ? `1px solid ${color.line}` : "none"}}>
+              <Box sx={{flex: 1, minWidth: 0, display: "flex", flexDirection: "column"}}>
+                <Box component="span" sx={{fontSize: 14.5, fontWeight: 700, ...ellipsis}}>
+                  {e.team_name}
+                  {e.status === "WAITING" && (
+                    <Box component="span" sx={{ml: "6px", fontSize: 12, fontWeight: 700, color: color.medal[0]}}>
+                      čeka {e.position}.
+                    </Box>
+                  )}
+                </Box>
+                <Box component="span" sx={{fontSize: 12.5, color: color.muted, ...ellipsis}}>
+                  {e.players.map((p) => p.name).join(" · ")}
+                </Box>
+              </Box>
+              <Box component="span" sx={{flex: "none", fontSize: 12.5, color: color.muted, textAlign: "right", fontVariantNumeric: "tabular-nums"}}>
+                {nightLabel(e.registered_at.slice(0, 10)).replace(/^\S+ /, "")} {clockOf(e.registered_at)}
+              </Box>
+            </Box>
+          ))}
+        </Box>
       )}
-      <Box sx={{display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px"}}>
-        {t.phase !== "cancelled" && t.phase !== "finished" && (
-          <Box component="button" type="button" onClick={() => manage("podaci")} sx={tile}>
-            <EditRoundedIcon aria-hidden />
-            Uredi
-          </Box>
-        )}
-        {upcoming ? (
-          <Box component="button" type="button" onClick={() => manage("prijave")} sx={tile}>
-            <GroupsRoundedIcon aria-hidden />
-            Prijave
-          </Box>
-        ) : (
-          <Box component="button" type="button" onClick={() => manage(t.phase === "active" ? "kola" : "poredak")} sx={tile}>
-            {t.phase === "active" ? <EventListRoundedIcon aria-hidden /> : <LeaderboardRoundedIcon aria-hidden />}
-            {t.phase === "active" ? "Kola" : "Poredak"}
-          </Box>
-        )}
-        <Box component="button" type="button" onClick={() => router.push(`/turniri/novi?kopiraj=${t.id}`)} sx={tile}>
-          <ContentCopyRoundedIcon aria-hidden />
-          Kopiraj
-        </Box>
-        <Box component="button" type="button" onClick={() => router.push(`/turniri/${t.id}`)} sx={tile}>
-          <OpenInNewRoundedIcon aria-hidden />
-          Stranica
-        </Box>
+    </Box>
+  );
+}
+
+// Aktivni: the Kolo being played and how many of its tables are over, or that the next one waits to be published
+function LiveLine({t, full}: {t: TournamentCard; full: AdminTournament | null}) {
+  const kolo = t.live_kolo != null ? full?.results.kolos.find((k) => k.number === t.live_kolo) : null;
+  const done = kolo ? kolo.tables.filter((x) => !x.open).length : null;
+  const line =
+    t.live_kolo != null
+      ? `Kolo ${t.live_kolo} uživo${kolo ? ` · ${done} od ${kolo.tables.length} stolova gotovo` : ""}`
+      : full?.next_kolo
+        ? `Odigrano ${t.completed_kolos} od ${t.rounds} kola · Kolo ${full.next_kolo.number} čeka objavu`
+        : `Odigrano ${t.completed_kolos} od ${t.rounds} kola`;
+  return (
+    <Box sx={{display: "flex", alignItems: "center", gap: "10px", p: "14px", borderRadius: "16px", background: tint.red[6], color: color.red, fontSize: 15, fontWeight: 700, "& svg": {flex: "none"}}}>
+      <PlayCircleRoundedIcon aria-hidden />
+      {line}
+    </Box>
+  );
+}
+
+// Završeni (Pobjednici) and Aktivni (Trenutno vode): the first three of the standings
+function TopThree({full, title}: {full: AdminTournament | null; title: string}) {
+  if (!full) return <LoadingRows rows={3} height={48} />;
+  const top = full.results.standings.slice(0, 3);
+  if (top.length === 0) return null;
+  return (
+    <Box component="section" aria-label={title} sx={{display: "flex", flexDirection: "column", gap: "6px"}}>
+      <Box component="h3" sx={{m: 0, fontSize: 12, fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", color: color.muted}}>
+        {title}
       </Box>
-      {error && <ErrorNote>{error}</ErrorNote>}
-      {upcoming && asking == null && (
-        <Box sx={{display: "flex", gap: "8px", pt: "6px", borderTop: `1px solid ${color.line}`}}>
-          <Box component="button" type="button" onClick={() => setAsking("cancel")} sx={danger}>
-            <EventBusyRoundedIcon aria-hidden />
-            Otkaži
+      <Box component="ol" sx={{listStyle: "none", m: 0, p: 0, display: "flex", flexDirection: "column", gap: "6px"}}>
+        {top.map((r, i) => (
+          <Box component="li" key={r.team_id} sx={{display: "flex", alignItems: "center", gap: "12px", p: "10px 12px", borderRadius: "14px", background: color.medalBg[i]}}>
+            <Box component="span" sx={{width: 30, height: 30, flex: "none", borderRadius: "10px", background: color.white, color: color.medal[i], display: "flex", alignItems: "center", justifyContent: "center", fontFamily: font.display, fontSize: 17, fontWeight: 800}}>
+              {i + 1}
+            </Box>
+            <Box sx={{flex: 1, minWidth: 0, display: "flex", flexDirection: "column"}}>
+              <Box component="span" sx={{fontSize: 15, fontWeight: 700, ...ellipsis}}>
+                {r.team.team_name}
+              </Box>
+              <Box component="span" sx={{fontSize: 12.5, color: color.ink2, ...ellipsis}}>
+                {r.players.join(" · ")}
+              </Box>
+            </Box>
+            <Box component="span" sx={{flex: "none", fontFamily: font.display, fontSize: 16, fontWeight: 800, fontVariantNumeric: "tabular-nums"}}>
+              {r.score}
+            </Box>
           </Box>
-          <Box component="button" type="button" onClick={() => setAsking("delete")} sx={danger}>
-            <DeleteRoundedIcon aria-hidden />
-            Obriši
-          </Box>
-        </Box>
-      )}
-      {upcoming && asking && (
-        <Confirm
-          title={asking === "cancel" ? `Otkazati ${t.name}?` : `Obrisati ${t.name}?`}
-          text={asking === "cancel" ? "Turnir ostaje u popisu kao Otkazan. Prijavljene ekipe neće dobiti obavijest." : "Turnir i sve prijave nestaju iz aplikacije."}
-          action={asking === "cancel" ? "Otkaži turnir" : "Obriši turnir"}
-          busy={busy != null}
-          onCancel={() => setAsking(null)}
-          onConfirm={() => run(asking, () => (asking === "cancel" ? cancelTournamentAPI(t.id) : deleteTournamentAPI(t.id)))}
-        />
-      )}
-    </Card>
+        ))}
+      </Box>
+    </Box>
+  );
+}
+
+// a number with its label (Tu, Nije potvrdilo, Čeka) on the day before Kolo 1
+function Stat({value, label, tone = color.paper2}: {value: number; label: string; tone?: string}) {
+  return (
+    <Box sx={{flex: 1, display: "flex", flexDirection: "column", gap: "2px", p: "10px 12px", borderRadius: "14px", background: tone}}>
+      <Box component="span" sx={{fontFamily: font.display, fontSize: 22, fontWeight: 800, lineHeight: 1}}>
+        {value}
+      </Box>
+      <Box component="span" sx={{fontSize: 12.5, color: color.ink2}}>
+        {label}
+      </Box>
+    </Box>
   );
 }
 

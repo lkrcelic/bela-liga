@@ -5,7 +5,7 @@ import {requireAdmin} from "@/app/_lib/service/auth/requireUser";
 import {TeamIdValidation} from "@/app/_interfaces/tournament";
 import {adminAddTeam} from "@/app/_lib/service/tournament/entries";
 import {getAdminTournament} from "@/app/_lib/service/tournament/tournaments";
-import {tournamentIdOf, tournamentNotFound} from "@/app/_lib/service/tournament/routes";
+import {refuseIfFinished, tournamentIdOf, tournamentNotFound} from "@/app/_lib/service/tournament/routes";
 
 // Dodaj ekipu (admin): in while there is room, else on the waiting list
 export async function POST(request: NextRequest, {params}: {params: {id: string}}) {
@@ -14,6 +14,7 @@ export async function POST(request: NextRequest, {params}: {params: {id: string}
   const id = tournamentIdOf(params.id);
   if (id == null) return tournamentNotFound();
   try {
+    await refuseIfFinished(id, auth.user);
     const {team_id} = TeamIdValidation.parse(await request.json());
     await adminAddTeam(id, team_id);
     return NextResponse.json(await getAdminTournament(id, auth.user), {status: STATUS.Created});

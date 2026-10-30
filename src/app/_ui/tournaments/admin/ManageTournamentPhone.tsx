@@ -10,6 +10,7 @@ import {
   makeKoloAPI,
   publishKoloAPI,
   removeTournamentTeamAPI,
+  restoreTournamentAPI,
   setRegistrationsOpenAPI,
   updateTournamentAPI,
 } from "@/app/_fetchers/tournament";
@@ -65,6 +66,7 @@ import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
 import EditRoundedIcon from "@mui/icons-material/EditRounded";
 import EmojiEventsRoundedIcon from "@mui/icons-material/EmojiEventsRounded";
 import EventBusyRoundedIcon from "@mui/icons-material/EventBusyRounded";
+import RestoreRoundedIcon from "@mui/icons-material/RestoreRounded";
 import GroupAddRoundedIcon from "@mui/icons-material/GroupAddRounded";
 import HowToRegRoundedIcon from "@mui/icons-material/HowToRegRounded";
 import InfoRoundedIcon from "@mui/icons-material/InfoRounded";
@@ -270,20 +272,37 @@ function StatusCard({t, onChanged, onOpen}: {t: AdminTournament; onChanged: (t: 
   }
 
   if (t.phase === "cancelled") {
+    // Vrati turnir: back among the upcoming ones, with the sign-ups open
+    const restore = async () => {
+      setSwitching(true);
+      setError(null);
+      try {
+        onChanged(await restoreTournamentAPI(t.id));
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "Turnir nije vraćen.");
+      }
+      setSwitching(false);
+    };
     return (
-      <Box sx={{...cardSx, flexDirection: "row", alignItems: "center", gap: "14px", background: color.white, color: color.ink, boxShadow: shadow.card}}>
-        <Box component="span" aria-hidden sx={{width: 44, height: 44, flex: "none", borderRadius: "50%", background: tint.red[10], color: color.red, display: "flex", alignItems: "center", justifyContent: "center", "& svg": {fontSize: 26}}}>
-          <EventBusyRoundedIcon />
-        </Box>
-        <Box sx={{flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: "2px"}}>
-          <Box component="span" sx={{fontSize: 18, fontWeight: 700}}>
-            Turnir je otkazan
+      <>
+        <Box sx={{...cardSx, flexDirection: "row", alignItems: "center", gap: "14px", background: color.white, color: color.ink, boxShadow: shadow.card}}>
+          <Box component="span" aria-hidden sx={{width: 44, height: 44, flex: "none", borderRadius: "50%", background: tint.red[10], color: color.red, display: "flex", alignItems: "center", justifyContent: "center", "& svg": {fontSize: 26}}}>
+            <EventBusyRoundedIcon />
           </Box>
-          <Box component="span" sx={{fontSize: 14, color: color.ink2}}>
-            {t.cancelled_at ? `Otkazao ${t.cancelled_by ?? "admin"}, ${nightLabel(t.cancelled_at.slice(0, 10))} · prijave zatvorene` : "Ostaje u popisu kao Otkazan."}
+          <Box sx={{flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: "2px"}}>
+            <Box component="span" sx={{fontSize: 18, fontWeight: 700}}>
+              Turnir je otkazan
+            </Box>
+            <Box component="span" sx={{fontSize: 14, color: color.ink2}}>
+              {t.cancelled_at ? `Otkazao ${t.cancelled_by ?? "admin"}, ${nightLabel(t.cancelled_at.slice(0, 10))} · prijave zatvorene` : "Ostaje u popisu kao Otkazan."}
+            </Box>
           </Box>
         </Box>
-      </Box>
+        <PrimaryButton icon={<RestoreRoundedIcon />} loading={switching} onClick={restore} sx={{flex: "none"}}>
+          Vrati turnir
+        </PrimaryButton>
+        {error && <ErrorNote>{error}</ErrorNote>}
+      </>
     );
   }
 
