@@ -6,7 +6,7 @@ import {leagueNightString} from "@/app/_lib/dates";
 import {teamPhotoUrls} from "@/app/_lib/service/players/photos";
 
 export async function GET(request: NextRequest, {params}: { params: { id: string } }) {
-  // nights and round tables need a login; only the season table (/standings) is public
+  // nights and round tables need a login, as the season table (/standings) does
   const auth = await requireUser(request);
   if (auth.response) return auth.response;
   const {id} = params;

@@ -20,7 +20,10 @@ import LeaderboardRoundedIcon from "@mui/icons-material/LeaderboardRounded";
 import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
 import LibraryAddRoundedIcon from "@mui/icons-material/LibraryAddRounded";
 import LoginRoundedIcon from "@mui/icons-material/LoginRounded";
+import MilitaryTechRoundedIcon from "@mui/icons-material/MilitaryTechRounded";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
+import LockRoundedIcon from "@mui/icons-material/LockRounded";
+import useGuestSheet from "@/app/_store/guestSheetStore";
 import MenuRoundedIcon from "@mui/icons-material/MenuRounded";
 import HandshakeRoundedIcon from "@mui/icons-material/HandshakeRounded";
 import PersonRoundedIcon from "@mui/icons-material/PersonRounded";
@@ -39,6 +42,7 @@ import {useScrollArrows} from "./ScrollArrows";
 import {Spinner} from "./States";
 import {InitialsAvatar} from "./Surface";
 import {Eyebrow} from "./Text";
+import {APP_NAME} from "./brand";
 
 export type NavKey =
   | "home"
@@ -48,6 +52,8 @@ export type NavKey =
   | "ratings"
   | "raspored"
   | "burza"
+  | "tournaments"
+  | "manageTournaments"
   | "manageLeague"
   | "createLeague"
   | "teams"
@@ -172,6 +178,10 @@ export function DesktopShell({
 // leaguePage: a page of the picked league, or of the one being played now (its href is filled in when it is known)
 type NavItem = {key: NavKey; label: string; icon: React.ReactNode; href?: string; leaguePage?: LeaguePage; head?: string; adminOnly?: boolean};
 
+// a guest's menu: these open, and these are shown locked
+const GUEST_OPEN = new Set<NavKey>(["home", "tournaments", "burza"]);
+const GUEST_LOCKED = new Set<NavKey>(["daily", "league", "ratings", "raspored"]);
+
 const NAV: NavItem[] = [
   {key: "home", label: "Početna", icon: <HomeRoundedIcon />, href: "/"},
   {key: "game", label: "Započni igru", icon: <PlayArrowRoundedIcon />},
@@ -179,8 +189,10 @@ const NAV: NavItem[] = [
   {key: "league", label: "Ukupni poredak", icon: <EmojiEventsRoundedIcon />, leaguePage: "standings"},
   {key: "ratings", label: "Rejting", icon: <LeaderboardRoundedIcon />, href: "/ratings"},
   {key: "raspored", label: "Raspored", icon: <EventRoundedIcon />, href: "/raspored"},
+  {key: "tournaments", label: "Turniri", icon: <MilitaryTechRoundedIcon />, href: "/turniri"},
   {key: "burza", label: "Burza igrača", icon: <PersonSearchRoundedIcon />, href: "/burza"},
-  {key: "manageLeague", label: "Upravljanje ligom", icon: <TuneRoundedIcon />, leaguePage: "manage", head: "Admin", adminOnly: true},
+  {key: "manageTournaments", label: "Turniri", icon: <MilitaryTechRoundedIcon />, href: "/turniri/upravljanje", head: "Admin", adminOnly: true},
+  {key: "manageLeague", label: "Upravljanje ligom", icon: <TuneRoundedIcon />, leaguePage: "manage", adminOnly: true},
   {key: "createLeague", label: "Nova liga", icon: <LibraryAddRoundedIcon />, href: "/league/new", adminOnly: true},
   {key: "teams", label: "Ekipe", icon: <GroupsRoundedIcon />, href: "/teams", adminOnly: true},
   {key: "players", label: "Igrači", icon: <PersonRoundedIcon />, href: "/players", adminOnly: true},
@@ -213,10 +225,12 @@ export function NavDrawer({open, onClose, active}: {open: boolean; onClose: () =
     };
   }, [open, signedIn, leagueId]);
 
-  // signed out, only the public season table and Burza igrača are available
-  const items = NAV.filter((n) => (signedIn ? isAdmin || !n.adminOnly : n.key === "league" || n.key === "burza")).map((n) =>
+  // signed out ("Gost i poziv"): Početna, the tournaments and Burza igrača open; the league's pages, Rejting and
+  // Raspored shown locked, opening "Sjedni za stol."
+  const items = NAV.filter((n) => (signedIn ? isAdmin || !n.adminOnly : GUEST_OPEN.has(n.key) || GUEST_LOCKED.has(n.key))).map((n) =>
     n.leaguePage ? {...n, href: currentLeagueHref(n.leaguePage, leagueId)} : n
   );
+  const showGuestSheet = useGuestSheet((s) => s.show);
   const itemSx = (on: boolean) => ({
     ...buttonBase,
     width: "100%",
@@ -260,10 +274,7 @@ export function NavDrawer({open, onClose, active}: {open: boolean; onClose: () =
       }}
     >
       <Box sx={{display: "flex", alignItems: "flex-start", justifyContent: "space-between", pl: "12px", pb: "22px"}}>
-        <Box sx={{display: "flex", flexDirection: "column", gap: "2px"}}>
-          <Box sx={{fontSize: 12, fontWeight: 600, letterSpacing: ".14em", textTransform: "uppercase", color: color.muted}}>Piatnik</Box>
-          <Box sx={{fontFamily: font.display, fontSize: 30, fontWeight: 800, lineHeight: 0.95, letterSpacing: "-.03em"}}>Bela Liga</Box>
-        </Box>
+        <Box sx={{fontFamily: font.display, fontSize: 30, fontWeight: 800, lineHeight: 1, letterSpacing: "-.03em", pt: "4px"}}>{APP_NAME}</Box>
         <GhostIconButton label="Zatvori izbornik" onClick={onClose} sx={{borderRadius: "50%"}}>
           <CloseRoundedIcon />
         </GhostIconButton>
@@ -278,7 +289,24 @@ export function NavDrawer({open, onClose, active}: {open: boolean; onClose: () =
                   {n.head}
                 </Box>
               )}
-              {n.href ? (
+              {!signedIn && GUEST_LOCKED.has(n.key) ? (
+                <Box
+                  component="button"
+                  type="button"
+                  onClick={() => {
+                    onClose();
+                    showGuestSheet(n.href ?? "/");
+                  }}
+                  aria-label={`${n.label} (samo s računom)`}
+                  sx={{...itemSx(false), color: color.muted}}
+                >
+                  {n.icon}
+                  <Box component="span" sx={{flex: 1}}>
+                    {n.label}
+                  </Box>
+                  <LockRoundedIcon aria-hidden sx={{"&&": {fontSize: 18}}} />
+                </Box>
+              ) : n.href ? (
                 <Box
                   component={Link}
                   href={n.href}

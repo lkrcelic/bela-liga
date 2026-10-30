@@ -11,7 +11,7 @@ import {
   START_TIME_ERROR,
 } from "../../_interfaces/league";
 import {leagueDateString} from "../dates";
-import {effectiveLocation, effectiveTime, exceptionLabel, gatheringLabel, isSafeUrl, isStartTime, nightTimeLabel, ownTimeOf, sameLocation, timeLabel} from "../nights";
+import {effectiveLocation, effectiveTime, exceptionLabel, gatheringLabel, isSafeUrl, isStartTime, nightTimeLabel, ownTimeOf, sameLocation, seasonGlance, timeLabel} from "../nights";
 import {zodMessage} from "../validation/zodMessage";
 
 // When a league night starts (Raspored, Početna, Upravljanje ligom · Podaci and Datumi)
@@ -218,4 +218,16 @@ test("a night's own time equal to the league's isn't kept; places compare by all
   assert.equal(sameLocation(a, {...a, address: "Vlaška 5"}), false);
   assert.equal(sameLocation(null, null), true);
   assert.equal(sameLocation(a, null), false);
+});
+
+test("a guest's Liga: the season's next night, tonight included, and its number", () => {
+  const nights = [
+    {date: "2026-10-20", time: "19:00"},
+    {date: "2026-10-27", time: null},
+    {date: "2026-11-03", time: "19:30"},
+  ];
+  assert.deepEqual(seasonGlance(nights, "2026-10-27"), {label: "Večer 2 od 3", next: {date: "2026-10-27", time: null}});
+  assert.deepEqual(seasonGlance(nights, "2026-10-30"), {label: "Večer 3 od 3", next: {date: "2026-11-03", time: "19:30"}});
+  assert.deepEqual(seasonGlance(nights, "2026-11-04"), {label: "Sezona je završila", next: null});
+  assert.deepEqual(seasonGlance([], "2026-11-04"), {label: "Još nema večeri", next: null});
 });

@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
 // A new response each time: a response body can only be sent once
 const leagueNotFound = () => NextResponse.json({error: "Liga ne postoji."}, {status: STATUS.NotFound});
 
-// A league's nights, each with whether it has rounds and when it starts (Raspored, Upravljanje ligom · Datumi). Public, like the season table.
+// A league's nights, each with whether it has rounds and when it starts (Raspored, Upravljanje ligom · Datumi). Public: a guest's Početna · Liga shows the next night.
 export async function GET(_request: NextRequest, {params}: {params: {id: string}}) {
   try {
     const leagueId = Number(params.id);

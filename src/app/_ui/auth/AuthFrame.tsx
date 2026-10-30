@@ -2,37 +2,31 @@
 
 import useIsDesktop from "@/app/_hooks/useIsDesktop";
 import {color, font, tint} from "@/app/_styles/tokens";
+import {APP_NAME} from "@/app/_ui/sp/brand";
 import {Box} from "@mui/material";
 import React from "react";
 
-// Brand block: the bell (zvono, the app icon) before the "PIATNIK" eyebrow over the big "Bela Liga" wordmark. "auth"
-// (login, sign-up): a muted eyebrow over a size-px wordmark. "home" (Početna, the desktop-only note): the navy 12.5 px
-// eyebrow over a 34 px wordmark.
+// Brand block (Claude Design "Natjecanja": the app is Belatronika, one word). "home" (Početna, the desktop-only note):
+// the 32 px wordmark alone, as the design's header. "auth" (login, sign-up): the bell (zvono, the app icon) before a
+// size-px wordmark.
 export function Brand({size = 56, light = false, variant = "auth"}: {size?: number; light?: boolean; variant?: "auth" | "home"}) {
-  const home = variant === "home";
-  // the bell stands about as tall as eyebrow and wordmark together, a little smaller where the row is short of room
-  const bell = home ? 50 : Math.round(size * 1.3);
+  if (variant === "home") {
+    return (
+      <Box sx={{fontFamily: font.display, fontSize: 32, fontWeight: 800, lineHeight: 1, letterSpacing: "-.02em", whiteSpace: "nowrap", color: color.ink}}>
+        {APP_NAME}
+      </Box>
+    );
+  }
+  // the bell stands a little taller than the wordmark
+  const bell = Math.round(size * 1.15);
   return (
-    <Box sx={{display: "flex", alignItems: "flex-end", gap: home ? "8px" : `${Math.round(size * 0.2)}px`}}>
+    <Box sx={{display: "flex", alignItems: "flex-end", gap: `${Math.round(size * 0.2)}px`}}>
       {/* eslint-disable-next-line @next/next/no-img-element -- a small static mark; next/image adds nothing */}
       <Box component="img" src="/bell.webp" alt="" draggable={false} sx={{width: Math.round(bell * 0.94), height: "auto", flex: "0 1 auto", minWidth: 30, display: "block"}} />
-      <Box sx={{flex: "none", display: "flex", flexDirection: "column", gap: !home && size > 60 ? "6px" : "4px"}}>
-        <Box
-          sx={{
-            fontSize: home ? 12.5 : size > 60 ? 14 : 13,
-            fontWeight: home ? 700 : 600,
-            letterSpacing: ".14em",
-            textTransform: "uppercase",
-            color: home ? color.navy : light ? color.cream : color.muted,
-          }}
-        >
-          Piatnik
-        </Box>
-        <Box
-          sx={{fontFamily: font.display, fontSize: home ? 34 : size, fontWeight: 800, lineHeight: home ? 1 : 0.92, letterSpacing: home ? "-.02em" : "-.03em", whiteSpace: home ? "nowrap" : undefined}}
-        >
-          Bela Liga
-        </Box>
+      <Box
+        sx={{flex: "0 1 auto", minWidth: 0, fontFamily: font.display, fontSize: size * 0.82, fontWeight: 800, lineHeight: 0.92, letterSpacing: "-.03em", color: light ? color.white : color.ink, overflowWrap: "anywhere"}}
+      >
+        {APP_NAME}
       </Box>
     </Box>
   );

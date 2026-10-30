@@ -1,7 +1,7 @@
 {
-  "name": "Piatnik Bela Liga",
-  "short_name": "Bela Liga",
-  "description": "Rezultati, poredak i bodovanje Piatnik Bela Lige",
+  "name": "Belatronika",
+  "short_name": "Belatronika",
+  "description": "Lige i turniri bele: rezultati, poredak i bodovanje",
   "lang": "hr",
   "id": "/",
   "start_url": "/",

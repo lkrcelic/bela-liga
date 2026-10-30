@@ -150,6 +150,7 @@ export const shadow = {
   knob: "0 1px 3px rgba(21,24,31,.25)", // the knob of a switch
   sticky: "0 6px 12px -8px rgba(31,36,51,.25)", // under a sticky header once the list scrolls
   photo: "0 6px 16px rgba(31,36,51,.12)", // a team's photo on a desktop podium card
+  playingCard: "0 8px 18px rgba(0,0,0,.25)", // the four suits on the navy "Sjedni za stol." sheet
   focus: `0 0 0 3px ${tint.navy[18]}`, // focus ring of an input
   // my team: a navy bar on the left of a row, a navy ring around a podium card; selectRing marks the selected row
   // and the player's own table card

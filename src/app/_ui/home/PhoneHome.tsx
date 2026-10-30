@@ -5,16 +5,16 @@ import useIsAdmin from "@/app/_hooks/useIsAdmin";
 import useAdminViewStore from "@/app/_store/adminViewStore";
 import {useSelectedLeagueId} from "@/app/_hooks/useLeagues";
 import useMySchedule from "@/app/_hooks/useMySchedule";
-import useOpenTable, {OpenTable} from "@/app/_hooks/useOpenTable";
+import useOpenTable from "@/app/_hooks/useOpenTable";
 import useStartGame from "@/app/_hooks/useStartGame";
 import {currentLeagueHref} from "@/app/_lib/league";
-import {color, font, shadow, teamOnNavy, tint} from "@/app/_styles/tokens";
+import {color, font, shadow, tint} from "@/app/_styles/tokens";
 import {Brand} from "@/app/_ui/auth/AuthFrame";
 import {BurzaHomeCard, HomeTile, NextNightCard, NextNightPlaceholder, nextNight} from "@/app/_ui/home/HomeCards";
+import {StartCard} from "@/app/_ui/home/StartCard";
 import HomeSponsors from "@/app/_ui/home/HomeSponsors";
 import InstallSheet from "@/app/_ui/install/InstallSheet";
-import {SmokingMark} from "@/app/_ui/smoking/SmokingParts";
-import {buttonBase, ellipsis, ErrorNote, IconCircleButton, InitialsAvatar, Screen, Spinner, visuallyHidden} from "@/app/_ui/sp";
+import {buttonBase, ErrorNote, IconCircleButton, InitialsAvatar, Screen, Segmented, tabPanelProps, visuallyHidden} from "@/app/_ui/sp";
 import useAuthStore from "@/app/_store/authStore";
 import AccountCircleRoundedIcon from "@mui/icons-material/AccountCircleRounded";
 import AdminPanelSettingsRoundedIcon from "@mui/icons-material/AdminPanelSettingsRounded";
@@ -23,35 +23,46 @@ import EventRoundedIcon from "@mui/icons-material/EventRounded";
 import EmojiEventsRoundedIcon from "@mui/icons-material/EmojiEventsRounded";
 import LeaderboardRoundedIcon from "@mui/icons-material/LeaderboardRounded";
 import LockRoundedIcon from "@mui/icons-material/LockRounded";
-import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
 import {Box} from "@mui/material";
-import {useTransitionRouter} from "@/app/_lib/viewTransitions";
+import {TransitionLink, useTransitionRouter} from "@/app/_lib/viewTransitions";
+import {useMyRating} from "@/app/_hooks/useRatings";
+import {useTournaments} from "@/app/_hooks/useTournaments";
+import TournamentsOverview, {playingToday} from "@/app/_ui/tournaments/TournamentsOverview";
+import EventRepeatRoundedIcon from "@mui/icons-material/EventRepeatRounded";
+import MilitaryTechRoundedIcon from "@mui/icons-material/MilitaryTechRounded";
+import {useState} from "react";
 
-// under 400 px the header holds the brand (with its bell) next to an admin's Admin button only as an icon
+// under 400 px the header holds a smaller brand next to an admin's Admin button only as an icon
 const narrowPhone = "@media (max-width: 399.98px)";
 
-// Početna on the phone, the only Home (handoff §2; Claude Design "Burza v2" screen "home"): the top card, the Burza
-// igrača card, the 2×2 tiles and the league's sponsors. Nothing is edited here. An admin sees it after "Prikaz igrača" on Večer lige
-// (admin-mobile 04), with an Admin button next to Moj profil that switches back.
+// Početna on the phone, the only Home (handoff §2; Claude Design "Burza v2" screen "home", and "Natjecanja" S1–S4):
+// the header with the rating chip, the switch Turniri · Liga (remembered on the phone), and under it the league's Home
+// (the top card, the Burza igrača card, the 2×2 tiles and the league's sponsors) or the tournaments' (TournamentsOverview).
+// Nothing is edited here. An admin sees it after "Prikaz igrača" on Večer lige (admin-mobile 04), with an Admin button
+// next to Moj profil that switches back.
 export default function PhoneHome() {
   const router = useTransitionRouter();
   // the profile button shows the player's photo, when there is one
   const me = useAuthStore((s) => s.user);
-  const leagueId = useSelectedLeagueId();
-  const {table: openTable, loading: openTableLoading} = useOpenTable();
-  const {start, starting, error} = useStartGame();
-  const {schedule, error: scheduleError} = useMySchedule();
-  const next = nextNight(schedule);
-  const {posts} = useBurza();
   const isAdmin = useIsAdmin();
   const setAdminView = useAdminViewStore((st) => st.setView);
+  const {me: myRating} = useMyRating();
+  const {schedule} = useMySchedule();
+  const {tournaments} = useTournaments();
+  const [tab, setTab] = useState<HomeTab | null>(readHomeTab);
+  const playing = playingToday(tournaments);
+  // the first time: Liga, or Turniri for a player in no league or whose tournament is being played today
+  const shown: HomeTab = tab ?? (playing || (schedule != null && schedule.leagues.length === 0) ? "turniri" : "liga");
+  const pick = (t: HomeTab) => {
+    setTab(t);
+    saveHomeTab(t);
+  };
 
   return (
     <Screen gap={12}>
       {/* 4 px more under the header than between the cards, as designed */}
-      <Box component="header" sx={{display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: "12px", px: "4px", pb: "4px"}}>
-        {/* minWidth 0: on a narrow phone the brand's bell gives way to the buttons */}
-        <Box component="h1" sx={{m: 0, fontWeight: "inherit", minWidth: 0}}>
+      <Box component="header" sx={{display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px", px: "4px", pb: "4px"}}>
+        <Box component="h1" sx={{m: 0, fontWeight: "inherit", minWidth: 0, [narrowPhone]: {"& > div": {fontSize: 27}}}}>
           <Brand variant="home" />
         </Box>
         <Box sx={{flex: "none", display: "flex", alignItems: "center", gap: "8px"}}>
@@ -75,7 +86,7 @@ export default function PhoneHome() {
                 fontWeight: 700,
                 boxShadow: shadow.raised,
                 "& svg": {fontSize: 20},
-                // a phone under 400 px has no room for the label next to the brand's bell: the icon alone
+                // a phone under 400 px has no room for the label next to the brand: the icon alone
                 [narrowPhone]: {width: 44, p: 0, justifyContent: "center"},
               }}
             >
@@ -85,12 +96,81 @@ export default function PhoneHome() {
               </Box>
             </Box>
           )}
+          {myRating && <RatingChip rating={myRating.rating} />}
           <IconCircleButton label="Moj profil" onClick={() => router.push("/profile")}>
             {me?.photo_url ? <InitialsAvatar name={me.username} src={me.photo_url} size={40} variant="navy" /> : <AccountCircleRoundedIcon />}
           </IconCircleButton>
         </Box>
       </Box>
 
+      <Segmented<HomeTab>
+        items={[
+          {key: "turniri", label: <><MilitaryTechRoundedIcon aria-hidden sx={{fontSize: 20}} />Turniri</>, live: shown === "liga" && playing},
+          {key: "liga", label: <><EventRepeatRoundedIcon aria-hidden sx={{fontSize: 20}} />Liga</>},
+        ]}
+        value={shown}
+        onChange={pick}
+        label="Početna"
+        variant="track"
+        size={48}
+        idPrefix="home"
+      />
+
+      <Box {...tabPanelProps("home", shown)} sx={{display: "flex", flexDirection: "column", gap: "12px"}}>
+        {shown === "liga" ? <LeagueHome /> : <TournamentsOverview withBurza />}
+      </Box>
+
+      <InstallSheet />
+    </Screen>
+  );
+}
+
+export type HomeTab = "turniri" | "liga";
+const HOME_TAB_KEY = "bela.homeTab";
+
+// the tab picked last on this phone (none the first time, or where storage isn't available)
+export function readHomeTab(): HomeTab | null {
+  try {
+    const v = window.localStorage.getItem(HOME_TAB_KEY);
+    return v === "turniri" || v === "liga" ? v : null;
+  } catch {
+    return null;
+  }
+}
+
+export function saveHomeTab(t: HomeTab) {
+  try {
+    window.localStorage.setItem(HOME_TAB_KEY, t);
+  } catch {
+    // not remembered: the next visit picks the tab again
+  }
+}
+
+// The rating next to the profile (as chess apps have it), for every league and tournament: opens Rejting
+function RatingChip({rating}: {rating: number}) {
+  return (
+    <Box
+      component={TransitionLink}
+      href="/ratings"
+      aria-label={`Rejting ${rating}`}
+      sx={{...buttonBase, height: 40, display: "flex", alignItems: "center", gap: "5px", pl: "10px", pr: "12px", borderRadius: "20px", background: color.white, color: color.ink, fontSize: 16, fontWeight: 800, textDecoration: "none", boxShadow: shadow.pill, fontVariantNumeric: "tabular-nums", "& svg": {fontSize: 19, color: color.navy}}}
+    >
+      <LeaderboardRoundedIcon aria-hidden />
+      {rating}
+    </Box>
+  );
+}
+
+// Početna · Liga: the league's Home as it was before the tournaments (only a league's table on the top card)
+function LeagueHome() {
+  const leagueId = useSelectedLeagueId();
+  const {table: openTable, loading: openTableLoading} = useOpenTable("league");
+  const {start, starting, error} = useStartGame({scope: "league"});
+  const {schedule, error: scheduleError, reload: reloadSchedule} = useMySchedule();
+  const next = nextNight(schedule);
+  const {posts} = useBurza();
+  return (
+    <>
       {/* the table to play tonight; the rest of the week, the team's next night. While the open round loads, the
           neutral frame (named like the Start card, so the scoreboard still shrinks into it on the way back) */}
       {openTable ? (
@@ -100,7 +180,7 @@ export default function PhoneHome() {
           <NextNightPlaceholder />
         </Box>
       ) : next ? (
-        <NextNightCard league={next.league} night={next.night} today={schedule!.today} />
+        <NextNightCard league={next.league} night={next.night} today={schedule!.today} onArrivalChanged={reloadSchedule} />
       ) : schedule || scheduleError ? (
         <NoRoundCard />
       ) : (
@@ -122,87 +202,7 @@ export default function PhoneHome() {
       </Box>
 
       <HomeSponsors leagueId={leagueId} />
-
-      <InstallSheet />
-    </Screen>
-  );
-}
-
-// Započni igru: the player's table of the open round (table number, the smoking mark, both teams, and the score once
-// a match is running, when it reads Nastavi igru)
-function StartCard({table, starting, onStart, errorId}: {table: OpenTable; starting: boolean; onStart: () => void; errorId?: string}) {
-  const live = table.score != null;
-  return (
-    <Box
-      component="button"
-      type="button"
-      onClick={onStart}
-      disabled={starting}
-      aria-busy={starting || undefined}
-      aria-describedby={errorId}
-      sx={{
-        ...buttonBase,
-        position: "relative",
-        minHeight: 200,
-        flex: "none",
-        borderRadius: "24px",
-        background: color.navy,
-        color: color.white,
-        p: "20px 20px 22px 22px",
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "space-between",
-        alignItems: "stretch",
-        gap: "14px",
-        textAlign: "left",
-        boxShadow: shadow.hero,
-        // grows into the scoreboard on Započni igru (the board's root has the same name)
-        viewTransitionName: "table",
-        transition: "transform 120ms ease",
-        "&:active:not(:disabled)": {transform: "scale(.98)"},
-      }}
-    >
-      <Box sx={{display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "12px"}}>
-        <Box sx={{display: "flex", flexDirection: "column", gap: "8px", minWidth: 0}}>
-          <Box sx={{display: "flex", alignItems: "center", gap: "8px"}}>
-            <Box component="span" sx={{height: 28, display: "flex", alignItems: "center", px: "10px", borderRadius: "9px", background: color.cream, color: color.navy, fontSize: 13, fontWeight: 800, letterSpacing: ".08em"}}>
-              STOL {table.table ?? "–"}
-            </Box>
-            {table.smoking && <SmokingMark variant="onNavy" />}
-            {live && (
-              <Box component="span" sx={{fontSize: 13, fontWeight: 700, color: color.cream, whiteSpace: "nowrap", fontVariantNumeric: "tabular-nums"}}>
-                {table.score![0]} : {table.score![1]}
-              </Box>
-            )}
-          </Box>
-          <Box sx={{display: "flex", flexDirection: "column", gap: "2px", minWidth: 0, fontSize: 17, fontWeight: 600, lineHeight: 1.2}}>
-            <TeamName name={table.myTeam} dot={teamOnNavy[0]} />
-            <TeamName name={table.opponent} dot={teamOnNavy[1]} />
-          </Box>
-        </Box>
-        <Box
-          component="span"
-          aria-hidden
-          sx={{width: 52, height: 52, flex: "none", borderRadius: "50%", background: color.cream, color: color.navy, display: "flex", alignItems: "center", justifyContent: "center"}}
-        >
-          {starting ? <Spinner size={22} /> : <PlayArrowRoundedIcon sx={{fontSize: 32}} />}
-        </Box>
-      </Box>
-      <Box component="span" sx={{fontFamily: font.display, fontSize: 42, fontWeight: 800, letterSpacing: "-.02em", lineHeight: 1, whiteSpace: "nowrap"}}>
-        {live ? "Nastavi igru" : "Započni igru"}
-      </Box>
-    </Box>
-  );
-}
-
-function TeamName({name, dot}: {name: string; dot: string}) {
-  return (
-    <Box component="span" sx={{display: "flex", alignItems: "center", gap: "8px", minWidth: 0}}>
-      <Box component="span" aria-hidden sx={{width: 8, height: 8, flex: "none", borderRadius: "50%", background: dot}} />
-      <Box component="span" sx={ellipsis}>
-        {name}
-      </Box>
-    </Box>
+    </>
   );
 }
 

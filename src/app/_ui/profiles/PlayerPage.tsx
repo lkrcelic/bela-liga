@@ -41,6 +41,7 @@ import type {Overview} from "@/app/_hooks/useOverview";
 import {adminPlayersList} from "@/app/_hooks/useAdminPlayers";
 import {PhotoAdminBadge, PhotoAdminCard} from "@/app/_ui/photo/PhotoAdmin";
 import type {PhotoInfo} from "@/app/_ui/photo/PhotoParts";
+import BanSection from "./BanSection";
 import {TeamCards} from "./TeamCards";
 
 // The Player page (/players/[playerId], handoff §6, frames 13c, 13g, 13j, 13l): the player's name and rating (to the
@@ -102,6 +103,7 @@ export function PlayerPagePhone({playerId}: {playerId: number}) {
           {admin && <AdminPhoto data={data} overview={overview} />}
           {admin ? <PlayerTeamsPhone data={data} admin={admin} /> : <TeamCards title="Ekipe" empty={NO_TEAMS} emptyIcon teams={data.teams} />}
           {admin && <PlayerAccountPhone data={data} overview={overview} />}
+          {admin && <BanSection target={{kind: "player", id: data.player.id, name: data.player.name}} />}
           {admin && editing && <PlayerDetailsSheet key={data.player.id} data={data} overview={overview} onClose={() => setEditing(false)} />}
         </>
       ) : (
@@ -165,6 +167,7 @@ export function PlayerPageDesktop({playerId, embedded = false}: {playerId: numbe
             />
             <DesktopNights nights={data.nights} />
           </PageColumns>
+          {admin && <BanSection desktop target={{kind: "player", id: data.player.id, name: data.player.name}} />}
           {admin && editing && <EditPlayerPanel key={data.player.id} data={data} overview={overview} onClose={() => setEditing(false)} />}
         </>
       ) : (

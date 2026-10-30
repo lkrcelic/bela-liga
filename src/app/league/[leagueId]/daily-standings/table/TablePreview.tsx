@@ -20,6 +20,7 @@ import SyncRoundedIcon from "@mui/icons-material/SyncRounded";
 import TableRestaurantRoundedIcon from "@mui/icons-material/TableRestaurantRounded";
 import {Box} from "@mui/material";
 import {useParams} from "next/navigation";
+import {roundHref, scopeHomeLabel, tableScopeOf} from "@/app/_lib/ui/tableScope";
 import React, {useCallback, useEffect, useState} from "react";
 
 const REFRESH_MS = 15000;
@@ -35,8 +36,8 @@ const CHIP: Record<TableState, {label: string; bg: string; ink: string}> = {
 // opens the team, the viewer's own team is marked), Meč 1 · Meč 2, and the chosen match's hands. A live table
 // refreshes itself. The player whose own table it is, still to be played, goes straight into the game instead.
 export default function TablePreview() {
-  const params = useParams<{leagueId: string; roundId: string}>();
-  const leagueId = Number(params.leagueId);
+  const params = useParams<{leagueId?: string; id?: string; roundId: string}>();
+  const scope = tableScopeOf(params);
   const roundId = Number(params.roundId);
   const {teams: myTeams} = useMyTeams();
   const {table: openTable} = useOpenTable();
@@ -81,8 +82,8 @@ export default function TablePreview() {
   }, [own, start]);
 
   // the team page opened from here says "‹ Stol 4" on its back pill
-  const nav = useNavStack(table ? `Stol ${table.table ?? "–"}` : null, `/league/${leagueId}/daily-standings`);
-  const roundLabel = table?.roundNumber ? `Kolo ${table.roundNumber}` : nav.previousLabel ?? "Dnevni poredak";
+  const nav = useNavStack(table ? `Stol ${table.table ?? "–"}` : null, roundHref(scope, {date: null, roundNumber: null, admin: false}));
+  const roundLabel = table?.roundNumber ? `Kolo ${table.roundNumber}` : nav.previousLabel ?? scopeHomeLabel(scope);
   const retry = () => {
     setFailed(null);
     setTable(null);
@@ -98,7 +99,7 @@ export default function TablePreview() {
             icon={<TableRestaurantRoundedIcon />}
             title="Stol ne postoji"
             text="Kolo je možda promijenjeno ili obrisano."
-            action={{label: `Natrag na ${nav.previousLabel ?? "Dnevni poredak"}`, icon: <ChevronLeftRoundedIcon />, onClick: nav.back}}
+            action={{label: `Natrag na ${nav.previousLabel ?? scopeHomeLabel(scope)}`, icon: <ChevronLeftRoundedIcon />, onClick: nav.back}}
             sx={{my: "auto"}}
           />
         ) : (
@@ -125,8 +126,8 @@ export default function TablePreview() {
 
   const names: [string, string] = [table.team1.name, table.team2.name];
   const mine = [table.team1.id, table.team2.id].map((id) => myTeams.some((t) => t.team_id === id));
-  const slots = matchSlots(table.matches);
-  const shown = picked ?? currentMatchNumber(table.matches);
+  const slots = matchSlots(table.matches, table.matchesPerRound);
+  const shown = picked ?? currentMatchNumber(table.matches, table.matchesPerRound);
   const slot = slots[shown - 1];
   const match = slot.match;
   const wins = roundWins(table.matches);
@@ -163,6 +164,7 @@ export default function TablePreview() {
             index={i}
             name={names[i]}
             wins={wins[i]}
+            of={table.matchesPerRound}
             total={match ? (i ? match.score2 : match.score1) : 0}
             threshold={match?.threshold ?? 1001}
             celebrate={false}

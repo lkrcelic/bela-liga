@@ -11,7 +11,6 @@ import {
   setStiglja,
   switchMode,
   typeDigit,
-  ZVANJA,
   zvanjaPoints,
 } from "@/app/_lib/ui/adminEntry";
 import {Side} from "@/app/_lib/bela/scoring";
@@ -25,6 +24,7 @@ import EditNoteRoundedIcon from "@mui/icons-material/EditNoteRounded";
 import EmojiEventsRoundedIcon from "@mui/icons-material/EmojiEventsRounded";
 import InfoRoundedIcon from "@mui/icons-material/InfoRounded";
 import StyleRoundedIcon from "@mui/icons-material/StyleRounded";
+import {zvanjaChoices, zvanjeBlocked, zvanjeLabel} from "@/app/_lib/bela/declarations";
 import {Box} from "@mui/material";
 import React, {useEffect, useRef} from "react";
 
@@ -43,6 +43,7 @@ export default function AdminEntryPanel({
   onCancel,
   onDelete,
   finish,
+  declarations = true,
 }: {
   entry: EntryState;
   onChange: (s: EntryState) => void;
@@ -56,9 +57,12 @@ export default function AdminEntryPanel({
   onDelete: () => void;
   // the selected match has a winner and can be finished (instead of saving hands)
   finish: {winner: string; color: string; onFinish: () => void; busy: boolean} | null;
+  // zvanja count at the table; false (a tournament "bez zvanja"): only one bela a hand
+  declarations?: boolean;
 }) {
   const manual = entry.mode === "man";
   const counts = entry.zvanja[entry.active];
+  const twenties = entry.zvanja[1][20] + entry.zvanja[2][20];
   const savable = canSave(entry);
 
   // number keys type points, Enter saves (when the focus is not in a text field)
@@ -267,7 +271,7 @@ export default function AdminEntryPanel({
 
       {!manual && (
         <Box sx={{display: "grid", gridTemplateColumns: "repeat(6, minmax(0,1fr))", gap: "8px"}}>
-          {ZVANJA.map((v) => {
+          {zvanjaChoices(declarations).map((v) => {
             const cnt = counts[v];
             return (
               <Box
@@ -275,10 +279,11 @@ export default function AdminEntryPanel({
                 component="button"
                 type="button"
                 onClick={() => onChange(addZvanje(entry, v))}
-                aria-label={`Zvanje ${v}${cnt ? `, upisano ${cnt}` : ""}`}
-                sx={{...buttonBase, position: "relative", height: 52, [SHORT_WINDOW]: {height: 40}, borderRadius: "14px", background: color.cream, color: color.navy, fontFamily: font.display, fontSize: 20, fontWeight: 800, "&:active": {transform: "scale(.95)"}}}
+                disabled={zvanjeBlocked(declarations, twenties)}
+                aria-label={`${declarations ? "Zvanje" : "Zvanje bela"} ${v}${cnt ? `, upisano ${cnt}` : ""}`}
+                sx={{...buttonBase, position: "relative", height: 52, [SHORT_WINDOW]: {height: 40}, borderRadius: "14px", background: color.cream, color: color.navy, fontFamily: font.display, fontSize: 20, fontWeight: 800, "&:active": {transform: "scale(.95)"}, "&:disabled": {opacity: cnt ? 1 : 0.45}, ...(!declarations && {gridColumn: "span 2"})}}
               >
-                {v}
+                {zvanjeLabel(v, declarations)}
                 <Box
                   component="span"
                   aria-hidden

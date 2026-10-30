@@ -1,5 +1,5 @@
 import {BelaResultCreateRequest} from "@/app/_interfaces/belaResult";
-import {InvalidResultError, normalizeBelaResult} from "@/app/_lib/validation/validateResult";
+import {declarationsError, InvalidResultError, normalizeBelaResult} from "@/app/_lib/validation/validateResult";
 import {prisma} from "@/app/_lib/prisma";
 
 type UpdateOngoingBelaResultType = {
@@ -23,6 +23,11 @@ export async function updateOngoingBelaResult({result_id, resultData, normalize 
         if (!existingResult) {
             throw new InvalidResultError("Igra ne postoji.");
         }
+        // a tournament "bez zvanja" takes only bela
+        const [table] = await tx.$queryRaw<{declarations: boolean}[]>`
+            SELECT r.declarations FROM "OngoingMatch" om JOIN "Round" r ON r.id = om.round_id WHERE om.id = ${existingResult.match_id}`;
+        const zvanja = declarationsError(table?.declarations ?? true, announcements);
+        if (zvanja) throw new InvalidResultError(zvanja);
 
         await tx.ongoingBelaResult.update({
             where: {result_id: result_id},

@@ -11,6 +11,7 @@ import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import ErrorRoundedIcon from "@mui/icons-material/ErrorRounded";
 import RemoveRoundedIcon from "@mui/icons-material/RemoveRounded";
 import {Box, SxProps, Theme} from "@mui/material";
+import {GAME_MINUTES_DEFAULT, GAME_MINUTES_MAX, GAME_MINUTES_MIN} from "@/app/_lib/gameTime";
 import {useState} from "react";
 
 export const DAYS = ["Pon", "Uto", "Sri", "Čet", "Pet", "Sub", "Ned"];
@@ -28,6 +29,8 @@ export type Details = {
   address: string;
   url: string;
   rounds: number;
+  // Vrijeme partije · min
+  minutes: number;
 };
 
 const fromLeague = (l: LeagueOption | undefined): Details => ({
@@ -41,6 +44,7 @@ const fromLeague = (l: LeagueOption | undefined): Details => ({
   address: l?.location?.address ?? "",
   url: l?.location?.url ?? "",
   rounds: l?.roundsPerNight ?? 3,
+  minutes: l?.gameMinutes ?? GAME_MINUTES_DEFAULT,
 });
 
 // The league's details being edited (Podaci on the desktop, Postavke on the admin's phone): the form's values over the
@@ -91,6 +95,7 @@ export function useLeagueDetails(leagueId: number, leagues: LeagueOption[]) {
         start_time: d.time || null,
         ...placePayload(place),
         rounds_per_night: d.rounds,
+        game_minutes: d.minutes,
       });
       updateCachedLeague(leagueId, {
         name,
@@ -101,6 +106,7 @@ export function useLeagueDetails(leagueId: number, leagues: LeagueOption[]) {
         startTime: d.time || null,
         location: placeOfDraft(place),
         roundsPerNight: d.rounds,
+        gameMinutes: d.minutes,
       });
       setDraft({});
       setSaved(true);
@@ -202,6 +208,27 @@ export default function LeagueDetailsView({leagueId, leagues}: {leagueId: number
                   {label}
                 </Box>
               ))}
+            </Box>
+          </Box>
+          <Box role="group" aria-labelledby="ld-gm" sx={{display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", p: "12px 14px", borderRadius: "16px", background: color.paper2}}>
+            <Box sx={{display: "flex", flexDirection: "column"}}>
+              <Box id="ld-gm" component="span" sx={{fontSize: 15, fontWeight: 600}}>
+                Vrijeme partije · min
+              </Box>
+              <Box component="span" sx={{fontSize: 13, color: color.muted}}>
+                Od početka partije; kad istekne, vrijedi upisani rezultat
+              </Box>
+            </Box>
+            <Box sx={{display: "flex", alignItems: "center", gap: "10px"}}>
+              <IconCircleButton label="Kraće vrijeme partije" size={44} onClick={() => set("minutes", Math.max(GAME_MINUTES_MIN, d.minutes - 5))} disabled={d.minutes <= GAME_MINUTES_MIN} sx={{borderRadius: "12px", "& svg": {fontSize: 22}}}>
+                <RemoveRoundedIcon />
+              </IconCircleButton>
+              <Box component="output" aria-live="polite" sx={{minWidth: 40, textAlign: "center", fontFamily: font.display, fontSize: 28, fontWeight: 800}}>
+                {d.minutes}
+              </Box>
+              <IconCircleButton label="Dulje vrijeme partije" size={44} onClick={() => set("minutes", Math.min(GAME_MINUTES_MAX, d.minutes + 5))} disabled={d.minutes >= GAME_MINUTES_MAX} sx={{borderRadius: "12px", "& svg": {fontSize: 22}}}>
+                <AddRoundedIcon />
+              </IconCircleButton>
             </Box>
           </Box>
           <Box role="group" aria-labelledby="ld-rpn" sx={{display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", p: "12px 14px", borderRadius: "16px", background: color.paper2}}>

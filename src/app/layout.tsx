@@ -1,7 +1,9 @@
 "use client";
 
 import BirthDatePrompt from "@/app/_bootstrap/BirthDatePrompt";
+import GuestSheet from "@/app/_ui/auth/GuestSheet";
 import SmokerPrompt from "@/app/_bootstrap/SmokerPrompt";
+import TournamentAttention from "@/app/_bootstrap/TournamentAttention";
 import UserBootstrapper from "@/app/_bootstrap/UserBootstrapper";
 // catches Chrome's install offer as early as possible, for the install sheet
 import "@/app/_lib/installPrompt";
@@ -25,7 +27,7 @@ export default function RootLayout({children}: Readonly<{children: React.ReactNo
         {/* installable from the browser ("Add to Home Screen" / "Install app"); no service worker, nothing offline */}
         <link rel="manifest" href="/manifest.webmanifest" />
         <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
-        <meta name="apple-mobile-web-app-title" content="Bela Liga" />
+        <meta name="apple-mobile-web-app-title" content="Belatronika" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
@@ -36,7 +38,7 @@ export default function RootLayout({children}: Readonly<{children: React.ReactNo
           rel="stylesheet"
           href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Instrument+Sans:wght@400;500;600;700&display=swap"
         />
-        <title>Piatnik Bela Liga</title>
+        <title>Belatronika</title>
       </head>
       <body style={{margin: 0, padding: 0, backgroundColor: color.paper, overflowX: "hidden"}}>
         <ThemeProvider theme={theme}>
@@ -47,6 +49,10 @@ export default function RootLayout({children}: Readonly<{children: React.ReactNo
           {mounted && <BirthDatePrompt />}
           {/* "Pušiš li?" for players who haven't answered it, after the birth date */}
           {mounted && <SmokerPrompt />}
+          {/* Nedolazak za stol: "Jesu li … za stolom?" over every screen on a tournament day */}
+          {mounted && <TournamentAttention />}
+          {/* "Sjedni za stol.": a guest's Prijavi se and locked items */}
+          {mounted && <GuestSheet />}
         </ThemeProvider>
       </body>
     </html>

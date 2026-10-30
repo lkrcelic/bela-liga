@@ -8,6 +8,7 @@ import {prisma} from "@/app/_lib/prisma";
 import {InvalidResultError} from "@/app/_lib/validation/validateResult";
 import {Prisma} from "@prisma/client";
 import {recalcTeamScores} from "@/app/_lib/service/admin/recalc";
+import {assertMayPlay, teamPlayBans} from "@/app/_lib/service/bans/bans";
 
 const dateString = (d: Date | null) => (d ? d.toISOString().slice(0, 10) : null);
 const dateValue = (d?: string | null) => (d ? new Date(`${d}T00:00:00.000Z`) : null);
@@ -46,6 +47,7 @@ export async function listLeagues(): Promise<LeagueSummary[]> {
     location_address: l.location_address,
     location_url: l.location_url,
     rounds_per_night: l.rounds_per_night,
+    game_minutes: l.game_minutes,
     smoking_tables: l.smoking_tables,
     team_count: l._count.leagueTeams,
     last_played: lastPlayed.get(l.league_id) ?? null,
@@ -77,6 +79,8 @@ export async function createLeague(req: LeagueCreateRequest): Promise<LeagueSumm
   if (teamIds.length) {
     const found = await prisma.team.count({where: {team_id: {in: teamIds}}});
     if (found !== teamIds.length) throw new InvalidResultError("Neke od ekipa ne postoje.");
+    // a banned team doesn't play the league's nights
+    await assertMayPlay(teamIds);
   }
   const nights = sortNights(req.nights ?? generateNights(req.start_date, req.end_date, req.play_day));
 
@@ -92,6 +96,7 @@ export async function createLeague(req: LeagueCreateRequest): Promise<LeagueSumm
       location_address: optionalText(req.location_address) ?? null,
       location_url: optionalText(req.location_url) ?? null,
       rounds_per_night: req.rounds_per_night,
+      game_minutes: req.game_minutes,
       leagueTeams: {create: teamIds.map((team_id) => ({team_id}))},
       nights: {create: nights.map((night) => ({night: nightValue(night)}))},
     },
@@ -109,6 +114,7 @@ export async function createLeague(req: LeagueCreateRequest): Promise<LeagueSumm
     location_address: league.location_address,
     location_url: league.location_url,
     rounds_per_night: league.rounds_per_night,
+    game_minutes: league.game_minutes,
     smoking_tables: league.smoking_tables,
     team_count: teamIds.length,
     last_played: null,
@@ -127,6 +133,7 @@ export async function listLeagueTeams(leagueId: number): Promise<LeagueTeamDetai
     where: {league_id: leagueId, team_id: {not: BYE_TEAM_ID}},
     include: {team: {include: {teamPlayers: {include: {player: {select: {id: true, username: true, smoker: true, active: true}}}}}}},
   });
+  const bans = await teamPlayBans(rows.map((r) => r.team_id));
   return rows
     .map((r) => ({
       team_id: r.team_id,
@@ -135,6 +142,7 @@ export async function listLeagueTeams(leagueId: number): Promise<LeagueTeamDetai
       players: r.team.teamPlayers.map((tp) => ({id: tp.player.id, username: tp.player.username})),
       // counted as the pairing counts them (teamSmokers): a deactivated player can't play
       smokers: r.team.teamPlayers.filter((tp) => tp.player.smoker && tp.player.active).length,
+      ban: bans.get(r.team_id) ?? null,
     }))
     .sort((a, b) => a.team_name.localeCompare(b.team_name, "hr"));
 }
@@ -163,6 +171,7 @@ export async function updateLeague(leagueId: number, req: LeagueUpdateRequest): 
       location_address: optionalText(req.location_address),
       location_url: optionalText(req.location_url),
       rounds_per_night: req.rounds_per_night,
+      game_minutes: req.game_minutes,
     },
   });
   return true;
@@ -184,6 +193,8 @@ export async function setLeagueNotes(leagueId: number, notes: string): Promise<b
 // league before gets its season row back from its closed rounds.
 export async function addTeamToLeague(leagueId: number, teamId: number): Promise<void> {
   if (teamId === BYE_TEAM_ID) throw new InvalidResultError("Slobodna runda se ne može dodati u ligu.");
+  // a banned team (or one with a banned player) doesn't play the league's nights
+  await assertMayPlay([teamId]);
   try {
     await prisma.$transaction(async (tx) => {
       await tx.leagueTeam.create({data: {league_id: leagueId, team_id: teamId}});
