@@ -465,6 +465,7 @@ function EntriesTab({t, waiting, onChanged}: {t: AdminTournament; waiting: boole
           ))}
         </Box>
       )}
+      {onDay && !waiting && <AtStartCard t={t} />}
       <ConfirmSheet
         open={asking != null}
         onClose={() => setAsking(null)}
