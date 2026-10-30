@@ -168,7 +168,7 @@ export default function TournamentsDesktop() {
         </Card>
         <Box sx={{minHeight: 0, overflowY: "auto", display: "flex", flexDirection: "column", gap: "16px"}}>
           {current && <PickedCard key={current.id} t={current} onChanged={reload} />}
-          <InfoNote icon={<InfoRoundedIcon />}>Obriši je moguće samo prije početka turnira. Otkazan turnir ostaje u popisu s oznakom Otkazan.</InfoNote>
+          <InfoNote icon={<InfoRoundedIcon />}>Dvoklik na turnir otvara upravljanje. Uredi, Kopiraj, Otkaži i Obriši su u turniru, u tabu Podaci; obrisati se može samo prije početka.</InfoNote>
         </Box>
       </Box>
     </DesktopShell>
