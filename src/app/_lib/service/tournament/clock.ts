@@ -6,10 +6,11 @@ import {skipDueTables} from "./attendance";
 import {ensureNextKoloDraft} from "./kola";
 import {lockTournament} from "./lock";
 
-// The tournament's clock. Nothing runs on a timer: whatever is due by now happens when someone reads the tournament
-// (its pages, the admin's, the players' check for the question at their table, the scorepads), once, under the
-// tournament's lock: the start time's switch (sign-ups close, unconfirmed teams inactive, confirmed waiting teams in),
-// the tables skipped at 10 minutes, the matches whose time is up, and the next Kolo's draft.
+// The tournament's clock. Whatever is due by now happens when someone reads the tournament (its pages, the admin's,
+// the players' check for the question at their table, the scorepads), once, under the tournament's lock: the start
+// time's switch (sign-ups close, unconfirmed teams inactive, confirmed waiting teams in), the tables skipped at 10
+// minutes, the matches whose time is up, and the next Kolo's draft. A scheduler calling /api/cron/tick (tick below)
+// does the same when nobody has the app open.
 
 // one run per tournament this often per server instance is enough (the pages ask every few seconds)
 const MIN_GAP_MS = 4_000;
@@ -53,4 +54,12 @@ export async function syncToday(): Promise<number[]> {
   const rows = await prisma.tournament.findMany({where: {date: {in: tournamentDays()}, cancelled_at: null}, select: {tournament_id: true}});
   for (const r of rows) await syncTournament(r.tournament_id);
   return rows.map((r) => r.tournament_id);
+}
+
+// The backup for the minutes nobody has the app open (/api/cron/tick, every minute): today's tournaments run what is
+// due, and every match whose time is up closes, the league's too (otherwise a league match closes only when its
+// scorepad is read)
+export async function tick(): Promise<{tournaments: number[]; closed_tables: number[]}> {
+  const tournaments = await syncToday();
+  return {tournaments, closed_tables: await expireDueMatches()};
 }

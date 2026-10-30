@@ -1214,7 +1214,7 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
       tournament's lock: the start time's switch, the skip at 10 minutes, a match out of time, the next Kolo's draft.
       The players' app asks /api/tournaments/attention on every screen, every 5 s while their table waits for an
       answer, every 30 s on the day, every 10 min otherwise. Alternative: a scheduled job. Reason: none needed, and a
-      phone asking anyway sees the result at once.
+      phone asking anyway sees the result at once. A scheduled backup came later: #70.
     - **Vrijeme partije holds for the league too** (your "svaka partija"). A match running when this is deployed has no
       limit (ends_at null), so nothing in progress closes by surprise. At the deadline the board says the time is up;
       a hand whose entry started before it (the phone sends when its entry opened) is still taken for 2 minutes, and
@@ -1268,3 +1268,26 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
       skipped match, Vrati, the statuses, Poredak, the bans on Ekipa and Igrač, Prijava nije moguća, a banned team in
       the sheet, Otkazan in the lists). **Not checked**: real phones, the Vercel preview, and two phones answering at
       the same moment (the lock makes the first answer count; untested by hand).
+
+70. **/api/cron/tick, the clock's backup** (your "Yes, add it" of 30.10., after #69's "Nothing runs on a timer").
+    - **What it does**: the same as #69's reads, for the minutes nobody has the app open. Today's tournaments run
+      what is due (the start time's switch, the skip at 10 minutes, matches out of time, the next Kolo's draft), and
+      every match whose time and grace are over closes, the league's too. That closes the league's gap: until now a
+      league match out of time closed only when its own scorepad was read, so Dnevni poredak could still show it as
+      live. A level match stays open for one more hand, as on the scorepad. It answers with the tournaments it ran
+      and the tables it closed; calling it twice, or at the same moment as a phone, does nothing more.
+    - **Only with the secret**: a request without `Authorization: Bearer <CRON_SECRET>` gets 401, and while
+      CRON_SECRET isn't set every request does, so nothing happens until it is switched on.
+    - **Switching it on is yours** (nothing is set yet): put CRON_SECRET (a long random string) in the Vercel
+      project's environment variables, then let a scheduler call it every minute.
+    - **Vercel Cron** would be one line in vercel.json,
+      `"crons": [{"path": "/api/cron/tick", "schedule": "* * * * *"}]`. It runs on the production deployment only
+      and sends the header by itself, but every minute needs Pro: on Hobby a cron runs at most once a day, and a
+      schedule more often than that fails the deploy. Alternative: the line in vercel.json now. Reason: the plan isn't
+      visible from here, and on Hobby every deploy would fail.
+    - **Any other scheduler** works on Hobby and on the preview too, for example cron-job.org (free): a GET of
+      https://<the app>/api/cron/tick every minute with the header `Authorization: Bearer <CRON_SECRET>`.
+    - **Checked**: unit tests for the secret check (471 pass), tsc, lint, and on the local copy: refused without the
+      right secret; of two league tables out of time that nobody read, the one ahead (100:62) closed by the tick
+      alone (time_expired, its second match on a fresh clock) and the level one (162:162) stayed open; a second tick
+      closed nothing; the tick took 23 ms there. **Not checked**: a real scheduler calling it on Vercel.

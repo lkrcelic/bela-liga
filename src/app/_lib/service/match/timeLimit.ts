@@ -7,8 +7,8 @@ import {afterTableClosed} from "@/app/_lib/service/tournament/kola";
 
 // Vrijeme partije on the server: a match gets its deadline when it starts, and a match whose time (and the grace for a
 // hand being entered) is over is closed with the score entered then, by whichever request comes first (the scorepads
-// ask every 15 seconds; the tournament's pages and the admin's do too). Matches started before the limit came in have
-// no deadline.
+// ask every 15 seconds; the tournament's pages and the admin's do too, and so does /api/cron/tick once a scheduler
+// calls it). Matches started before the limit came in have no deadline.
 
 type Db = Prisma.TransactionClient | typeof prisma;
 
