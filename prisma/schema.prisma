@@ -183,6 +183,10 @@ model Tournament {
   registrations_open Boolean   @default(true)
   // Vrijeme partije: a match's time limit in minutes (5-180), counted from the start of the match
   game_minutes       Int       @default(35)
+  // Automatska kola: once every table of a Kolo is over, the next one is made and published at once, without the
+  // admin's Skica (Kolo 1 still waits for Objavi). Read each time a Kolo is made by itself, so it can be switched on
+  // or off during the tournament
+  auto_publish       Boolean   @default(false)
   // Telefon organizatora: required for a new tournament (the old ones have none); the players call it or write on
   // WhatsApp from the tournament's page
   organizer_phone    String?   @db.VarChar(30)

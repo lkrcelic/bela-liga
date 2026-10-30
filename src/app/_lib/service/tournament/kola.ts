@@ -174,8 +174,9 @@ export async function publishKolo(tournamentId: number, number: number): Promise
   }, {timeout: 30_000});
 }
 
-// Once every table of the last Kolo published is played, the next Kolo's draft is made by itself (the admin still
-// publishes it). Called after a tournament's table closes and when the admin's page is read; quiet when it isn't time.
+// Once every table of the last Kolo published is played, the next Kolo's draft is made by itself. The admin publishes
+// it, unless the tournament has Automatska kola on just then: then it goes out at once. Called after a tournament's
+// table closes and when the admin's page is read; quiet when it isn't time.
 export async function ensureNextKoloDraft(tournamentId: number): Promise<void> {
   const t = await prisma.tournament.findUnique({where: {tournament_id: tournamentId}, select: {started_at: true, cancelled_at: true, rounds: true}});
   if (!t || !t.started_at || t.cancelled_at) return;
@@ -185,10 +186,13 @@ export async function ensureNextKoloDraft(tournamentId: number): Promise<void> {
   if (rounds.some((r) => r.status !== "PUBLISHED")) return;
   if (rounds.some((r) => r.round_number === last && r.open)) return;
   try {
-    await makeKoloDraft(tournamentId);
+    const {number} = await makeKoloDraft(tournamentId);
+    // the setting as it is now, not as it was when the tournament was made
+    const now = await prisma.tournament.findUnique({where: {tournament_id: tournamentId}, select: {auto_publish: true}});
+    if (now?.auto_publish) await publishKolo(tournamentId, number);
   } catch (error) {
-    // another request made it first, or the admin changed something meanwhile: the page shows what is there
-    if (!(error instanceof InvalidResultError)) throw error;
+    // another request made or published it first, or the admin changed something meanwhile: the page shows what is there
+    if (!(error instanceof InvalidResultError) && !(error instanceof NotFoundError) && !(error instanceof StaleDraftError)) throw error;
   }
 }
 

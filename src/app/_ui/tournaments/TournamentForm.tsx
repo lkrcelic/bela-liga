@@ -36,6 +36,8 @@ export type TournamentDraft = {
   phone: string;
   // Vrijeme partije · min
   gameMinutes: string;
+  // Iduća kola: published by themselves (Automatski) or after the admin's Objavi (Ručno)
+  autoPublish: boolean;
 };
 
 export const EMPTY_TOURNAMENT: TournamentDraft = {
@@ -53,6 +55,7 @@ export const EMPTY_TOURNAMENT: TournamentDraft = {
   prizes: [{prize: "", description: ""}],
   phone: "",
   gameMinutes: "35",
+  autoPublish: false,
 };
 
 type Source = Pick<
@@ -71,6 +74,7 @@ type Source = Pick<
   | "prizes"
   | "organizer_phone"
   | "game_minutes"
+  | "auto_publish"
 >;
 
 export function draftOf(t: Source): TournamentDraft {
@@ -89,6 +93,7 @@ export function draftOf(t: Source): TournamentDraft {
     prizes: t.prizes.length ? t.prizes.map((p) => ({prize: p.prize, description: p.description})) : [{prize: "", description: ""}],
     phone: t.organizer_phone ?? "",
     gameMinutes: String(t.game_minutes),
+    autoPublish: t.auto_publish,
   };
 }
 
@@ -144,6 +149,7 @@ export function draftPayload(d: TournamentDraft): TournamentRequest {
     rules_url: text(d.rulesUrl),
     prizes: d.prizes.filter((p) => p.prize.trim()).map((p) => ({prize: p.prize.trim(), description: p.description.trim()})),
     game_minutes: Number(d.gameMinutes),
+    auto_publish: d.autoPublish,
     organizer_phone: text(d.phone),
   };
 }
@@ -342,6 +348,17 @@ export function TournamentFields({form, locks, compact = false, sx}: {form: Tour
       <Box sx={{mt: "-6px", pl: "4px", fontSize: 13, lineHeight: 1.45, color: color.muted}}>
         Vrijeme partije teče od početka partije; kad istekne, vrijedi upisani rezultat. Prazan broj ekipa = bez ograničenja; kad je turnir pun, ekipe idu na listu čekanja.
         Kotizacija 0 € = igrači vide „Bez stresa, bez obveza”.
+      </Box>
+      <Choice<"auto" | "rucno">
+        label="Iduća kola"
+        value={d.autoPublish ? "auto" : "rucno"}
+        items={[{key: "rucno", label: "Objavljujem ja"}, {key: "auto", label: "Automatski"}]}
+        onChange={(v) => set("autoPublish", v === "auto")}
+      />
+      <Box sx={{mt: "-6px", pl: "4px", fontSize: 13, lineHeight: 1.45, color: color.muted}}>
+        {d.autoPublish
+          ? "Kad svi stolovi kola završe, iduće kolo se složi po poretku i odmah objavi, bez skice. Kolo 1 objavljuješ ti."
+          : "Kad svi stolovi kola završe, iduće kolo se složi kao skica koju pregledaš i objaviš."}
       </Box>
       <Box>
         <TextField

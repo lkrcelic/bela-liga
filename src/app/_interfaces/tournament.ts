@@ -50,6 +50,8 @@ export const TournamentRequestValidation = z.object({
   prizes: z.array(PrizeValidation).max(20, "Najviše 20 nagrada."),
   // Vrijeme partije in minutes
   game_minutes: z.number().int().min(GAME_MINUTES_MIN, GAME_MINUTES_ERROR).max(GAME_MINUTES_MAX, GAME_MINUTES_ERROR).default(35),
+  // Automatska kola: the Kolos after the first are published by themselves
+  auto_publish: z.boolean().default(false),
   // Telefon organizatora: required for a new tournament (checked by the service); an old one may stay without
   organizer_phone: z.string().trim().max(30).refine((v) => v === "" || isValidPhone(v), PHONE_ERROR).nullable().default(null),
 });
@@ -71,6 +73,7 @@ export type TournamentRequest = {
   rules_url: string | null;
   prizes: {prize: string; description: string}[];
   game_minutes: number;
+  auto_publish: boolean;
   organizer_phone: string | null;
 };
 
@@ -175,6 +178,8 @@ export type TournamentCard = {
   my_place: number | null;
   // Vrijeme partije in minutes
   game_minutes: number;
+  // Automatska kola: the Kolos after the first are published by themselves
+  auto_publish: boolean;
   day: TournamentDay | null;
   // the server's clock (ISO), for the countdowns
   server_now: string;

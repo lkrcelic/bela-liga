@@ -2,6 +2,16 @@
 
 What the commits changed for the people using the app, newest first. The reasons and details are in DECISIONS.md.
 
+## 30.10.2026 · Kola: zastarjela skica i automatska kola
+
+On development, not live yet (DECISIONS #71, #72).
+
+### Added for the admin
+- Novi turnir and Podaci: **Iduća kola**, **Objavljujem ja** or **Automatski**. With Automatski, every Kolo after the first goes out by itself as soon as the one before it ends, with no Skica.
+
+### Changed
+- A draft of any Kolo, not only Kolo 1, shows the red **Popis ekipa se promijenio…** and can't be published until **Složi ponovo**.
+
 ## 30.10.2026 · Turniri, prva verzija
 
 On development, not live yet. Commits 14f988f..faf4836 (DECISIONS #69, #70).

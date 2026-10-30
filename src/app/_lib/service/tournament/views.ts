@@ -170,6 +170,7 @@ export function cardView(s: Snapshot, viewer: Viewer | null): TournamentCard {
     me,
     my_place: place > 0 ? place : null,
     game_minutes: t.game_minutes,
+    auto_publish: t.auto_publish,
     day: dayOf(s, now),
     server_now: now.toISOString(),
     ...(admin && {cancelled_info: t.cancelled_at ? {by: t.canceller ? displayName(t.canceller) : null, at: t.cancelled_at.toISOString()} : null}),

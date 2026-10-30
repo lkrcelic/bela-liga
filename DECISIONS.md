@@ -1306,3 +1306,20 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
       the Kolo 2 draft came by itself; excluding a team then gave stale_draft true and Objavi was refused (409
       STALE_DRAFT); after Složi ponovo the draft left the team out (two tables, one the bye) and was published.
       **Not checked**: the warning on the screens (the browser can't reach vercel.app from here).
+
+72. **Automatska kola** (your request of 30.10.: "opcija kod kreiranja turnira da pustim automatsko kreiranje kola po
+    završetku prethodnog bez mojeg skica", read each time a draft is made).
+    - **Novi turnir and Podaci** have **Iduća kola**: Objavljujem ja (default, as before) or Automatski. It is
+      `Tournament.auto_publish` (migration 20261031120000, default false, so every existing tournament stays as it was).
+    - **With it on**, when the last table of a Kolo closes, the next Kolo is made by the standings as before and
+      published at once (its timers and the no-show question start then). The setting is read right after that draft
+      is made, so switching it on or off during the tournament counts from the next Kolo.
+    - **Kolo 1 is never published by itself**: publishing it starts the tournament, and the start time's switch and
+      the arrival window come first. Alternative: publish it at Početak. Reason: not asked, and the admin should see
+      who is in before the start.
+    - **A draft already waiting** when the setting is switched on is not published by that: the admin publishes it
+      (or it waits for the next Kolo). Reason: the request was about the moment a draft is made.
+    - **Rematches**: with Automatski the admin doesn't see the "Ponovo igraju…" warning before the Kolo goes out.
+      Accepted: it only happens when no other pairing is possible.
+    - **Two requests at once** (two tables closing together): one makes and publishes it, the other finds it done
+      and stays quiet.

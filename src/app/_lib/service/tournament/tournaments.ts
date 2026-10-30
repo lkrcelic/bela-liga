@@ -43,6 +43,7 @@ function fields(r: TournamentRequest) {
     entry_fee: r.entry_fee,
     rules_url: blankToNull(r.rules_url),
     game_minutes: r.game_minutes,
+    auto_publish: r.auto_publish,
     organizer_phone: normalizePhone(r.organizer_phone),
   };
 }
