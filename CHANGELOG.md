@@ -4,7 +4,7 @@ What the commits changed for the people using the app, newest first. The reasons
 
 ## 31.10.2026 · Admin: popis turnira i Vrati turnir
 
-On development, not live yet (DECISIONS #77).
+Live since 31.10.2026 (DECISIONS #77), except the Kolo's **point difference**, which is on development, not live yet.
 
 ### Added for the admin
 - Turniri (computer), Nadolazeći: the card shows the **last 5 sign-ups**, with **Prijave** and **Stranica**.
@@ -21,7 +21,7 @@ On development, not live yet (DECISIONS #77).
 
 ## 30.10.2026 · Registracija s Googleom
 
-On development, not live yet (DECISIONS #76).
+Live since 31.10.2026 (DECISIONS #76).
 
 ### Added for players
 - **Registracija** starts with **Registriraj se s Googleom**: no new password, the name and email come from Google, then the app asks the birth date and **Pušiš li?**.
@@ -33,7 +33,7 @@ On development, not live yet (DECISIONS #76).
 
 ## 30.10.2026 · Gost i poziv
 
-On development, not live yet (DECISIONS #75).
+Live since 31.10.2026 (DECISIONS #75).
 
 ### Added for players
 - Without an account: **Početna** opens with **Prijava** in the header, the tournaments and **Burza igrača**.
@@ -49,7 +49,7 @@ On development, not live yet (DECISIONS #75).
 
 ## 30.10.2026 · Liga: međusobni omjer
 
-On development, not live yet (DECISIONS #74).
+Live since 31.10.2026 (DECISIONS #74).
 
 ### Changed
 - Ukupni and Dnevni poredak: teams level on points and difference are ordered by their tables against each other (points, then difference), then by name, as in tournaments.
@@ -58,7 +58,7 @@ On development, not live yet (DECISIONS #74).
 
 ## 30.10.2026 · Liga: Tu smo i zabrane
 
-On development, not live yet (DECISIONS #73).
+Live since 31.10.2026 (DECISIONS #73).
 
 ### Added for players
 - Početna · Liga, **Večeras**: **Tu smo** from 30 min before the night's start until the night ends.
@@ -80,7 +80,7 @@ On development, not live yet (DECISIONS #73).
 
 ## 30.10.2026 · Kola: zastarjela skica i automatska kola
 
-On development, not live yet (DECISIONS #71, #72).
+Live since 31.10.2026 (DECISIONS #71, #72).
 
 ### Added for the admin
 - Novi turnir and Podaci: **Iduća kola**, **Objavljujem ja** or **Automatski**. With Automatski, every Kolo after the first goes out by itself as soon as the one before it ends, with no Skica.
@@ -90,7 +90,7 @@ On development, not live yet (DECISIONS #71, #72).
 
 ## 30.10.2026 · Turniri, prva verzija
 
-On development, not live yet. Commits 14f988f..faf4836 (DECISIONS #69, #70).
+Live since 31.10.2026. Commits 14f988f..faf4836 (DECISIONS #69, #70).
 
 ### Added for players
 - **Tu smo** on Početna and the tournament page, from Okupljanje to Početak; **Ipak otkazujemo** undoes it.
@@ -128,7 +128,7 @@ On development, not live yet. Commits 14f988f..faf4836 (DECISIONS #69, #70).
 
 ## 26.10.2026 · Turniri
 
-On development, not live yet. Commits 79d735a..c354458 except 8eaf904, which is already live (DECISIONS #65–#68).
+Live since 31.10.2026 (8eaf904 went live earlier). Commits 79d735a..c354458 (DECISIONS #65–#68).
 
 ### Added for players
 - **Turniri**: one-day tournaments of teams, with a waiting list.
