@@ -1,6 +1,6 @@
 "use client";
 
-import {signOffAPI} from "@/app/_fetchers/tournament";
+import {arrivalAPI, signOffAPI} from "@/app/_fetchers/tournament";
 import useNavStack from "@/app/_hooks/useNavStack";
 import useOpenTable from "@/app/_hooks/useOpenTable";
 import useStartGame from "@/app/_hooks/useStartGame";
@@ -17,11 +17,14 @@ import React, {useEffect, useState} from "react";
 import PlayerFrame from "./PlayerFrame";
 import {EntriesPreview, InfoCard, MyMatchesCard, MyResultCard, PrizesCard, ResultsButton, SignUpCard, TournamentHead, UpcomingCard, WinnersCard} from "./PlayerParts";
 import SignUpSheet from "./SignUpSheet";
+import {ArrivalAction, ArrivalCard, ExcludedCard, JoinedSheet, NoShowWinCard, OrganizerCard} from "./DayParts";
 
-// A tournament's page (Claude Design "Natjecanja" R1–R5, D1–D2, W1, G0). Before it starts: the navy card of the
-// sign-ups (Prijavi se, or the team signed up or waiting), the details, the prizes and the teams signed up. On the
-// day: the player's table (Nastavi igru / Započni igru) and Poredak i rezultati. Once it is over: Pobjednici, the
-// results, and for a player who played Vaš rezultat and Vaši mečevi. Public: a visitor sees it read-only.
+// A tournament's page (Claude Design "Natjecanja" R1–R5, D1–D2, W1, G0; "Potvrda dolaska" P1–P9; "Nedolazak za stol"
+// N5, N6, N8; "Zabrana prijava" ZP1). Before it starts: the navy card of the sign-ups (Prijavi se, or the team signed
+// up or waiting, with Tu smo on the day), the organizer, the details, the prizes and the teams signed up. On the day:
+// the player's table (Nastavi igru / Započni igru), a table won without play, the team out of the tournament, joining
+// (Želimo uskočiti) and leaving (Odlazimo), and Poredak i rezultati. Once it is over: Pobjednici, the results, and for
+// a player who played Vaš rezultat and Vaši mečevi. Public: a visitor sees it read-only.
 // ?prijava=1 (a visitor's Prijavi se, back from logging in) opens the sign-up sheet at once.
 export default function TournamentPage({id}: {id: number}) {
   const meId = useAuthStore((s) => s.user?.id ?? null);
@@ -34,18 +37,34 @@ export default function TournamentPage({id}: {id: number}) {
   const [withdraw, setWithdraw] = useState(false);
   const [busy, setBusy] = useState(false);
   const [withdrawError, setWithdrawError] = useState<string | null>(null);
+  const [arrivalBusy, setArrivalBusy] = useState<ArrivalAction | null>(null);
+  const [arrivalError, setArrivalError] = useState<string | null>(null);
+  const [joined, setJoined] = useState<string | null>(null);
   const {table: openTable} = useOpenTable("tournament");
   const game = useStartGame({scope: "tournament"});
   const {tournaments} = useTournaments();
   const today = leagueDateString();
 
-  // a tournament being played comes in again every 30 s
-  const live = t?.phase === "active";
-  if ((live ? 30_000 : undefined) !== every) setEvery(live ? 30_000 : undefined);
+  // a tournament being played comes in again every 30 s, and on its day every 20 s (the arrival window)
+  const live = t?.phase === "active" || (t?.day != null && t.day.phase !== "before" && t.phase === "upcoming");
+  if ((live ? 20_000 : undefined) !== every) setEvery(live ? 20_000 : undefined);
   useEffect(() => {
     if (t && params.get("prijava") === "1" && signedIn && t.phase === "upcoming" && t.registrations_open && !t.me) setSheet(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [t?.id]);
+
+  const arrival = async (action: ArrivalAction) => {
+    if (!t || arrivalBusy) return;
+    setArrivalBusy(action);
+    setArrivalError(null);
+    try {
+      await arrivalAPI(t.id, action);
+      reload();
+    } catch (e) {
+      setArrivalError(e instanceof Error ? e.message : "Nije spremljeno.");
+    }
+    setArrivalBusy(null);
+  };
 
   const signOff = async () => {
     if (!t?.me) return;
@@ -63,6 +82,10 @@ export default function TournamentPage({id}: {id: number}) {
 
   const others = (tournaments ?? []).filter((x) => x.phase === "upcoming" && x.id !== id).sort((a, b) => a.date.localeCompare(b.date)).slice(0, 3);
   const myTable = openTable && openTable.tournamentId === id ? openTable : null;
+  // the day has started (the start time or Kolo 1): no more signing off
+  const dayClosed = t?.day?.phase === "closed";
+  // a table of the Kolo being played won without play (Pobjeda bez igre)
+  const wonWithoutPlay = t?.my_last_table && t.my_last_table.won && t.my_last_table.kolo === t.live_kolo ? t.my_last_table : null;
 
   return (
     <PlayerFrame>
@@ -82,11 +105,16 @@ export default function TournamentPage({id}: {id: number}) {
           <TournamentHead t={t} today={today} />
           {t.phase === "upcoming" && (
             <>
-              <SignUpCard t={t} meId={meId} signedIn={signedIn} onSignUp={() => setSheet(true)} />
+              {t.me ? (
+                <ArrivalCard t={t} busy={arrivalBusy} error={arrivalError} onAction={arrival} />
+              ) : (
+                <SignUpCard t={t} meId={meId} signedIn={signedIn} onSignUp={() => setSheet(true)} />
+              )}
+              {(t.me || t.my_ban) && <OrganizerCard phone={t.organizer_phone} />}
               <InfoCard t={t} hidePlace={t.me?.status === "REGISTERED"} />
               <PrizesCard prizes={t.prizes} startsOpen={t.me != null} />
               <EntriesPreview t={t} meId={meId} />
-              {t.me && (
+              {t.me && !dayClosed && (
                 <Box
                   component="button"
                   type="button"
@@ -101,13 +129,20 @@ export default function TournamentPage({id}: {id: number}) {
           )}
           {t.phase === "active" && (
             <>
-              {myTable ? (
+              {t.me?.excluded ? (
+                <ExcludedCard t={t} />
+              ) : myTable ? (
                 <StartCard table={myTable} starting={game.starting} onStart={game.start} />
+              ) : wonWithoutPlay ? (
+                <NoShowWinCard last={wonWithoutPlay} kolo={(t.live_kolo ?? 0) + 1 <= t.rounds ? (t.live_kolo ?? 0) + 1 : null} />
+              ) : t.me && (t.me.status === "WAITING" || !t.me.active || t.me.plays_from) ? (
+                <ArrivalCard t={t} busy={arrivalBusy} error={arrivalError} onAction={arrival} />
               ) : (
-                t.me?.status === "REGISTERED" && <WaitingCard team={t.me.team_name} kolo={t.live_kolo} />
+                t.me?.status === "REGISTERED" && <WaitingCard team={t.me.team_name} kolo={t.live_kolo} onLeave={() => arrival("leave")} leaving={arrivalBusy === "leave"} />
               )}
               {game.error && <ErrorNote>{game.error}</ErrorNote>}
               <ResultsButton t={t} />
+              {t.me && <OrganizerCard phone={t.organizer_phone} />}
             </>
           )}
           {t.phase === "finished" && (
@@ -141,12 +176,14 @@ export default function TournamentPage({id}: {id: number}) {
               t={t}
               open={sheet}
               onClose={() => setSheet(false)}
-              onDone={() => {
+              onDone={(_status, team) => {
                 setSheet(false);
+                if (t.day && team) setJoined(team);
                 reload();
               }}
             />
           )}
+          {joined && <JoinedSheet open={joined != null} onClose={() => setJoined(null)} t={t} team={joined} />}
           {t.me && (
             <ConfirmSheet
               open={withdraw}
@@ -166,8 +203,9 @@ export default function TournamentPage({id}: {id: number}) {
   );
 }
 
-// On the day, between the player's tables: their team and the Kolo being played
-function WaitingCard({team, kolo}: {team: string; kolo: number | null}) {
+// On the day, between the player's tables: their team and the Kolo being played, and Odlazimo (asked first)
+function WaitingCard({team, kolo, onLeave, leaving}: {team: string; kolo: number | null; onLeave: () => void; leaving: boolean}) {
+  const [asking, setAsking] = useState(false);
   return (
     <Box component="section" aria-label="Tvoja ekipa" sx={{flex: "none", borderRadius: "24px", background: color.navy, color: color.white, p: "18px", display: "flex", flexDirection: "column", gap: "8px", boxShadow: shadow.hero}}>
       <Box component="h2" sx={{m: 0, fontSize: 12.5, fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", color: color.cream}}>
@@ -177,6 +215,28 @@ function WaitingCard({team, kolo}: {team: string; kolo: number | null}) {
       <Box sx={{fontSize: 15, lineHeight: 1.45, color: color.cream}}>
         {kolo ? `Vaš stol u Kolu ${kolo} je odigran. Sljedeće kolo kreće kad svi stolovi završe.` : "Sljedeće kolo uskoro: stol će se pojaviti ovdje."}
       </Box>
+      <Box
+        component="button"
+        type="button"
+        onClick={() => setAsking(true)}
+        sx={{...buttonBase, alignSelf: "center", height: 44, px: "14px", borderRadius: "12px", color: color.cream, fontSize: 15, fontWeight: 700, textDecoration: "underline", textUnderlineOffset: "3px"}}
+      >
+        Odlazimo
+      </Box>
+      <ConfirmSheet
+        open={asking}
+        onClose={() => setAsking(false)}
+        onConfirm={async () => {
+          await onLeave();
+          setAsking(false);
+        }}
+        title="Odlazite s turnira?"
+        text="Ekipa postaje Neaktivna i ne igra sljedeća kola. Odigrana kola ostaju u poretku."
+        action="Odlazimo"
+        icon={<LogoutRoundedIcon />}
+        busy={leaving}
+        error={null}
+      />
     </Box>
   );
 }

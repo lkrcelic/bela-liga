@@ -6,7 +6,7 @@ import {daysUntilLabel, feeLabel, formatLabel, prizeSummary, rulesLabel} from "@
 import {teamInitial} from "@/app/_lib/ui/profiles";
 import {formatChange} from "@/app/_lib/ui/ratings";
 import {count, NOUN} from "@/app/_lib/ui/text";
-import {TransitionLink} from "@/app/_lib/viewTransitions";
+import {TransitionLink, useTransitionRouter} from "@/app/_lib/viewTransitions";
 import {color, font, shadow, tint} from "@/app/_styles/tokens";
 import {GatheringRow} from "@/app/_ui/home/HomeCards";
 import {mapLinkProps} from "@/app/_ui/gathering/Gathering";
@@ -32,6 +32,7 @@ import SentimentSatisfiedRoundedIcon from "@mui/icons-material/SentimentSatisfie
 import {Box, SxProps, Theme} from "@mui/material";
 import React, {useState} from "react";
 import {DateTile} from "./TournamentParts";
+import {ArrivalAction, BannedSignUp, HomeArrival} from "./DayParts";
 
 // The player's tournament screens (Claude Design "Natjecanja"): the cards of Početna · Turniri and of a tournament's
 // page, in the league's look (the navy card of Sljedeća večer, white cards with icon rows, the standings' rows).
@@ -171,7 +172,9 @@ export function SignUpCard({t, meId, onSignUp, signedIn}: {t: TournamentDetail; 
         )}
       </Box>
       <PlayersCount t={t} onNavy />
-      {open ? (
+      {open && signedIn && t.my_ban ? (
+        <BannedSignUp until={t.my_ban.until} />
+      ) : open ? (
         <>
           {full && <Box sx={{fontSize: 14, lineHeight: 1.45, color: color.cream}}>Turnir je pun: nova prijava ide na listu čekanja.</Box>}
           <Box
@@ -512,19 +515,35 @@ export function MyMatchesCard({matches, tournamentId}: {matches: MyMatch[]; tour
 
 // ---------- Početna · Turniri ----------
 
-// The navy card of the next tournament (S2, S3): signed up (the team, where and when, Stranica turnira), waiting, or
-// how many have signed up and Vidi stranicu (the page is read first, Prijavi se is on it)
-export function NextTournamentCard({t}: {t: TournamentCard}) {
+// The navy card of the next tournament (S2, S3; "Potvrda dolaska" C1–C3): the whole card opens the tournament's page
+// (› in its head). Signed up: the team, where and when, and Potvrda dolaska with Tu smo on the day; waiting; or how many
+// have signed up and Stranica turnira.
+export function NextTournamentCard({t, arrival}: {t: TournamentCard; arrival?: {busy: ArrivalAction | null; onAction: (a: ArrivalAction) => void}}) {
+  const router = useTransitionRouter();
   const place = t.location.name ? {name: t.location.name, address: t.location.address, url: t.location.url} : null;
+  const open = () => router.push(tournamentHref(t.id));
   return (
-    <Box component="section" aria-label="Sljedeći turnir" sx={{flex: "none", borderRadius: "24px", background: color.navy, color: color.white, p: "18px", display: "flex", flexDirection: "column", gap: "12px", boxShadow: shadow.hero}}>
+    <Box
+      component="section"
+      role="link"
+      tabIndex={0}
+      aria-label={`Sljedeći turnir: ${t.name}`}
+      onClick={open}
+      onKeyDown={(e: React.KeyboardEvent) => {
+        if (e.key === "Enter") open();
+      }}
+      sx={{flex: "none", borderRadius: "24px", background: color.navy, color: color.white, p: "18px", display: "flex", flexDirection: "column", gap: "12px", boxShadow: shadow.hero, cursor: "pointer", outlineOffset: "3px"}}
+    >
       <Box sx={{display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px"}}>
         <Box component="h2" sx={{m: 0, ...eyebrowSx, color: color.cream, whiteSpace: "nowrap"}}>
           Sljedeći turnir
         </Box>
-        <Box component="span" sx={{height: 32, display: "flex", alignItems: "center", gap: "6px", px: "10px", borderRadius: "10px", background: color.cream, color: color.navy, fontSize: 13, fontWeight: 800, whiteSpace: "nowrap", "& svg": {fontSize: 18}}}>
-          <EventRoundedIcon aria-hidden />
-          {nightLabel(t.date)}
+        <Box sx={{display: "flex", alignItems: "center", gap: "4px"}}>
+          <Box component="span" sx={{height: 32, display: "flex", alignItems: "center", gap: "6px", px: "10px", borderRadius: "10px", background: color.cream, color: color.navy, fontSize: 13, fontWeight: 800, whiteSpace: "nowrap", "& svg": {fontSize: 18}}}>
+            <EventRoundedIcon aria-hidden />
+            {nightLabel(t.date)}
+          </Box>
+          <ChevronRightRoundedIcon aria-hidden sx={{fontSize: 26, color: color.cream}} />
         </Box>
       </Box>
       <Box sx={{display: "flex", flexDirection: "column", gap: "4px"}}>
@@ -545,15 +564,12 @@ export function NextTournamentCard({t}: {t: TournamentCard}) {
               </Box>
             </span>
           </Box>
-          {place && t.me.status === "REGISTERED" && <GatheringRow time={t.start_time} place={place} />}
-          <Box
-            component={TransitionLink}
-            href={tournamentHref(t.id)}
-            sx={{...buttonBase, height: 52, borderRadius: "14px", background: tint.creamOnNavy[16], color: color.white, display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", fontSize: 15, fontWeight: 600, textDecoration: "none", "& svg": {fontSize: 22, color: color.cream}}}
-          >
-            Stranica turnira
-            <ChevronRightRoundedIcon aria-hidden />
-          </Box>
+          {place && t.me.status === "REGISTERED" && (
+            <Box onClick={(e: React.MouseEvent) => e.stopPropagation()}>
+              <GatheringRow time={t.start_time} place={place} />
+            </Box>
+          )}
+          {arrival && <HomeArrival t={t} busy={arrival.busy} onAction={arrival.onAction} />}
         </>
       ) : (
         <Box sx={{display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", flexWrap: "wrap"}}>
@@ -566,11 +582,10 @@ export function NextTournamentCard({t}: {t: TournamentCard}) {
             </Box>
           </Box>
           <Box
-            component={TransitionLink}
-            href={tournamentHref(t.id)}
-            sx={{...buttonBase, height: 48, display: "flex", alignItems: "center", gap: "4px", pl: "18px", pr: "10px", borderRadius: "14px", background: color.white, color: color.navy, fontSize: 16, fontWeight: 700, textDecoration: "none", "& svg": {fontSize: 22}}}
+            component="span"
+            sx={{height: 48, display: "flex", alignItems: "center", gap: "4px", pl: "18px", pr: "10px", borderRadius: "14px", background: color.white, color: color.navy, fontSize: 16, fontWeight: 700, "& svg": {fontSize: 22}}}
           >
-            Vidi stranicu
+            Stranica turnira
             <ChevronRightRoundedIcon aria-hidden />
           </Box>
         </Box>
@@ -609,10 +624,20 @@ export function TodayCard({t}: {t: TournamentCard}) {
         </Box>
       )}
       <Box component="span" sx={{fontSize: 14, lineHeight: 1.45, color: color.cream}}>
-        {t.live_kolo ? `Vaš stol u Kolu ${t.live_kolo} je odigran. Sljedeće kolo kreće kad svi stolovi završe.` : "Sljedeće kolo uskoro: stol će se pojaviti ovdje."}
+        {todayLine(t)}
       </Box>
     </Box>
   );
+}
+
+// What the day card says under the team: out of the tournament, not playing, waiting, joining, or the next Kolo
+function todayLine(t: TournamentCard): string {
+  const me = t.me;
+  if (me?.excluded) return "Isključeni ste iz turnira. Na stranici turnira piše zašto.";
+  if (me?.status === "WAITING") return `Na listi čekanja · ${me.position}. Ulazite čim se mjesto oslobodi.`;
+  if (me && !me.active) return "Ekipa ne igra: niste potvrdili dolazak ili ste otišli. Na stranici turnira možete uskočiti.";
+  if (me?.plays_from) return `Igrate od Kola ${me.plays_from}. Stol se pojavi kad organizator objavi kolo.`;
+  return t.live_kolo ? `Vaš stol u Kolu ${t.live_kolo} je odigran. Sljedeće kolo kreće kad svi stolovi završe.` : "Sljedeće kolo uskoro: stol će se pojaviti ovdje.";
 }
 
 // No tournament coming: what the Turniri tab says instead of the card
@@ -671,7 +696,7 @@ export function UpcomingCard({t}: {t: TournamentCard}) {
             href={tournamentHref(t.id)}
             sx={{...buttonBase, flex: "none", ml: "auto", height: 44, display: "flex", alignItems: "center", gap: "2px", pl: "12px", pr: "6px", borderRadius: "12px", background: color.navy, color: color.white, fontSize: 15, fontWeight: 700, textDecoration: "none", "& svg": {fontSize: 20}}}
           >
-            Vidi stranicu
+            Prijavi se
             <ChevronRightRoundedIcon aria-hidden />
           </Box>
         ) : (

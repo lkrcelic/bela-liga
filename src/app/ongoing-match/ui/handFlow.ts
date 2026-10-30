@@ -14,7 +14,18 @@ export function startNewHand(matchId: number) {
   useResultStore.getState().resetResult();
   useAnnouncementStore.getState().resetAnnouncements();
   useResultStore.getState().setMatchId(matchId);
+  // Vrijeme partije: a hand whose entry started before the time was up is still taken
+  entryStarts.set(matchId, new Date(Date.now() + serverOffset).toISOString());
 }
+
+// the server's clock minus the phone's (the scorepad sets it from server_now)
+let serverOffset = 0;
+export function setServerOffset(ms: number) {
+  serverOffset = ms;
+}
+
+// when the entry of each match's new hand started (server time, ISO)
+const entryStarts = new Map<number, string>();
 
 // Loads a saved hand into the stores for editing
 export async function openHandForEdit(resultId: number) {
@@ -55,7 +66,8 @@ export async function saveHand(matchId: number, resultId?: number | string | nul
 
   const saved = resultId
     ? await updateOngoingBelaResultAPI({resultId: String(resultId), result: data})
-    : await createOngoingBelaResultAPI({result: data});
+    : await createOngoingBelaResultAPI({result: {...data, entry_started_at: entryStarts.get(matchId) ?? null}});
+  if (!resultId) entryStarts.delete(matchId);
 
   markHand(matchId, resultId ? {flash: Number(resultId)} : {added: saved?.result_id ?? null});
   discardHand();

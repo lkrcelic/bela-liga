@@ -16,6 +16,7 @@ import {HandList, HandRow, ScorePanel} from "@/app/ongoing-match/ui/BoardParts";
 import HandEntryPanel from "@/app/ongoing-match/ui/HandEntryPanel";
 import {markWizardOpened, openHandForEdit, previousTotals, rememberTotals, startNewHand, takeHandMark} from "@/app/ongoing-match/ui/handFlow";
 import useMatchSides from "@/app/ongoing-match/ui/useMatchSides";
+import {TimerChip, TimeUpNote, TimeWarning, useMatchClock} from "@/app/ongoing-match/ui/MatchClock";
 import AddCircleRoundedIcon from "@mui/icons-material/AddCircleRounded";
 import DoneRoundedIcon from "@mui/icons-material/DoneRounded";
 import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
@@ -91,6 +92,9 @@ export default function ScoreBoardPage() {
     router.router.prefetch(`/ongoing-match/${matchId}/ongoing-result/new/trump-caller`);
   }, [router, matchId]);
 
+  // past the deadline the board asks every 5 s, so it follows the match the server closes
+  const timeUp = match.ends_at != null && new Date(match.ends_at).getTime() < Date.now() + (match.server_now ? Date.parse(match.server_now) - Date.now() : 0);
+
   // Several phones can follow the same match, so pick up hands entered elsewhere
   useEffect(() => {
     const refresh = async () => {
@@ -101,13 +105,17 @@ export default function ScoreBoardPage() {
         if (error instanceof OngoingMatchGoneError) await followFinishedMatch();
       }
     };
-    const intervalId = setInterval(refresh, 15000);
+    const intervalId = setInterval(refresh, timeUp ? 5000 : 15000);
     document.addEventListener("visibilitychange", refresh);
     return () => {
       clearInterval(intervalId);
       document.removeEventListener("visibilitychange", refresh);
     };
-  }, [matchId, setOngoingMatch, followFinishedMatch]);
+  }, [matchId, setOngoingMatch, followFinishedMatch, timeUp]);
+
+  // Vrijeme partije: the time left; once it is up the board asks more often (the server closes the match by itself)
+  const clock = useMatchClock(match);
+  const tied = (match.player_pair1_score ?? 0) === (match.player_pair2_score ?? 0);
 
   const p = (side: 1 | 2) => (side === 1 ? match.player_pair1_score : match.player_pair2_score) ?? 0;
   const totals: [number, number] = [p(sides.left), p(sides.right)];
@@ -260,15 +268,18 @@ export default function ScoreBoardPage() {
         eyebrow={matchLabel}
         title={`${sides.names[0]} vs ${sides.names[1]}`}
         right={
-          sides.tableNumber != null && (
-            <Box
-              sx={{display: "flex", alignItems: "center", gap: "10px", height: 44, px: "16px", borderRadius: "22px", background: color.white, fontSize: 15, fontWeight: 600, boxShadow: shadow.card}}
-            >
-              <TableRestaurantRoundedIcon sx={{fontSize: 20, color: color.navy}} />
-              Stol {sides.tableNumber}
-              {sides.roundNumber != null && ` · Kolo ${sides.roundNumber}`}
-            </Box>
-          )
+          <Box sx={{display: "flex", alignItems: "center", gap: "14px"}}>
+            <TimerChip clock={clock} />
+            {sides.tableNumber != null && (
+              <Box
+                sx={{display: "flex", alignItems: "center", gap: "10px", height: 44, px: "16px", borderRadius: "22px", background: color.white, fontSize: 15, fontWeight: 600, boxShadow: shadow.card}}
+              >
+                <TableRestaurantRoundedIcon sx={{fontSize: 20, color: color.navy}} />
+                Stol {sides.tableNumber}
+                {sides.roundNumber != null && ` · Kolo ${sides.roundNumber}`}
+              </Box>
+            )}
+          </Box>
         }
       >
         <Box sx={{flex: 1, minHeight: 0, display: "grid", gridTemplateColumns: "minmax(0,1fr) 460px", gap: "20px"}}>
@@ -286,6 +297,10 @@ export default function ScoreBoardPage() {
               </Box>
               {finishError && <ErrorNote>{finishError}</ErrorNote>}
               {finishButton}
+            </Box>
+          ) : clock.expired && !tied && editingId == null ? (
+            <Box sx={{display: "flex", flexDirection: "column", justifyContent: "flex-end", gap: "12px"}}>
+              <TimeUpNote tied={false} />
             </Box>
           ) : (
             <HandEntryPanel
@@ -336,18 +351,24 @@ export default function ScoreBoardPage() {
             <HomeRoundedIcon />
           </Box>
           <Eyebrow>{matchLabel}</Eyebrow>
+          <Box sx={{position: "absolute", right: 0, top: 0, height: 44, display: "flex", alignItems: "center"}}>
+            <TimerChip clock={clock} />
+          </Box>
         </Box>
         <Box sx={{display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,1fr)", gap: "12px"}}>{panels("phone")}</Box>
       </Box>
       <HandList rows={rows} onOpen={openPhone} listRef={listRef} sx={{mt: "14px"}} />
       <Box sx={{pt: "14px", display: "flex", flexDirection: "column", gap: "10px"}}>
         {finishError && <ErrorNote>{finishError}</ErrorNote>}
-        {finishButton || (
-          <PrimaryButton icon={<AddCircleRoundedIcon />} onClick={newHand} loading={opening != null}>
-            Upiši igru
-          </PrimaryButton>
-        )}
+        {clock.expired && !finishButton && <TimeUpNote tied={tied} />}
+        {finishButton ||
+          ((!clock.expired || tied) && (
+            <PrimaryButton icon={<AddCircleRoundedIcon />} onClick={newHand} loading={opening != null}>
+              Upiši igru
+            </PrimaryButton>
+          ))}
       </Box>
+      <TimeWarning matchId={matchId} clock={clock} />
     </Screen>
   );
 }

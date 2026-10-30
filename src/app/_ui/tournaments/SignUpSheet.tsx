@@ -7,6 +7,7 @@ import {teamInitial} from "@/app/_lib/ui/profiles";
 import {color, font, shadow, tint} from "@/app/_styles/tokens";
 import {BottomSheet, buttonBase, ellipsis, ErrorNote, InitialsAvatar, PrimaryButton, SearchInput, Spinner, TextField} from "@/app/_ui/sp";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
+import BlockRoundedIcon from "@mui/icons-material/BlockRounded";
 import ChevronLeftRoundedIcon from "@mui/icons-material/ChevronLeftRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import HowToRegRoundedIcon from "@mui/icons-material/HowToRegRounded";
@@ -23,7 +24,7 @@ import React, {useEffect, useState} from "react";
 // signs it up in the same step. A teammate without an account gets an invitation link instead. The search finds
 // players by name only (usernames are private, DECISIONS #40).
 
-type Props = {t: TournamentDetail; open: boolean; onClose: () => void; onDone: (status: "REGISTERED" | "WAITING") => void};
+type Props = {t: TournamentDetail; open: boolean; onClose: () => void; onDone: (status: "REGISTERED" | "WAITING", team: string) => void};
 
 export default function SignUpSheet({t, open, onClose, onDone}: Props) {
   const [view, setView] = useState<"pick" | "new">("pick");
@@ -44,7 +45,7 @@ export default function SignUpSheet({t, open, onClose, onDone}: Props) {
     setError(null);
     try {
       const r = await signUpAPI(t.id, body);
-      onDone(r.status);
+      onDone(r.status, "new_team" in body ? body.new_team.name : (t.my_teams.find((m) => m.team_id === body.team_id)?.team_name ?? ""));
     } catch (e) {
       setError(e instanceof Error ? e.message : "Ekipa nije prijavljena.");
     }
@@ -91,7 +92,7 @@ export default function SignUpSheet({t, open, onClose, onDone}: Props) {
           </Box>
         </Box>
         <Box component="li" sx={{fontSize: 13, color: color.muted, textAlign: "center", pb: "4px"}}>
-          Prikazane su samo ekipe u kojima igraš.
+          {t.my_teams.some((m) => m.ban_until != null) ? "Zabranjena ekipa se ne može odabrati. Za pitanja se javite organizatoru." : "Prikazane su samo ekipe u kojima igraš."}
         </Box>
       </Box>
       {error && <ErrorNote>{error}</ErrorNote>}
@@ -136,7 +137,11 @@ function TeamOption({m, on, onPick}: {m: MyTeamOption; on: boolean; onPick: () =
           <Box component="span" sx={{flex: 1, minWidth: 0, fontSize: 17, fontWeight: 800, ...ellipsis}}>
             {m.team_name}
           </Box>
-          {!off && (on ? <RadioButtonCheckedRoundedIcon sx={{color: color.navy}} /> : <RadioButtonUncheckedRoundedIcon sx={{color: color.faint}} />)}
+          {m.ban_until != null ? (
+            <BlockRoundedIcon aria-label="Zabrana prijava" sx={{color: color.red}} />
+          ) : (
+            !off && (on ? <RadioButtonCheckedRoundedIcon sx={{color: color.navy}} /> : <RadioButtonUncheckedRoundedIcon sx={{color: color.faint}} />)
+          )}
         </Box>
         <Box sx={{width: "100%", display: "flex", flexDirection: "column", gap: "6px", pl: "2px"}}>
           <Box component="span" sx={{fontSize: 11.5, fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", color: color.muted}}>

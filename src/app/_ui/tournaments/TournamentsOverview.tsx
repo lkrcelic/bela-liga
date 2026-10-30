@@ -1,5 +1,6 @@
 "use client";
 
+import {arrivalAPI} from "@/app/_fetchers/tournament";
 import useBurza from "@/app/_hooks/useBurza";
 import useOpenTable from "@/app/_hooks/useOpenTable";
 import useStartGame from "@/app/_hooks/useStartGame";
@@ -10,7 +11,8 @@ import {BurzaHomeCard, NextNightPlaceholder} from "@/app/_ui/home/HomeCards";
 import {StartCard} from "@/app/_ui/home/StartCard";
 import {ErrorNote} from "@/app/_ui/sp";
 import {Box} from "@mui/material";
-import React from "react";
+import React, {useState} from "react";
+import {ArrivalAction} from "./DayParts";
 import {FinishedRow, NextTournamentCard, NoTournamentCard, ResultsButton, TodayCard, UpcomingCard} from "./PlayerParts";
 
 // Početna · Turniri (Claude Design "Natjecanja" S2–S4), also /turniri on its own: the card on top (the player's table
@@ -39,6 +41,21 @@ export default function TournamentsOverview({withBurza = false}: {withBurza?: bo
   const upcoming = list.filter((t) => t.phase === "upcoming" && t.id !== main?.id).sort((a, b) => a.date.localeCompare(b.date));
   const finished = list.filter((t) => t.phase === "finished").sort((a, b) => b.date.localeCompare(a.date));
   const liveOfTable = openTable ? list.find((t) => t.id === openTable.tournamentId) : undefined;
+  // Tu smo and Ipak otkazujemo on the card itself (Potvrda dolaska C2, C3)
+  const [arrivalBusy, setArrivalBusy] = useState<ArrivalAction | null>(null);
+  const [arrivalError, setArrivalError] = useState<string | null>(null);
+  const onArrival = async (action: ArrivalAction) => {
+    if (!main || arrivalBusy) return;
+    setArrivalBusy(action);
+    setArrivalError(null);
+    try {
+      await arrivalAPI(main.id, action);
+      reload();
+    } catch (e) {
+      setArrivalError(e instanceof Error ? e.message : "Nije spremljeno.");
+    }
+    setArrivalBusy(null);
+  };
 
   return (
     <>
@@ -57,11 +74,12 @@ export default function TournamentsOverview({withBurza = false}: {withBurza?: bo
           <ResultsButton t={main} />
         </>
       ) : main ? (
-        <NextTournamentCard t={main} />
+        <NextTournamentCard t={main} arrival={{busy: arrivalBusy, onAction: onArrival}} />
       ) : (
         <NoTournamentCard />
       )}
       {error && <ErrorNote onRetry={reload}>{error}</ErrorNote>}
+      {arrivalError && <ErrorNote>{arrivalError}</ErrorNote>}
       {game.error && <ErrorNote>{game.error}</ErrorNote>}
       {withBurza && <BurzaHomeCard posts={posts} />}
       {upcoming.length > 0 && (
