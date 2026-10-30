@@ -33,10 +33,19 @@ import {DateTile, FillBar, StatusChip, statusOf, tournamentMeta, ViewTabs} from 
 export type ListTab = "upcoming" | "active" | "finished";
 
 // Nadolazeći soonest first; Aktivni and Završeni (cancelled ones too) newest first
+// Aktivni: being played, or its day has come (Potvrda dolaska, before Kolo 1)
+export const activeNow = (t: TournamentCard) => t.phase === "active" || (t.phase === "upcoming" && t.day != null && t.day.phase !== "before");
+
 export function tournamentsOf(list: TournamentCard[], tab: ListTab): TournamentCard[] {
-  const inTab = list.filter((t) => (tab === "upcoming" ? t.phase === "upcoming" : tab === "active" ? t.phase === "active" : t.phase === "finished" || t.phase === "cancelled"));
+  const inTab = list.filter((t) =>
+    tab === "upcoming" ? t.phase === "upcoming" && !activeNow(t) : tab === "active" ? activeNow(t) : t.phase === "finished" || t.phase === "cancelled"
+  );
   return inTab.sort((a, b) => (tab === "upcoming" ? a.date.localeCompare(b.date) : b.date.localeCompare(a.date)) || a.id - b.id);
 }
+
+// "Otkazao Lovro, 22. 10. · 14 ekipa bilo prijavljeno"
+export const cancelledLine = (t: TournamentCard) =>
+  [t.cancelled_info ? `Otkazao ${t.cancelled_info.by ?? "admin"}, ${nightLabel(t.cancelled_info.at.slice(0, 10)).replace(/^\S+ /, "")}` : "Otkazan", `${count(t.teams + t.waiting, NOUN.ekipa)} bilo prijavljeno`].join(" · ");
 
 const placeLine = (t: TournamentCard) => [t.location.name, t.location.address].filter(Boolean).join(", ") || "—";
 
@@ -133,11 +142,11 @@ export default function TournamentsDesktop() {
                       <Box sx={{display: "flex", alignItems: "center", gap: "12px", minWidth: 0}}>
                         <DateTile date={t.date} size={46} done={t.phase === "finished" || t.phase === "cancelled"} />
                         <Box sx={{minWidth: 0, display: "flex", flexDirection: "column", gap: "2px"}}>
-                          <Box component="span" sx={{fontSize: 16, fontWeight: 700, color: color.ink, ...ellipsis}}>
+                          <Box component="span" sx={{fontSize: 16, fontWeight: 700, color: t.phase === "cancelled" ? color.muted : color.ink, textDecoration: t.phase === "cancelled" ? "line-through" : "none", ...ellipsis}}>
                             {t.name}
                           </Box>
                           <Box component="span" sx={{fontSize: 13, color: color.muted, ...ellipsis}}>
-                            {tournamentMeta(t)}
+                            {t.phase === "cancelled" ? cancelledLine(t) : tournamentMeta(t)}
                           </Box>
                         </Box>
                       </Box>

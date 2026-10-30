@@ -171,6 +171,7 @@ export function cardView(s: Snapshot, viewer: Viewer | null): TournamentCard {
     game_minutes: t.game_minutes,
     day: dayOf(s, now),
     server_now: now.toISOString(),
+    ...(admin && {cancelled_info: t.cancelled_at ? {by: t.canceller ? displayName(t.canceller) : null, at: t.cancelled_at.toISOString()} : null}),
   };
 }
 

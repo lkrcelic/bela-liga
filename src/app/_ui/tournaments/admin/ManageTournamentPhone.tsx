@@ -77,6 +77,9 @@ import SaveRoundedIcon from "@mui/icons-material/SaveRounded";
 import WarningRoundedIcon from "@mui/icons-material/WarningRounded";
 import {Box} from "@mui/material";
 import {useSearchParams} from "next/navigation";
+import {ActiveSwitch, ArrivalButton, ArrivalChip, ArrivalSummaryLine, AtStartCard, dayOn, ExcludeControls, ExcludedStandings, ExclusionTag, STANDINGS_ORDER, TableStates, useTeamDay} from "./DayAdmin";
+import ScheduleRoundedIcon from "@mui/icons-material/ScheduleRounded";
+import BlockRoundedIcon from "@mui/icons-material/BlockRounded";
 import React, {useEffect, useState} from "react";
 import {draftOf, draftPayload, TournamentFields, useTournamentForm} from "../TournamentForm";
 import {FillBar} from "../TournamentParts";
@@ -156,7 +159,14 @@ export default function ManageTournamentPhone({id}: {id: number}) {
       ) : (
         <ScrollArea bleed sx={{gap: "12px"}}>
           <StatusCard t={t} onChanged={setTournament} onOpen={(v, k) => go(v, k)} />
-          <Segmented<ManageView> items={TABS} value={shown} onChange={(v) => go(v)} label="Upravljanje turnirom" variant="track" idPrefix="tm" />
+          <Segmented<ManageView>
+            items={t.phase === "cancelled" ? TABS.filter((x) => x.key === "prijave" || x.key === "podaci") : TABS}
+            value={shown}
+            onChange={(v) => go(v)}
+            label="Upravljanje turnirom"
+            variant="track"
+            idPrefix="tm"
+          />
           <Box {...tabPanelProps("tm", shown)} sx={{flex: "none", display: "flex", flexDirection: "column", gap: "12px"}}>
             {shown === "prijave" || shown === "cekanje" ? (
               <EntriesTab key={shown} t={t} waiting={shown === "cekanje"} onChanged={setTournament} />
@@ -218,6 +228,20 @@ function StatusCard({t, onChanged, onOpen}: {t: AdminTournament; onChanged: (t: 
   const [switching, setSwitching] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  if (dayOn(t)) {
+    return (
+      <Box component="button" type="button" onClick={() => onOpen("prijave", null)} sx={{...cardSx, flexDirection: "row", alignItems: "center", gap: "14px"}}>
+        <CardIcon>
+          <ScheduleRoundedIcon />
+        </CardIcon>
+        <Box component="span" sx={{flex: 1, minWidth: 0}}>
+          <ArrivalSummaryLine t={t} />
+        </Box>
+        <ChevronRightRoundedIcon aria-hidden sx={{fontSize: 26}} />
+      </Box>
+    );
+  }
+
   if (t.phase === "upcoming") {
     const toggle = async () => {
       setSwitching(true);
@@ -256,7 +280,7 @@ function StatusCard({t, onChanged, onOpen}: {t: AdminTournament; onChanged: (t: 
             Turnir je otkazan
           </Box>
           <Box component="span" sx={{fontSize: 14, color: color.ink2}}>
-            Ostaje u popisu kao Otkazan.
+            {t.cancelled_at ? `Otkazao ${t.cancelled_by ?? "admin"}, ${nightLabel(t.cancelled_at.slice(0, 10))} · prijave zatvorene` : "Ostaje u popisu kao Otkazan."}
           </Box>
         </Box>
       </Box>
@@ -269,7 +293,7 @@ function StatusCard({t, onChanged, onOpen}: {t: AdminTournament; onChanged: (t: 
         <CardIcon>
           <EmojiEventsRoundedIcon />
         </CardIcon>
-        <CardText title="Turnir je završen" sub={t.winner ? `Pobjednici: ${t.winner.team_name}` : `Odigrano ${t.completed_kolos} od ${t.rounds} kola`} />
+        <CardText title="Turnir je završen" sub={`Nema otvorenih kola · ${t.completed_kolos} od ${t.rounds} odigrano${t.winner ? ` · pobjednici ${t.winner.team_name}` : ""}`} />
         <ChevronRightRoundedIcon aria-hidden sx={{fontSize: 26}} />
       </Box>
     );
@@ -303,7 +327,11 @@ function EntriesTab({t, waiting, onChanged}: {t: AdminTournament; waiting: boole
   const [asking, setAsking] = useState<TournamentEntryView | null>(null);
   const [busy, setBusy] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const editable = t.phase === "upcoming";
+  const day = useTeamDay(t, onChanged);
+  // the tournament's day before Kolo 1 (Tu smo, Aktivna), or the tournament under way (Isključi, Vrati)
+  const onDay = dayOn(t);
+  const started = t.started_at != null && t.phase !== "cancelled";
+  const editable = t.phase === "upcoming" && !(t.day?.phase === "closed");
   const list = waiting ? t.waiting_list : t.entries;
   const next = t.waiting_list[0];
 
@@ -347,14 +375,26 @@ function EntriesTab({t, waiting, onChanged}: {t: AdminTournament; waiting: boole
           <GroupAddRoundedIcon aria-hidden />
           Dodaj ekipu · ime ekipe
         </Box>
+      ) : t.phase === "cancelled" ? null : started ? (
+        <InfoNote icon={<InfoRoundedIcon />}>Turnir je krenuo: isključi umjesto briši. Isključena ekipa ne igra ostala kola, a odigrana ostaju u poretku.</InfoNote>
       ) : (
-        <InfoNote icon={<InfoRoundedIcon />}>Turnir je počeo: prijave se više ne mijenjaju. Ekipe za stolovima mijenjaš u Kolima.</InfoNote>
+        <InfoNote icon={<InfoRoundedIcon />}>Početak je prošao: prijave su zatvorene. Ekipe koje stignu kasnije označi pa ih uključi prekidačem.</InfoNote>
       )}
-      {error && !asking && <ErrorNote>{error}</ErrorNote>}
+      {(error || day.error) && !asking && <ErrorNote>{error ?? day.error}</ErrorNote>}
       <Box sx={{display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: "10px", px: "6px"}}>
-        <SectionLabel sx={{px: 0}}>{waiting ? "Prva ulazi kad se netko odjavi" : "Prijavljene ekipe"}</SectionLabel>
+        <SectionLabel sx={{px: 0}}>
+          {t.phase === "cancelled"
+            ? `Bile su prijavljene · ${list.length}`
+            : waiting
+              ? "Prva ulazi kad se netko odjavi"
+              : started && t.arrival_summary
+                ? `${t.arrival_summary.active} aktivnih · ${t.arrival_summary.excluded} ${t.arrival_summary.excluded === 1 ? "isključena" : "isključene"}`
+                : onDay
+                  ? "Nepotvrđene možeš ručno označiti"
+                  : "Prijavljene ekipe"}
+        </SectionLabel>
         <Box component="span" sx={{flex: "none", fontSize: 13, fontWeight: 600, color: color.ink2, ...tabular}}>
-          {waiting ? count(list.length, NOUN.ekipa) : t.max_teams != null ? `${t.teams} / ${t.max_teams}` : t.teams}
+          {onDay && !waiting ? "Aktivna" : waiting ? count(list.length, NOUN.ekipa) : started ? "" : t.max_teams != null ? `${t.teams} / ${t.max_teams}` : t.teams}
         </Box>
       </Box>
       {list.length === 0 ? (
@@ -370,14 +410,30 @@ function EntriesTab({t, waiting, onChanged}: {t: AdminTournament; waiting: boole
                   {e.position}
                 </Box>
               )}
-              <Box sx={{flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: "2px", py: "8px"}}>
+              <Box sx={{flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: "2px", py: "8px", opacity: e.excluded || (started && !e.active) ? 0.6 : 1}}>
                 <Box component="span" sx={{fontSize: 16, fontWeight: 600, ...ellipsis}}>
                   {e.team_name}
                 </Box>
-                <Box component="span" sx={{fontSize: 13, color: color.muted, ...ellipsis}}>
-                  {handles(e)}
-                </Box>
+                {e.excluded ? (
+                  <ExclusionTag x={e.excluded} />
+                ) : (onDay || (started && waiting)) ? (
+                  <Box sx={{display: "flex"}}>
+                    <ArrivalChip e={e} />
+                  </Box>
+                ) : started && !e.active ? (
+                  <Box component="span" sx={{fontSize: 13, fontWeight: 700, color: color.muted}}>
+                    Neaktivna
+                  </Box>
+                ) : (
+                  <Box component="span" sx={{fontSize: 13, color: color.muted, ...ellipsis}}>
+                    {handles(e)}
+                  </Box>
+                )}
               </Box>
+              {(onDay || (started && (waiting || !e.active))) && !e.excluded && !e.arrival && <ArrivalButton e={e} day={day} />}
+              {onDay && !waiting && <ActiveSwitch e={e} day={day} />}
+              {started && !waiting && <ExcludeControls e={e} day={day} t={t} />}
+              {started && !waiting && !e.excluded && !e.active && <ActiveSwitch e={e} day={day} />}
               {waiting && editable && (
                 <Box
                   component="button"
@@ -391,7 +447,7 @@ function EntriesTab({t, waiting, onChanged}: {t: AdminTournament; waiting: boole
                   Ubaci
                 </Box>
               )}
-              {editable && (
+              {editable && !onDay && (
                 <Box
                   component="button"
                   type="button"
@@ -455,6 +511,12 @@ function AddTeamSheet({t, onClose, onAdded}: {t: AdminTournament; onClose: () =>
                         {h.reason ?? (h.players.map((p) => (p.username ? `@${p.username}` : p.name)).join(" · ") || "—")}
                       </Box>
                     </Box>
+                    {h.banned && (
+                      <Box component="span" sx={{flex: "none", display: "inline-flex", alignItems: "center", gap: "4px", height: 32, px: "10px", borderRadius: "10px", background: tint.red[10], color: color.red, fontSize: 13, fontWeight: 700, "& svg": {fontSize: 17}}}>
+                        <BlockRoundedIcon aria-hidden />
+                        Zabrana
+                      </Box>
+                    )}
                     {!h.reason && (
                       <Box
                         component="button"
@@ -755,7 +817,10 @@ function KoloPhone({t, kolo, onBack, onChanged, reload}: {t: AdminTournament; ko
         ) : draft ? (
           <DraftTableList rows={rows} label={`Skica Kola ${kolo}, stolovi`} />
         ) : (
-          <PhoneRoundTables title={`Kolo ${kolo}`} rows={rows} tableTarget={(r) => ({href: `/turniri/${t.id}/stol/${r.id}`})} />
+          <>
+            <TableStates t={t} kolo={view} />
+            <PhoneRoundTables title={`Kolo ${kolo}`} rows={rows} tableTarget={(r) => ({href: `/turniri/${t.id}/stol/${r.id}`})} />
+          </>
         )}
       </ScrollArea>
 
@@ -815,8 +880,9 @@ function StandingsTab({t}: {t: AdminTournament}) {
       </Box>
       <Card sx={{p: 0, overflow: "hidden"}}>{rows.length === 0 ? <EmptyState>Poredak će biti ovdje kad počne prvo kolo.</EmptyState> : <StandingsRows rows={rows} head rowHref={standingsTeamHref} />}</Card>
       <Box component="p" sx={{m: 0, px: "4px", fontSize: 13.5, lineHeight: 1.45, color: color.ink2}}>
-        Bodovi: pobjeda 2, neriješeno 1; pa razlika, pa ime ekipe. Crveni broj = ekipa trenutno igra.
+        {STANDINGS_ORDER} Crveni broj = ekipa trenutno igra.
       </Box>
+      <ExcludedStandings t={t} />
       <OutlineButton height={52} onClick={() => router.push(`/turniri/${t.id}/poredak`)} sx={{flex: "none", fontSize: 16, borderWidth: "1.5px", borderColor: tint.navy[25], background: color.white}}>
         <OpenInNewRoundedIcon sx={{fontSize: 20}} />
         Prikaz za igrače

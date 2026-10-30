@@ -28,6 +28,7 @@ import RefreshRoundedIcon from "@mui/icons-material/RefreshRounded";
 import VisibilityRoundedIcon from "@mui/icons-material/VisibilityRounded";
 import WarningRoundedIcon from "@mui/icons-material/WarningRounded";
 import {Box, Dialog} from "@mui/material";
+import {TableStates} from "./DayAdmin";
 import React, {useEffect, useId, useState} from "react";
 
 // Upravljanje turnirom · Kola (Claude Design "Turniri admin" C1–C4): one Kolo's tables on the left with the Kolos 1…N
@@ -365,6 +366,7 @@ export default function KolaDesktop({t, kolo, onKolo, onChanged, reload}: Props)
       </Card>
       <Box sx={{minHeight: 0, overflowY: "auto", display: "flex", flexDirection: "column", gap: "16px"}}>
         <SideCard t={t} kolo={kolo} step={step} done={done} tables={rows.length} busy={busy} repeats={repeats} onMake={make} onPublish={publish} onPlayers={() => router.push(`/turniri/${t.id}/poredak`)} />
+        {view && view.published && <TableStates t={t} kolo={view} />}
         <InfoNote icon={<InfoRoundedIcon />}>
           {kolo === 1 && step !== "played" && step !== "live"
             ? "Od drugog kola parovi se slažu po poretku (švicarski sustav): ekipe sličnih bodova igraju jedna protiv druge i ne ponavljaju protivnika. Slobodna runda radi isto kao u ligi: kod neparnog broja ekipa jedna ekipa nema protivnika i dobiva pobjedu."
@@ -420,6 +422,7 @@ function SideCard({
         </Box>
         {title(t.winner ? `Pobjednici: ${t.winner.team_name}` : "Sva kola su odigrana")}
         {t.winner && text(t.winner.players.join(" · "))}
+        {text(`Nema otvorenih kola · ${t.completed_kolos} od ${t.rounds} odigrano. Turnir se sam završava kad nema otvorenih kola; nastavlja se samo ako dodaš novo kolo (+ pokraj kola).`)}
         <OutlineButton height={50} onClick={onPlayers} sx={{fontSize: 15, borderWidth: "1.5px"}}>
           <OpenInNewRoundedIcon sx={{fontSize: 20}} />
           Prikaz za igrače

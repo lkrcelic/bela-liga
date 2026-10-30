@@ -16,6 +16,11 @@ import {useSearchParams} from "next/navigation";
 import React, {useState} from "react";
 import {StatusChip, statusOf, ViewTabs} from "../TournamentParts";
 import EntriesDesktop from "./EntriesDesktop";
+import DayEntriesDesktop from "./DayEntriesDesktop";
+import {ArrivalSummaryLine, clockOf, dayOn} from "./DayAdmin";
+import EventBusyRoundedIcon from "@mui/icons-material/EventBusyRounded";
+import {nightLabel} from "@/app/_lib/nights";
+import {tint} from "@/app/_styles/tokens";
 import KolaDesktop, {defaultKolo} from "./KolaDesktop";
 import {DetailsDesktop, StandingsDesktop} from "./StandingsDetailsDesktop";
 
@@ -62,7 +67,11 @@ export default function ManageTournamentDesktop({id}: {id: number}) {
   };
 
   const right =
-    t && t.phase === "upcoming" ? (
+    t && dayOn(t) ? (
+      <Box sx={{height: 52, display: "flex", alignItems: "center", gap: "10px", px: "18px", borderRadius: "26px", background: color.navy, color: color.white}}>
+        <ArrivalSummaryLine t={t} />
+      </Box>
+    ) : t && t.phase === "upcoming" ? (
       <Box
         component="button"
         type="button"
@@ -93,21 +102,38 @@ export default function ManageTournamentDesktop({id}: {id: number}) {
         </Card>
       ) : (
         <>
+          {t.phase === "cancelled" && (
+            <Box sx={{flex: "none", display: "flex", alignItems: "center", gap: "14px", p: "16px 20px", borderRadius: "22px", background: color.lineFill, border: `1.5px dashed ${tint.navy[22]}`}}>
+              <EventBusyRoundedIcon aria-hidden sx={{fontSize: 28, color: color.red}} />
+              <Box sx={{display: "flex", flexDirection: "column", gap: "2px"}}>
+                <Box component="span" sx={{fontSize: 17, fontWeight: 700}}>
+                  Turnir je otkazan
+                </Box>
+                <Box component="span" sx={{fontSize: 14, color: color.ink2}}>
+                  {t.cancelled_at ? `Otkazao ${t.cancelled_by ?? "admin"}, ${nightLabel(t.cancelled_at.slice(0, 10))} u ${clockOf(t.cancelled_at)} · prijave zatvorene` : "Prijave zatvorene"}
+                </Box>
+              </Box>
+            </Box>
+          )}
           <ViewTabs<ManageView>
             label="Upravljanje turnirom"
             value={shown}
             onChange={(v) => go(v)}
             items={[
-              {key: "prijave", label: "Prijave", icon: <GroupsRoundedIcon />, count: t.teams},
-              {key: "cekanje", label: "Lista čekanja", icon: <HourglassTopRoundedIcon />, count: t.waiting},
-              {key: "kola", label: "Kola", icon: <EventNoteRoundedIcon />, count: t.rounds},
-              {key: "poredak", label: "Poredak", icon: <EmojiEventsRoundedIcon />},
-              {key: "podaci", label: "Podaci", icon: <TuneRoundedIcon />},
-            ]}
+              {key: "prijave" as const, label: "Prijave", icon: <GroupsRoundedIcon />, count: t.teams},
+              {key: "cekanje" as const, label: "Lista čekanja", icon: <HourglassTopRoundedIcon />, count: t.waiting},
+              {key: "kola" as const, label: "Kola", icon: <EventNoteRoundedIcon />, count: t.rounds},
+              {key: "poredak" as const, label: "Poredak", icon: <EmojiEventsRoundedIcon />},
+              {key: "podaci" as const, label: "Podaci", icon: <TuneRoundedIcon />},
+            ].filter((x) => t.phase !== "cancelled" || x.key === "prijave" || x.key === "podaci")}
           />
           {switchError && <ErrorNote>{switchError}</ErrorNote>}
           {shown === "prijave" || shown === "cekanje" ? (
-            <EntriesDesktop key={shown} t={t} waiting={shown === "cekanje"} onChanged={setTournament} />
+            (dayOn(t) || t.started_at) && t.phase !== "cancelled" ? (
+              <DayEntriesDesktop t={t} onChanged={setTournament} />
+            ) : (
+              <EntriesDesktop key={shown} t={t} waiting={shown === "cekanje"} onChanged={setTournament} />
+            )
           ) : shown === "kola" ? (
             <KolaDesktop t={t} kolo={shownKolo} onKolo={(k) => go("kola", k)} onChanged={setTournament} reload={reload} />
           ) : shown === "poredak" ? (

@@ -13,6 +13,7 @@ import EventBusyRoundedIcon from "@mui/icons-material/EventBusyRounded";
 import InfoRoundedIcon from "@mui/icons-material/InfoRounded";
 import OpenInNewRoundedIcon from "@mui/icons-material/OpenInNewRounded";
 import {Box} from "@mui/material";
+import {ExcludedStandings} from "./DayAdmin";
 import React, {useState} from "react";
 import {draftOf, draftPayload, TournamentFields, useTournamentForm} from "../TournamentForm";
 import {Confirm} from "./TournamentsDesktop";
@@ -50,14 +51,15 @@ export function StandingsDesktop({t}: {t: AdminTournament}) {
             Kako se računa
           </Box>
           <Box component="p" sx={{m: 0, fontSize: 15, lineHeight: 1.5}}>
-            Računa se sam nakon svake igre. Redoslijed: bodovi (pobjeda 2, neriješeno 1), pa razlika, pa ime ekipe.
+            Računa se sam nakon svake igre. Redoslijed: bodovi (pobjeda 2, neriješeno 1), pa razlika bodova, pa međusobni omjer na turniru.
           </Box>
           <OutlineButton height={50} onClick={() => router.push(`/turniri/${t.id}/poredak`)} sx={{fontSize: 15, borderWidth: "1.5px"}}>
             <OpenInNewRoundedIcon sx={{fontSize: 20}} />
             Prikaz za igrače
           </OutlineButton>
         </Card>
-        <InfoNote icon={<InfoRoundedIcon />}>Crveni broj = ekipa trenutno igra. Rezultati se ispravljaju u tabu Kola (dodir na stol).</InfoNote>
+        <ExcludedStandings t={t} />
+        <InfoNote icon={<InfoRoundedIcon />}>Crveni broj = ekipa trenutno igra. Rezultati se ispravljaju u tabu Kola (dodir na stol), i nakon kraja turnira.</InfoNote>
       </Box>
     </Box>
   );

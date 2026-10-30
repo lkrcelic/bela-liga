@@ -178,6 +178,8 @@ export type TournamentCard = {
   day: TournamentDay | null;
   // the server's clock (ISO), for the countdowns
   server_now: string;
+  // Otkazan: who cancelled it and when (admins only)
+  cancelled_info?: {by: string | null; at: string} | null;
 };
 
 export type TournamentPrizeView = {place: number; prize: string; description: string};
