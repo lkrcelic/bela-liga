@@ -2,12 +2,12 @@ import {Prisma} from "@prisma/client";
 import {prisma} from "@/app/_lib/prisma";
 import {Viewer} from "@/app/_lib/players/privacy";
 import {isByeTeam} from "@/app/_lib/bye";
-import {leagueClock, leagueDateString, leagueNight} from "@/app/_lib/dates";
+import {leagueClock, leagueDateString} from "@/app/_lib/dates";
 import {addToDay} from "@/app/_lib/bans";
 import {InvalidResultError} from "@/app/_lib/validation/validateResult";
 import {NotFoundError} from "@/app/_lib/service/admin/tables";
 import {autoBanTeam} from "@/app/_lib/service/bans/bans";
-import {NO_SHOW_BAN_MONTHS, NO_SHOW_SCORE, noShowStep, noShowTimes} from "@/app/_lib/tournamentDay";
+import {NO_SHOW_BAN_MONTHS, NO_SHOW_SCORE, noShowStep, noShowTimes, tournamentDays} from "@/app/_lib/tournamentDay";
 import {fillPlaces} from "./day";
 import {lockTournament} from "./lock";
 import {afterTableClosed} from "./kola";
@@ -40,8 +40,9 @@ const tableSelect = {
 
 type Table = Prisma.RoundGetPayload<{select: typeof tableSelect}>;
 
-// A table the question is about: today's, published, open, not a bye, no game started and not answered yet
-export function awaitingPlay(t: Pick<Table, "status" | "open" | "attendance" | "team1_id" | "team2_id" | "_count" | "round_date" | "published_at">, today: Date): boolean {
+// A table the question is about: today's (days: tournamentDays), published, open, not a bye, no game started and not
+// answered yet
+export function awaitingPlay(t: Pick<Table, "status" | "open" | "attendance" | "team1_id" | "team2_id" | "_count" | "round_date" | "published_at">, days: Date[]): boolean {
   return (
     t.status === "PUBLISHED" &&
     t.open &&
@@ -52,7 +53,7 @@ export function awaitingPlay(t: Pick<Table, "status" | "open" | "attendance" | "
     t._count.matches === 0 &&
     t._count.ongoingMatches === 0 &&
     t.round_date != null &&
-    t.round_date.getTime() === today.getTime()
+    days.some((d) => d.getTime() === t.round_date!.getTime())
   );
 }
 
@@ -115,9 +116,9 @@ async function applySkip(tx: Tx, table: Table, now: Date) {
 
 // Skips the tournament's tables whose 10 minutes are over (the clock). Answers with the tables it closed.
 export async function skipDueTables(tournamentId: number, now = new Date()): Promise<number[]> {
-  const today = leagueNight(now);
+  const today = tournamentDays(now);
   const candidates = await prisma.round.findMany({
-    where: {tournamentRounds: {some: {tournament_id: tournamentId}}, status: "PUBLISHED", open: true, attendance: null, round_date: today},
+    where: {tournamentRounds: {some: {tournament_id: tournamentId}}, status: "PUBLISHED", open: true, attendance: null, round_date: {in: today}},
     select: tableSelect,
   });
   const due = candidates.filter((t) => awaitingPlay(t, today) && noShowStep(t.published_at!, now) === "due");
@@ -143,7 +144,7 @@ export async function answerAttendance(roundId: number, viewer: Viewer, answer: 
   const link = await prisma.tournamentRound.findFirst({where: {round_id: roundId}, select: {tournament_id: true}});
   if (!link) throw new NotFoundError("Stol ne postoji.");
   const now = new Date();
-  const today = leagueNight(now);
+  const today = tournamentDays(now);
   const outcome = await prisma.$transaction(async (tx) => {
     await lockTournament(tx, link.tournament_id);
     const table = await tx.round.findUnique({where: {id: roundId}, select: tableSelect});

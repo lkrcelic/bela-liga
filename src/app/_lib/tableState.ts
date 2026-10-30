@@ -30,6 +30,8 @@ export type StateTable = {
   matches: {score1: number; score2: number; time_expired: boolean}[];
   team1: string;
   team2: string;
+  // the matches the table plays (1 or 2)
+  matches_per_round: number;
   // the table is of today's tournament (the question and the skip only happen on the day)
   today: boolean;
 };
@@ -46,7 +48,7 @@ export function tableState(t: StateTable, now: Date, gameMinutes: number, clock:
   if (expired >= 0) {
     const m = t.matches[expired];
     const winner = m.score1 > m.score2 ? t.team1 : t.team2;
-    const which = t.matches.length > 1 || !t.open ? `Partija ${expired + 1}` : "Partija";
+    const which = t.matches_per_round > 1 ? `Partija ${expired + 1}` : "Partija";
     return {kind: "time_expired", label: "Vrijeme isteklo", note: `${which} završena nakon ${gameMinutes} min s upisanim rezultatom. Pobjeđuju ${winner}.`};
   }
   if (!t.open) return {kind: "done", label: "Gotovo", note: null};

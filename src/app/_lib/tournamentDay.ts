@@ -4,7 +4,15 @@
 // no game has started gets the question "Jesu li … za stolom?" 5 minutes after its Kolo went out, it can be answered
 // from 8 minutes, and at 10 minutes the match is skipped. All times are the server's. Framework free so it can be unit
 // tested.
-import {leagueMoment} from "@/app/_lib/dates";
+import {leagueDateString, leagueMoment, leagueNightString} from "@/app/_lib/dates";
+
+// The days a tournament can be played on now (as stored, UTC midnight): the calendar day, and until 06:00 also the
+// league night before, so a tournament that runs past midnight keeps its clock
+export function tournamentDays(now: Date = new Date()): Date[] {
+  return Array.from(new Set([leagueDateString(now), leagueNightString(now)])).map((d) => new Date(`${d}T00:00:00.000Z`));
+}
+
+export const isTournamentDay = (date: Date, now: Date = new Date()) => tournamentDays(now).some((d) => d.getTime() === date.getTime());
 
 // without an Okupljanje the confirmation opens this long before the start
 export const ARRIVAL_DEFAULT_MS = 30 * 60_000;

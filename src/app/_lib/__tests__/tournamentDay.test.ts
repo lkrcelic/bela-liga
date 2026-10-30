@@ -117,6 +117,7 @@ const base: StateTable = {
   matches: [],
   team1: "Istrani",
   team2: "Imoćani",
+  matches_per_round: 2,
   today: true,
 };
 const clock = (d: Date) => leagueClock(d);

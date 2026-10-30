@@ -58,6 +58,7 @@ export type LoadedTable = {
   ongoing: {player_pair1_score: number; player_pair2_score: number; started_at: Date | null; ends_at: Date | null} | null;
   // the players who played it (Tko igra)
   lineup: {player_id: number; team_id: number}[];
+  matches_per_round: number;
   // Nedolazak za stol: the answer (or SKIPPED), which team gave it and when
   attendance: "PRESENT" | "NO_SHOW" | "SKIPPED" | null;
   attendance_team_id: number | null;
@@ -135,6 +136,7 @@ export async function loadSnapshots(ids: number[], viewer: Viewer | null, db: Db
         active: true,
         status: true,
         published_at: true,
+        matches_per_round: true,
         attendance: true,
         attendance_team_id: true,
         attendance_at: true,
@@ -198,6 +200,7 @@ export async function loadSnapshots(ids: number[], viewer: Viewer | null, db: Db
         matches: r.matches.map((m) => ({score1: m.player_pair1_score, score2: m.player_pair2_score, time_expired: m.time_expired})),
         ongoing: r.ongoingMatches[0] ?? null,
         lineup: r.roundPlayers,
+        matches_per_round: r.matches_per_round,
         attendance: r.attendance,
         attendance_team_id: r.attendance_team_id,
         attendance_at: r.attendance_at,

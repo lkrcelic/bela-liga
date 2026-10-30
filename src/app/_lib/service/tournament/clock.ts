@@ -1,5 +1,5 @@
 import {prisma} from "@/app/_lib/prisma";
-import {leagueNight} from "@/app/_lib/dates";
+import {tournamentDays} from "@/app/_lib/tournamentDay";
 import {expireDueMatches} from "@/app/_lib/service/match/timeLimit";
 import {closeArrival} from "./day";
 import {skipDueTables} from "./attendance";
@@ -27,8 +27,9 @@ export async function syncTournament(tournamentId: number, {force = false}: {for
   });
   if (!t || t.cancelled_at) return;
   // only a tournament of today (or one that hasn't run its switch yet) has anything due
-  const today = leagueNight(now);
-  if (t.date.getTime() > today.getTime()) return;
+  const days = tournamentDays(now);
+  if (days.every((d) => t.date.getTime() > d.getTime())) return;
+  const today = days.some((d) => d.getTime() === t.date.getTime());
 
   if (!t.arrival_closed_at && !t.started_at && t.start_time) {
     await prisma.$transaction(async (tx) => {
@@ -36,7 +37,7 @@ export async function syncTournament(tournamentId: number, {force = false}: {for
       await closeArrival(tx, tournamentId, now);
     });
   }
-  if (t.date.getTime() === today.getTime()) {
+  if (today) {
     await skipDueTables(tournamentId, now);
     const open = await prisma.round.findMany({
       where: {tournamentRounds: {some: {tournament_id: tournamentId}}, status: "PUBLISHED", open: true},
@@ -49,8 +50,7 @@ export async function syncTournament(tournamentId: number, {force = false}: {for
 
 // The tournaments of today (for the players' check and the lists)
 export async function syncToday(): Promise<number[]> {
-  const today = leagueNight();
-  const rows = await prisma.tournament.findMany({where: {date: today, cancelled_at: null}, select: {tournament_id: true}});
+  const rows = await prisma.tournament.findMany({where: {date: {in: tournamentDays()}, cancelled_at: null}, select: {tournament_id: true}});
   for (const r of rows) await syncTournament(r.tournament_id);
   return rows.map((r) => r.tournament_id);
 }

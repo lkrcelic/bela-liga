@@ -1,8 +1,8 @@
 import {prisma} from "@/app/_lib/prisma";
 import {Viewer} from "@/app/_lib/players/privacy";
-import {leagueNight} from "@/app/_lib/dates";
+
 import {teamLabel} from "@/app/_lib/bye";
-import {noShowStep, noShowTimes} from "@/app/_lib/tournamentDay";
+import {noShowStep, noShowTimes, tournamentDays} from "@/app/_lib/tournamentDay";
 import {awaitingPlay} from "./attendance";
 import {syncTournament} from "./clock";
 
@@ -45,14 +45,14 @@ const FAST_S = 5;
 
 export async function attentionFor(viewer: Viewer): Promise<Attention> {
   const now = new Date();
-  const today = leagueNight(now);
+  const today = tournamentDays(now);
   const teams = await prisma.teamPlayer.findMany({where: {player_id: viewer.id}, select: {team_id: true}});
   const teamIds = teams.map((t) => t.team_id);
   const quiet: Attention = {now: now.toISOString(), prompt: null, notices: [], poll_in: QUIET_S};
   if (teamIds.length === 0) return quiet;
 
   const tournaments = await prisma.tournament.findMany({
-    where: {date: today, cancelled_at: null, tournamentTeams: {some: {team_id: {in: teamIds}}}},
+    where: {date: {in: today}, cancelled_at: null, tournamentTeams: {some: {team_id: {in: teamIds}}}},
     select: {tournament_id: true, tournament_name: true, organizer_phone: true},
   });
   if (tournaments.length === 0) return quiet;
@@ -62,7 +62,7 @@ export async function attentionFor(viewer: Viewer): Promise<Attention> {
     where: {
       tournamentRounds: {some: {tournament_id: {in: tournaments.map((t) => t.tournament_id)}}},
       status: "PUBLISHED",
-      round_date: today,
+      round_date: {in: today},
       OR: [{team1_id: {in: teamIds}}, {team2_id: {in: teamIds}}],
     },
     orderBy: [{round_number: "desc"}, {id: "desc"}],

@@ -19,9 +19,9 @@ import {
   TournamentWinner,
 } from "@/app/_interfaces/tournament";
 import {waitingList} from "@/app/_lib/tournamentEntries";
-import {leagueClock, leagueNight} from "@/app/_lib/dates";
+import {leagueClock} from "@/app/_lib/dates";
 import {displayName} from "@/app/_lib/players/names";
-import {arrivalPhase, DayEntry, startSwitch} from "@/app/_lib/tournamentDay";
+import {arrivalPhase, DayEntry, isTournamentDay, startSwitch} from "@/app/_lib/tournamentDay";
 import {tableState} from "@/app/_lib/tableState";
 import {windowOf} from "./day";
 import {LoadedEntry, LoadedPlayer, LoadedTable, Snapshot, tableStarted} from "./load";
@@ -222,7 +222,8 @@ function koloTable(s: Snapshot, t: LoadedTable, now: Date): KoloTable {
       matches: t.matches,
       team1: team(t.team1_id).team_name,
       team2: team(t.team2_id).team_name,
-      today: s.tournament.date.getTime() === leagueNight(now).getTime(),
+      matches_per_round: t.matches_per_round,
+      today: isTournamentDay(s.tournament.date, now),
     },
     now,
     s.tournament.game_minutes,
