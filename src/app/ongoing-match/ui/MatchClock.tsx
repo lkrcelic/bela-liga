@@ -10,7 +10,7 @@ import {Box, Dialog} from "@mui/material";
 import {useEffect, useState} from "react";
 import {setServerOffset} from "./handFlow";
 
-// Vrijeme partije on the scorepad (Claude Design "Vrijeme partije" T1–T3): the time left in the board's head (grey, red
+// Vrijeme partije on the scorepad (Claude Design "Vrijeme partije" T1–T3): the time left in the board's head (muted grey, red
 // in the last 5 minutes), "Još 5:00 do kraja partije" once per match on the board's main screen, and what the board
 // says when the time is up (the score entered then counts; with the score level one more hand). The server's clock
 // counts (server_now), not the phone's.
@@ -47,7 +47,7 @@ export function useMatchClock(match: Pick<OngoingMatchExtendedResponse, "id" | "
 // "timer 23:41" in the board's head: grey, red in the last 5 minutes
 export function TimerChip({clock}: {clock: MatchClock}) {
   if (clock.left == null) return null;
-  const tone = clock.warn ? color.red : "#5E6577";
+  const tone = clock.warn ? color.red : color.muted;
   return (
     <Box
       component="span"
