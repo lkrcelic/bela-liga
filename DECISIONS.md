@@ -1478,3 +1478,25 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
     - **Dodaj večer on the computer** sat below the night's card, so on a laptop's screen its button was cut off or out
       of view, in a column that scrolls without a scrollbar. It is now the first card on the right, above Uredi večer.
       The phone's Dodaj was always at the top.
+
+79. **Dodaj večer as a button, and every night opens** (your request of 31.10. after #78: "dodaj večer mora biti kao
+    neki gumb sa strane ili gumb na vrhu koji otvara cijelu formu za večer, lokaciju, vrijeme i sve povuče iz postavka
+    lige ako ima. Kada se klikne na neki datum onda se otvore podaci tog datuma/večeri").
+    - **Dodaj večer** is a button: on the computer in the header of Večeri lige (beside "N odigrano · još M"), on the
+      phone full width under Sljedeća večer (the header's + stays Nova liga). It opens **Nova večer**: the computer's
+      card on the right, the phone's sheet. It is the same form as Uredi večer (Datum večeri, Vrijeme okupljanja,
+      Mjesto: Zadano lige or Drugo mjesto), with **Odustani** and **Dodaj večer**. After adding, the computer opens
+      the new night in Uredi večer; the phone closes the sheet.
+    - **From the league's settings**: the time starts as the league's and the place as "Zadano lige" (its place shown),
+      as Podaci/Postavke has them. The date starts on the league's play day after its last night, today at the
+      earliest; a league without a play day starts with an empty date. A time equal to the league's isn't kept as the
+      night's own, so the night follows a later change in Podaci. `POST /api/leagues/{id}/nights` now takes the
+      night's own place too.
+    - A new night may still be in the past (a night that was played but not added); only moving a night is limited to
+      today or later (#78).
+    - **Every night opens**: a click (computer) or tap (phone) on any row. One still to be played opens in Uredi večer.
+      One that has passed or has rounds opens read-only: its time, place and rounds ("3 odigrana kola" or "Nije
+      odigrana"), why it can't change, and **Makni večer** (passed without rounds, at once) or **Obriši večer i kola**
+      (played: Obrisati odigranu večer? first). The computer keeps the bin on each row as a shortcut; the phone's rows
+      lost the bins from #78 and all have the chevron, the actions are in the sheet.
+    - With nothing clicked, the computer's card shows the next night still to be played, as before.

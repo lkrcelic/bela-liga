@@ -11,19 +11,21 @@ On development, not live yet.
 - The same for the times under **Zadnje prijave** on the computer's list of tournaments, and for **Postavio …** on a ban (Ekipa and Igrač).
 - **Postavio …** on a ban no longer ends with two periods after the date.
 
-## 31.10.2026 · Datumi: premjesti večer, obriši odigranu
+## 31.10.2026 · Datumi: Dodaj večer, premjesti večer, obriši odigranu
 
-On development, not live yet (DECISIONS #78).
+On development, not live yet (DECISIONS #78, #79).
 
 ### Added for the admin
-- Upravljanje ligom · Datumi: an upcoming night can move to another date (**Datum večeri** in **Uredi večer**), computer and phone.
-- A team's Burza ad for a substitute moves with its night.
-- A played night can be removed: the bin opens **Obrisati odigranu večer?**, and **Obriši večer i kola** deletes its rounds and results too.
-- Phone: a night that has passed without rounds has a bin and goes at once.
+- Upravljanje ligom · Datumi: **Dodaj večer** is a button (computer: over the list; phone: under Sljedeća večer) that opens **Nova večer**: date, time and place.
+- Nova večer starts filled in from the league: its play day after the last night, its time and its place; any of them can be changed.
+- A click (tap) on any night opens it: an upcoming one in **Uredi večer**, a passed or played one with its time, place and rounds.
+- An upcoming night can move to another date (**Datum večeri** in Uredi večer); a team's Burza ad for a substitute moves with it.
+- A played night can be removed: **Obriši večer i kola** opens **Obrisati odigranu večer?**, and only then its rounds and results go too.
+- A night that has passed without rounds can be removed (**Makni večer**, or the bin on the computer).
 
 ### Changed
-- Computer: **Dodaj večer** is the first card on the right, above the night being edited, so its button is always in view.
 - The night's card and sheet are called **Uredi večer** (they were Okupljanje večeri).
+- Computer: the card on the right starts at its top when another night opens.
 
 ## 31.10.2026 · Admin: popis turnira i Vrati turnir
 
