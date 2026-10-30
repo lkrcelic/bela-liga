@@ -2,6 +2,20 @@
 
 What the commits changed for the people using the app, newest first. The reasons and details are in DECISIONS.md.
 
+## 31.10.2026 · Datumi: premjesti večer, obriši odigranu
+
+On development, not live yet (DECISIONS #78).
+
+### Added for the admin
+- Upravljanje ligom · Datumi: an upcoming night can move to another date (**Datum večeri** in **Uredi večer**), computer and phone.
+- A team's Burza ad for a substitute moves with its night.
+- A played night can be removed: the bin opens **Obrisati odigranu večer?**, and **Obriši večer i kola** deletes its rounds and results too.
+- Phone: a night that has passed without rounds has a bin and goes at once.
+
+### Changed
+- Computer: **Dodaj večer** is the first card on the right, above the night being edited, so its button is always in view.
+- The night's card and sheet are called **Uredi večer** (they were Okupljanje večeri).
+
 ## 31.10.2026 · Admin: popis turnira i Vrati turnir
 
 Live since 31.10.2026 (DECISIONS #77), except the Kolo's **point difference**, which is on development, not live yet.

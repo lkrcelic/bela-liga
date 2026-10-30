@@ -62,6 +62,9 @@ async function lockCompetition(tx: Tx, c: Competition) {
   else await lockTournament(tx, c.id);
 }
 
+// The league's edit lock, for a change of its nights that round creation mustn't cross
+export const lockLeague = (tx: Tx, leagueId: number) => lockCompetition(tx, {kind: "league", id: leagueId});
+
 // The league or tournament a table belongs to (null: it doesn't exist)
 export async function tableCompetition(roundId: number, db: Tx | typeof prisma = prisma): Promise<Competition | null> {
   const [league, tournament] = await Promise.all([
@@ -311,4 +314,19 @@ export async function deleteLeagueRound(leagueId: number, roundDate: Date, round
     await settle(tx, league, tables, []);
     return tables.length;
   }, {timeout: 60000});
+}
+
+// Deletes every table of a league's night, drafts too, with what was played at them (Datumi · Obrisati odigranu
+// večer?). Returns how many tables went.
+export async function deleteNightTables(tx: Tx, leagueId: number, night: Date): Promise<number> {
+  const league: Competition = {kind: "league", id: leagueId};
+  await lockCompetition(tx, league);
+  const tables = await tx.round.findMany({where: {leagueRounds: {some: {league_id: leagueId}}, round_date: night}, select: tableSelect});
+  if (tables.length === 0) return 0;
+  const ids = tables.map((t) => t.id);
+  await tx.ongoingMatch.deleteMany({where: {round_id: {in: ids}}});
+  await tx.match.deleteMany({where: {round_id: {in: ids}}});
+  await tx.round.deleteMany({where: {id: {in: ids}}});
+  await settle(tx, league, tables, []);
+  return tables.length;
 }

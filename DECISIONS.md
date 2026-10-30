@@ -1456,3 +1456,25 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
       reopens it (it is active again) and the sign-ups' buttons come back with it.
     - **Natrag na popis**: the management page already has "← Turniri" next to the menu on the computer and ‹ on the
       phone, so nothing was added.
+
+78. **Datumi: moving a night, removing a played one** (your requests of 31.10.: "na kreiranoj večeri mogu sve
+    promijeniti osim za datume koji su prošli, njih mogu brisati, ali za odigrane datume ide notice jer se onda brišu i
+    kola… mora ići poseban modal" and "ne vidim dodaj večer gumb").
+    - **A night still to be played** (no rounds, not before today) changes everything in **Uredi večer** (until now
+      Okupljanje večeri): **Datum večeri**, the time and the place. Computer: a click on its row opens the card; phone:
+      a tap opens the sheet. `PATCH /api/leagues/{id}/nights/{date}` takes `date`. The new date must be free and today
+      or later (a night moved into the past couldn't be changed any more; Dodaj večer still adds a past one). The move
+      holds the league's lock, which round creation holds too, so no round lands on the night while it moves.
+    - **Burza igrača**: a team's ads for a substitute on that night move to the new date. Tu smo (arrivals) of the old
+      date stay where they are: they belong to the evening the team came on.
+    - **A night that has passed without rounds** can only be removed: the bin on its row, at once, no question (as the
+      computer already did). New on the phone, where only an upcoming night could be removed, inside its sheet.
+    - **A played night** (published rounds) has a bin too. It asks first in its own dialog, **Obrisati odigranu
+      večer?** (computer: a dialog, phone: a sheet), which says how many rounds it has and that they go with their
+      results and that standings and ratings are recalculated, with the red **Obriši večer i kola**. The server
+      (`DELETE …?with_rounds=1`) deletes every table of the night, drafts too, with its games, recalculates as deleting
+      a round in Kola does, and removes the night. Without `with_rounds` it still refuses a night with rounds, so
+      nothing removes a played night by accident. A night with only a Skica draft still says to discard it in Skica.
+    - **Dodaj večer on the computer** sat below the night's card, so on a laptop's screen its button was cut off or out
+      of view, in a column that scrolls without a scrollbar. It is now the first card on the right, above Uredi večer.
+      The phone's Dodaj was always at the top.
