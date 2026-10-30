@@ -521,9 +521,12 @@ export function MyMatchesCard({matches, tournamentId}: {matches: MyMatch[]; tour
 
 // The navy card of the next tournament (S2, S3; "Potvrda dolaska" C1–C3): the whole card opens the tournament's page
 // (› in its head). Signed up: the team, where and when, and Potvrda dolaska with Tu smo on the day; waiting; or how many
-// have signed up and Stranica turnira.
+// have signed up and Stranica turnira. A guest gets Prijavi se there while sign-ups are open, opening "Sjedni za stol."
+// ("Gost i poziv" G1).
 export function NextTournamentCard({t, arrival}: {t: TournamentCard; arrival?: {busy: ArrivalAction | null; onAction: (a: ArrivalAction) => void}}) {
   const router = useTransitionRouter();
+  const guest = useAuthStore((s) => s.user == null);
+  const showGuestSheet = useGuestSheet((s) => s.show);
   const place = t.location.name ? {name: t.location.name, address: t.location.address, url: t.location.url} : null;
   const open = () => router.push(tournamentHref(t.id));
   return (
@@ -585,13 +588,27 @@ export function NextTournamentCard({t, arrival}: {t: TournamentCard; arrival?: {
               {count(t.players, NOUN.igrač)}
             </Box>
           </Box>
-          <Box
-            component="span"
-            sx={{height: 48, display: "flex", alignItems: "center", gap: "4px", pl: "18px", pr: "10px", borderRadius: "14px", background: color.white, color: color.navy, fontSize: 16, fontWeight: 700, "& svg": {fontSize: 22}}}
-          >
-            Stranica turnira
-            <ChevronRightRoundedIcon aria-hidden />
-          </Box>
+          {guest && t.registrations_open ? (
+            <Box
+              component="button"
+              type="button"
+              onClick={(e: React.MouseEvent) => {
+                e.stopPropagation();
+                showGuestSheet(`${tournamentHref(t.id)}?prijava=1`, "signup");
+              }}
+              sx={{...buttonBase, height: 48, display: "flex", alignItems: "center", px: "22px", borderRadius: "14px", background: color.white, color: color.navy, fontSize: 16, fontWeight: 700}}
+            >
+              Prijavi se
+            </Box>
+          ) : (
+            <Box
+              component="span"
+              sx={{height: 48, display: "flex", alignItems: "center", gap: "4px", pl: "18px", pr: "10px", borderRadius: "14px", background: color.white, color: color.navy, fontSize: 16, fontWeight: 700, "& svg": {fontSize: 22}}}
+            >
+              Stranica turnira
+              <ChevronRightRoundedIcon aria-hidden />
+            </Box>
+          )}
         </Box>
       )}
     </Box>

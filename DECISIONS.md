@@ -1398,8 +1398,8 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
       on Rejting.
     - **Deviations, league patterns kept** ([[design-league-patterns]]): Liga's tiles stay the league's 2×2 (Raspored,
       Dnevni, Ukupni, Rejting), dimmed with a lock, where G2 draws three in a row; Burza's card is the usual one, open.
-      The main tournament card keeps "Stranica turnira ›" for a guest as for a player who isn't in (G1 draws Prijavi
-      se there); the upcoming cards' Prijavi se opens the sheet. The computer shows the guest's Početna in the
+      The upcoming cards' Prijavi se opens the sheet, and so does the main tournament card's Prijavi se (your request
+      of 30.10.; it first kept "Stranica turnira ›" as for a player who isn't in, while sign-ups are closed it still does). The computer shows the guest's Početna in the
       phone-wide column, as the player's tournament pages, with the locked items in the menu.
     - **Nova ekipa (S1–S3)**: before a name is typed, "Igrač 2 · S kim igraš?" with the rules and WhatsApp · Ostalo;
       nobody found, the navy "Nema računa" card; once sent, "Poziv je poslan" ("Poveznica je kopirana" where the browser
