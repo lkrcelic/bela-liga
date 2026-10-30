@@ -529,6 +529,16 @@ export function NextTournamentCard({t, arrival}: {t: TournamentCard; arrival?: {
   const showGuestSheet = useGuestSheet((s) => s.show);
   const place = t.location.name ? {name: t.location.name, address: t.location.address, url: t.location.url} : null;
   const open = () => router.push(tournamentHref(t.id));
+  const signedUp = (
+    <Box sx={{display: "flex", alignItems: "center", gap: "8px", fontSize: 15}}>
+      <Box component="span" sx={{color: color.cream}}>
+        Prijavljeno
+      </Box>
+      <Box component="strong" sx={{fontFamily: font.display, fontSize: 20, fontWeight: 800}}>
+        {count(t.players, NOUN.igrač)}
+      </Box>
+    </Box>
+  );
   return (
     <Box
       component="section"
@@ -578,37 +588,33 @@ export function NextTournamentCard({t, arrival}: {t: TournamentCard; arrival?: {
           )}
           {arrival && <HomeArrival t={t} busy={arrival.busy} onAction={arrival.onAction} />}
         </>
+      ) : guest && t.registrations_open ? (
+        // the guest's Prijavi se is SignUpCard's: full width under the count
+        <>
+          {signedUp}
+          <Box
+            component="button"
+            type="button"
+            onClick={(e: React.MouseEvent) => {
+              e.stopPropagation();
+              showGuestSheet(`${tournamentHref(t.id)}?prijava=1`, "signup");
+            }}
+            sx={{...buttonBase, height: 56, borderRadius: "16px", background: color.white, color: color.navy, display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", fontSize: 17, fontWeight: 700, "& svg": {fontSize: 22}}}
+          >
+            <HowToRegRoundedIcon aria-hidden />
+            Prijavi se
+          </Box>
+        </>
       ) : (
         <Box sx={{display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", flexWrap: "wrap"}}>
-          <Box sx={{display: "flex", alignItems: "center", gap: "8px", fontSize: 15}}>
-            <Box component="span" sx={{color: color.cream}}>
-              Prijavljeno
-            </Box>
-            <Box component="strong" sx={{fontFamily: font.display, fontSize: 20, fontWeight: 800}}>
-              {count(t.players, NOUN.igrač)}
-            </Box>
+          {signedUp}
+          <Box
+            component="span"
+            sx={{height: 48, display: "flex", alignItems: "center", gap: "4px", pl: "18px", pr: "10px", borderRadius: "14px", background: color.white, color: color.navy, fontSize: 16, fontWeight: 700, "& svg": {fontSize: 22}}}
+          >
+            Stranica turnira
+            <ChevronRightRoundedIcon aria-hidden />
           </Box>
-          {guest && t.registrations_open ? (
-            <Box
-              component="button"
-              type="button"
-              onClick={(e: React.MouseEvent) => {
-                e.stopPropagation();
-                showGuestSheet(`${tournamentHref(t.id)}?prijava=1`, "signup");
-              }}
-              sx={{...buttonBase, height: 48, display: "flex", alignItems: "center", px: "22px", borderRadius: "14px", background: color.white, color: color.navy, fontSize: 16, fontWeight: 700}}
-            >
-              Prijavi se
-            </Box>
-          ) : (
-            <Box
-              component="span"
-              sx={{height: 48, display: "flex", alignItems: "center", gap: "4px", pl: "18px", pr: "10px", borderRadius: "14px", background: color.white, color: color.navy, fontSize: 16, fontWeight: 700, "& svg": {fontSize: 22}}}
-            >
-              Stranica turnira
-              <ChevronRightRoundedIcon aria-hidden />
-            </Box>
-          )}
         </Box>
       )}
     </Box>
