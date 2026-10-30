@@ -40,6 +40,9 @@ export type TournamentDraft = {
   autoPublish: boolean;
 };
 
+// Bela pravila igre v1.5 (Macaklin Social Club), the rules every new tournament starts with
+export const DEFAULT_RULES_URL = "https://drive.google.com/file/d/1yDwq44QO8lvoZQ7f2Zjqamwt2N7nWU8v/view";
+
 export const EMPTY_TOURNAMENT: TournamentDraft = {
   name: "",
   date: "",
@@ -51,7 +54,7 @@ export const EMPTY_TOURNAMENT: TournamentDraft = {
   declarations: true,
   maxTeams: "",
   fee: "0",
-  rulesUrl: "",
+  rulesUrl: DEFAULT_RULES_URL,
   prizes: [{prize: "", description: ""}],
   phone: "",
   gameMinutes: "35",

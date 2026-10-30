@@ -12,6 +12,7 @@ On development, not live yet (DECISIONS #77).
 - Završeni: **Pobjednici** (top 3), with **Poredak** and **Stranica**.
 - **Vrati turnir** for a cancelled tournament: back to Nadolazeći with its teams, sign-ups open.
 - A double click on a tournament opens it.
+- **Novi turnir** starts with **Link na pravila** filled in: Bela pravila igre v1.5 (Macaklin Social Club). It can be changed or cleared.
 
 ### Changed
 - A finished tournament's **Prijave** and **Lista čekanja** can't be changed any more; Kola, Poredak and Podaci can.
