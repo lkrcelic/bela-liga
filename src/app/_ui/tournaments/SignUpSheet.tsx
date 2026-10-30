@@ -371,7 +371,7 @@ function TeammateRules(invite: InviteActions) {
   const rule = {display: "flex", alignItems: "flex-start", gap: "10px", fontSize: 14.5, lineHeight: 1.4, color: color.ink2} as const;
   const icon = {width: 28, height: 28, flex: "none", borderRadius: "9px", background: color.paper, color: color.navy, display: "flex", alignItems: "center", justifyContent: "center", "& svg": {fontSize: 17}} as const;
   return (
-    <Box sx={{borderRadius: "22px", background: color.white, p: "18px", display: "flex", flexDirection: "column", gap: "14px"}}>
+    <Box sx={{borderRadius: "22px", background: color.white, border: `1px solid ${color.line}`, p: "18px", display: "flex", flexDirection: "column", gap: "14px"}}>
       <Box sx={{display: "flex", flexDirection: "column", gap: "4px"}}>
         <Box component="span" sx={{fontSize: 12.5, fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", color: color.navy}}>
           Igrač 2
