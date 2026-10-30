@@ -19,6 +19,13 @@ export function tournamentPhase(t: {startedAt: Date | string | null; cancelledAt
 
 const kolosDone = (k: KoloSummary) => k.tables > 0 && k.done === k.tables;
 
+// Still coming up for the players (Sljedeći turnir, Nadolazeći turniri): not started and not before today. One whose day
+// passed without Kolo 1 published stays "upcoming" for the admin (who can still start, move or cancel it) but isn't
+// shown to the players as coming up. today: the league's date (YYYY-MM-DD).
+export function isComingUp(t: {phase: TournamentPhase; date: string}, today: string): boolean {
+  return t.phase === "upcoming" && t.date >= today;
+}
+
 // The Kolos played to the end ("Nakon 2 od 9 kola")
 export function completedKolos(kolos: KoloSummary[]): number {
   return kolos.filter((k) => k.published && kolosDone(k)).length;

@@ -6,6 +6,7 @@ import useOpenTable from "@/app/_hooks/useOpenTable";
 import useStartGame from "@/app/_hooks/useStartGame";
 import {useTournament, useTournaments} from "@/app/_hooks/useTournaments";
 import {leagueDateString} from "@/app/_lib/dates";
+import {isComingUp} from "@/app/_lib/tournaments";
 import useAuthStore from "@/app/_store/authStore";
 import {color, font, shadow} from "@/app/_styles/tokens";
 import {StartCard} from "@/app/_ui/home/StartCard";
@@ -80,7 +81,7 @@ export default function TournamentPage({id}: {id: number}) {
     setBusy(false);
   };
 
-  const others = (tournaments ?? []).filter((x) => x.phase === "upcoming" && x.id !== id).sort((a, b) => a.date.localeCompare(b.date)).slice(0, 3);
+  const others = (tournaments ?? []).filter((x) => isComingUp(x, leagueDateString()) && x.id !== id).sort((a, b) => a.date.localeCompare(b.date)).slice(0, 3);
   const myTable = openTable && openTable.tournamentId === id ? openTable : null;
   // the day has started (the start time or Kolo 1): no more signing off
   const dayClosed = t?.day?.phase === "closed";

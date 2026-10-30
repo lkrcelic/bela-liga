@@ -6,6 +6,8 @@ import useOpenTable from "@/app/_hooks/useOpenTable";
 import useStartGame from "@/app/_hooks/useStartGame";
 import {useTournaments} from "@/app/_hooks/useTournaments";
 import {TournamentCard} from "@/app/_interfaces/tournament";
+import {leagueDateString} from "@/app/_lib/dates";
+import {isComingUp} from "@/app/_lib/tournaments";
 import {color} from "@/app/_styles/tokens";
 import {BurzaHomeCard, NextNightPlaceholder} from "@/app/_ui/home/HomeCards";
 import {StartCard} from "@/app/_ui/home/StartCard";
@@ -20,11 +22,11 @@ import {FinishedRow, NextTournamentCard, NoTournamentCard, ResultsButton, TodayC
 // Nadolazeći turniri with Prijavi se, and Završeni turniri.
 
 // The tournament the card on top shows: one being played that the viewer is in, else the soonest coming up (the
-// viewer's first on the same day)
-export function mainTournament(list: TournamentCard[]): TournamentCard | null {
+// viewer's first on the same day; one whose day passed without starting is left out, isComingUp)
+export function mainTournament(list: TournamentCard[], today: string = leagueDateString()): TournamentCard | null {
   const live = list.filter((t) => t.phase === "active" && t.me?.status === "REGISTERED");
   if (live.length) return live[0];
-  const coming = list.filter((t) => t.phase === "upcoming").sort((a, b) => a.date.localeCompare(b.date) || Number(!!b.me) - Number(!!a.me));
+  const coming = list.filter((t) => isComingUp(t, today)).sort((a, b) => a.date.localeCompare(b.date) || Number(!!b.me) - Number(!!a.me));
   return coming[0] ?? null;
 }
 
@@ -38,7 +40,7 @@ export default function TournamentsOverview({withBurza = false}: {withBurza?: bo
   const {posts} = useBurza();
   const list = tournaments ?? [];
   const main = mainTournament(list);
-  const upcoming = list.filter((t) => t.phase === "upcoming" && t.id !== main?.id).sort((a, b) => a.date.localeCompare(b.date));
+  const upcoming = list.filter((t) => isComingUp(t, leagueDateString()) && t.id !== main?.id).sort((a, b) => a.date.localeCompare(b.date));
   const finished = list.filter((t) => t.phase === "finished").sort((a, b) => b.date.localeCompare(a.date));
   const liveOfTable = openTable ? list.find((t) => t.id === openTable.tournamentId) : undefined;
   // Tu smo and Ipak otkazujemo on the card itself (Potvrda dolaska C2, C3)

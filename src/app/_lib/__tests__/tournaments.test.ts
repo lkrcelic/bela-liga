@@ -8,6 +8,7 @@ import {
   completedKolos,
   daysUntilLabel,
   draftIsStale,
+  isComingUp,
   feeLabel,
   formatLabel,
   koloSteps,
@@ -344,4 +345,11 @@ test("a draft of any Kolo is stale once the teams that play are not the ones at 
   assert.equal(draftIsStale(draft, [1, 2]), true, "a team left or was excluded");
   assert.equal(draftIsStale(draft, [1, 2, 4]), true, "one out, another in");
   assert.equal(draftIsStale([], [1, 2]), false, "no draft");
+});
+
+test("a tournament whose day passed without starting isn't coming up for the players", () => {
+  assert.equal(isComingUp({phase: "upcoming", date: "2026-10-31"}, "2026-10-30"), true);
+  assert.equal(isComingUp({phase: "upcoming", date: "2026-10-30"}, "2026-10-30"), true, "today still counts");
+  assert.equal(isComingUp({phase: "upcoming", date: "2026-10-26"}, "2026-10-30"), false);
+  assert.equal(isComingUp({phase: "active", date: "2026-10-31"}, "2026-10-30"), false);
 });

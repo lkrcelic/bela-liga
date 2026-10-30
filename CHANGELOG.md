@@ -15,6 +15,7 @@ On development, not live yet (DECISIONS #75).
 ### Changed
 - **Ukupni poredak** needs an account now.
 - A link to a page that needs an account goes to Prijava and back to that page.
+- A tournament whose day passed without starting no longer shows as **Sljedeći turnir** or under **Nadolazeći turniri** (the admin still sees it).
 
 ## 30.10.2026 · Liga: međusobni omjer
 
