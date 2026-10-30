@@ -521,12 +521,9 @@ export function MyMatchesCard({matches, tournamentId}: {matches: MyMatch[]; tour
 
 // The navy card of the next tournament (S2, S3; "Potvrda dolaska" C1–C3): the whole card opens the tournament's page
 // (› in its head). Signed up: the team, where and when, and Potvrda dolaska with Tu smo on the day; waiting; or how many
-// have signed up and Stranica turnira. A guest gets Prijavi se there while sign-ups are open, opening "Sjedni za stol."
-// ("Gost i poziv" G1).
+// have signed up and Stranica turnira across the card, for a guest too (its sign-up is on the page).
 export function NextTournamentCard({t, arrival}: {t: TournamentCard; arrival?: {busy: ArrivalAction | null; onAction: (a: ArrivalAction) => void}}) {
   const router = useTransitionRouter();
-  const guest = useAuthStore((s) => s.user == null);
-  const showGuestSheet = useGuestSheet((s) => s.show);
   const place = t.location.name ? {name: t.location.name, address: t.location.address, url: t.location.url} : null;
   const open = () => router.push(tournamentHref(t.id));
   const signedUp = (
@@ -588,34 +585,18 @@ export function NextTournamentCard({t, arrival}: {t: TournamentCard; arrival?: {
           )}
           {arrival && <HomeArrival t={t} busy={arrival.busy} onAction={arrival.onAction} />}
         </>
-      ) : guest && t.registrations_open ? (
-        // the guest's Prijavi se is SignUpCard's: full width under the count
+      ) : (
+        // under the count, Stranica turnira across the card, as SignUpCard's Prijavi se
         <>
           {signedUp}
           <Box
-            component="button"
-            type="button"
-            onClick={(e: React.MouseEvent) => {
-              e.stopPropagation();
-              showGuestSheet(`${tournamentHref(t.id)}?prijava=1`, "signup");
-            }}
-            sx={{...buttonBase, height: 56, borderRadius: "16px", background: color.white, color: color.navy, display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", fontSize: 17, fontWeight: 700, "& svg": {fontSize: 22}}}
-          >
-            <HowToRegRoundedIcon aria-hidden />
-            Prijavi se
-          </Box>
-        </>
-      ) : (
-        <Box sx={{display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", flexWrap: "wrap"}}>
-          {signedUp}
-          <Box
             component="span"
-            sx={{height: 48, display: "flex", alignItems: "center", gap: "4px", pl: "18px", pr: "10px", borderRadius: "14px", background: color.white, color: color.navy, fontSize: 16, fontWeight: 700, "& svg": {fontSize: 22}}}
+            sx={{height: 56, borderRadius: "16px", background: color.white, color: color.navy, display: "flex", alignItems: "center", justifyContent: "center", gap: "4px", fontSize: 17, fontWeight: 700, "& svg": {fontSize: 22}}}
           >
             Stranica turnira
             <ChevronRightRoundedIcon aria-hidden />
           </Box>
-        </Box>
+        </>
       )}
     </Box>
   );

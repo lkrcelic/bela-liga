@@ -23,7 +23,7 @@ On development, not live yet (DECISIONS #75).
 - Liga, **Raspored**, **Dnevni** and **Ukupni poredak** and **Rejting** show locked; a tap opens **Sjedni za stol.** with **Napravi račun** and **Prijavi se**.
 - After making an account and logging in, the app goes back to where you started (a tournament's sign-up included).
 - Nova ekipa: **S kim igraš?**, **Nema računa** and **Poziv je poslan**, with **WhatsApp** and **Ostalo** to invite a teammate.
-- Without an account, the **Sljedeći turnir** card has **Prijavi se** as a wide button under **Prijavljeno**, like the tournament page's sign-up card.
+- The **Sljedeći turnir** card has **Stranica turnira** as a wide button under **Prijavljeno**, like the tournament page's sign-up card; a guest signs up from the tournament's page.
 
 ### Changed
 - **Ukupni poredak** needs an account now.
