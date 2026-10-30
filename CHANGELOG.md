@@ -2,6 +2,18 @@
 
 What the commits changed for the people using the app, newest first. The reasons and details are in DECISIONS.md.
 
+## 30.10.2026 · Registracija s Googleom
+
+On development, not live yet (DECISIONS #76).
+
+### Added for players
+- **Registracija** starts with **Registriraj se s Googleom**: no new password, the name and email come from Google, then the app asks the birth date and **Pušiš li?**.
+- After a Google sign-up you land back where you started (an invitation's tournament included).
+
+### Changed
+- On the phone, Registracija opens with two buttons, **Registriraj se s Googleom** and **Registriraj se emailom**; the form opens after the second.
+- The phone's Registracija has **Već imaš profil? Prijavi se** at the bottom.
+
 ## 30.10.2026 · Gost i poziv
 
 On development, not live yet (DECISIONS #75).

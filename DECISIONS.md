@@ -1407,3 +1407,27 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
       korisničko ime": usernames stay private (#40), the search is by name. The invitation's link is Registracija with
       `next` set to the tournament. WhatsApp opens `wa.me` with the text and no number.
     - **Server**: every action already needs a login (requireUser); nothing changed there but the season table.
+
+76. **Registracija s Googleom** (your request of 30.10. "dodati opciju registracije s google-om… da bude dobro za mobile
+    ekrane. Google registracija mora biti prva po redu").
+    - **Google first**: Registracija starts with "Registriraj se s Googleom", then "ili" and the form. It is Prijava's
+      Google login (googleAuth.ts): a Google account the app doesn't know becomes a new player (the username from the
+      email, the first and last name from Google), and the app then asks the birth date and "Pušiš li?" in its
+      sheets, as before. An email that already has an account logs into that account. No new server code or setting:
+      Vercel has the Google keys for production, preview and development.
+    - **The phone**: the screen opens with the two ways only, Google (under it "Bez nove lozinke. Ime i email uzimamo
+      s tvog Google računa.") and "Registriraj se emailom" in the same look, with "Već imaš profil? Prijavi se" at the
+      bottom as on Prijava. It fits a 375×667 phone without scrolling. Registriraj se emailom opens the form in its
+      place, on Korisničko ime. Alternative: the form under Google at once, as on Prijava. Reason: the form is about
+      two screens long on a phone, so Google would sit on top of a long page and the choice would get lost.
+    - **The computer** shows Google above the form at once: there is room, and it saves a click.
+    - **`next`**: Google comes back logged in to the page the guest came from ("Sjedni za stol.", an invitation's
+      tournament, #75); the form still goes through Prijava, as before.
+    - **Design**: Claude Design has no Google sign-up; frame 12a's header (back, Novi igrač, Registracija) and its
+      fields stay as they were.
+    - **Not changed**: a failed or cancelled Google sign-up lands on Prijava with "Prijava s Googleom nije uspjela.
+      Pokušaj ponovno." NextAuth has one error page, and the Google button there makes an account too.
+    - **Checked**: tsc, lint, unit tests (485 pass), `next build`, screenshots at 390×844, 375×667 and 1440×900, the
+      focus on Korisničko ime, and on the local copy with a made-up Google client the button's redirect to Google
+      with the page to come back to (`/`, and an invitation's `/turniri/20`). **Not checked**: a whole sign-up with a
+      real Google account (the local copy has no Google keys) and real phones.
