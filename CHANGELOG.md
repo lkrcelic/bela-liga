@@ -15,6 +15,7 @@ On development, not live yet (DECISIONS #77).
 - **Novi turnir** starts with **Link na pravila** filled in: Bela pravila igre v1.5 (Macaklin Social Club). It can be changed or cleared.
 
 ### Changed
+- A tournament's **Kolo** shows each finished table's **point difference** (+/−) beside the wins, as in the league; players and admin.
 - A finished tournament's **Prijave** and **Lista čekanja** can't be changed any more; Kola, Poredak and Podaci can.
 - The list's card no longer has the sign-ups switch, Uredi, Kopiraj, Otkaži and Obriši: they are in the tournament's page.
 

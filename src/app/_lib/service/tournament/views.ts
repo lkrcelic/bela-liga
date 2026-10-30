@@ -246,6 +246,7 @@ function koloTable(s: Snapshot, t: LoadedTable, now: Date): KoloTable {
     active: t.open && (t.active || t.ongoing != null),
     open: t.open,
     ongoingMatches: t.ongoing ? [{player_pair1_score: t.ongoing.player_pair1_score, player_pair2_score: t.ongoing.player_pair2_score}] : [],
+    matches: t.matches.map((m) => ({player_pair1_score: m.score1, player_pair2_score: m.score2})),
     status: t.status,
     state,
   };
