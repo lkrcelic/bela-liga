@@ -623,6 +623,12 @@ function SettingsTab({leagueId}: {leagueId: number}) {
         </Box>
         <Box sx={{display: "flex", flexDirection: "column", gap: "6px"}}>
           <Box component="span" sx={{...adminLabelSx, fontSize: 14, color: color.ink2, pl: "4px"}}>
+            Vrijeme partije · min
+          </Box>
+          <PhoneStepper label="Vrijeme partije" value={f.d.minutes} onChange={(n) => f.set("minutes", n)} min={5} max={180} step={5} less="Kraće vrijeme partije" more="Dulje vrijeme partije" />
+        </Box>
+        <Box sx={{display: "flex", flexDirection: "column", gap: "6px"}}>
+          <Box component="span" sx={{...adminLabelSx, fontSize: 14, color: color.ink2, pl: "4px"}}>
             Kola po večeri
           </Box>
           <PhoneStepper label="Kola po večeri" value={f.d.rounds} onChange={(n) => f.set("rounds", n)} min={1} max={6} less="Manje kola po večeri" more="Više kola po večeri" />

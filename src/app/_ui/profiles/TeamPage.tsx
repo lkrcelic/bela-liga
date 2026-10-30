@@ -36,6 +36,7 @@ import {
 import AddCircleRoundedIcon from "@mui/icons-material/AddCircleRounded";
 import PersonAddRoundedIcon from "@mui/icons-material/PersonAddRounded";
 import {Box} from "@mui/material";
+import BanSection from "./BanSection";
 import React, {useId, useMemo, useState} from "react";
 import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
 import type {TeamPhotoInfo} from "@/app/_interfaces/photo";
@@ -212,6 +213,7 @@ export function TeamPagePhone({teamId}: {teamId: number}) {
           <PhonePlayers team={team} admin={admin} />
           <PhoneLeagues team={team} admin={admin} />
           <PhoneNights nights={team.nights} teamId={team.team.id} />
+          {admin && <BanSection target={{kind: "team", id: team.team.id, name: team.team.name, players: team.players.map((p) => ({id: p.id, name: p.name, username: p.username}))}} />}
           {admin && <DeleteTeam team={team} phone />}
         </>
       ) : (
@@ -522,6 +524,7 @@ export function TeamPageDesktop({teamId, embedded = false}: {teamId: number; emb
             }
           />
           <TeamColumns team={team} admin={admin} />
+          {admin && <BanSection desktop target={{kind: "team", id: team.team.id, name: team.team.name, players: team.players.map((p) => ({id: p.id, name: p.name, username: p.username}))}} />}
           {photoOpen && <PhotoDialog kind="team" photo={photo} onClose={() => setPhotoOpen(false)} />}
         </>
       ) : (

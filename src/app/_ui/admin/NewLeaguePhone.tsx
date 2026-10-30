@@ -33,6 +33,8 @@ export default function NewLeaguePhone() {
   const [startTime, setStartTime] = useState("");
   const [place, setPlace] = useState<PlaceDraft>(EMPTY_PLACE);
   const [rounds, setRounds] = useState(3);
+  // Vrijeme partije · min
+  const [minutes, setMinutes] = useState(35);
   const [removed, setRemoved] = useState<string[]>([]);
   const [extra, setExtra] = useState<string[]>([]);
   const [newNight, setNewNight] = useState("");
@@ -63,6 +65,7 @@ export default function NewLeaguePhone() {
         start_time: startTime || null,
         ...placePayload(place),
         rounds_per_night: rounds,
+        game_minutes: minutes,
         team_ids: [],
         nights,
       });
@@ -93,6 +96,12 @@ export default function NewLeaguePhone() {
               Dan igranja · neobavezno
             </Box>
             <DayPicker value={playDay} onChange={setPlayDay} labelId="nl-day" />
+          </Box>
+          <Box sx={{display: "flex", flexDirection: "column", gap: "6px"}}>
+            <Box component="span" sx={{fontSize: 14, fontWeight: 600, color: color.ink2, pl: "4px"}}>
+              Vrijeme partije · min
+            </Box>
+            <PhoneStepper label="Vrijeme partije" value={minutes} onChange={setMinutes} min={5} max={180} step={5} less="Kraće vrijeme partije" more="Dulje vrijeme partije" />
           </Box>
           <Box sx={{display: "flex", flexDirection: "column", gap: "6px"}}>
             <Box component="span" sx={{fontSize: 14, fontWeight: 600, color: color.ink2, pl: "4px"}}>
