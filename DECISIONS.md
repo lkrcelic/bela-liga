@@ -1291,3 +1291,15 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
       right secret; of two league tables out of time that nobody read, the one ahead (100:62) closed by the tick
       alone (time_expired, its second match on a fresh clock) and the level one (162:162) stayed open; a second tick
       closed nothing; the tick took 23 ms there. **Not checked**: a real scheduler calling it on Vercel.
+
+71. **The stale-draft check holds for every Kolo** (your "Yes, fix the stale-draft check" of 30.10., after the test
+    of Petak u Pitaniku on development).
+    - **The bug**: only Kolo 1 was checked. A later Kolo's draft is made by itself as soon as the Kolo before it
+      ends, so a team that came in (Movie Pub, from the waiting list) or was excluded or let back after that was
+      left out of, or kept in, a draft that could still be published. Movie Pub got no table in Kolo 2.
+    - **Now**: publishing any Kolo whose draft seats other teams than the ones that play now (in, active, not
+      excluded; the bye aside) is refused with STALE_DRAFT, and the admin's draft (phone and computer) shows the red
+      warning with Objavi kolo off until Složi ponovo. One check, `draftIsStale` in tournaments.ts, for both.
+    - **The draft isn't made again by itself** when the teams change. Alternative: remake it on every change.
+      Reason: the admin may have moved pairs by hand, and those edits would be lost without a word.
+    - **Checked**: a unit test (472 pass), tsc, lint, and on development (below in the commit's check).

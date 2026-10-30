@@ -827,7 +827,7 @@ function KoloPhone({t, kolo, onBack, onChanged, reload}: {t: AdminTournament; ko
 
       {draft && !editing && (
         <Box sx={{flex: "none", display: "flex", flexDirection: "column", gap: "10px"}}>
-          {kolo === 1 && t.stale_draft && (
+          {t.stale_draft && (
             <Box role="alert" sx={{display: "flex", gap: "8px", p: "10px 12px", borderRadius: "14px", background: tint.red[10], color: color.red, fontSize: 14, lineHeight: 1.4, fontWeight: 600, "& svg": {fontSize: 20, flex: "none"}}}>
               <WarningRoundedIcon aria-hidden />
               Popis ekipa se promijenio nakon što je kolo složeno. Složi ga ponovo pa objavi.
@@ -846,7 +846,7 @@ function KoloPhone({t, kolo, onBack, onChanged, reload}: {t: AdminTournament; ko
             <OutlineButton height={60} onClick={redo} disabled={busy != null} aria-label="Složi ponovo" sx={{width: 60, borderWidth: "1.5px", borderColor: tint.navy[25], background: color.white, "& svg": {fontSize: 24}}}>
               {busy === "redo" ? <Spinner size={22} /> : <RefreshRoundedIcon />}
             </OutlineButton>
-            <PrimaryButton icon={<PublishRoundedIcon />} onClick={publish} loading={busy === "publish"} disabled={busy != null || (kolo === 1 && t.stale_draft)}>
+            <PrimaryButton icon={<PublishRoundedIcon />} onClick={publish} loading={busy === "publish"} disabled={busy != null || t.stale_draft}>
               Objavi kolo
             </PrimaryButton>
           </Box>

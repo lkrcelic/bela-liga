@@ -6,7 +6,7 @@ import {addCompetitionTable, NotFoundError} from "@/app/_lib/service/admin/table
 import {replayRatings} from "@/app/_lib/service/admin/recalc";
 import {createByeMatches} from "@/app/_lib/service/round/insertPairRounds";
 import {firstKoloPairs, KoloPair, swissPairs} from "@/app/_lib/matching/tournamentPairing";
-import {KOLO_MAX, opponentsOf, rankTeams, TableResult, tournamentTotals} from "@/app/_lib/tournaments";
+import {draftIsStale, KOLO_MAX, opponentsOf, rankTeams, TableResult, tournamentTotals} from "@/app/_lib/tournaments";
 import {lockTournament} from "./lock";
 import {TOURNAMENT_NOT_FOUND} from "./tournaments";
 
@@ -16,9 +16,10 @@ import {TOURNAMENT_NOT_FOUND} from "./tournaments";
 
 type Tx = Prisma.TransactionClient;
 
-// Publishing a Kolo 1 drawn from other teams than the ones in now (someone signed off or was added after it)
+// Publishing a Kolo made from other teams than the ones that play now (a team signed off, came in, left or was
+// excluded or let back after it was made; a later Kolo's draft is made by itself as soon as the Kolo before it ends)
 export const STALE_DRAFT = "STALE_DRAFT";
-export const STALE_DRAFT_ERROR = "Popis ekipa se promijenio nakon što je Kolo 1 složeno. Složi ga ponovo pa objavi.";
+export const STALE_DRAFT_ERROR = "Popis ekipa se promijenio nakon što je kolo složeno. Složi ga ponovo pa objavi.";
 
 export class StaleDraftError extends Error {
   constructor() {
@@ -158,11 +159,8 @@ export async function publishKolo(tournamentId: number, number: number): Promise
     if (rounds.some((r) => r.status === "PUBLISHED" && r.round_number === number - 1 && r.open)) {
       throw new InvalidResultError(`Kolo ${number - 1} još traje.`);
     }
-    if (number === 1) {
-      const active = await playingTeams(tx, tournamentId);
-      const seated = new Set(tables.flatMap((r) => [r.team1_id, r.team2_id]).filter((id) => !isByeTeam(id)));
-      if (seated.size !== active.length || active.some((id) => !seated.has(id))) throw new StaleDraftError();
-    }
+    const draft = tables.map((r) => ({team1Id: r.team1_id, team2Id: r.team2_id}));
+    if (draftIsStale(draft, await playingTeams(tx, tournamentId))) throw new StaleDraftError();
     const now = new Date();
     await tx.round.updateMany({where: {id: {in: tables.map((r) => r.id)}}, data: {status: "PUBLISHED", published_at: now, draft_order: null}});
     // the tournament starts: no more sign-ups, and the arrival window is over (who plays was decided by the draft)

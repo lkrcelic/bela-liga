@@ -19,6 +19,7 @@ import {
   TournamentWinner,
 } from "@/app/_interfaces/tournament";
 import {waitingList} from "@/app/_lib/tournamentEntries";
+import {draftIsStale} from "@/app/_lib/tournaments";
 import {leagueClock} from "@/app/_lib/dates";
 import {displayName} from "@/app/_lib/players/names";
 import {arrivalPhase, DayEntry, isTournamentDay, startSwitch} from "@/app/_lib/tournamentDay";
@@ -291,13 +292,11 @@ export function resultsView(s: Snapshot, viewer: Viewer | null): TournamentResul
   };
 }
 
-// The teams at a Kolo 1 draft are not the teams in now (someone signed off or was added after it was made)
+// The teams at the waiting draft (of any Kolo) are not the teams that play now (draftIsStale)
 export function staleDraft(s: Snapshot): boolean {
-  const draft = s.tables.filter((t) => t.kolo === 1 && t.status !== "PUBLISHED");
-  if (draft.length === 0) return false;
-  const seated = new Set(draft.flatMap((t) => [t.team1_id, t.team2_id]).filter((id) => !isByeTeam(id)));
-  const playing = new Set(s.entries.filter((e) => e.status === "REGISTERED" && e.active && !e.excluded_at).map((e) => e.team_id));
-  return seated.size !== playing.size || Array.from(playing).some((id) => !seated.has(id));
+  const draft = s.tables.filter((t) => t.status !== "PUBLISHED").map((t) => ({team1Id: t.team1_id, team2Id: t.team2_id}));
+  const playing = s.entries.filter((e) => e.status === "REGISTERED" && e.active && !e.excluded_at).map((e) => e.team_id);
+  return draftIsStale(draft, playing);
 }
 
 // Which Kolo can be made next (Složi Kolo N), and why not yet

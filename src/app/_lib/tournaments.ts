@@ -66,6 +66,15 @@ export function koloSteps(rounds: number, kolos: KoloSummary[]): {number: number
   });
 }
 
+// A Kolo's draft seats other teams than the ones that play now: one joined, left, or was excluded or let back after it
+// was made (Kolo 1 before the start, any later Kolo made by itself when the Kolo before it ended). It has to be made
+// again before it is published. The bye is not a team.
+export function draftIsStale(draft: {team1Id: number; team2Id: number}[], playing: number[]): boolean {
+  if (draft.length === 0) return false;
+  const seated = new Set(draft.flatMap((t) => [t.team1Id, t.team2Id]).filter((id) => !isByeTeam(id)));
+  return seated.size !== new Set(playing).size || playing.some((id) => !seated.has(id));
+}
+
 // ---------- standings ----------
 
 // A published table as the standings read it

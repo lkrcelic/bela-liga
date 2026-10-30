@@ -436,7 +436,7 @@ function SideCard({
       <Box component="section" sx={{...card, background: color.cream}}>
         {title(`Skica Kola ${kolo}`)}
         {text(kolo === 1 ? "Prvo kolo je složeno nasumično. Igrači ne vide stolove dok ne objaviš kolo." : `Parovi su složeni po poretku nakon ${kolo - 1} kola. Provjeri pa objavi.`)}
-        {kolo === 1 && t.stale_draft && (
+        {t.stale_draft && (
           <Box role="alert" sx={{display: "flex", gap: "8px", p: "10px 12px", borderRadius: "14px", background: tint.red[10], color: color.red, fontSize: 14, lineHeight: 1.4, fontWeight: 600, "& svg": {fontSize: 20, flex: "none"}}}>
             <WarningRoundedIcon aria-hidden />
             Popis ekipa se promijenio nakon što je kolo složeno. Složi ga ponovo pa objavi.
@@ -448,7 +448,7 @@ function SideCard({
             {`Ponovo igraju jer drugačije nije moguće: ${repeats.map(([a, b]) => (isByeTeam(b) ? `${names.get(a) ?? a} (druga slobodna runda)` : `${names.get(a) ?? a} – ${names.get(b) ?? b}`)).join(", ")}.`}
           </Box>
         )}
-        <PrimaryButton icon={<VisibilityRoundedIcon />} loading={busy === "publish"} disabled={busy != null || (kolo === 1 && t.stale_draft)} onClick={onPublish}>
+        <PrimaryButton icon={<VisibilityRoundedIcon />} loading={busy === "publish"} disabled={busy != null || t.stale_draft} onClick={onPublish}>
           Objavi kolo
         </PrimaryButton>
         <OutlineButton height={50} onClick={() => onMake(true)} disabled={busy != null} sx={{fontSize: 15, borderWidth: "1.5px", background: color.white}}>

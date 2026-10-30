@@ -307,7 +307,7 @@ export type AdminTournament = TournamentCard & {
   results: TournamentResults;
   // the next Kolo that can be made (Složi Kolo N), and why not yet; null when every Kolo is out
   next_kolo: {number: number; ready: boolean; reason: string | null} | null;
-  // a Kolo 1 draft made from other teams than the ones in now: it has to be made again before it is published
+  // the waiting draft (of any Kolo) seats other teams than the ones that play now: it has to be made again before it is published
   stale_draft: boolean;
   organizer_phone: string | null;
   // who pressed Otkaži

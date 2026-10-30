@@ -7,6 +7,7 @@ import {
   capacityLabel,
   completedKolos,
   daysUntilLabel,
+  draftIsStale,
   feeLabel,
   formatLabel,
   koloSteps,
@@ -331,4 +332,16 @@ test("teams level on points and difference go by their head-to-head, then by nam
     won
   );
   assert.deepEqual(ranked2.map((t) => t.id), [5, 4]);
+});
+
+test("a draft of any Kolo is stale once the teams that play are not the ones at its tables", () => {
+  const draft = [
+    {team1Id: 1, team2Id: 2},
+    {team1Id: 3, team2Id: BYE_TEAM_ID},
+  ];
+  assert.equal(draftIsStale(draft, [3, 2, 1]), false, "the same teams, the bye aside");
+  assert.equal(draftIsStale(draft, [1, 2, 3, 4]), true, "a waiting team came in after the draft was made");
+  assert.equal(draftIsStale(draft, [1, 2]), true, "a team left or was excluded");
+  assert.equal(draftIsStale(draft, [1, 2, 4]), true, "one out, another in");
+  assert.equal(draftIsStale([], [1, 2]), false, "no draft");
 });
