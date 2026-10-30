@@ -127,7 +127,7 @@ export default function ManageTournamentDesktop({id}: {id: number}) {
                 </Box>
               </Box>
               {/* Vrati turnir: back among the upcoming ones, with the sign-ups open */}
-              <PrimaryButton icon={<RestoreRoundedIcon />} height={46} loading={switching} onClick={restore} sx={{flex: "none", px: "18px", fontSize: 15}}>
+              <PrimaryButton icon={<RestoreRoundedIcon />} height={46} loading={switching} onClick={restore} sx={{flex: "none", width: "auto", px: "18px", fontSize: 15}}>
                 Vrati turnir
               </PrimaryButton>
             </Box>

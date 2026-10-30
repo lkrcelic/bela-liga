@@ -102,7 +102,11 @@ export default function EntriesDesktop({t, waiting, onChanged}: Props) {
         {editable ? (
           <AddTeamCard t={t} onAdded={onChanged} />
         ) : (
-          <InfoNote icon={<InfoRoundedIcon />}>Turnir je počeo: prijave se više ne mijenjaju. Ekipe za stolovima mijenjaš u tabu Kola.</InfoNote>
+          <InfoNote icon={<InfoRoundedIcon />}>
+            {t.phase === "cancelled"
+              ? "Turnir je otkazan: prijave se ne mijenjaju. Vrati turnir pa se prijave ponovo otvaraju."
+              : "Turnir je počeo: prijave se više ne mijenjaju. Ekipe za stolovima mijenjaš u tabu Kola."}
+          </InfoNote>
         )}
         {editable && (
           <InfoNote icon={<InfoRoundedIcon />}>
