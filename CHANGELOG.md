@@ -39,3 +39,47 @@ On development, not live yet. Commits 14f988f..faf4836 (DECISIONS #69, #70).
 - Aktivni lists today's tournament.
 - Početna: the whole tournament card opens the tournament; upcoming cards say **Prijavi se**.
 - Once a scheduler calls /api/cron/tick, overdue matches close even with no scorepad open.
+
+## 26.10.2026 · Turniri
+
+On development, not live yet. Commits 79d735a..c354458 except 8eaf904, which is already live (DECISIONS #65–#68).
+
+### Added for players
+- **Turniri**: one-day tournaments of teams, with a waiting list.
+- Početna: the **Turniri · Liga** switch under the header, with a red dot on Turniri while your tournament is live.
+- Početna · Turniri: your table on the day, else the next tournament; then Burza igrača, upcoming and finished ones.
+- The tournament's page: details, prizes, the teams in, **Prijavi se** and **Odjavi se**.
+- On the waiting list: **Na listi čekanja · N.**; the first team waiting comes in by itself when a place frees up.
+- **Prijava ekipe**: one of your teams, or a new team with a teammate found by name.
+- **Pošalji poziv** shares the sign-up link with a teammate who has no account.
+- On the day: your table, and **Poredak i rezultati** with every Kolo, like Dnevni poredak.
+- **Kraj kola** of a tournament table opens Poredak i rezultati.
+- When it's over: **Pobjednici**, **Vaš rezultat** with the rating change over the day, and **Vaši mečevi**.
+- The tournament pages are public and read-only for visitors (no ratings, photos or usernames).
+- A tournament counts for the rating as one night.
+- Teams of three or more say **Tko igra** before every Kolo.
+- A tournament **bez zvanja** has a single **Bela** button on the scorepad.
+- A table of one match says **Meč** and closes after it.
+- On the computer, players get the phone's pages in a centred column.
+
+### Added for the admin
+- **Turniri** in the computer's menu and the phone's bottom bar: Nadolazeći, Aktivni, Završeni.
+- **Novi turnir**: date, times, place, Kolos, matches per table, Zvanja, team limit, fee, rules link, prizes.
+- **Kopiraj turnir** starts a new tournament from an old one.
+- **Upravljanje turnirom**: Prijave, Lista čekanja, Kola, Poredak, Podaci.
+- Prijave: **Dodaj ekipu**, **Makni ekipu**, and **Ubaci u turnir** for a waiting team (the limit grows by one).
+- The **Prijave otvorene** switch; Kolo 1 is drawn once sign-ups are closed.
+- Kolo 1 is drawn at random; later Kolos are paired by the standings, with no repeat meetings.
+- Kola: **Skica**, **Složi ponovo**, **Objavi kolo** and **Uredi stolove**, as in the league.
+- Publishing Kolo 1 starts the tournament; each next Kolo is drafted by itself.
+- Kola lists every Kolo (the ones to come greyed), with **Dodaj kolo** and **Obriši kolo** (the last one, with a warning).
+- **Otkaži** and **Obriši** before the start; a cancelled tournament stays in Završeni as **Otkazan**.
+- A tournament table opens the league's scorepad and Pregled stola, with links back to the tournament.
+
+### Changed
+- The app is called **Belatronika**: the header, the titles, the install sheet and the installed app.
+- Početna's league content is under **Liga**; the rating sits next to the profile.
+- The computer's Početna shows the next tournament above the tables.
+- The admin phone's bottom bar has six tabs: Večer · Turniri · Rejting · Ekipe · Igrači · Sponzori.
+- Reload and Back keep the tab you were on (Upravljanje ligom on the phone, Dnevni poredak).
+- Skica kola: long team names take two lines instead of being cut, in the league too.
