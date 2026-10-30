@@ -1302,4 +1302,7 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
       warning with Objavi kolo off until Složi ponovo. One check, `draftIsStale` in tournaments.ts, for both.
     - **The draft isn't made again by itself** when the teams change. Alternative: remake it on every change.
       Reason: the admin may have moved pairs by hand, and those edits would be lost without a word.
-    - **Checked**: a unit test (472 pass), tsc, lint, and on development (below in the commit's check).
+    - **Checked**: a unit test (472 pass), tsc, lint, and on development with Provjera skice (test): after Kolo 1
+      the Kolo 2 draft came by itself; excluding a team then gave stale_draft true and Objavi was refused (409
+      STALE_DRAFT); after Složi ponovo the draft left the team out (two tables, one the bye) and was published.
+      **Not checked**: the warning on the screens (the browser can't reach vercel.app from here).
