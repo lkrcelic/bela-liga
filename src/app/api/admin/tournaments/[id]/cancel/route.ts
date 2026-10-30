@@ -12,7 +12,7 @@ export async function POST(request: NextRequest, {params}: {params: {id: string}
   const id = tournamentIdOf(params.id);
   if (id == null) return tournamentNotFound();
   try {
-    await cancelTournament(id);
+    await cancelTournament(id, auth.user.id);
     return NextResponse.json(await getAdminTournament(id, auth.user), {status: STATUS.OK});
   } catch (error) {
     return errorResponse(error, "Turnir nije otkazan.");

@@ -46,6 +46,7 @@ export async function listLeagues(): Promise<LeagueSummary[]> {
     location_address: l.location_address,
     location_url: l.location_url,
     rounds_per_night: l.rounds_per_night,
+    game_minutes: l.game_minutes,
     smoking_tables: l.smoking_tables,
     team_count: l._count.leagueTeams,
     last_played: lastPlayed.get(l.league_id) ?? null,
@@ -92,6 +93,7 @@ export async function createLeague(req: LeagueCreateRequest): Promise<LeagueSumm
       location_address: optionalText(req.location_address) ?? null,
       location_url: optionalText(req.location_url) ?? null,
       rounds_per_night: req.rounds_per_night,
+      game_minutes: req.game_minutes,
       leagueTeams: {create: teamIds.map((team_id) => ({team_id}))},
       nights: {create: nights.map((night) => ({night: nightValue(night)}))},
     },
@@ -109,6 +111,7 @@ export async function createLeague(req: LeagueCreateRequest): Promise<LeagueSumm
     location_address: league.location_address,
     location_url: league.location_url,
     rounds_per_night: league.rounds_per_night,
+    game_minutes: league.game_minutes,
     smoking_tables: league.smoking_tables,
     team_count: teamIds.length,
     last_played: null,
@@ -163,6 +166,7 @@ export async function updateLeague(leagueId: number, req: LeagueUpdateRequest): 
       location_address: optionalText(req.location_address),
       location_url: optionalText(req.location_url),
       rounds_per_night: req.rounds_per_night,
+      game_minutes: req.game_minutes,
     },
   });
   return true;

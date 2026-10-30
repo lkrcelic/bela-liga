@@ -120,7 +120,7 @@ test("a whole tournament: 23 teams over 9 Kolos, nobody meets twice and no team 
     for (const [a, b] of pairs) {
       const bye = b === BYE_TEAM_ID;
       const wins1 = bye ? 2 : Math.floor(random() * 3);
-      tables.push({kolo, team1Id: a, team2Id: b, team1Wins: wins1, team2Wins: 2 - wins1, open: false, started: true, diff: bye ? 602 : Math.round((random() - 0.5) * 400)});
+      tables.push({kolo, team1Id: a, team2Id: b, team1Wins: wins1, team2Wins: 2 - wins1, open: false, started: true, diff: bye ? 602 : Math.round((random() - 0.5) * 400), scored: true});
     }
   };
   play(firstKoloPairs(ids, random), 1);
@@ -174,7 +174,7 @@ test("a player signs up with one team only", () => {
   assert.deepEqual(playersInOtherEntries([1, 2], []), []);
 });
 
-const table = (kolo: number, a: number, b: number, w1: number, w2: number, diff: number, open = false, started = true): TableResult => ({
+const table = (kolo: number, a: number, b: number, w1: number, w2: number, diff: number, open = false, started = true, scored = true): TableResult => ({
   kolo,
   team1Id: a,
   team2Id: b,
@@ -183,6 +183,7 @@ const table = (kolo: number, a: number, b: number, w1: number, w2: number, diff:
   open,
   started,
   diff,
+  scored,
 });
 
 test("the standings count tables played to the end: a win 2, a draw 1, the difference of every match, the bye too", () => {
@@ -288,4 +289,46 @@ test("a tournament's table of one match shows only Meč 1", async () => {
   assert.equal(matchSlots([], 1).length, 1);
   assert.equal(matchSlots([]).length, 2);
   assert.equal(currentMatchNumber([{number: 1, kind: "finished"}], 1), 1);
+});
+
+test("a skipped table counts for nobody; a no-show's 1001:700 counts as a win", () => {
+  // Kolo 1: 1 beat 2 by a no-show (two matches of 1001:700); 3 and 4 skipped
+  const tables = [table(1, 1, 2, 2, 0, 602), table(1, 3, 4, 0, 0, 0, false, false, false)];
+  const totals = tournamentTotals([1, 2, 3, 4], tables);
+  assert.deepEqual(totals.get(1), {teamId: 1, played: 1, wins: 1, draws: 0, losses: 0, points: 2, difference: 602, live: false});
+  assert.equal(totals.get(3)!.played, 0);
+  assert.equal(totals.get(4)!.points, 0);
+});
+
+test("teams level on points and difference go by their head-to-head, then by name", () => {
+  // 1, 2 and 3 all win one and lose one between them (the same difference); 1 beat 2, 2 beat 3, 3 beat 1: a circle,
+  // so the name decides. 4 and 5 are level, and 5 beat 4.
+  const tables = [
+    table(1, 1, 2, 2, 0, 100),
+    table(2, 2, 3, 2, 0, 100),
+    table(3, 3, 1, 2, 0, 100),
+    table(1, 4, 6, 2, 0, 50),
+    table(2, 5, 7, 2, 0, 50),
+    table(3, 5, 4, 1, 1, 0),
+    table(4, 4, 8, 0, 2, -50),
+    table(4, 5, 9, 0, 2, -50),
+  ];
+  const ids = [1, 2, 3, 4, 5];
+  const totals = tournamentTotals(ids, tables);
+  assert.equal(totals.get(4)!.points, totals.get(5)!.points);
+  const names: Record<number, string> = {1: "Zadrani", 2: "Bjelovarci", 3: "Osječani", 4: "Ante", 5: "Zvonko"};
+  const ranked = rankTeams(ids.map((id) => ({id, name: names[id], totals: totals.get(id)!})), tables);
+  // 4 and 5 (3 points) drew their table, so the name (Ante before Zvonko); then the circle of 1, 2, 3 by name
+  assert.deepEqual(ranked.map((t) => t.id), [4, 5, 2, 3, 1]);
+
+  // 5 beats 4 at their table: 5 goes ahead though its name comes later
+  const won = tables.map((t) => (t.team1Id === 5 && t.team2Id === 4 ? table(3, 5, 4, 2, 0, 0) : t));
+  const wonTotals = tournamentTotals(ids, won);
+  // give 4 the same points and difference as 5 for the test
+  const level = {...wonTotals.get(5)!};
+  const ranked2 = rankTeams(
+    [4, 5].map((id) => ({id, name: names[id], totals: {...level, teamId: id}})),
+    won
+  );
+  assert.deepEqual(ranked2.map((t) => t.id), [5, 4]);
 });

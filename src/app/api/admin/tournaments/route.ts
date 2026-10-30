@@ -4,6 +4,7 @@ import {errorResponse} from "@/app/_lib/apiErrors";
 import {requireAdmin} from "@/app/_lib/service/auth/requireUser";
 import {TournamentRequest, TournamentRequestValidation} from "@/app/_interfaces/tournament";
 import {createTournament, listAdminTournaments} from "@/app/_lib/service/tournament/tournaments";
+import {syncToday} from "@/app/_lib/service/tournament/clock";
 
 export const dynamic = "force-dynamic";
 
@@ -12,6 +13,7 @@ export async function GET(request: NextRequest) {
   const auth = await requireAdmin(request);
   if (auth.response) return auth.response;
   try {
+    await syncToday();
     return NextResponse.json(await listAdminTournaments(auth.user), {status: STATUS.OK});
   } catch (error) {
     return errorResponse(error, "Turniri se nisu učitali.");

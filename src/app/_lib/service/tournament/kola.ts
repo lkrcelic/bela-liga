@@ -39,8 +39,17 @@ const roundSelect = {
   team1_wins: true,
   team2_wins: true,
   active: true,
+  attendance: true,
   matches: {select: {player_pair1_score: true, player_pair2_score: true}},
 } as const;
+
+// The teams a Kolo is made from: in the tournament, active (Aktivna) and not excluded
+export const PLAYING = {status: "REGISTERED", active: true, excluded_at: null} as const;
+
+export async function playingTeams(tx: Tx, tournamentId: number): Promise<number[]> {
+  const rows = await tx.tournamentTeam.findMany({where: {tournament_id: tournamentId, ...PLAYING}, select: {team_id: true}, orderBy: {registered_at: "asc"}});
+  return rows.map((r) => r.team_id);
+}
 
 async function tournamentRounds(tx: Tx, tournamentId: number) {
   return tx.round.findMany({where: {tournamentRounds: {some: {tournament_id: tournamentId}}}, select: roundSelect});
@@ -71,11 +80,12 @@ async function pairsFor(tx: Tx, number: number, rounds: RoundRow[], teamIds: num
       open: r.open,
       started: true,
       diff: r.matches.reduce((sum, m) => sum + m.player_pair1_score - m.player_pair2_score, 0),
+      scored: r.attendance !== "SKIPPED",
     }));
   const totals = tournamentTotals(teamIds, results);
   const names = new Map((await tx.team.findMany({where: {team_id: {in: teamIds}}, select: {team_id: true, team_name: true}})).map((t) => [t.team_id, t.team_name]));
   const opponents = opponentsOf(results);
-  const ranked = rankTeams(teamIds.map((id) => ({id, name: names.get(id) ?? "", totals: totals.get(id)!})));
+  const ranked = rankTeams(teamIds.map((id) => ({id, name: names.get(id) ?? "", totals: totals.get(id)!})), results);
   return swissPairs(ranked.map((t) => ({id: t.id, points: t.totals.points, difference: t.totals.difference, opponents: opponents.get(t.id) ?? []})));
 }
 
@@ -99,11 +109,12 @@ export async function makeKoloDraft(tournamentId: number, {redo = false}: {redo?
     if (number > 1 && rounds.some((r) => r.status === "PUBLISHED" && r.round_number === last && r.open)) {
       throw new InvalidResultError(`Kolo ${last} još traje: sljedeće se slaže kad svi stolovi završe.`);
     }
-    const teams = await tx.tournamentTeam.findMany({where: {tournament_id: tournamentId, status: "REGISTERED"}, select: {team_id: true}, orderBy: {registered_at: "asc"}});
-    if (teams.length < 2) throw new InvalidResultError("Za turnir trebaju barem dvije prijavljene ekipe.");
+    // only the teams that play: in, active and not excluded (Slobodna runda, inactive and excluded teams get no pair)
+    const teams = await playingTeams(tx, tournamentId);
+    if (teams.length < 2) throw new InvalidResultError("Za kolo trebaju barem dvije aktivne ekipe.");
 
     await dropTables(tx, draft.map((r) => r.id));
-    const {pairs, repeats} = await pairsFor(tx, number, rounds, teams.map((e) => e.team_id));
+    const {pairs, repeats} = await pairsFor(tx, number, rounds, teams);
     for (let i = 0; i < pairs.length; i++) {
       const [team1, team2] = pairs[i];
       const bye = isByeTeam(team1) || isByeTeam(team2);
@@ -148,13 +159,19 @@ export async function publishKolo(tournamentId: number, number: number): Promise
       throw new InvalidResultError(`Kolo ${number - 1} još traje.`);
     }
     if (number === 1) {
-      const registered = await tx.tournamentTeam.findMany({where: {tournament_id: tournamentId, status: "REGISTERED"}, select: {team_id: true}});
+      const active = await playingTeams(tx, tournamentId);
       const seated = new Set(tables.flatMap((r) => [r.team1_id, r.team2_id]).filter((id) => !isByeTeam(id)));
-      if (seated.size !== registered.length || registered.some((e) => !seated.has(e.team_id))) throw new StaleDraftError();
+      if (seated.size !== active.length || active.some((id) => !seated.has(id))) throw new StaleDraftError();
     }
     const now = new Date();
     await tx.round.updateMany({where: {id: {in: tables.map((r) => r.id)}}, data: {status: "PUBLISHED", published_at: now, draft_order: null}});
-    if (number === 1) await tx.tournament.update({where: {tournament_id: tournamentId}, data: {started_at: now, registrations_open: false}});
+    // the tournament starts: no more sign-ups, and the arrival window is over (who plays was decided by the draft)
+    if (number === 1) {
+      await tx.tournament.update({
+        where: {tournament_id: tournamentId},
+        data: {started_at: now, registrations_open: false, arrival_closed_at: t.arrival_closed_at ?? now},
+      });
+    }
     return {publishedAt: now.toISOString()};
   }, {timeout: 30_000});
 }

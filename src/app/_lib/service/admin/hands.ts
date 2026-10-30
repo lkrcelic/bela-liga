@@ -7,6 +7,7 @@ import {matchWinner} from "@/app/_lib/bela/scoring";
 import {declarationsError, InvalidResultError, normalizeBelaResult} from "@/app/_lib/validation/validateResult";
 import {transformBelaResult} from "@/app/_lib/helpers/databaseHelpers";
 import {createBelaResult} from "@/app/_lib/service/ongoingBelaResult/create";
+import {timeWinner} from "@/app/_lib/gameTime";
 import {updateOngoingBelaResult} from "@/app/_lib/service/ongoingBelaResult/update";
 import {createOngoingMatch} from "@/app/_lib/service/ongoingMatch/create";
 import {finishOngoingMatch, FinishMatchOutcome} from "@/app/_lib/service/match/finishOngoingMatch";
@@ -176,12 +177,16 @@ async function recountFinishedMatch(tx: Tx, matchId: number) {
       team2_id: true,
       team1_wins: true,
       team2_wins: true,
+      attendance: true,
       leagueRounds: {select: {league_id: true}},
-      matches: {select: {player_pair1_score: true, player_pair2_score: true, score_threshold: true}},
+      matches: {select: {player_pair1_score: true, player_pair2_score: true, score_threshold: true, time_expired: true}},
     },
   });
-  // a match without a winner (nobody over the threshold after an edit) counts for neither team
-  const winners = round.matches.map((m) => matchWinner(m.player_pair1_score, m.player_pair2_score, m.score_threshold ?? DEFAULT_THRESHOLD));
+  // a match without a winner (nobody over the threshold after an edit) counts for neither team; one closed by Vrijeme
+  // partije goes to the team with more points
+  const winners = round.matches.map((m) =>
+    m.time_expired ? timeWinner(m.player_pair1_score, m.player_pair2_score) : matchWinner(m.player_pair1_score, m.player_pair2_score, m.score_threshold ?? DEFAULT_THRESHOLD)
+  );
   const team1Wins = winners.filter((w) => w === 1).length;
   const team2Wins = winners.filter((w) => w === 2).length;
   await tx.round.update({where: {id: round.id}, data: {team1_wins: team1Wins, team2_wins: team2Wins}});
@@ -217,7 +222,7 @@ export async function addHand(roundId: number, target: HandTarget, hand: AdminHa
       (await prisma.ongoingMatch.findFirst({where: {round_id: roundId}, orderBy: {id: "desc"}, select: {id: true}})) ??
       (await createOngoingMatch({round_id: roundId, score_threshold: DEFAULT_THRESHOLD}));
     const result = adminHandToResult(hand, ongoing.id);
-    await createBelaResult(result, (r) => r);
+    await createBelaResult(result, (r) => r, {admin: true});
     return;
   }
 

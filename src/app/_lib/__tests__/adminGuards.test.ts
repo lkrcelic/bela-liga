@@ -70,6 +70,8 @@ const ALLOWED_WITHOUT_ADMIN: Record<string, string> = {
   "teams/[id]/photo/route.ts DELETE": "a player of the team or an admin removes its photo (teamPhotoChangeError)",
   "tournaments/[id]/registrations/route.ts POST": "a player signs up a team they play in, or a new one with a partner (signUp checks it)",
   "tournaments/[id]/registrations/[teamId]/route.ts DELETE": "a player of the team signs it off before the start (signOff checks it)",
+  "tournaments/[id]/arrival/route.ts POST": "Tu smo, Ipak otkazujemo, Želimo uskočiti, Odlazimo: a player of an entered team, for the team (arrivalAction checks it)",
+  "rounds/[id]/attendance/route.ts POST": "Jesu li … za stolom?: a player of one of the table's teams answers (answerAttendance checks it)",
 };
 
 type Handler = {file: string; method: string; body: string};

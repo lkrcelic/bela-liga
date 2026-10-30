@@ -876,12 +876,14 @@ function DetailsTab({t, onChanged}: {t: AdminTournament; onChanged: (t: AdminTou
   return (
     <Box component="form" noValidate onSubmit={(e: React.FormEvent) => (e.preventDefault(), save())} sx={{flex: "none", display: "flex", flexDirection: "column", gap: "12px"}}>
       <Box sx={adminCardSx}>
-        <TournamentFields form={form} locks={{started, registered: t.teams}} compact />
+        <TournamentFields form={form} locks={{started, registered: t.teams, finished: t.phase === "finished"}} compact />
       </Box>
       <InfoNote icon={<InfoRoundedIcon />}>
-        {started
-          ? "Turnir je počeo: datum, broj ekipa, partije po kolu i zvanja se više ne mijenjaju. Broj kola može ići do odigranih kola, pa se turnir može završiti ranije."
-          : "Sve se može mijenjati do početka turnira. Smanjiš li najveći broj ekipa, zadnje prijavljene idu na listu čekanja."}
+        {t.phase === "finished"
+          ? "Sve se može mijenjati osim datuma. Ispravak rezultata (u tabu Kola, dodirom na stol) odmah mijenja poredak i rejting. Novo kolo dodaješ u tabu Kola, pa se turnir nastavlja."
+          : started
+            ? "Turnir je počeo: sve se može mijenjati osim datuma. Partija po kolu, zvanja i vrijeme partije vrijede za kola koja se tek slažu. Broj kola može ići do objavljenih kola, pa se turnir može završiti ranije."
+            : "Sve se može mijenjati do početka turnira. Smanjiš li najveći broj ekipa, zadnje prijavljene idu na listu čekanja."}
       </InfoNote>
       {form.dirty && firstError && (
         <Box role="alert" sx={{px: "4px", fontSize: 14, fontWeight: 600, color: color.red}}>

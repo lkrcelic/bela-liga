@@ -112,7 +112,7 @@ export function DetailsDesktop({t, onChanged}: {t: AdminTournament; onChanged: (
   return (
     <Box sx={grid}>
       <Card component="section" aria-label="Podaci turnira" sx={{minHeight: 0, overflowY: "auto", borderRadius: "24px", p: "24px 28px"}}>
-        <TournamentFields form={form} locks={{started, registered: t.teams}} />
+        <TournamentFields form={form} locks={{started, registered: t.teams, finished: t.phase === "finished"}} />
       </Card>
       <Box sx={{minHeight: 0, overflowY: "auto", display: "flex", flexDirection: "column", gap: "16px"}}>
         <Card component="section" sx={{flex: "none", borderRadius: "24px", p: "20px", display: "flex", flexDirection: "column", gap: "10px"}}>
@@ -147,9 +147,11 @@ export function DetailsDesktop({t, onChanged}: {t: AdminTournament; onChanged: (
           )}
         </Card>
         <InfoNote icon={<InfoRoundedIcon />}>
-          {started
-            ? "Turnir je počeo: datum, broj ekipa, partije po kolu i zvanja se više ne mijenjaju. Broj kola može ići do odigranih kola, pa se turnir može završiti ranije."
-            : "Sve se može mijenjati do početka turnira. Smanjiš li najveći broj ekipa, zadnje prijavljene idu na listu čekanja."}
+          {t.phase === "finished"
+            ? "Sve se može mijenjati osim datuma. Ispravak rezultata (u tabu Kola, dodirom na stol) odmah mijenja poredak i rejting. Dodaj kolo nastavlja turnir."
+            : started
+              ? "Turnir je počeo: sve se može mijenjati osim datuma. Partija po kolu, zvanja i vrijeme partije vrijede za kola koja se tek slažu. Broj kola može ići do objavljenih kola, pa se turnir može završiti ranije."
+              : "Sve se može mijenjati do početka turnira. Smanjiš li najveći broj ekipa, zadnje prijavljene idu na listu čekanja."}
         </InfoNote>
         {error && <ErrorNote>{error}</ErrorNote>}
         {saved && !form.dirty && <SuccessNote>Promjene su spremljene.</SuccessNote>}

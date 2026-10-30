@@ -2,7 +2,11 @@ import {z} from "zod";
 import {isIsoDate, isSafeUrl, isStartTime} from "@/app/_lib/nights";
 import {DATE_FORMAT_ERROR, LOCATION_URL_ERROR} from "@/app/_interfaces/league";
 import type {TournamentPhase} from "@/app/_lib/tournaments";
+import type {ArrivalPhase} from "@/app/_lib/tournamentDay";
+import type {TableState} from "@/app/_lib/tableState";
 import type {StandingsItem} from "@/app/_lib/ui/standings";
+import {GAME_MINUTES_ERROR, GAME_MINUTES_MAX, GAME_MINUTES_MIN} from "@/app/_lib/gameTime";
+import {isValidPhone, PHONE_ERROR} from "@/app/_lib/phone";
 
 // Turniri: what the admin sends to create or change a tournament, what a player sends to sign a team up, and what the
 // tournament API answers with.
@@ -44,6 +48,10 @@ export const TournamentRequestValidation = z.object({
   entry_fee: z.number().int().min(0, FEE_ERROR).max(999, FEE_ERROR),
   rules_url: url,
   prizes: z.array(PrizeValidation).max(20, "Najviše 20 nagrada."),
+  // Vrijeme partije in minutes
+  game_minutes: z.number().int().min(GAME_MINUTES_MIN, GAME_MINUTES_ERROR).max(GAME_MINUTES_MAX, GAME_MINUTES_ERROR).default(35),
+  // Telefon organizatora: required for a new tournament (checked by the service); an old one may stay without
+  organizer_phone: z.string().trim().max(30).refine((v) => v === "" || isValidPhone(v), PHONE_ERROR).nullable().default(null),
 });
 
 // written out by hand: with strict off, z.infer would make every field optional
@@ -62,7 +70,11 @@ export type TournamentRequest = {
   entry_fee: number;
   rules_url: string | null;
   prizes: {prize: string; description: string}[];
+  game_minutes: number;
+  organizer_phone: string | null;
 };
+
+export const ORGANIZER_PHONE_REQUIRED = "Upiši telefon organizatora. Igrači ga zovu ako kasne.";
 
 const teamName = z.string().trim().min(1, "Upiši ime ekipe.").max(100, "Ime ekipe je predugo.");
 
@@ -85,6 +97,12 @@ export type TournamentPlace = {name: string | null; address: string | null; url:
 // A player as a tournament's lists show them (the username only for an admin: they are private)
 export type EntryPlayer = {id: number; name: string; photo_url: string | null; username?: string};
 
+// Potvrda dolaska: when and by whom ("Potvrdio Marko u 9:43"; by is null for the admin's Označi dolazak)
+export type EntryArrival = {at: string; by: string | null; admin: boolean};
+
+// Out of the rest of the tournament after a Kolo (Isključena · nedolazak K3)
+export type EntryExclusion = {at: string; kolo: number | null; reason: "NO_SHOW" | "SKIPPED" | "ADMIN"};
+
 // A team's entry (Prijavljene ekipe, Prijave, Lista čekanja)
 export type TournamentEntryView = {
   team_id: number;
@@ -100,10 +118,31 @@ export type TournamentEntryView = {
   position: number | null;
   // the viewer plays in it
   mine: boolean;
+  arrival: EntryArrival | null;
+  // Aktivna: plays the next Kolo
+  active: boolean;
+  excluded: EntryExclusion | null;
+  // its ban on sign-ups in force (admin only), for the Zabrana tag
+  ban_until?: string | null;
+  banned?: boolean;
 };
 
 // The viewer's own entry
-export type MyEntry = {team_id: number; team_name: string; status: "REGISTERED" | "WAITING"; position: number | null; players: EntryPlayer[]};
+export type MyEntry = {
+  team_id: number;
+  team_name: string;
+  status: "REGISTERED" | "WAITING";
+  position: number | null;
+  players: EntryPlayer[];
+  arrival: EntryArrival | null;
+  active: boolean;
+  excluded: EntryExclusion | null;
+  // the Kolo it plays from after joining (Igrate od Kola 3); null when it plays the next one anyway
+  plays_from: number | null;
+};
+
+// Potvrda dolaska's window on the tournament's day; null for a tournament without a start time
+export type TournamentDay = {opens: string; closes: string; phase: ArrivalPhase};
 
 export type TournamentWinner = {team_id: number; team_name: string; photo_url: string | null; players: string[]; wins: number; draws: number; losses: number};
 
@@ -134,6 +173,11 @@ export type TournamentCard = {
   me: MyEntry | null;
   // the viewer's team's final place once it is over (N1's #5)
   my_place: number | null;
+  // Vrijeme partije in minutes
+  game_minutes: number;
+  day: TournamentDay | null;
+  // the server's clock (ISO), for the countdowns
+  server_now: string;
 };
 
 export type TournamentPrizeView = {place: number; prize: string; description: string};
@@ -147,6 +191,8 @@ export type MyTeamOption = {
   // already signed up (in or waiting)
   entry: "REGISTERED" | "WAITING" | null;
   reason: string | null;
+  // the team (or one of its players) may not sign up until this day; "" = Trajno; null = no ban
+  ban_until: string | null;
 };
 
 // A table of the viewer's team (Vaši mečevi): the opponent and the matches won, the viewer's team first
@@ -177,6 +223,26 @@ export type TournamentDetail = TournamentCard & {
   my_matches: MyMatch[];
   my_result: MyResult | null;
   cancelled: boolean;
+  // Telefon organizatora (logged-in viewers): Nazovi · WhatsApp
+  organizer_phone: string | null;
+  // the viewer's own ban on sign-ups ("" = Trajno); null without one
+  my_ban: {until: string | null} | null;
+  // the viewer's team's table that was decided without play (Pobjeda bez igre, Isključeni ste) in the last Kolo
+  my_last_table: MyLastTable | null;
+};
+
+// How the viewer's team's latest table ended when it wasn't played (Nedolazak za stol)
+export type MyLastTable = {
+  round_id: number;
+  kolo: number;
+  table_number: number | null;
+  attendance: "NO_SHOW" | "SKIPPED";
+  // NO_SHOW: the viewer's team won (it answered) or didn't come
+  won: boolean;
+  opponent: string;
+  // when the answer came (ISO), and the score of each match (the viewer's team first)
+  at: string;
+  matches: [number, number][];
 };
 
 // A table of a Kolo, in the shape of the league's rounds so the league's table rows read it (toTableRows)
@@ -194,12 +260,15 @@ export type KoloTable = {
   open: boolean;
   ongoingMatches: {player_pair1_score: number; player_pair2_score: number}[];
   status: "DRAFT" | "APPROVED" | "PUBLISHED";
+  // the admin's status of the table (Upit · 1:52, Nedolazak, Vrijeme isteklo, Preskočen…) and its line of explanation
+  state?: TableState;
 };
 
 export type KoloView = {number: number; published: boolean; tables: KoloTable[]};
 
-// A standings row: the league's shape (StandingsRows / StandingsGrid read it) with the team's players
-export type TournamentStandingsItem = StandingsItem & {team_id: number; players: string[]};
+// A standings row: the league's shape (StandingsRows / StandingsGrid read it) with the team's players; an excluded team
+// stays with its Kolos played (Isključena nakon Kola 3 · nedolazak)
+export type TournamentStandingsItem = StandingsItem & {team_id: number; players: string[]; excluded?: EntryExclusion | null};
 
 // Poredak i rezultati: the standings and every Kolo (players: the published ones; the admin also the draft)
 export type TournamentResults = {
@@ -223,7 +292,7 @@ export type AdminTournamentRow = TournamentCard & {
   created_at: string;
 };
 
-export type CandidateTeam = {team_id: number; team_name: string; players: EntryPlayer[]; reason: string | null};
+export type CandidateTeam = {team_id: number; team_name: string; players: EntryPlayer[]; reason: string | null; ban_until?: string | null; banned?: boolean};
 
 // Upravljanje turnirom: the tournament's fields, its entries, its Kolos and the standings
 export type AdminTournament = TournamentCard & {
@@ -238,4 +307,21 @@ export type AdminTournament = TournamentCard & {
   next_kolo: {number: number; ready: boolean; reason: string | null} | null;
   // a Kolo 1 draft made from other teams than the ones in now: it has to be made again before it is published
   stale_draft: boolean;
+  organizer_phone: string | null;
+  // who pressed Otkaži
+  cancelled_by: string | null;
+  // the day's numbers (Prijave on the tournament's day) and what the start time will do (U 10:00)
+  arrival_summary: ArrivalSummary | null;
+};
+
+export type ArrivalSummary = {
+  here: number;
+  not_confirmed: number;
+  waiting_here: number;
+  waiting: number;
+  // at the start time: these become inactive, these come in from the waiting list
+  will_be_inactive: string[];
+  will_come_in: string[];
+  active: number;
+  excluded: number;
 };

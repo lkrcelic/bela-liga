@@ -1,6 +1,10 @@
+import {GAME_MINUTES_DEFAULT, GAME_MINUTES_ERROR, GAME_MINUTES_MAX, GAME_MINUTES_MIN} from "@/app/_lib/gameTime";
 import {isIsoDate, isSafeUrl, isStartTime, MAX_NIGHTS, NightLocation} from "@/app/_lib/nights";
 import {count, NOUN} from "@/app/_lib/ui/text";
 import {z} from "zod";
+
+// Vrijeme partije (minutes), for Nova liga and Postavke lige
+const gameMinutes = z.number().int().min(GAME_MINUTES_MIN, GAME_MINUTES_ERROR).max(GAME_MINUTES_MAX, GAME_MINUTES_ERROR);
 
 export const DATE_FORMAT_ERROR = "Datum mora biti u obliku GGGG-MM-DD.";
 const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, DATE_FORMAT_ERROR);
@@ -53,6 +57,8 @@ export const LeagueCreateRequestValidation = z
     location_address: locAddress.nullable().optional(),
     location_url: locUrl.nullable().optional(),
     rounds_per_night: z.number().int().min(1).max(6).default(3),
+    // Vrijeme partije in minutes
+    game_minutes: gameMinutes.default(GAME_MINUTES_DEFAULT),
     team_ids: z.array(z.number().int()).default([]),
     // the league nights; left out, they are filled in from the start date, end date and play day
     nights: z
@@ -74,6 +80,7 @@ export const LeagueUpdateRequestValidation = z.object({
   location_address: locAddress.nullable().optional(),
   location_url: locUrl.nullable().optional(),
   rounds_per_night: z.number().int().min(1).max(6).optional(),
+  game_minutes: gameMinutes.optional(),
 });
 
 export const LeagueNotesRequestValidation = z.object({
@@ -140,6 +147,8 @@ export type LeagueSummary = {
   location_address: string | null;
   location_url: string | null;
   rounds_per_night: number;
+  // Vrijeme partije: a match's time limit in minutes
+  game_minutes: number;
   // the smoking tables of its last Create Round (empty: none)
   smoking_tables: number[];
   team_count: number;

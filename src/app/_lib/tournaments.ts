@@ -80,6 +80,8 @@ export type TableResult = {
   started: boolean;
   // team1's points minus team2's, over the matches played
   diff: number;
+  // false for a skipped table (Nedolazak za stol: nobody started or answered in 10 minutes): it isn't counted
+  scored: boolean;
 };
 
 export type TeamTotals = {
@@ -96,8 +98,8 @@ export type TeamTotals = {
 };
 
 // Every team's totals from the tables played to the end, as in the league: a table won (more matches won) is a win,
-// equal matches a draw; the difference is of the points of every match played, the bye's 301:0 matches too. Teams
-// without a table yet have zeros.
+// equal matches a draw; the difference is of the points of every match played, the bye's 301:0 matches and a no-show's
+// 1001:700 too. A skipped table counts for nobody. Teams without a table yet have zeros.
 export function tournamentTotals(teamIds: number[], tables: TableResult[]): Map<number, TeamTotals> {
   const totals = new Map<number, TeamTotals>(
     teamIds.map((id) => [id, {teamId: id, played: 0, wins: 0, draws: 0, losses: 0, points: 0, difference: 0, live: false}])
@@ -123,6 +125,7 @@ export function tournamentTotals(teamIds: number[], tables: TableResult[]): Map<
         if (table.started) t.live = true;
         continue;
       }
+      if (!table.scored) continue;
       t.played += 1;
       if (won > lost) t.wins += 1;
       else if (won === lost) t.draws += 1;
@@ -134,11 +137,28 @@ export function tournamentTotals(teamIds: number[], tables: TableResult[]): Map<
   return totals;
 }
 
-// The standings order: points, then the difference, then the name (as the league's table)
-export function rankTeams<T extends {name: string; totals: TeamTotals}>(teams: T[]): T[] {
-  return [...teams].sort(
+// The standings order: points, then the difference, then the head-to-head ("međusobni omjer"): among the teams level
+// on both, the points and then the difference of only the tables they played against each other; then the name. Without
+// tables only points, difference and name count.
+export function rankTeams<T extends {name: string; totals: TeamTotals}>(teams: T[], tables: TableResult[] = []): T[] {
+  const sorted = [...teams].sort(
     (a, b) => b.totals.points - a.totals.points || b.totals.difference - a.totals.difference || a.name.localeCompare(b.name, "hr")
   );
+  const out: T[] = [];
+  for (let i = 0; i < sorted.length; ) {
+    let j = i + 1;
+    while (j < sorted.length && sorted[j].totals.points === sorted[i].totals.points && sorted[j].totals.difference === sorted[i].totals.difference) j++;
+    const group = sorted.slice(i, j);
+    if (group.length > 1 && tables.length > 0) {
+      const ids = new Set(group.map((t) => t.totals.teamId));
+      const mutual = tournamentTotals(Array.from(ids), tables.filter((t) => ids.has(t.team1Id) && ids.has(t.team2Id)));
+      const h2h = (t: T) => mutual.get(t.totals.teamId)!;
+      group.sort((a, b) => h2h(b).points - h2h(a).points || h2h(b).difference - h2h(a).difference || a.name.localeCompare(b.name, "hr"));
+    }
+    out.push(...group);
+    i = j;
+  }
+  return out;
 }
 
 // Every team's opponents so far, for the next Kolo's pairing (the bye counts as an opponent, BYE_TEAM_ID)

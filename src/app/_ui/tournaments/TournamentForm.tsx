@@ -2,13 +2,16 @@
 
 import {AdminTournament, TournamentRequest} from "@/app/_interfaces/tournament";
 import {isIsoDate, isSafeUrl, isStartTime} from "@/app/_lib/nights";
+import {GAME_MINUTES_ERROR, GAME_MINUTES_MAX, GAME_MINUTES_MIN} from "@/app/_lib/gameTime";
+import {isValidPhone, phoneInput, PHONE_ERROR} from "@/app/_lib/phone";
+import useAuthStore from "@/app/_store/authStore";
 import {color, font, tint} from "@/app/_styles/tokens";
 import {PlaceDraft, PlaceFields} from "@/app/_ui/admin/GatheringForm";
 import {buttonBase, Field, mergeSx, Segmented, TextField, TextInput, TimeField} from "@/app/_ui/sp";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
 import {Box, SxProps, Theme} from "@mui/material";
-import React, {useMemo, useState} from "react";
+import React, {useEffect, useMemo, useState} from "react";
 
 // Novi turnir and Upravljanje turnirom · Podaci (desktop and phone): one form for the whole tournament. Every field
 // as it is typed, the checks before anything is sent, and the request the server takes.
@@ -29,6 +32,10 @@ export type TournamentDraft = {
   fee: string;
   rulesUrl: string;
   prizes: PrizeDraft[];
+  // Telefon organizatora (required)
+  phone: string;
+  // Vrijeme partije · min
+  gameMinutes: string;
 };
 
 export const EMPTY_TOURNAMENT: TournamentDraft = {
@@ -44,11 +51,26 @@ export const EMPTY_TOURNAMENT: TournamentDraft = {
   fee: "0",
   rulesUrl: "",
   prizes: [{prize: "", description: ""}],
+  phone: "",
+  gameMinutes: "35",
 };
 
 type Source = Pick<
   AdminTournament,
-  "name" | "date" | "gathering_time" | "start_time" | "location" | "rounds" | "matches_per_round" | "declarations" | "max_teams" | "entry_fee" | "rules_url" | "prizes"
+  | "name"
+  | "date"
+  | "gathering_time"
+  | "start_time"
+  | "location"
+  | "rounds"
+  | "matches_per_round"
+  | "declarations"
+  | "max_teams"
+  | "entry_fee"
+  | "rules_url"
+  | "prizes"
+  | "organizer_phone"
+  | "game_minutes"
 >;
 
 export function draftOf(t: Source): TournamentDraft {
@@ -65,6 +87,8 @@ export function draftOf(t: Source): TournamentDraft {
     fee: String(t.entry_fee),
     rulesUrl: t.rules_url ?? "",
     prizes: t.prizes.length ? t.prizes.map((p) => ({prize: p.prize, description: p.description})) : [{prize: "", description: ""}],
+    phone: t.organizer_phone ?? "",
+    gameMinutes: String(t.game_minutes),
   };
 }
 
@@ -75,7 +99,11 @@ export function copyOf(t: Source): TournamentDraft {
 
 const wholeNumber = (v: string) => /^\d+$/.test(v.trim());
 
-export type FormErrors = Partial<Record<"name" | "date" | "gathering" | "start" | "rounds" | "maxTeams" | "fee" | "rulesUrl" | "placeUrl" | "prizes", string>>;
+export type FormErrors = Partial<
+  Record<"name" | "date" | "gathering" | "start" | "rounds" | "maxTeams" | "fee" | "rulesUrl" | "placeUrl" | "prizes" | "phone" | "gameMinutes", string>
+>;
+
+export const PHONE_REQUIRED = "Upiši telefon organizatora. Igrači ga zovu ako kasne.";
 
 // What is wrong, field by field (the server checks the same and says it in the same words)
 export function draftErrors(d: TournamentDraft): FormErrors {
@@ -91,6 +119,9 @@ export function draftErrors(d: TournamentDraft): FormErrors {
   if (d.rulesUrl.trim() && !isSafeUrl(d.rulesUrl)) e.rulesUrl = "Link mora počinjati s https://.";
   if (d.place.url.trim() && !isSafeUrl(d.place.url)) e.placeUrl = "Link mora počinjati s https://.";
   if (d.prizes.some((p) => !p.prize.trim() && p.description.trim())) e.prizes = "Upiši nagradu za svako mjesto ili makni redak.";
+  if (!d.phone.trim()) e.phone = PHONE_REQUIRED;
+  else if (!isValidPhone(d.phone)) e.phone = PHONE_ERROR;
+  if (!wholeNumber(d.gameMinutes) || Number(d.gameMinutes) < GAME_MINUTES_MIN || Number(d.gameMinutes) > GAME_MINUTES_MAX) e.gameMinutes = GAME_MINUTES_ERROR;
   return e;
 }
 
@@ -112,7 +143,35 @@ export function draftPayload(d: TournamentDraft): TournamentRequest {
     entry_fee: Number(d.fee || "0"),
     rules_url: text(d.rulesUrl),
     prizes: d.prizes.filter((p) => p.prize.trim()).map((p) => ({prize: p.prize.trim(), description: p.description.trim()})),
+    game_minutes: Number(d.gameMinutes),
+    organizer_phone: text(d.phone),
   };
+}
+
+// Novi turnir: the admin's own phone is filled in (Telefon organizatora), once, if they have one on their profile
+export function useOwnPhone(form: TournamentFormState) {
+  const meId = useAuthStore((s) => s.user?.id ?? null);
+  useEffect(() => {
+    if (meId == null) return;
+    let cancelled = false;
+    fetch(`/api/players/${meId}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((p: {phone?: string | null} | null) => {
+        if (!cancelled && p?.phone) form.setDraft((d) => (d.phone ? d : {...d, phone: p.phone!}));
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [meId]);
+}
+
+// "2 zadnje prijavljene ekipe idu na listu čekanja." (a lower limit before the start)
+export function loweredLimitNote(n: number): string {
+  if (n % 10 === 1 && n % 100 !== 11) return `${n} zadnja prijavljena ekipa ide na listu čekanja.`;
+  if ([2, 3, 4].includes(n % 10) && ![12, 13, 14].includes(n % 100)) return `${n} zadnje prijavljene ekipe idu na listu čekanja.`;
+  return `${n} zadnjih prijavljenih ekipa ide na listu čekanja.`;
 }
 
 // The form's state: the draft, what changed since `base`, and the errors. rebase: the tournament as saved becomes what
@@ -136,8 +195,9 @@ export function useTournamentForm(initial: TournamentDraft) {
 
 export type TournamentFormState = ReturnType<typeof useTournamentForm>;
 
-// What can't change once the tournament started (the server refuses it too)
-export type FormLocks = {started: boolean; registered: number};
+// What can't change once the tournament started (the server refuses it too): the date. finished: it is over (the note
+// says so)
+export type FormLocks = {started: boolean; registered: number; finished?: boolean};
 
 function SectionTitle({children}: {children: React.ReactNode}) {
   return (
@@ -214,14 +274,15 @@ export function TournamentFields({form, locks, compact = false, sx}: {form: Tour
   const {draft: d, set, errors} = form;
   const started = locks?.started ?? false;
   const input = {height: 52} as const;
-  const lowered = !started && locks && d.maxTeams.trim() && Number(d.maxTeams) < locks.registered;
+  const lowered = !started && locks && d.maxTeams.trim() && Number(d.maxTeams) < locks.registered ? locks.registered - Number(d.maxTeams) : 0;
+  const dateLocked = locks?.finished ? "Datum se ne mijenja nakon završetka turnira." : "Turnir je počeo: datum se ne mijenja.";
   const columns = (n: number) => ({display: "grid", gridTemplateColumns: compact ? "minmax(0,1fr)" : `repeat(${n}, minmax(0,1fr))`, gap: "14px"});
   return (
     <Box sx={mergeSx({display: "flex", flexDirection: "column", gap: "16px"}, sx)}>
       <SectionTitle>Osnovno</SectionTitle>
       <TextField label="Naziv turnira" placeholder="npr. Jesenski turnir" maxLength={100} value={d.name} onChange={(e) => set("name", e.target.value)} soft inputSx={input} error={form.touched ? errors.name : undefined} />
       <Box sx={columns(3)}>
-        <Field label="Datum" error={form.touched ? errors.date : started ? "Turnir je počeo: datum se ne mijenja." : undefined} errorSx={started ? {color: color.muted} : undefined}>
+        <Field label="Datum" error={form.touched ? errors.date : started ? dateLocked : undefined} errorSx={started ? {color: color.muted} : undefined}>
           {(a11y) => <TextInput {...a11y} type="date" soft value={d.date} disabled={started} onChange={(e) => set("date", e.target.value)} sx={input} />}
         </Field>
         <TimeField label="Okupljanje" value={d.gathering} onChange={(v) => set("gathering", v)} clearLabel="Ukloni vrijeme okupljanja" soft inputSx={input} error={errors.gathering} />
@@ -236,26 +297,53 @@ export function TournamentFields({form, locks, compact = false, sx}: {form: Tour
           {errors.placeUrl}
         </Box>
       )}
+      <Field label="Telefon organizatora *" error={form.touched ? errors.phone : undefined}>
+        {(a11y) => (
+          <TextInput
+            {...a11y}
+            type="tel"
+            inputMode="tel"
+            autoComplete="tel"
+            placeholder="+385 91 234 5678"
+            maxLength={30}
+            soft
+            value={d.phone}
+            onChange={(e) => set("phone", phoneInput(e.target.value))}
+            sx={input}
+          />
+        )}
+      </Field>
+      <Box sx={{mt: "-8px", pl: "4px", fontSize: 13, lineHeight: 1.45, color: color.muted}}>
+        Obavezno. Igrači ga vide na stranici turnira (Nazovi · WhatsApp) i javljaju se ako kasne.
+      </Box>
 
       <Box component="hr" sx={rule} />
       <SectionTitle>Format i prijave</SectionTitle>
       <Box sx={columns(3)}>
         <TextField label="Broj kola" type="number" inputMode="numeric" min={1} max={20} value={d.rounds} onChange={(e) => set("rounds", e.target.value)} soft inputSx={input} error={errors.rounds} />
-        <Choice<1 | 2> label="Partija po kolu" value={d.matches} items={[{key: 1, label: "1"}, {key: 2, label: "2"}]} onChange={(v) => set("matches", v)} disabled={started} />
-        <Choice<"da" | "ne"> label="Zvanja" value={d.declarations ? "da" : "ne"} items={[{key: "da", label: "Da"}, {key: "ne", label: "Ne"}]} onChange={(v) => set("declarations", v === "da")} disabled={started} />
+        <Choice<1 | 2> label="Partija po kolu" value={d.matches} items={[{key: 1, label: "1"}, {key: 2, label: "2"}]} onChange={(v) => set("matches", v)} />
+        <Choice<"da" | "ne"> label="Zvanja" value={d.declarations ? "da" : "ne"} items={[{key: "da", label: "Da"}, {key: "ne", label: "Ne"}]} onChange={(v) => set("declarations", v === "da")} />
       </Box>
       <Box sx={columns(3)}>
-        <Field
-          label="Najveći broj ekipa"
-          error={errors.maxTeams ?? (lowered ? `Prijavljeno je ${locks!.registered} ekipa: zadnje prijavljene idu na listu čekanja.` : undefined)}
-        >
+        <Field label="Vrijeme partije · min" error={errors.gameMinutes}>
           {(a11y) => (
-            <TextInput {...a11y} type="number" inputMode="numeric" min={2} placeholder="Bez ograničenja" soft value={d.maxTeams} disabled={started} onChange={(e) => set("maxTeams", e.target.value)} sx={input} />
+            <TextInput {...a11y} type="number" inputMode="numeric" min={GAME_MINUTES_MIN} max={GAME_MINUTES_MAX} soft value={d.gameMinutes} onChange={(e) => set("gameMinutes", e.target.value)} sx={input} />
+          )}
+        </Field>
+        <Field label="Najveći broj ekipa" error={errors.maxTeams ?? (lowered ? loweredLimitNote(lowered) : undefined)}>
+          {(a11y) => (
+            <TextInput {...a11y} type="number" inputMode="numeric" min={2} placeholder="Bez ograničenja" soft value={d.maxTeams} onChange={(e) => set("maxTeams", e.target.value)} sx={input} />
           )}
         </Field>
         <Field label="Kotizacija po igraču · €" error={errors.fee}>
           {(a11y) => <TextInput {...a11y} type="number" inputMode="numeric" min={0} max={999} soft value={d.fee} onChange={(e) => set("fee", e.target.value)} sx={input} />}
         </Field>
+      </Box>
+      <Box sx={{mt: "-6px", pl: "4px", fontSize: 13, lineHeight: 1.45, color: color.muted}}>
+        Vrijeme partije teče od početka partije; kad istekne, vrijedi upisani rezultat. Prazan broj ekipa = bez ograničenja; kad je turnir pun, ekipe idu na listu čekanja.
+        Kotizacija 0 € = igrači vide „Bez stresa, bez obveza”.
+      </Box>
+      <Box>
         <TextField
           label="Link na pravila"
           type="url"
@@ -270,9 +358,6 @@ export function TournamentFields({form, locks, compact = false, sx}: {form: Tour
           inputSx={input}
           error={errors.rulesUrl}
         />
-      </Box>
-      <Box sx={{mt: "-6px", pl: "4px", fontSize: 13, lineHeight: 1.45, color: color.muted}}>
-        Prazno = bez ograničenja; kad je turnir pun, ekipe idu na listu čekanja. Kotizacija 0 € = igrači vide „Bez stresa, bez obveza”.
       </Box>
 
       <Box component="hr" sx={rule} />

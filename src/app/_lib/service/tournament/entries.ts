@@ -11,6 +11,8 @@ import {TEAM_NAME_TAKEN} from "@/app/_interfaces/team";
 import {CandidateTeam, RegistrationRequest} from "@/app/_interfaces/tournament";
 import {playersInOtherEntries, signUpStatus} from "@/app/_lib/tournamentEntries";
 import {BYE_TEAM_ID} from "@/app/_lib/bye";
+import {banDay} from "@/app/_lib/bans";
+import {activeBans, banReason} from "@/app/_lib/service/bans/bans";
 import {lockTournament} from "./lock";
 import {applyLimit, dropDrafts, TOURNAMENT_NOT_FOUND} from "./tournaments";
 
@@ -43,9 +45,12 @@ async function rosterOf(tx: Tx, teamId: number) {
   return {...team, players: team.teamPlayers.map((tp) => tp.player).filter((p) => p.deleted_at == null)};
 }
 
-// Refuses a team with fewer than two active players, or with a player who already plays in another entry
-async function assertCanEnter(tx: Tx, tournamentId: number, team: Awaited<ReturnType<typeof rosterOf>>) {
+// Refuses a team with fewer than two active players, a team that (or whose player) may not sign up (Zabrana prijava),
+// or a team with a player who already plays in another entry
+async function assertCanEnter(tx: Tx, tournamentId: number, team: Awaited<ReturnType<typeof rosterOf>>, viewerId: number | null = null) {
   if (team.players.filter((p) => p.active).length < 2) throw new InvalidResultError(TEAM_NEEDS_TWO);
+  const ban = await banReason(team, viewerId, tx);
+  if (ban) throw new InvalidResultError(ban.text.endsWith(".") ? ban.text : `${ban.text}.`);
   const entries = await tx.tournamentTeam.findMany({
     where: {tournament_id: tournamentId},
     select: {team_id: true, team: {select: {team_name: true, teamPlayers: {select: {player_id: true}}}}},
@@ -79,10 +84,15 @@ export async function signUp(tournamentId: number, viewer: Viewer, request: Regi
     return await prisma.$transaction(async (tx) => {
       const t = await lockOpenTournament(tx, tournamentId);
       if (!t.registrations_open) throw new InvalidResultError(SIGN_UPS_CLOSED);
+      // a banned player signs up no team and makes no new one
+      const mine = (await activeBans({playerIds: [viewer.id]}, tx)).players.get(viewer.id);
+      if (mine) throw new InvalidResultError(`Prijave su ti zabranjene${mine.until ? ` do ${banDay(mine.until)}` : ""}. Za pitanja se javi organizatoru.`);
       let teamId: number;
       if ("new_team" in request) {
-        const partner = await tx.player.findFirst({where: {id: request.new_team.partner_id, deleted_at: null, active: true}, select: {id: true}});
+        const partner = await tx.player.findFirst({where: {id: request.new_team.partner_id, deleted_at: null, active: true}, select: {id: true, first_name: true, last_name: true}});
         if (!partner) throw new InvalidResultError("Suigrač mora imati račun u aplikaciji.");
+        const partnerBan = (await activeBans({playerIds: [partner.id]}, tx)).players.get(partner.id);
+        if (partnerBan) throw new InvalidResultError(`Igraču ${displayName(partner)} su prijave zabranjene${partnerBan.until ? ` do ${banDay(partnerBan.until)}` : ""}.`);
         // nobody of the new team may already play in another entry: checked before the team is made
         await assertNotEntered(tx, tournamentId, [viewer.id, partner.id]);
         const team = await insertTeam(tx, {team_name: request.new_team.name.trim(), players: [viewer.id, partner.id], league_id: null}, viewer.id, null);
@@ -92,7 +102,7 @@ export async function signUp(tournamentId: number, viewer: Viewer, request: Regi
       }
       const team = await rosterOf(tx, teamId);
       if (!team.players.some((p) => p.id === viewer.id)) throw new InvalidResultError("Možeš prijaviti samo ekipu u kojoj igraš.");
-      await assertCanEnter(tx, tournamentId, team);
+      await assertCanEnter(tx, tournamentId, team, viewer.id);
       const status = await enter(tx, tournamentId, teamId, t.max_teams, viewer.id);
       return {teamId, status};
     }, {timeout: 20_000});
@@ -180,22 +190,29 @@ export async function candidateTeams(tournamentId: number, query: string): Promi
     prisma.tournamentTeam.findMany({where: {tournament_id: tournamentId}, select: {team_id: true, team: {select: {team_name: true, teamPlayers: {select: {player_id: true}}}}}}),
   ]);
   const others = entries.map((e) => ({teamId: e.team_id, playerIds: e.team.teamPlayers.map((tp) => tp.player_id)}));
-  return teams
-    .slice(0, 12)
-    .map((t) => {
-      const players = t.teamPlayers.map((tp) => tp.player).filter((p) => p.deleted_at == null);
-      const taken = playersInOtherEntries(players.map((p) => p.id), others);
-      const reason =
-        players.filter((p) => p.active).length < 2
-          ? TEAM_NEEDS_TWO
-          : taken.length > 0
-            ? `${displayName(players.find((p) => p.id === taken[0])!)} je već prijavljen.`
-            : null;
-      return {
-        team_id: t.team_id,
-        team_name: t.team_name,
-        players: players.map((p) => ({id: p.id, name: displayName(p), photo_url: null, username: p.username})),
-        reason,
-      };
-    });
+  const shown = teams.slice(0, 12);
+  const bans = await activeBans({teamIds: shown.map((t) => t.team_id), playerIds: shown.flatMap((t) => t.teamPlayers.map((tp) => tp.player.id))});
+  return shown.map((t) => {
+    const players = t.teamPlayers.map((tp) => tp.player).filter((p) => p.deleted_at == null);
+    const taken = playersInOtherEntries(players.map((p) => p.id), others);
+    // Zabrana prijava: the team's own ban, or a player's
+    const ban = bans.teams.get(t.team_id) ?? players.map((p) => bans.players.get(p.id)).find((b) => b != null) ?? null;
+    const reason = ban
+      ? ban.until
+        ? `Zabrana prijava do ${banDay(ban.until)}`
+        : "Trajna zabrana prijava"
+      : players.filter((p) => p.active).length < 2
+        ? TEAM_NEEDS_TWO
+        : taken.length > 0
+          ? `${displayName(players.find((p) => p.id === taken[0])!)} je već prijavljen.`
+          : null;
+    return {
+      team_id: t.team_id,
+      team_name: t.team_name,
+      players: players.map((p) => ({id: p.id, name: displayName(p), photo_url: null, username: p.username})),
+      reason,
+      banned: ban != null,
+      ban_until: ban ? ban.until : null,
+    };
+  });
 }

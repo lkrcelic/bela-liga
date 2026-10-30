@@ -10,7 +10,7 @@ import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import ChevronLeftRoundedIcon from "@mui/icons-material/ChevronLeftRounded";
 import {Box} from "@mui/material";
 import React from "react";
-import {EMPTY_TOURNAMENT, TournamentFields, useTournamentForm} from "../TournamentForm";
+import {EMPTY_TOURNAMENT, TournamentFields, useOwnPhone, useTournamentForm} from "../TournamentForm";
 import {useCopySource, useCreateTournament} from "./NewTournamentDesktop";
 
 // Novi turnir on the admin's phone (Claude Design "Turniri admin" M10, M10b): Kopiraj iz turnira first, the whole form
@@ -18,6 +18,7 @@ import {useCopySource, useCreateTournament} from "./NewTournamentDesktop";
 export default function NewTournamentPhone() {
   const nav = useNavStack("Novi turnir", "/turniri/upravljanje");
   const form = useTournamentForm(EMPTY_TOURNAMENT);
+  useOwnPhone(form);
   const copy = useCopySource(form);
   const {create, saving, error} = useCreateTournament(form);
   const {tournaments} = useAdminTournaments();

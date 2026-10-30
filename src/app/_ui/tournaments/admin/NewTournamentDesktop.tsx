@@ -11,7 +11,7 @@ import InfoRoundedIcon from "@mui/icons-material/InfoRounded";
 import {Box} from "@mui/material";
 import {useSearchParams} from "next/navigation";
 import React, {useEffect, useState} from "react";
-import {copyOf, draftPayload, EMPTY_TOURNAMENT, TournamentFields, TournamentFormState, useTournamentForm} from "../TournamentForm";
+import {copyOf, draftPayload, EMPTY_TOURNAMENT, TournamentFields, TournamentFormState, useOwnPhone, useTournamentForm} from "../TournamentForm";
 
 // Novi turnir (Claude Design "Turniri admin" A2): the whole form on the left; on the right Kopiraj turnir (everything
 // from an earlier tournament but its date, sign-ups and prizes) and Kreiraj turnir. It is published at once, with
@@ -66,6 +66,7 @@ export function useCreateTournament(form: TournamentFormState) {
 
 export default function NewTournamentDesktop() {
   const form = useTournamentForm(EMPTY_TOURNAMENT);
+  useOwnPhone(form);
   const copy = useCopySource(form);
   const {create, saving, error} = useCreateTournament(form);
   const {tournaments} = useAdminTournaments();

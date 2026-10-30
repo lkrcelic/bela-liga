@@ -24,6 +24,16 @@ export type LoadedEntry = {
   registered_by: number | null;
   // the team's players with an account (deleted ones are left out)
   players: LoadedPlayer[];
+  // Potvrda dolaska: when, and by whom (a player's name; null with arrived_by_admin for the admin's Označi dolazak)
+  arrived_at: Date | null;
+  arrived_by_name: string | null;
+  arrived_by_admin: boolean;
+  // Aktivna: paired in the next Kolo
+  active: boolean;
+  // out of the rest of the tournament after Kolo excluded_kolo
+  excluded_at: Date | null;
+  excluded_kolo: number | null;
+  excluded_reason: "NO_SHOW" | "SKIPPED" | "ADMIN" | null;
 };
 
 export type LoadedTable = {
@@ -38,17 +48,24 @@ export type LoadedTable = {
   open: boolean;
   active: boolean;
   status: "DRAFT" | "APPROVED" | "PUBLISHED";
+  published_at: Date | null;
   // matches played at it, and team1's points minus team2's over them
   played: number;
   diff: number;
-  // the running match's points
-  ongoing: {player_pair1_score: number; player_pair2_score: number} | null;
+  // its matches played, in order: the points, and whether the time closed it (Vrijeme partije)
+  matches: {score1: number; score2: number; time_expired: boolean}[];
+  // the running match's points and its time
+  ongoing: {player_pair1_score: number; player_pair2_score: number; started_at: Date | null; ends_at: Date | null} | null;
   // the players who played it (Tko igra)
   lineup: {player_id: number; team_id: number}[];
+  // Nedolazak za stol: the answer (or SKIPPED), which team gave it and when
+  attendance: "PRESENT" | "NO_SHOW" | "SKIPPED" | null;
+  attendance_team_id: number | null;
+  attendance_at: Date | null;
 };
 
 export type Snapshot = {
-  tournament: Tournament & {prizes: TournamentPrize[]};
+  tournament: Tournament & {prizes: TournamentPrize[]; canceller: {first_name: string; last_name: string} | null};
   entries: LoadedEntry[];
   tables: LoadedTable[];
   // names and photos of the teams at the tables (the bye's too), whether they are entered or not
@@ -82,7 +99,10 @@ export async function loadSnapshots(ids: number[], viewer: Viewer | null, db: Db
   if (ids.length === 0) return [];
   const admin = viewer != null && isAdminRole(viewer);
   const [tournaments, entries, rounds] = await Promise.all([
-    db.tournament.findMany({where: {tournament_id: {in: ids}}, include: {prizes: {orderBy: {place: "asc"}}}}),
+    db.tournament.findMany({
+      where: {tournament_id: {in: ids}},
+      include: {prizes: {orderBy: {place: "asc"}}, canceller: {select: {first_name: true, last_name: true}}},
+    }),
     db.tournamentTeam.findMany({
       where: {tournament_id: {in: ids}},
       orderBy: [{registered_at: "asc"}, {team_id: "asc"}],
@@ -96,6 +116,7 @@ export async function loadSnapshots(ids: number[], viewer: Viewer | null, db: Db
             teamPlayers: {select: {player: {select: playerSelect}}},
           },
         },
+        arriver: {select: {first_name: true, last_name: true, username: true}},
       },
     }),
     db.round.findMany({
@@ -113,9 +134,13 @@ export async function loadSnapshots(ids: number[], viewer: Viewer | null, db: Db
         open: true,
         active: true,
         status: true,
+        published_at: true,
+        attendance: true,
+        attendance_team_id: true,
+        attendance_at: true,
         tournamentRounds: {select: {tournament_id: true}},
-        matches: {select: {player_pair1_score: true, player_pair2_score: true}},
-        ongoingMatches: {select: {player_pair1_score: true, player_pair2_score: true}, orderBy: {id: "desc"}, take: 1},
+        matches: {select: {player_pair1_score: true, player_pair2_score: true, time_expired: true}, orderBy: {id: "asc"}},
+        ongoingMatches: {select: {player_pair1_score: true, player_pair2_score: true, started_at: true, ends_at: true}, orderBy: {id: "desc"}, take: 1},
         roundPlayers: {select: {player_id: true, team_id: true}},
         team1: {select: {team_id: true, team_name: true, photo_updated_at: true, photo_visibility: true}},
         team2: {select: {team_id: true, team_name: true, photo_updated_at: true, photo_visibility: true}},
@@ -145,6 +170,13 @@ export async function loadSnapshots(ids: number[], viewer: Viewer | null, db: Db
           .filter((p) => p.deleted_at == null)
           .map((p) => ({id: p.id, name: displayName(p), rating: p.rating, username: p.username, photo_url: playerPhotos.get(p.id) ?? null}))
           .sort((a, b) => a.name.localeCompare(b.name, "hr")),
+        arrived_at: e.arrived_at,
+        arrived_by_name: e.arriver ? displayName(e.arriver) : null,
+        arrived_by_admin: e.arrived_by_admin,
+        active: e.active,
+        excluded_at: e.excluded_at,
+        excluded_kolo: e.excluded_kolo,
+        excluded_reason: e.excluded_reason,
       }));
 
       const ownRounds = rounds.filter((r) => r.tournamentRounds.some((tr) => tr.tournament_id === tournament.tournament_id));
@@ -160,10 +192,15 @@ export async function loadSnapshots(ids: number[], viewer: Viewer | null, db: Db
         open: r.open,
         active: r.active,
         status: r.status,
+        published_at: r.published_at,
         played: r.matches.length,
         diff: r.matches.reduce((sum, m) => sum + m.player_pair1_score - m.player_pair2_score, 0),
+        matches: r.matches.map((m) => ({score1: m.player_pair1_score, score2: m.player_pair2_score, time_expired: m.time_expired})),
         ongoing: r.ongoingMatches[0] ?? null,
         lineup: r.roundPlayers,
+        attendance: r.attendance,
+        attendance_team_id: r.attendance_team_id,
+        attendance_at: r.attendance_at,
       }));
 
       const teams = new Map<number, {name: string; photo_url: string | null}>();
@@ -175,10 +212,15 @@ export async function loadSnapshots(ids: number[], viewer: Viewer | null, db: Db
       const kolos = koloSummaries(tables);
       const phase = tournamentPhase({startedAt: tournament.started_at, cancelledAt: tournament.cancelled_at, rounds: tournament.rounds}, kolos);
       const published = tables.filter((t) => t.status === "PUBLISHED");
-      const registered = loadedEntries.filter((e) => e.status === "REGISTERED");
-      const totals = tournamentTotals(registered.map((e) => e.team_id), published.map(toResult));
+      const results = published.map(toResult);
+      // the teams in that play or played (an inactive team that never sat at a table isn't listed), and any team that
+      // played and left
+      const seated = new Set(published.flatMap((t) => [t.team1_id, t.team2_id]));
+      const listed = loadedEntries.filter((e) => e.status === "REGISTERED" && (e.active || e.excluded_at != null || seated.has(e.team_id)));
+      const totals = tournamentTotals(listed.map((e) => e.team_id), results);
       const standings = rankTeams(
-        Array.from(totals.values()).map((t) => ({team_id: t.teamId, name: teams.get(t.teamId)?.name ?? `Ekipa ${t.teamId}`, totals: t}))
+        Array.from(totals.values()).map((t) => ({team_id: t.teamId, name: teams.get(t.teamId)?.name ?? `Ekipa ${t.teamId}`, totals: t})),
+        results
       );
 
       return {
@@ -210,6 +252,7 @@ export function toResult(t: LoadedTable): TableResult {
     open: t.open,
     started: tableStarted(t),
     diff: t.diff,
+    scored: t.attendance !== "SKIPPED",
   };
 }
 
