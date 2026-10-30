@@ -88,15 +88,15 @@ export default function BanSection({target, desktop = false}: {target: BanTarget
   const teamBan = target.kind === "team";
   const viaTeam = ban?.via_team ?? null;
   return (
-    <Card component="section" aria-label="Zabrana prijava" sx={{flex: "none", p: desktop ? "18px 20px" : "16px", borderRadius: "22px", display: "flex", flexDirection: "column", gap: "12px"}}>
+    <Card component="section" aria-label="Zabrana prijava" sx={{flex: "none", p: desktop ? "14px 18px" : "16px", borderRadius: "22px", display: "flex", flexDirection: "column", gap: desktop ? "8px" : "12px"}}>
       <Box component="h2" sx={{m: 0, fontSize: desktop ? 18 : 12.5, fontWeight: 700, ...(desktop ? {fontFamily: font.display, fontWeight: 800} : {letterSpacing: ".1em", textTransform: "uppercase", color: color.muted})}}>
         Zabrana prijava
       </Box>
       {!state && !error ? (
         <Spinner size={22} />
       ) : ban ? (
-        <>
-          <Box sx={{display: "flex", gap: "12px", p: "12px 14px", borderRadius: "16px", background: tint.red[8]}}>
+        <Box sx={{display: "flex", flexDirection: desktop ? "row" : "column", alignItems: desktop ? "center" : "stretch", gap: "12px"}}>
+          <Box sx={{flex: 1, minWidth: 0, display: "flex", gap: "12px", p: "12px 14px", borderRadius: "16px", background: tint.red[8]}}>
             <BlockRoundedIcon aria-hidden sx={{fontSize: 24, color: color.red, flex: "none", mt: "1px"}} />
             <Box sx={{minWidth: 0, display: "flex", flexDirection: "column", gap: "3px"}}>
               <Box component="span" sx={{fontSize: 16, fontWeight: 700, color: color.red}}>
@@ -126,7 +126,7 @@ export default function BanSection({target, desktop = false}: {target: BanTarget
               )}
             </Box>
           </Box>
-          <Box sx={{display: "flex", gap: "10px"}}>
+          <Box sx={{display: "flex", gap: "10px", ...(desktop && {flex: "none", width: 300})}}>
             <OutlineButton height={46} onClick={() => setEditing("change")} sx={{flex: 1, fontSize: 15, borderWidth: "1.5px", "& svg": {fontSize: 20}}}>
               <EditCalendarRoundedIcon aria-hidden />
               Promijeni
@@ -136,10 +136,10 @@ export default function BanSection({target, desktop = false}: {target: BanTarget
               Ukini
             </OutlineButton>
           </Box>
-        </>
+        </Box>
       ) : state ? (
-        <>
-          <Box sx={{display: "flex", alignItems: "center", gap: "10px"}}>
+        <Box sx={{display: "flex", flexDirection: desktop ? "row" : "column", alignItems: desktop ? "center" : "stretch", gap: "12px"}}>
+          <Box sx={{flex: 1, display: "flex", alignItems: "center", gap: "10px"}}>
             <CheckCircleRoundedIcon aria-hidden sx={{fontSize: 24, color: color.green}} />
             <Box sx={{display: "flex", flexDirection: "column"}}>
               <Box component="span" sx={{fontSize: 16, fontWeight: 700}}>
@@ -150,11 +150,11 @@ export default function BanSection({target, desktop = false}: {target: BanTarget
               </Box>
             </Box>
           </Box>
-          <OutlineButton height={48} tone={color.red} onClick={() => setEditing("new")} sx={{fontSize: 15, borderWidth: "1.5px", "& svg": {fontSize: 20}}}>
+          <OutlineButton height={48} tone={color.red} onClick={() => setEditing("new")} sx={{fontSize: 15, borderWidth: "1.5px", "& svg": {fontSize: 20}, ...(desktop && {flex: "none", width: 300})}}>
             <BlockRoundedIcon aria-hidden />
             {teamBan ? "Zabrani prijave ekipi" : "Zabrani prijave igraču"}
           </OutlineButton>
-        </>
+        </Box>
       ) : null}
       {error && <ErrorNote onRetry={load}>{error}</ErrorNote>}
       {editing && (

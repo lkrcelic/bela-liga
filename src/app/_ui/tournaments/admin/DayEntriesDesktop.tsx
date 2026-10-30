@@ -138,7 +138,9 @@ export default function DayEntriesDesktop({t, onChanged}: {t: AdminTournament; o
             <>
               <AtStartCard t={t} />
               <InfoNote icon={<InfoRoundedIcon />}>
-                Samo aktivne ekipe ulaze u kolo. U {t.day ? clockOf(t.day.closes) : "vrijeme početka"} nepotvrđene ekipe postaju Neaktivne (ostaju prijavljene), a prva potvrđena s liste čekanja ulazi umjesto njih.
+                {t.day?.phase === "closed"
+                  ? `Samo aktivne ekipe ulaze u kolo. Potvrda dolaska je zatvorena u ${clockOf(t.day.closes)}: nepotvrđene ekipe su Neaktivne (ostaju prijavljene). Ekipu koja stigne kasnije označi pa je uključi prekidačem.`
+                  : `Samo aktivne ekipe ulaze u kolo. U ${t.day ? clockOf(t.day.closes) : "vrijeme početka"} nepotvrđene ekipe postaju Neaktivne (ostaju prijavljene), a prva potvrđena s liste čekanja ulazi umjesto njih.`}
               </InfoNote>
             </>
           )}
