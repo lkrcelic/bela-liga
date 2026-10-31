@@ -9,6 +9,7 @@ import BlockRoundedIcon from "@mui/icons-material/BlockRounded";
 import CallRoundedIcon from "@mui/icons-material/CallRounded";
 import ChatRoundedIcon from "@mui/icons-material/ChatRounded";
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
+import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
 import EmojiEventsRoundedIcon from "@mui/icons-material/EmojiEventsRounded";
 import EventAvailableRoundedIcon from "@mui/icons-material/EventAvailableRounded";
@@ -90,7 +91,52 @@ const lightButton = {
   "&:disabled": {opacity: 0.45},
 } as const;
 
-const quietButton = {...buttonBase, alignSelf: "center", height: 44, px: "14px", borderRadius: "12px", color: color.cream, fontSize: 15, fontWeight: 700, textDecoration: "underline", textUnderlineOffset: "3px"} as const;
+// Odlazimo and Ipak otkazujemo: a real button, outlined in cream, so the team sees how to leave or cancel
+export const leaveButton = {
+  ...buttonBase,
+  height: 48,
+  borderRadius: "14px",
+  border: `1.5px solid ${color.cream}`,
+  color: color.cream,
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: "8px",
+  fontSize: 16,
+  fontWeight: 700,
+  transition: "background 160ms ease",
+  "&:hover": {background: tint.creamOnNavy[16]},
+  "& svg": {fontSize: 20},
+  "&:disabled": {opacity: 0.45},
+} as const;
+
+// Odlazimo under Započni igru on Početna (league and tournament): the cards' outlined cream button on navy, so the
+// team playing a table still sees how to leave; it asks first (title, text: what leaving means there)
+export function LeaveRow({title, text, onLeave}: {title: string; text: string; onLeave: () => Promise<void>}) {
+  const [open, setOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const leave = async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      await onLeave();
+      setOpen(false);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Nije spremljeno.");
+    }
+    setBusy(false);
+  };
+  return (
+    <>
+      <Box component="button" type="button" onClick={() => setOpen(true)} sx={{...leaveButton, flex: "none", height: 52, background: color.navy, boxShadow: shadow.card, "&:hover": {background: color.navy}}}>
+        <LogoutRoundedIcon aria-hidden />
+        Odlazimo
+      </Box>
+      <ConfirmSheet open={open} onClose={() => setOpen(false)} onConfirm={leave} title={title} text={text} action="Odlazimo" icon={<LogoutRoundedIcon />} busy={busy} error={error} />
+    </>
+  );
+}
 
 // The warning under Tu smo
 function FakeWarning() {
@@ -182,7 +228,8 @@ export function ArrivalCard({t, busy, error, onAction, myTable}: {t: TournamentD
           )}
         </Box>
         {t.phase === "active" && (
-          <Box component="button" type="button" onClick={() => setLeaving(true)} disabled={busy != null} sx={quietButton}>
+          <Box component="button" type="button" onClick={() => setLeaving(true)} disabled={busy != null} sx={leaveButton}>
+            <LogoutRoundedIcon aria-hidden />
             Odlazimo
           </Box>
         )}
@@ -215,8 +262,9 @@ export function ArrivalCard({t, busy, error, onAction, myTable}: {t: TournamentD
           {arrivedLine(me)}.{" "}
           {waiting ? `U ${closes} ulazite ako se oslobodi mjesto.` : `Prvo kolo počinje u ${closes}.`}
         </Box>
-        <Box component="button" type="button" onClick={() => onAction("cancel")} disabled={busy != null} sx={quietButton}>
-          {busy === "cancel" ? <Spinner size={18} tone="white" /> : "Ipak otkazujemo"}
+        <Box component="button" type="button" onClick={() => onAction("cancel")} disabled={busy != null} sx={leaveButton}>
+          {busy === "cancel" ? <Spinner size={18} tone="white" /> : <CloseRoundedIcon aria-hidden />}
+          Ipak otkazujemo
         </Box>
         {error && <ErrorNote>{error}</ErrorNote>}
       </Box>
@@ -495,8 +543,9 @@ export function HomeArrival({t, busy, onAction}: {t: TournamentCard; busy: Arriv
             stop(e);
             onAction("cancel");
           }}
-          sx={{...quietButton, alignSelf: "flex-start", px: 0, height: 36}}
+          sx={leaveButton}
         >
+          <CloseRoundedIcon aria-hidden />
           Ipak otkazujemo
         </Box>
       </Box>

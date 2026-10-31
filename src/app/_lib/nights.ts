@@ -39,6 +39,17 @@ export function generateNights(start: string | null | undefined, end: string | n
   return nights;
 }
 
+// Dodaj večer's date to start with: the league's play day after its last night, today at the earliest ("" without a
+// play day)
+export function suggestedNightDate(nights: string[], today: string, playDay: number | null | undefined): string {
+  if (playDay == null) return "";
+  const last = nights.reduce((a, b) => (b > a ? b : a), "");
+  const lastTime = last ? utcTime(last) : null;
+  const from = lastTime != null && last >= today ? isoOf(lastTime + DAY_MS) : today;
+  const fromTime = utcTime(from);
+  return fromTime == null ? "" : (generateNights(from, isoOf(fromTime + 6 * DAY_MS), playDay)[0] ?? "");
+}
+
 // The nights without repeats, in date order
 export function sortNights(nights: string[]): string[] {
   return Array.from(new Set(nights)).sort();
@@ -125,6 +136,11 @@ export const timeLabel = (time: string | null | undefined) => time || "—";
 export function nightLabelLong(iso: string): string {
   const time = utcTime(iso);
   return time == null ? iso : `${nightLabel(iso)} ${new Date(time).getUTCFullYear()}.`;
+}
+
+// Obrisati odigranu večer? (Datumi): what goes with a night that has rounds
+export function playedNightRemovalText(iso: string, rounds: number): string {
+  return `Večer ${nightLabelLong(iso)} ima ${count(rounds, NOUN.odigranoKolo)}. Uz večer se brišu i ${rounds === 1 ? "to kolo" : "sva ta kola"} sa svim upisanim rezultatima, a poredak lige i rejting igrača računaju se ponovno. Ovo se ne može poništiti.`;
 }
 
 // The next night (tonight counts as next), or -1 when the season is over; nights are in date order

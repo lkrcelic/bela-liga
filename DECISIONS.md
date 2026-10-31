@@ -1456,3 +1456,78 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
       reopens it (it is active again) and the sign-ups' buttons come back with it.
     - **Natrag na popis**: the management page already has "← Turniri" next to the menu on the computer and ‹ on the
       phone, so nothing was added.
+
+78. **Datumi: moving a night, removing a played one** (your requests of 31.10.: "na kreiranoj večeri mogu sve
+    promijeniti osim za datume koji su prošli, njih mogu brisati, ali za odigrane datume ide notice jer se onda brišu i
+    kola… mora ići poseban modal" and "ne vidim dodaj večer gumb").
+    - **A night still to be played** (no rounds, not before today) changes everything in **Uredi večer** (until now
+      Okupljanje večeri): **Datum večeri**, the time and the place. Computer: a click on its row opens the card; phone:
+      a tap opens the sheet. `PATCH /api/leagues/{id}/nights/{date}` takes `date`. The new date must be free and today
+      or later (a night moved into the past couldn't be changed any more; Dodaj večer still adds a past one). The move
+      holds the league's lock, which round creation holds too, so no round lands on the night while it moves.
+    - **Burza igrača**: a team's ads for a substitute on that night move to the new date. Tu smo (arrivals) of the old
+      date stay where they are: they belong to the evening the team came on.
+    - **A night that has passed without rounds** can only be removed: the bin on its row, at once, no question (as the
+      computer already did). New on the phone, where only an upcoming night could be removed, inside its sheet.
+    - **A played night** (published rounds) has a bin too. It asks first in its own dialog, **Obrisati odigranu
+      večer?** (computer: a dialog, phone: a sheet), which says how many rounds it has and that they go with their
+      results and that standings and ratings are recalculated, with the red **Obriši večer i kola**. The server
+      (`DELETE …?with_rounds=1`) deletes every table of the night, drafts too, with its games, recalculates as deleting
+      a round in Kola does, and removes the night. Without `with_rounds` it still refuses a night with rounds, so
+      nothing removes a played night by accident. A night with only a Skica draft still says to discard it in Skica.
+    - **Dodaj večer on the computer** sat below the night's card, so on a laptop's screen its button was cut off or out
+      of view, in a column that scrolls without a scrollbar. It is now the first card on the right, above Uredi večer.
+      The phone's Dodaj was always at the top.
+
+79. **Dodaj večer as a button, and every night opens** (your request of 31.10. after #78: "dodaj večer mora biti kao
+    neki gumb sa strane ili gumb na vrhu koji otvara cijelu formu za večer, lokaciju, vrijeme i sve povuče iz postavka
+    lige ako ima. Kada se klikne na neki datum onda se otvore podaci tog datuma/večeri").
+    - **Dodaj večer** is a button: on the computer in the header of Večeri lige (beside "N odigrano · još M"), on the
+      phone full width under Sljedeća večer (the header's + stays Nova liga). It opens **Nova večer**: the computer's
+      card on the right, the phone's sheet. It is the same form as Uredi večer (Datum večeri, Vrijeme okupljanja,
+      Mjesto: Zadano lige or Drugo mjesto), with **Odustani** and **Dodaj večer**. After adding, the computer opens
+      the new night in Uredi večer; the phone closes the sheet.
+    - **From the league's settings**: the time starts as the league's and the place as "Zadano lige" (its place shown),
+      as Podaci/Postavke has them. The date starts on the league's play day after its last night, today at the
+      earliest; a league without a play day starts with an empty date. A time equal to the league's isn't kept as the
+      night's own, so the night follows a later change in Podaci. `POST /api/leagues/{id}/nights` now takes the
+      night's own place too.
+    - A new night may still be in the past (a night that was played but not added); only moving a night is limited to
+      today or later (#78).
+    - **Every night opens**: a click (computer) or tap (phone) on any row. One still to be played opens in Uredi večer.
+      One that has passed or has rounds opens read-only: its time, place and rounds ("3 odigrana kola" or "Nije
+      odigrana"), why it can't change, and **Makni večer** (passed without rounds, at once) or **Obriši večer i kola**
+      (played: Obrisati odigranu večer? first). The computer keeps the bin on each row as a shortcut; the phone's rows
+      lost the bins from #78 and all have the chevron, the actions are in the sheet.
+    - With nothing clicked, the computer's card shows the next night still to be played, as before.
+
+80. **Okupljanje and Početak in the league** (your request of 31.10.: "napravi kao za turnire: vrijeme od kad se
+    počinjemo okupljati je jedno, početak je nešto drugo. Početak je glavno vrijeme").
+    - The league and each night now have two times, as a tournament: **Okupljanje** (new `gathering_time`, migration
+      20261101120000_league_gathering_time) and **Početak** (the existing `start_time`, until now labelled "Vrijeme
+      okupljanja"). Both optional; a night's own wins over the league's, each on its own.
+    - **Početak is the main time**: Raspored's and Početna's "19:00 · Buffet HAŠK", Sljedeća večer, the date chips and
+      Tu smo all count from it, as before. Okupljanje is said beside it: "Okupljanje od 18:30" on Raspored's next-night
+      card and in Početna's place row ("Okupljanje od 18:30 · Donje Svetice 87"), as a tournament's page says it. The
+      list rows in Raspored and Datumi keep only Početak.
+    - **Tu smo opens at Okupljanje** (as in a tournament); without one, or with one that isn't before Početak, half an
+      hour before Početak as until now. A night without Početak still has no Tu smo.
+    - **Forms**: Okupljanje and Početak side by side (Novi turnir's two fields) in Nova liga (computer and phone),
+      Podaci and Postavke (the league's), and Dodaj večer / Uredi večer (the night's, starting with the league's;
+      under them "Zadano za ligu: okupljanje 18:30, početak 19:00." and "Ova večer ima svoje vrijeme." when it has).
+      Okupljanje at or after Početak isn't saved: "Okupljanje mora biti prije početka." (checked in the forms; the
+      server takes any two times, and Tu smo ignores an Okupljanje that isn't earlier). Vrati na zadano takes back
+      both of a night's own times.
+    - A night with its own Okupljanje is marked "Drugo vrijeme" ("!") in Datumi and Raspored; Datumi's row shows its
+      Početak bold only when Početak is its own.
+    - Existing leagues have no Okupljanje until an admin sets one in Podaci; nothing else changes for them.
+
+81. **The night's table is also the list of who is here** (your request of 31.10.: "dnevni poredak služi ne samo za
+    rezultate nego i dok liga ne počne da ljudi vide jesu li na današnjem popisu").
+    - **League · Dnevni poredak**: a team that has come (Tu smo, or the admin's switch in Novo kolo) and hasn't left is
+      in the night's table from then on with zeros, before its first table too. A team that pressed Odlazimo (or was
+      switched off) without playing drops out; one that played stays, as before. The order is unchanged: the 0 / 0
+      teams by name.
+    - **Tournament · Poredak**: until Kolo 1 is published only the teams that confirmed arrival (Tu smo or Označi
+      dolazak) are listed, not every signed-up team; from Kolo 1 on it is as before. With none yet: "Ekipe koje potvrde
+      dolazak bit će ovdje."

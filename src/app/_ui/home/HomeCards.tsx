@@ -3,6 +3,7 @@
 import {BurzaPost, MyLeague, MySchedule} from "@/app/_interfaces/burza";
 import {gatheringLabel, isSafeUrl, nextNightIndex, NightLocation, nightLabel, nightTimeLabel} from "@/app/_lib/nights";
 import {adCount, namesAndMore, teamsAsking, teamsLooking} from "@/app/_lib/ui/burza";
+import {leagueArrivalPhase} from "@/app/_lib/leagueArrival";
 import {initials} from "@/app/_lib/ui/text";
 import {TransitionLink} from "@/app/_lib/viewTransitions";
 import {color, font, shadow, tint} from "@/app/_styles/tokens";
@@ -16,7 +17,7 @@ import PersonSearchRoundedIcon from "@mui/icons-material/PersonSearchRounded";
 import PlaceRoundedIcon from "@mui/icons-material/PlaceRounded";
 import {Box, Skeleton} from "@mui/material";
 import React from "react";
-import {LeagueArrival} from "./LeagueArrival";
+import {LeagueArrival, useNow} from "./LeagueArrival";
 
 // Početna's Burza igrača cards (Claude Design "Burza igrača · spojeno", Početna)
 
@@ -33,7 +34,9 @@ export function nextNight(schedule: MySchedule | null): {league: MyLeague; night
 
 // Where the night gathers, on the navy card: a pin, "19:30 · Caffe bar Kartaš", the address, and Karta when the place
 // has a link (it opens Google Maps in a new tab or the Maps app)
-export function GatheringRow({time, place}: {time: string | null | undefined; place: NightLocation}) {
+// gathering: Okupljanje, "HH:MM", said under the time and place with the address
+export function GatheringRow({time, gathering, place}: {time: string | null | undefined; gathering?: string | null; place: NightLocation}) {
+  const sub = [gathering ? `Okupljanje od ${gathering}` : null, place.address].filter(Boolean).join(" · ");
   const map = place.url && isSafeUrl(place.url) ? place.url : null;
   return (
     <Box sx={{display: "flex", alignItems: "center", gap: "10px", p: "10px 10px 10px 12px", borderRadius: "14px", background: tint.creamOnNavy[16]}}>
@@ -42,9 +45,9 @@ export function GatheringRow({time, place}: {time: string | null | undefined; pl
         <Box component="span" sx={{fontSize: 15, fontWeight: 700, lineHeight: 1.3, overflowWrap: "anywhere"}}>
           {gatheringLabel(time, place)}
         </Box>
-        {place.address && (
+        {sub && (
           <Box component="span" sx={{fontSize: 13, lineHeight: 1.3, color: color.cream, overflowWrap: "anywhere"}}>
-            {place.address}
+            {sub}
           </Box>
         )}
       </Box>
@@ -64,12 +67,15 @@ export function GatheringRow({time, place}: {time: string | null | undefined; pl
 }
 
 // Sljedeća večer: the team, its players, where and when it gathers, and the night (opening Raspored); Nađi zamjenu
-// opens the substitute form. Tonight it holds Potvrda dolaska (Tu smo) when the night has a start time;
-// onArrivalChanged: a button there changed it (the schedule is asked again).
+// opens the substitute form until Tu smo opens (then the night is under way and the button goes). Tonight it holds
+// Potvrda dolaska (Tu smo) when the night has a start time; onArrivalChanged: a button there changed it (the schedule is asked again).
 export function NextNightCard({league, night, today, onArrivalChanged}: {league: MyLeague; night: string; today: string; onArrivalChanged?: () => void}) {
   const tonight = night === today;
   const arrival = league.arrival?.night === night ? league.arrival : null;
+  const now = useNow();
+  const findSub = !arrival || leagueArrivalPhase(arrival, now) === "before";
   const time = league.times[night];
+  const gathering = league.gatherings?.[night];
   const place = league.places?.[night];
   // "sri 14. 10. · 19:00", or only the date when the night has no start time; with a place, the time is in its row
   const when = place ? nightLabel(night) : nightTimeLabel(night, time);
@@ -109,33 +115,35 @@ export function NextNightCard({league, night, today, onArrivalChanged}: {league:
           </Box>
         ))}
       </Box>
-      {place && <GatheringRow time={time} place={place} />}
+      {place && <GatheringRow time={time} gathering={gathering} place={place} />}
       {arrival && <LeagueArrival leagueId={league.league_id} teamId={league.team_id} initial={arrival} onChanged={onArrivalChanged} />}
-      <Box
-        component={TransitionLink}
-        href={`/burza/novi/zamjena?from=home&league=${league.league_id}&night=${night}`}
-        sx={{
-          ...buttonBase,
-          height: 52,
-          borderRadius: "14px",
-          background: tint.creamOnNavy[16],
-          color: color.white,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: "8px",
-          px: "14px",
-          fontSize: 15,
-          fontWeight: 600,
-          textDecoration: "none",
-          transition: "background 160ms ease",
-          "&:hover": {background: tint.creamOnNavy[24]},
-          "& svg": {fontSize: 22, color: color.cream},
-        }}
-      >
-        <PersonSearchRoundedIcon aria-hidden />
-        Nađi zamjenu
-      </Box>
+      {findSub && (
+        <Box
+          component={TransitionLink}
+          href={`/burza/novi/zamjena?from=home&league=${league.league_id}&night=${night}`}
+          sx={{
+            ...buttonBase,
+            height: 52,
+            borderRadius: "14px",
+            background: tint.creamOnNavy[16],
+            color: color.white,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "8px",
+            px: "14px",
+            fontSize: 15,
+            fontWeight: 600,
+            textDecoration: "none",
+            transition: "background 160ms ease",
+            "&:hover": {background: tint.creamOnNavy[24]},
+            "& svg": {fontSize: 22, color: color.cream},
+          }}
+        >
+          <PersonSearchRoundedIcon aria-hidden />
+          Nađi zamjenu
+        </Box>
+      )}
     </Box>
   );
 }

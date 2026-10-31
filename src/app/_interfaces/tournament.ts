@@ -266,6 +266,8 @@ export type KoloTable = {
   active: boolean;
   open: boolean;
   ongoingMatches: {player_pair1_score: number; player_pair2_score: number}[];
+  // its matches played (the table rows' point difference once it's done, as the league's)
+  matches: {player_pair1_score: number; player_pair2_score: number}[];
   status: "DRAFT" | "APPROVED" | "PUBLISHED";
   // the admin's status of the table (Upit · 1:52, Nedolazak, Vrijeme isteklo, Preskočen…) and its line of explanation
   state?: TableState;

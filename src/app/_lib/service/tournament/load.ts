@@ -217,9 +217,11 @@ export async function loadSnapshots(ids: number[], viewer: Viewer | null, db: Db
       const published = tables.filter((t) => t.status === "PUBLISHED");
       const results = published.map(toResult);
       // the teams in that play or played (an inactive team that never sat at a table isn't listed), and any team that
-      // played and left
+      // played and left. Before Kolo 1 only the teams that confirmed arrival, so the players see they are on the list.
       const seated = new Set(published.flatMap((t) => [t.team1_id, t.team2_id]));
-      const listed = loadedEntries.filter((e) => e.status === "REGISTERED" && (e.active || e.excluded_at != null || seated.has(e.team_id)));
+      const listed = loadedEntries.filter(
+        (e) => e.status === "REGISTERED" && (published.length > 0 ? e.active || e.excluded_at != null || seated.has(e.team_id) : e.active && e.arrived_at != null)
+      );
       const totals = tournamentTotals(listed.map((e) => e.team_id), results);
       const standings = rankTeams(
         Array.from(totals.values()).map((t) => ({team_id: t.teamId, name: teams.get(t.teamId)?.name ?? `Ekipa ${t.teamId}`, totals: t})),

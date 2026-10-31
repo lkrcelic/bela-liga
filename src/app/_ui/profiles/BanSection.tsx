@@ -44,7 +44,7 @@ export function BanTag({ban, kind}: {ban: Pick<BanView, "until">; kind: "team" |
 }
 
 function setBy(ban: BanView): string {
-  const day = banDayShort(ban.created_at.slice(0, 10));
+  const day = banDayShort(leagueDateString(new Date(ban.created_at)));
   return ban.created_by ? `Postavio ${ban.created_by.split(" ")[0]}, ${day}` : `Postavila aplikacija, ${day} (nedolazak u 1. kolu)`;
 }
 
@@ -107,7 +107,8 @@ export default function BanSection({target, desktop = false}: {target: BanTarget
                   ? `Preko ekipe ${viaTeam.team_name}. Ne može prijaviti nijednu ekipu, a njegove ekipe ne igraju ni u ligi.`
                   : [
                       ban.until ? `Još ${banDaysLeft(ban.until, today)} ${banDaysLeft(ban.until, today) === 1 ? "dan" : "dana"}.` : null,
-                      `${setBy(ban)}.`,
+                      // the date ("31. 10.") already ends the sentence
+                      setBy(ban).replace(/\.?$/, "."),
                       teamBan
                         ? ban.players.length === 0
                           ? "Samo ekipa, ne igrači."

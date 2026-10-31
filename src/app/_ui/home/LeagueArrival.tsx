@@ -5,10 +5,11 @@ import {MyLeagueArrival} from "@/app/_interfaces/leagueArrival";
 import {banDay} from "@/app/_lib/bans";
 import {LeagueArrivalAction, leagueArrivalPhase} from "@/app/_lib/leagueArrival";
 import {color, tint} from "@/app/_styles/tokens";
-import {clockOf} from "@/app/_ui/tournaments/DayParts";
+import {clockOf, leaveButton} from "@/app/_ui/tournaments/DayParts";
 import {buttonBase, ConfirmSheet, Spinner} from "@/app/_ui/sp";
 import BlockRoundedIcon from "@mui/icons-material/BlockRounded";
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
+import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import HowToRegRoundedIcon from "@mui/icons-material/HowToRegRounded";
 import LockClockRoundedIcon from "@mui/icons-material/LockClockRounded";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
@@ -40,8 +41,6 @@ const lightButton = {
   "&:disabled": {opacity: 0.45},
 } as const;
 
-const quietButton = {...buttonBase, alignSelf: "flex-start", height: 36, color: color.cream, fontSize: 15, fontWeight: 700, textDecoration: "underline", textUnderlineOffset: "3px"} as const;
-
 // "Potvrdio Marko u 19:42", or the admin's switch in Novo kolo
 function arrivedLine(a: NonNullable<MyLeagueArrival["arrival"]>): string {
   const who = a.by_admin ? "Organizator je označio dolazak" : `Potvrdio ${a.by?.split(" ")[0] ?? "igrač"}`;
@@ -56,7 +55,7 @@ function banLine(ban: NonNullable<MyLeagueArrival["ban"]>): string {
 }
 
 // The time now, again every 20 s, so the window opens and the night starts on screen by themselves
-function useNow(): Date {
+export function useNow(): Date {
   const [now, setNow] = useState(() => new Date());
   useEffect(() => {
     const id = window.setInterval(() => setNow(new Date()), 20_000);
@@ -136,12 +135,14 @@ export function LeagueArrival({leagueId, teamId, initial, onChanged}: {leagueId:
           </>
         )}
         {phase === "started" ? (
-          <Box component="button" type="button" disabled={busy != null} onClick={() => setLeaving(true)} sx={quietButton}>
+          <Box component="button" type="button" disabled={busy != null} onClick={() => setLeaving(true)} sx={leaveButton}>
+            <LogoutRoundedIcon aria-hidden />
             Odlazimo
           </Box>
         ) : (
-          <Box component="button" type="button" disabled={busy != null} onClick={() => act("leave")} sx={quietButton}>
-            {busy === "leave" ? <Spinner size={18} tone="white" /> : "Ipak otkazujemo"}
+          <Box component="button" type="button" disabled={busy != null} onClick={() => act("leave")} sx={leaveButton}>
+            {busy === "leave" ? <Spinner size={18} tone="white" /> : <CloseRoundedIcon aria-hidden />}
+            Ipak otkazujemo
           </Box>
         )}
         {errorLine}

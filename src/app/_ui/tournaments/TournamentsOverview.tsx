@@ -14,7 +14,7 @@ import {StartCard} from "@/app/_ui/home/StartCard";
 import {ErrorNote} from "@/app/_ui/sp";
 import {Box} from "@mui/material";
 import React, {useState} from "react";
-import {ArrivalAction} from "./DayParts";
+import {ArrivalAction, LeaveRow} from "./DayParts";
 import {FinishedRow, NextTournamentCard, NoTournamentCard, ResultsButton, TodayCard, UpcomingCard} from "./PlayerParts";
 
 // Početna · Turniri (Claude Design "Natjecanja" S2–S4), also /turniri on its own: the card on top (the player's table
@@ -65,6 +65,16 @@ export default function TournamentsOverview({withBurza = false}: {withBurza?: bo
         <>
           <StartCard table={openTable} starting={game.starting} onStart={game.start} />
           {liveOfTable && <ResultsButton t={liveOfTable} />}
+          {liveOfTable?.phase === "active" && liveOfTable.me?.status === "REGISTERED" && (
+            <LeaveRow
+              title="Odlazite s turnira?"
+              text="Ekipa postaje Neaktivna i ne igra sljedeća kola. Odigrana kola ostaju u poretku."
+              onLeave={async () => {
+                await arrivalAPI(liveOfTable.id, "leave");
+                reload();
+              }}
+            />
+          )}
         </>
       ) : (tableLoading || !tournaments) && !error ? (
         <Box sx={{flex: "none", borderRadius: "24px", viewTransitionName: "table"}}>
