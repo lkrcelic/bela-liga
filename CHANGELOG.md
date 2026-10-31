@@ -9,6 +9,7 @@ On development, not live yet.
 ### Changed
 - Početna's Večeras card shows **Nađi zamjenu** only until **Tu smo** opens; from then on (Tu smo, Želimo uskočiti, the night under way) the button is gone.
 - **Odlazimo** (once the night or tournament has started) and **Ipak otkazujemo** (before it) are real buttons outlined in cream with an icon, no longer underlined text, in the league and on the tournament page.
+- Početna's **Započni igru** card has **Odlazimo** under it (league and tournament), a white row like Poredak i rezultati, so a team at its table can still leave; it asks first.
 
 ## 31.10.2026 · Poredak kao popis prisutnih
 
