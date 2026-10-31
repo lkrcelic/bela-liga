@@ -110,8 +110,8 @@ export const leaveButton = {
   "&:disabled": {opacity: 0.45},
 } as const;
 
-// Odlazimo under Započni igru on Početna (league and tournament): a white row like Poredak i rezultati, so the team
-// playing a table still sees how to leave; it asks first (title, text: what leaving means there)
+// Odlazimo under Započni igru on Početna (league and tournament): the cards' outlined cream button on navy, so the
+// team playing a table still sees how to leave; it asks first (title, text: what leaving means there)
 export function LeaveRow({title, text, onLeave}: {title: string; text: string; onLeave: () => Promise<void>}) {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -129,37 +129,9 @@ export function LeaveRow({title, text, onLeave}: {title: string; text: string; o
   };
   return (
     <>
-      <Box
-        component="button"
-        type="button"
-        onClick={() => setOpen(true)}
-        sx={{
-          ...buttonBase,
-          flex: "none",
-          minHeight: 64,
-          display: "flex",
-          alignItems: "center",
-          gap: "12px",
-          px: "16px",
-          py: "10px",
-          borderRadius: "20px",
-          background: color.white,
-          color: color.ink,
-          textAlign: "left",
-          boxShadow: shadow.card,
-          "&:active": {transform: "scale(.98)"},
-        }}
-      >
-        <LogoutRoundedIcon aria-hidden sx={{fontSize: 24, color: color.navy}} />
-        <Box sx={{flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: "1px"}}>
-          <Box component="span" sx={{fontSize: 16, fontWeight: 700}}>
-            Odlazimo
-          </Box>
-          <Box component="span" sx={{fontSize: 13, color: color.muted, fontWeight: 500}}>
-            Ekipa ne ulazi u iduće kolo
-          </Box>
-        </Box>
-        <ChevronRightRoundedIcon aria-hidden sx={{fontSize: 26, color: color.navy}} />
+      <Box component="button" type="button" onClick={() => setOpen(true)} sx={{...leaveButton, flex: "none", height: 52, background: color.navy, boxShadow: shadow.card, "&:hover": {background: color.navy}}}>
+        <LogoutRoundedIcon aria-hidden />
+        Odlazimo
       </Box>
       <ConfirmSheet open={open} onClose={() => setOpen(false)} onConfirm={leave} title={title} text={text} action="Odlazimo" icon={<LogoutRoundedIcon />} busy={busy} error={error} />
     </>
