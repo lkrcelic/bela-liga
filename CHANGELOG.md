@@ -11,6 +11,21 @@ On development, not live yet.
 - The same for the times under **Zadnje prijave** on the computer's list of tournaments, and for **Postavio …** on a ban (Ekipa and Igrač).
 - **Postavio …** on a ban no longer ends with two periods after the date.
 
+## 31.10.2026 · Liga: Okupljanje i Početak
+
+On development, not live yet (DECISIONS #80). Needs the migration 20261101120000_league_gathering_time on deploy.
+
+### Added for players
+- Raspored's next night and Početna's Sljedeća večer say **Okupljanje od 18:30** beside the start time and place.
+- **Tu smo** opens at Okupljanje (without one, half an hour before Početak, as before).
+
+### Added for the admin
+- **Okupljanje** and **Početak** side by side in Nova liga, Podaci, Postavke, Dodaj večer and Uredi večer; a night can have its own of either.
+- "Okupljanje mora biti prije početka." stops a save with the times the wrong way round.
+
+### Changed
+- The league's one time, until now **Vrijeme okupljanja**, is now **Početak**: the main time, shown everywhere as before.
+
 ## 31.10.2026 · Datumi: Dodaj večer, premjesti večer, obriši odigranu
 
 On development, not live yet (DECISIONS #78, #79).

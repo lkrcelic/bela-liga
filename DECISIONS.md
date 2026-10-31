@@ -1500,3 +1500,24 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
       (played: Obrisati odigranu večer? first). The computer keeps the bin on each row as a shortcut; the phone's rows
       lost the bins from #78 and all have the chevron, the actions are in the sheet.
     - With nothing clicked, the computer's card shows the next night still to be played, as before.
+
+80. **Okupljanje and Početak in the league** (your request of 31.10.: "napravi kao za turnire: vrijeme od kad se
+    počinjemo okupljati je jedno, početak je nešto drugo. Početak je glavno vrijeme").
+    - The league and each night now have two times, as a tournament: **Okupljanje** (new `gathering_time`, migration
+      20261101120000_league_gathering_time) and **Početak** (the existing `start_time`, until now labelled "Vrijeme
+      okupljanja"). Both optional; a night's own wins over the league's, each on its own.
+    - **Početak is the main time**: Raspored's and Početna's "19:00 · Buffet HAŠK", Sljedeća večer, the date chips and
+      Tu smo all count from it, as before. Okupljanje is said beside it: "Okupljanje od 18:30" on Raspored's next-night
+      card and in Početna's place row ("Okupljanje od 18:30 · Donje Svetice 87"), as a tournament's page says it. The
+      list rows in Raspored and Datumi keep only Početak.
+    - **Tu smo opens at Okupljanje** (as in a tournament); without one, or with one that isn't before Početak, half an
+      hour before Početak as until now. A night without Početak still has no Tu smo.
+    - **Forms**: Okupljanje and Početak side by side (Novi turnir's two fields) in Nova liga (computer and phone),
+      Podaci and Postavke (the league's), and Dodaj večer / Uredi večer (the night's, starting with the league's;
+      under them "Zadano za ligu: okupljanje 18:30, početak 19:00." and "Ova večer ima svoje vrijeme." when it has).
+      Okupljanje at or after Početak isn't saved: "Okupljanje mora biti prije početka." (checked in the forms; the
+      server takes any two times, and Tu smo ignores an Okupljanje that isn't earlier). Vrati na zadano takes back
+      both of a night's own times.
+    - A night with its own Okupljanje is marked "Drugo vrijeme" ("!") in Datumi and Raspored; Datumi's row shows its
+      Početak bold only when Početak is its own.
+    - Existing leagues have no Okupljanje until an admin sets one in Podaci; nothing else changes for them.
