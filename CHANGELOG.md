@@ -2,6 +2,13 @@
 
 What the commits changed for the people using the app, newest first. The reasons and details are in DECISIONS.md.
 
+## 31.10.2026 · Nađi zamjenu do Tu smo
+
+On development, not live yet.
+
+### Changed
+- Početna's Večeras card shows **Nađi zamjenu** only until **Tu smo** opens; from then on (Tu smo, Želimo uskočiti, the night under way) the button is gone.
+
 ## 31.10.2026 · Datum iza ponoći
 
 On development, not live yet.
