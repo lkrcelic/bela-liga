@@ -9,6 +9,7 @@ import BlockRoundedIcon from "@mui/icons-material/BlockRounded";
 import CallRoundedIcon from "@mui/icons-material/CallRounded";
 import ChatRoundedIcon from "@mui/icons-material/ChatRounded";
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
+import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
 import EmojiEventsRoundedIcon from "@mui/icons-material/EmojiEventsRounded";
 import EventAvailableRoundedIcon from "@mui/icons-material/EventAvailableRounded";
@@ -90,7 +91,7 @@ const lightButton = {
   "&:disabled": {opacity: 0.45},
 } as const;
 
-// Odlazimo during the night: a real button, outlined in cream, so the team sees how to leave
+// Odlazimo and Ipak otkazujemo: a real button, outlined in cream, so the team sees how to leave or cancel
 export const leaveButton = {
   ...buttonBase,
   height: 48,
@@ -108,8 +109,6 @@ export const leaveButton = {
   "& svg": {fontSize: 20},
   "&:disabled": {opacity: 0.45},
 } as const;
-
-const quietButton = {...buttonBase, alignSelf: "center", height: 44, px: "14px", borderRadius: "12px", color: color.cream, fontSize: 15, fontWeight: 700, textDecoration: "underline", textUnderlineOffset: "3px"} as const;
 
 // The warning under Tu smo
 function FakeWarning() {
@@ -235,8 +234,9 @@ export function ArrivalCard({t, busy, error, onAction, myTable}: {t: TournamentD
           {arrivedLine(me)}.{" "}
           {waiting ? `U ${closes} ulazite ako se oslobodi mjesto.` : `Prvo kolo počinje u ${closes}.`}
         </Box>
-        <Box component="button" type="button" onClick={() => onAction("cancel")} disabled={busy != null} sx={quietButton}>
-          {busy === "cancel" ? <Spinner size={18} tone="white" /> : "Ipak otkazujemo"}
+        <Box component="button" type="button" onClick={() => onAction("cancel")} disabled={busy != null} sx={leaveButton}>
+          {busy === "cancel" ? <Spinner size={18} tone="white" /> : <CloseRoundedIcon aria-hidden />}
+          Ipak otkazujemo
         </Box>
         {error && <ErrorNote>{error}</ErrorNote>}
       </Box>
@@ -515,8 +515,9 @@ export function HomeArrival({t, busy, onAction}: {t: TournamentCard; busy: Arriv
             stop(e);
             onAction("cancel");
           }}
-          sx={{...quietButton, alignSelf: "flex-start", px: 0, height: 36}}
+          sx={leaveButton}
         >
+          <CloseRoundedIcon aria-hidden />
           Ipak otkazujemo
         </Box>
       </Box>
