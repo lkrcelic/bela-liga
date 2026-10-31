@@ -8,6 +8,7 @@ On development, not live yet.
 
 ### Changed
 - Početna's Večeras card shows **Nađi zamjenu** only until **Tu smo** opens; from then on (Tu smo, Želimo uskočiti, the night under way) the button is gone.
+- **Odlazimo** (league night and tournament, once it has started) is a real button outlined in cream with an icon, no longer underlined text.
 
 ## 31.10.2026 · Poredak kao popis prisutnih
 

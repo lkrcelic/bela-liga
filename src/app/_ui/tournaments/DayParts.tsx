@@ -90,6 +90,25 @@ const lightButton = {
   "&:disabled": {opacity: 0.45},
 } as const;
 
+// Odlazimo during the night: a real button, outlined in cream, so the team sees how to leave
+export const leaveButton = {
+  ...buttonBase,
+  height: 48,
+  borderRadius: "14px",
+  border: `1.5px solid ${color.cream}`,
+  color: color.cream,
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: "8px",
+  fontSize: 16,
+  fontWeight: 700,
+  transition: "background 160ms ease",
+  "&:hover": {background: tint.creamOnNavy[16]},
+  "& svg": {fontSize: 20},
+  "&:disabled": {opacity: 0.45},
+} as const;
+
 const quietButton = {...buttonBase, alignSelf: "center", height: 44, px: "14px", borderRadius: "12px", color: color.cream, fontSize: 15, fontWeight: 700, textDecoration: "underline", textUnderlineOffset: "3px"} as const;
 
 // The warning under Tu smo
@@ -182,7 +201,8 @@ export function ArrivalCard({t, busy, error, onAction, myTable}: {t: TournamentD
           )}
         </Box>
         {t.phase === "active" && (
-          <Box component="button" type="button" onClick={() => setLeaving(true)} disabled={busy != null} sx={quietButton}>
+          <Box component="button" type="button" onClick={() => setLeaving(true)} disabled={busy != null} sx={leaveButton}>
+            <LogoutRoundedIcon aria-hidden />
             Odlazimo
           </Box>
         )}
