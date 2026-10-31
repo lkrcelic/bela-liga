@@ -86,7 +86,7 @@ export default function ResultsPage({id}: {id: number}) {
             {shown === 0 ? (
               <ScrollCard aria-label="Poredak turnira">
                 {standings.length === 0 ? (
-                  <EmptyState>Poredak će biti ovdje od prvog kola.</EmptyState>
+                  <EmptyState>{r.phase === "upcoming" ? "Ekipe koje potvrde dolazak bit će ovdje." : "Poredak će biti ovdje od prvog kola."}</EmptyState>
                 ) : (
                   <StandingsRows rows={finished && podium.length ? rest : standings} podium={finished && podium.length ? podium : undefined} head rowHref={signedIn ? standingsTeamHref : undefined} />
                 )}

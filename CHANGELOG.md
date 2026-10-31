@@ -9,6 +9,14 @@ On development, not live yet.
 ### Changed
 - Početna's Večeras card shows **Nađi zamjenu** only until **Tu smo** opens; from then on (Tu smo, Želimo uskočiti, the night under way) the button is gone.
 
+## 31.10.2026 · Poredak kao popis prisutnih
+
+On development, not live yet (DECISIONS #81).
+
+### Changed
+- **Dnevni poredak** in the league lists a team as soon as it presses **Tu smo** (or the admin switches it on), with zeros, so players see they are on tonight's list before the first round. A team that leaves without playing drops out.
+- A tournament's **Poredak** before Kolo 1 lists only the teams that confirmed arrival, not every signed-up team; empty, it says **Ekipe koje potvrde dolazak bit će ovdje.**
+
 ## 31.10.2026 · Datum iza ponoći
 
 On development, not live yet.

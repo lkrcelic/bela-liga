@@ -1521,3 +1521,13 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
     - A night with its own Okupljanje is marked "Drugo vrijeme" ("!") in Datumi and Raspored; Datumi's row shows its
       Početak bold only when Početak is its own.
     - Existing leagues have no Okupljanje until an admin sets one in Podaci; nothing else changes for them.
+
+81. **The night's table is also the list of who is here** (your request of 31.10.: "dnevni poredak služi ne samo za
+    rezultate nego i dok liga ne počne da ljudi vide jesu li na današnjem popisu").
+    - **League · Dnevni poredak**: a team that has come (Tu smo, or the admin's switch in Novo kolo) and hasn't left is
+      in the night's table from then on with zeros, before its first table too. A team that pressed Odlazimo (or was
+      switched off) without playing drops out; one that played stays, as before. The order is unchanged: the 0 / 0
+      teams by name.
+    - **Tournament · Poredak**: until Kolo 1 is published only the teams that confirmed arrival (Tu smo or Označi
+      dolazak) are listed, not every signed-up team; from Kolo 1 on it is as before. With none yet: "Ekipe koje potvrde
+      dolazak bit će ovdje."
