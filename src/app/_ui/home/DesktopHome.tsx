@@ -173,7 +173,7 @@ function TournamentStrip() {
         ? t.me.status === "WAITING"
           ? `Na listi čekanja · ${t.me.team_name}`
           : `Prijavljeni · ${t.me.team_name}`
-        : `${count(t.players, NOUN.igrač)} · ${t.registrations_open ? "prijave otvorene" : "prijave zatvorene"}`;
+        : `${count(t.teams, NOUN.ekipa)} · ${t.registrations_open ? "prijave otvorene" : "prijave zatvorene"}`;
   return (
     <Box
       component={TransitionLink}

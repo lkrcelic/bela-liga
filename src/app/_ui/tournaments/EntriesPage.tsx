@@ -28,7 +28,7 @@ export default function EntriesPage({id}: {id: number}) {
         </Display>
         {t && (
           <Box component="span" sx={{fontSize: 14, color: color.ink2}}>
-            {t.name} · {count(t.teams, NOUN.ekipa)} · {count(t.players, NOUN.igrač)}
+            {t.name} · {count(t.teams, NOUN.ekipa)}
           </Box>
         )}
       </Box>

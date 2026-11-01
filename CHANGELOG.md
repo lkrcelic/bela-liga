@@ -2,6 +2,13 @@
 
 What the commits changed for the people using the app, newest first. The reasons and details are in DECISIONS.md.
 
+## 02.11.2026 · Broj ekipa umjesto igrača
+
+On development, not live yet.
+
+### Changed
+- A tournament shows how many **teams** signed up ("1 ekipa", "12 ekipa"), not how many players, on its page, its card in the list, Početna's next-tournament card and Prijavljene ekipe; a team with more than two players no longer looks like several teams.
+
 ## 31.10.2026 · Nađi zamjenu do Tu smo
 
 On development, not live yet.
