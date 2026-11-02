@@ -3,7 +3,7 @@
 import {addHandAPI, deleteHandAPI, finishTableMatchAPI, getTablePadAPI, HandTarget, updateHandAPI} from "@/app/_fetchers/admin/daily";
 import {PadHand, PadMatch, TablePad} from "@/app/_interfaces/adminHand";
 import {currentMatchNumber, matchSlots, matchTabSub, roundWins} from "@/app/_lib/tableOverview";
-import {adminLineupHref, roundHref, tableHref, tableScopeOf} from "@/app/_lib/ui/tableScope";
+import {adminLineupHref, roundBackBy, roundHref, tableHref, tableScopeOf} from "@/app/_lib/ui/tableScope";
 import {
   addZvanje,
   blankEntry,
@@ -56,7 +56,7 @@ import GroupRoundedIcon from "@mui/icons-material/GroupRounded";
 import InfoRoundedIcon from "@mui/icons-material/InfoRounded";
 import {Box} from "@mui/material";
 import {useParams, useSearchParams} from "next/navigation";
-import React, {useCallback, useEffect, useState} from "react";
+import React, {useCallback, useEffect, useRef, useState} from "react";
 
 const THRESHOLD = 1001;
 type Step = "1" | "2" | "3";
@@ -64,6 +64,16 @@ type Step = "1" | "2" | "3";
 // How many entry steps were opened from the board in this tab, so saving goes back to the board in the browser's
 // history too (a reload in the middle doesn't know, and replaces the address instead)
 let stepsFromBoard = 0;
+
+// the path this document was loaded at (a reload or a link from outside), null when unknown
+function documentPath(): string | null {
+  try {
+    const entry = performance.getEntriesByType("navigation")[0];
+    return entry ? new URL(entry.name).pathname : null;
+  } catch {
+    return null;
+  }
+}
 
 // One of the table's two matches: played (finished), being played (ongoing with id), or the next one (ongoing
 // without id; its first hand starts it). null: a match that can't be played yet.
@@ -151,8 +161,8 @@ export default function TablePhone() {
   }
   const base = tableHref(scope, roundId);
   const round = roundHref(scope, {date: pad.date, roundNumber: pad.roundNumber, admin: true});
-  // back to the round the table was opened from (or, opened directly, to that night's round)
-  const toRound = () => (window.history.length > 1 ? router.back() : router.push(round, "back"));
+  // back to the round the table was opened from (or, opened directly or reloaded, to that night's round)
+  const toRound = () => (roundBackBy(documentPath(), base, window.history.length) === "back" ? router.back() : router.push(round, "back"));
   if (kraj) return <RoundEnd pad={pad} onBack={() => router.replace(base, "back")} />;
   if (pad.bye) {
     return (
@@ -242,20 +252,30 @@ function MatchPhone({
 
   // the hand opened (or a reload in the middle of entering it): the entry starts from it, or empty. A hand entered
   // by its points (Ručni unos) has no caller or zvanja to correct: step by step it starts afresh.
+  // A later step opened with no hand being entered (a reload, Back or Forward into an old step) has no caller, so its
+  // Spremi could never be enabled: the board instead. Not while a saved hand goes back to the board (the address
+  // still has the step for a moment).
+  const board = `${base}?mec=${number}`;
+  const leaving = useRef(false);
   useEffect(() => {
+    if (!korak) leaving.current = false;
     if (!igra || igra === entryFor) return;
-    if (igra === "new") setEntry(blankEntry());
-    else if (editing) setEntry(editing.manual ? blankEntry() : fromPadHand(editing));
-    else return;
+    const fresh = igra === "new" ? blankEntry() : editing ? (editing.manual ? blankEntry() : fromPadHand(editing)) : null;
+    if (!fresh) return;
+    if (korak && korak !== "1" && fresh.caller == null && !leaving.current) {
+      stepsFromBoard = 0;
+      router.replace(board, "back");
+      return;
+    }
+    setEntry(fresh);
     setEntryFor(igra);
     setError(null);
-  }, [igra, entryFor, editing]);
+  }, [igra, entryFor, editing, korak, board, router]);
   // steps 2 and 3 start with the left team picked, as the players' steps do
   useEffect(() => {
     if (korak === "2" || korak === "3") setEntry((s) => setActive(s, 1));
   }, [korak]);
 
-  const board = `${base}?mec=${number}`;
   const step = (k: Step, hand = igra ?? "new") => {
     stepsFromBoard += 1;
     router.push(`${board}&igra=${hand}&korak=${k}`);
@@ -267,6 +287,7 @@ function MatchPhone({
   const toBoard = () => {
     const n = stepsFromBoard;
     stepsFromBoard = 0;
+    leaving.current = true;
     setEntryFor(null);
     if (n > 0) navigateWithTransition(() => window.history.go(-n), "back");
     else router.replace(board, "back");

@@ -30,3 +30,10 @@ export function roundHref(scope: TableScope, {date, roundNumber, admin}: {date: 
 
 // What the way back is called when there is no round to name
 export const scopeHomeLabel = (scope: TableScope) => (scope.kind === "league" ? "Dnevni poredak" : "Turnir");
+
+// How the admin's scorepad goes back to its round: Back, when the round's page is the entry before it; by the round's
+// address when the tab has no history, or when the document was loaded at the table itself (a reload, a link from
+// outside), as what is behind it then isn't known: a reload in the middle of a hand leaves the hand's steps there.
+export function roundBackBy(loadedAt: string | null, tablePath: string, historyLength: number): "back" | "address" {
+  return historyLength > 1 && loadedAt !== tablePath ? "back" : "address";
+}

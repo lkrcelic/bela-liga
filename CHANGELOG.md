@@ -2,6 +2,13 @@
 
 What the commits changed for the people using the app, newest first. The reasons and details are in DECISIONS.md.
 
+## 02.11.2026 · Natrag na kolo nakon osvježavanja
+
+On development, not live yet.
+
+### Admin
+- On a table's scorepad, **Natrag na kolo N** goes to Dnevni poredak on that Kolo also after the page was reloaded in the middle of entering a hand; it no longer opens an empty Korak 2 whose Spremi can never be pressed. An old step reached with Back or Forward opens the table's board instead.
+
 ## 02.11.2026 · Broj ekipa umjesto igrača
 
 On development, not live yet.
