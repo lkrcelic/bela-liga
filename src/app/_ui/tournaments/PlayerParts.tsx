@@ -7,7 +7,7 @@ import {isSafeUrl, nightLabel} from "@/app/_lib/nights";
 import {daysUntilLabel, feeLabel, formatLabel, prizeSummary, rulesLabel} from "@/app/_lib/tournaments";
 import {teamInitial} from "@/app/_lib/ui/profiles";
 import {formatChange} from "@/app/_lib/ui/ratings";
-import {count, NOUN} from "@/app/_lib/ui/text";
+import {count, NOUN, plural} from "@/app/_lib/ui/text";
 import {TransitionLink, useTransitionRouter} from "@/app/_lib/viewTransitions";
 import {color, font, shadow, tint} from "@/app/_styles/tokens";
 import {GatheringRow} from "@/app/_ui/home/HomeCards";
@@ -74,11 +74,11 @@ export function TournamentHead({t, today}: {t: TournamentCard; today: string}) {
   );
 }
 
-// The bubbles of a few players and "44 igrača" (on navy or on a light band)
-// max: at most that many photos, the rest in the +N circle (a card row that shares the line with a button)
-export function PlayersCount({t, onNavy = false, max}: {t: Pick<TournamentCard, "avatars" | "players">; onNavy?: boolean; max?: number}) {
+// The bubbles of a few players and "12 ekipa" (on navy or on a light band): the teams signed up, not their players,
+// since a team can have more than two players
+// max: at most that many photos (a card row that shares the line with a button)
+export function TeamsCount({t, onNavy = false, max}: {t: Pick<TournamentCard, "avatars" | "teams">; onNavy?: boolean; max?: number}) {
   const avatars = max == null ? t.avatars : t.avatars.slice(0, max);
-  const more = t.players - avatars.length;
   return (
     <Box sx={{display: "flex", alignItems: "center", gap: "10px", minWidth: 0}}>
       {avatars.length > 0 && (
@@ -88,18 +88,13 @@ export function PlayersCount({t, onNavy = false, max}: {t: Pick<TournamentCard, 
               <InitialsAvatar name={a.name} src={a.photo_url} size={30} sx={{fontSize: 11}} />
             </Box>
           ))}
-          {more > 0 && (
-            <Box component="span" sx={{ml: "-9px", width: 30, height: 30, borderRadius: "50%", background: color.cream, color: color.navy, fontSize: 11, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: `0 0 0 2.5px ${onNavy ? color.navy : color.paper2}`}}>
-              +{more}
-            </Box>
-          )}
         </Box>
       )}
       <Box component="span" sx={{fontSize: 15, color: onNavy ? color.white : color.ink, whiteSpace: "nowrap"}}>
         <Box component="span" sx={{fontFamily: font.display, fontSize: onNavy ? 26 : 17, fontWeight: 800}}>
-          {t.players}
+          {t.teams}
         </Box>{" "}
-        {t.players === 1 ? "igrač" : "igrača"}
+        {plural(t.teams, ...NOUN.ekipa)}
       </Box>
     </Box>
   );
@@ -174,7 +169,7 @@ export function SignUpCard({t, meId, onSignUp, signedIn}: {t: TournamentDetail; 
           <LockRoundedIcon aria-hidden sx={{fontSize: 20, color: color.cream}} />
         )}
       </Box>
-      <PlayersCount t={t} onNavy />
+      <TeamsCount t={t} onNavy />
       {open && signedIn && t.my_ban ? (
         <BannedSignUp until={t.my_ban.until} />
       ) : open ? (
@@ -532,7 +527,7 @@ export function NextTournamentCard({t, arrival}: {t: TournamentCard; arrival?: {
         Prijavljeno
       </Box>
       <Box component="strong" sx={{fontFamily: font.display, fontSize: 20, fontWeight: 800}}>
-        {count(t.players, NOUN.igrač)}
+        {count(t.teams, NOUN.ekipa)}
       </Box>
     </Box>
   );
@@ -693,9 +688,9 @@ export function UpcomingCard({t}: {t: TournamentCard}) {
           </Box>
         </Box>
       </Box>
-      {/* on a narrow phone Vidi stranicu goes under the players, on the right */}
+      {/* on a narrow phone Vidi stranicu goes under the teams, on the right */}
       <Box sx={{display: "flex", alignItems: "center", flexWrap: "wrap", justifyContent: "space-between", gap: "8px 10px", p: "8px 8px 8px 12px", borderRadius: "16px", background: color.paper2}}>
-        <PlayersCount t={t} max={2} />
+        <TeamsCount t={t} max={2} />
         {t.me ? (
           <Box component="span" sx={{display: "flex", alignItems: "center", gap: "5px", fontSize: 14, fontWeight: 700, color: t.me.status === "WAITING" ? color.medal[0] : color.green, "& svg": {fontSize: 19}}}>
             {t.me.status === "WAITING" ? <HourglassTopRoundedIcon aria-hidden /> : <CheckCircleRoundedIcon aria-hidden />}

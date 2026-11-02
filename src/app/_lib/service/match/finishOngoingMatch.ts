@@ -2,7 +2,7 @@ import {prisma} from "@/app/_lib/prisma";
 import {BelaMatchAllIncluded, transformBelaMatch} from "@/app/_lib/helpers/databaseHelpers";
 import {matchWinner} from "@/app/_lib/bela/scoring";
 import {InvalidResultError} from "@/app/_lib/validation/validateResult";
-import {closeRound, lockRound} from "@/app/_lib/service/round/finish";
+import {closeRound, lockRound, roundAfterMatch, roundWinsIncrement} from "@/app/_lib/service/round/finish";
 import {combineDateAndTime} from "@/app/_lib/dates";
 import {timeWinner} from "@/app/_lib/gameTime";
 import {matchClock} from "@/app/_lib/service/match/timeLimit";
@@ -71,11 +71,11 @@ export async function finishOngoingMatch(ongoingMatchId: number, {byTime = false
     const round = await lockRound(tx, roundId);
     await tx.round.update({
       where: {id: roundId},
-      data: winner === 1 ? {team1_wins: {increment: 1}} : {team2_wins: {increment: 1}},
+      data: roundWinsIncrement(winner),
     });
 
     const playedMatches = await tx.match.count({where: {round_id: roundId}});
-    if (playedMatches >= round.matches_per_round) {
+    if (roundAfterMatch(playedMatches, round.matches_per_round) === "close") {
       await closeRound(tx, roundId);
       return {roundId, roundFinished: true, nextOngoingMatchId: null};
     }
