@@ -2,6 +2,13 @@
 
 What the commits changed for the people using the app, newest first. The reasons and details are in DECISIONS.md.
 
+## 03.11.2026 · Odigrani meč ostaje s pobjednikom
+
+On development, not live yet.
+
+### Admin
+- On a table's scorepad, changing or deleting a hand of a **finished match** is refused when the match would be left without a winner (e.g. "Meč bi ostao bez pobjednika (860:640, nitko nema 1001)."); before, the match silently counted for nobody and a 2:0 win could turn into a draw in the standings. Moving the win to the other team is still allowed.
+
 ## 02.11.2026 · Natrag na kolo nakon osvježavanja
 
 Live since 02.11. (1a0eff3).

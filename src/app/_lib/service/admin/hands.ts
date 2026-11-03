@@ -151,19 +151,42 @@ function assertDeclarations(declarations: boolean, result: BelaResultCreateReque
   if (error) throw new InvalidResultError(error);
 }
 
+type FinishedScore = {player_pair1_score: number; player_pair2_score: number; score_threshold: number | null; time_expired: boolean};
+
+// The winner of a finished match: the team over the threshold with more points, or for one closed by Vrijeme partije
+// the team with more points
+export function finishedMatchWinner(m: FinishedScore): 1 | 2 | null {
+  return m.time_expired
+    ? timeWinner(m.player_pair1_score, m.player_pair2_score)
+    : matchWinner(m.player_pair1_score, m.player_pair2_score, m.score_threshold ?? DEFAULT_THRESHOLD);
+}
+
+// A change of a finished match's hands may move its win to the other team, but never leave a match that had a winner
+// without one (the round would count it for neither team and turn a 2:0 into a draw)
+export function lostWinnerError(before: FinishedScore, after: FinishedScore): string | null {
+  if (finishedMatchWinner(before) == null || finishedMatchWinner(after) != null) return null;
+  const score = `${after.player_pair1_score}:${after.player_pair2_score}`;
+  const why = after.player_pair1_score === after.player_pair2_score ? score : `${score}, nitko nema ${after.score_threshold ?? DEFAULT_THRESHOLD}`;
+  return `Meč bi ostao bez pobjednika (${why}). Ispravi bodove tako da jedna ekipa i dalje pobjeđuje.`;
+}
+
 // After a finished match's hands changed: its score, the round's wins, and for a finished round the standings
-// (and the ratings when the round's outcome changed)
+// (and the ratings when the round's outcome changed). Refused when the match would be left without a winner.
 async function recountFinishedMatch(tx: Tx, matchId: number) {
   const sums = await tx.belaResult.aggregate({
     where: {match_id: matchId},
     _sum: {player_pair1_total_points: true, player_pair2_total_points: true},
   });
+  const before = await tx.match.findUniqueOrThrow({
+    where: {id: matchId},
+    select: {player_pair1_score: true, player_pair2_score: true, score_threshold: true, time_expired: true},
+  });
+  const score = {player_pair1_score: sums._sum.player_pair1_total_points ?? 0, player_pair2_score: sums._sum.player_pair2_total_points ?? 0};
+  const error = lostWinnerError(before, {...before, ...score});
+  if (error) throw new InvalidResultError(error);
   const match = await tx.match.update({
     where: {id: matchId},
-    data: {
-      player_pair1_score: sums._sum.player_pair1_total_points ?? 0,
-      player_pair2_score: sums._sum.player_pair2_total_points ?? 0,
-    },
+    data: score,
     select: {round_id: true},
   });
   if (match.round_id == null) return;
@@ -182,11 +205,8 @@ async function recountFinishedMatch(tx: Tx, matchId: number) {
       matches: {select: {player_pair1_score: true, player_pair2_score: true, score_threshold: true, time_expired: true}},
     },
   });
-  // a match without a winner (nobody over the threshold after an edit) counts for neither team; one closed by Vrijeme
-  // partije goes to the team with more points
-  const winners = round.matches.map((m) =>
-    m.time_expired ? timeWinner(m.player_pair1_score, m.player_pair2_score) : matchWinner(m.player_pair1_score, m.player_pair2_score, m.score_threshold ?? DEFAULT_THRESHOLD)
-  );
+  // a match without a winner (only one stored so before this guard) counts for neither team
+  const winners = round.matches.map(finishedMatchWinner);
   const team1Wins = winners.filter((w) => w === 1).length;
   const team2Wins = winners.filter((w) => w === 2).length;
   await tx.round.update({where: {id: round.id}, data: {team1_wins: team1Wins, team2_wins: team2Wins}});
