@@ -2,6 +2,13 @@
 
 What the commits changed for the people using the app, newest first. The reasons and details are in DECISIONS.md.
 
+## 04.11.2026 · Najnoviji igrači
+
+On development, not live yet.
+
+### Admin
+- The Igrači list (computer and phone) has **A–Ž | Najnoviji** under the search: Najnoviji puts the newest accounts first and shows on each row when the account was made ("od 03.11.2026"). The choice comes back with Back.
+
 ## 03.11.2026 · Odigrani meč ostaje s pobjednikom
 
 On development, not live yet.
