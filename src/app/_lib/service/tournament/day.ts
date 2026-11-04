@@ -14,6 +14,7 @@ import {TOURNAMENT_NOT_FOUND} from "./tournaments";
 type Tx = Prisma.TransactionClient;
 
 export const DAY_NOT_STARTED = "Potvrda dolaska još nije otvorena.";
+export const LAST_KOLO_MADE = "Zadnje kolo je već složeno: više se ne može uskočiti.";
 
 const isoDay = (d: Date) => d.toISOString().slice(0, 10);
 
@@ -125,9 +126,14 @@ export async function arrivalAction(tournamentId: number, viewer: Viewer, action
 }
 
 // After the start, a team that has come: an inactive team in plays from the next Kolo when there is room, else it waits
-// (on the waiting list, confirmed); a waiting team is confirmed and comes in when there is room
-async function joinFromNextKolo(tx: Tx, t: {tournament_id: number; max_teams: number | null}, teamId: number, by: {arrived_by: number | null; arrived_by_admin: boolean}, now: Date) {
+// (on the waiting list, confirmed); a waiting team is confirmed and comes in when there is room. Once the last Kolo is
+// made (a draft too) there is no next Kolo: a team that doesn't play can't join.
+async function joinFromNextKolo(tx: Tx, t: {tournament_id: number; max_teams: number | null; rounds: number}, teamId: number, by: {arrived_by: number | null; arrived_by_admin: boolean}, now: Date) {
   const entry = await tx.tournamentTeam.findUniqueOrThrow({where: entryKey(t.tournament_id, teamId)});
+  if (!(entry.status === "REGISTERED" && entry.active)) {
+    const made = await tx.round.count({where: {tournamentRounds: {some: {tournament_id: t.tournament_id}}, round_number: {gte: t.rounds}}});
+    if (made > 0) throw new InvalidResultError(LAST_KOLO_MADE);
+  }
   const arrival = entry.arrived_at ? {} : {arrived_at: now, ...by};
   if (entry.status === "REGISTERED") {
     if (entry.active) {

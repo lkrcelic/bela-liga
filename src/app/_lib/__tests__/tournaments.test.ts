@@ -353,3 +353,11 @@ test("a tournament whose day passed without starting isn't coming up for the pla
   assert.equal(isComingUp({phase: "upcoming", date: "2026-10-26"}, "2026-10-30"), false);
   assert.equal(isComingUp({phase: "active", date: "2026-10-31"}, "2026-10-30"), false);
 });
+
+test("joining ends once the last Kolo is made, a draft of it too", async () => {
+  const {lastKoloMade} = await import("@/app/_lib/tournaments");
+  const kolo = (number: number, published: boolean) => ({number, published, tables: 4, done: 0, live: 0});
+  assert.equal(lastKoloMade([kolo(1, true), kolo(2, true)], 3), false);
+  assert.equal(lastKoloMade([kolo(1, true), kolo(2, true), kolo(3, false)], 3), true);
+  assert.equal(lastKoloMade([kolo(1, true), kolo(2, true), kolo(3, true)], 3), true);
+});

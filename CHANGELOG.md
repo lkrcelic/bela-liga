@@ -2,6 +2,14 @@
 
 What the commits changed for the people using the app, newest first. The reasons and details are in DECISIONS.md.
 
+## 05.11.2026 · Nema uskakanja nakon zadnjeg kola
+
+On development, not live yet.
+
+### Players
+- **Liga**: once the night's last round (Kola po večeri) is published, a team that isn't here no longer gets **Tu smo · Želimo uskočiti** on Početna; the card says "Zadnje kolo večeri je već počelo, pa se više ne može uskočiti." The server refuses it too. A team already here can still press Odlazimo.
+- **Turniri**: once the last Kolo is made (a draft too), a team that doesn't play no longer gets **Tu smo · Želimo uskočiti** on the tournament's page or Početna ("Zadnje kolo je već složeno, pa se više ne može uskočiti."); the server refuses it, and the admin's Označi dolazak for a team that doesn't play as well.
+
 ## 04.11.2026 · Registracija: datum rođenja i korisničko ime
 
 On development, not live yet.

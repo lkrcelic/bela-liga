@@ -37,6 +37,12 @@ export function liveKolo(kolos: KoloSummary[]): number | null {
   return published.length > 0 && !kolosDone(published[0]) ? published[0].number : null;
 }
 
+// The tournament's last Kolo is made (a draft or published): there is no next Kolo to join, so Tu smo · Želimo
+// uskočiti isn't offered any more
+export function lastKoloMade(kolos: KoloSummary[], rounds: number): boolean {
+  return kolos.some((k) => k.number >= rounds);
+}
+
 // The most Kolos a tournament has (Tournament_rounds_check)
 export const KOLO_MAX = 20;
 
