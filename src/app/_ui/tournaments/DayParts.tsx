@@ -150,6 +150,9 @@ function FakeWarning() {
 
 export type ArrivalAction = "confirm" | "cancel" | "join" | "leave";
 
+// Once the last Kolo is made a team that doesn't play has no Kolo left to join
+const LAST_KOLO_TEXT = "Zadnje kolo je već složeno, pa se više ne može uskočiti.";
+
 // The tournament page's navy card for the team signed up (P2–P9): before the day, the window (Tu smo), confirmed (Ipak
 // otkazujemo), after the start without a confirmation (Želimo uskočiti), joined, waiting, and during the tournament
 // (Odlazimo). myTable: the Kolo and table being played, when there is one.
@@ -181,8 +184,10 @@ export function ArrivalCard({t, busy, error, onAction, myTable}: {t: TournamentD
             </Box>
           ) : (
             <>
-              <Box sx={{fontSize: 14.5, lineHeight: 1.45, color: color.cream}}>Ako ste stigli, javite se: ulazite čim se mjesto oslobodi, od sljedećeg kola.</Box>
-              {button("join", "Tu smo · Želimo uskočiti", <LoginRoundedIcon />)}
+              <Box sx={{fontSize: 14.5, lineHeight: 1.45, color: color.cream}}>
+                {t.last_kolo_made ? LAST_KOLO_TEXT : "Ako ste stigli, javite se: ulazite čim se mjesto oslobodi, od sljedećeg kola."}
+              </Box>
+              {!t.last_kolo_made && button("join", "Tu smo · Želimo uskočiti", <LoginRoundedIcon />)}
             </>
           )}
           {error && <ErrorNote>{error}</ErrorNote>}
@@ -195,9 +200,10 @@ export function ArrivalCard({t, busy, error, onAction, myTable}: {t: TournamentD
           <Eyebrow icon={<PersonOffRoundedIcon aria-hidden />}>{me.arrival ? "Ekipa ne igra" : "Niste potvrdili dolazak"}</Eyebrow>
           <TeamName me={me} />
           <Box sx={{fontSize: 14.5, lineHeight: 1.45, color: color.cream}}>
-            {t.phase === "active" ? "Turnir je počeo bez vas." : "Turnir počinje bez vas."} Ako ste stigli, uskočite: igrate od sljedećeg kola. Propuštena kola se ne broje.
+            {t.phase === "active" ? "Turnir je počeo bez vas." : "Turnir počinje bez vas."}{" "}
+            {t.last_kolo_made ? LAST_KOLO_TEXT : "Ako ste stigli, uskočite: igrate od sljedećeg kola. Propuštena kola se ne broje."}
           </Box>
-          {button("join", "Tu smo · Želimo uskočiti", <LoginRoundedIcon />)}
+          {!t.last_kolo_made && button("join", "Tu smo · Želimo uskočiti", <LoginRoundedIcon />)}
           {error && <ErrorNote>{error}</ErrorNote>}
         </Box>
       );
@@ -521,8 +527,8 @@ export function HomeArrival({t, busy, onAction}: {t: TournamentCard; busy: Arriv
     return (
       <Box sx={box} onClick={stop}>
         {head(<PersonOffRoundedIcon aria-hidden />, me.status === "WAITING" ? `Lista čekanja · ${me.position}.` : "Niste potvrdili dolazak")}
-        <Box sx={{fontSize: 14, lineHeight: 1.45, color: color.cream}}>Ako ste stigli, uskočite: igrate od sljedećeg kola.</Box>
-        {!(me.status === "WAITING" && me.arrival) && tuSmo(false, "Tu smo · Želimo uskočiti", "join")}
+        <Box sx={{fontSize: 14, lineHeight: 1.45, color: color.cream}}>{t.last_kolo_made ? LAST_KOLO_TEXT : "Ako ste stigli, uskočite: igrate od sljedećeg kola."}</Box>
+        {!t.last_kolo_made && !(me.status === "WAITING" && me.arrival) && tuSmo(false, "Tu smo · Želimo uskočiti", "join")}
       </Box>
     );
   }
