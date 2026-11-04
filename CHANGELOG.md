@@ -2,6 +2,13 @@
 
 What the commits changed for the people using the app, newest first. The reasons and details are in DECISIONS.md.
 
+## 04.11.2026 · Registracija: datum rođenja i korisničko ime
+
+On development, not live yet.
+
+### Players
+- **Registracija** refuses a birth date that doesn't exist (31. 2.), is in the future or before 1900 ("Neispravan datum rođenja."), and a username with spaces or other signs than a–z, numbers, dot and underscore, as Moj profil does; before, 31. 2. was saved as 3. 3. A username typed with capitals is saved lowercase.
+
 ## 04.11.2026 · Najnoviji igrači
 
 On development, not live yet.
