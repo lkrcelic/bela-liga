@@ -566,7 +566,7 @@ export function HomeArrival({t, busy, onAction}: {t: TournamentCard; busy: Arriv
     <Box sx={box} onClick={stop}>
       {head(<LockClockRoundedIcon aria-hidden />, "Potvrda dolaska")}
       <Box sx={{fontSize: 14, lineHeight: 1.45, color: color.cream}}>
-        Gumb se otvara na dan turnira u {opens}. Tada potvrdite da ste stigli (Tu smo). Do tada ne radi.
+        Gumb se otvara na dan turnira u {opens}. Tada potvrdite da ste stigli (Tu smo).
       </Box>
       {tuSmo(true)}
     </Box>
