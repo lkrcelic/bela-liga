@@ -2,6 +2,14 @@
 
 What the commits changed for the people using the app, newest first. The reasons and details are in DECISIONS.md.
 
+## 05.11.2026 · Prijava prije registracije
+
+On development, not live yet (DECISIONS #82).
+
+### Changed
+- **Sjedni za stol.** (a guest's Prijavi se on a tournament, or anything locked) has **Prijavi se** as its big button and **Nemaš račun? Registriraj se** under it; before, the big button was Napravi račun and led to Registracija.
+- Početna · Liga for a guest: the night's card has **Prijavi se** and **Nemaš račun? Registriraj se** under it, instead of only Napravi račun.
+
 ## 05.11.2026 · Turnir s jednom partijom: pobjeda 1 bod
 
 On development, not live yet.

@@ -1531,3 +1531,25 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
     - **Tournament · Poredak**: until Kolo 1 is published only the teams that confirmed arrival (Tu smo or Označi
       dolazak) are listed, not every signed-up team; from Kolo 1 on it is as before. With none yet: "Ekipe koje potvrde
       dolazak bit će ovdje."
+
+82. **Prijava first, Registracija on request** (your note of 05.11.: "ljudi prečesto završe na registration ekranu a
+    trebali bi na login. Login je osnova, registracija je samo ako nemaš acc i odeš registriraj se").
+    - **Where they came from**: the middleware, the session check and Prijava in the header and the menu already went
+      to Prijava. Registracija came from the guest's two big buttons: Napravi račun in "Sjedni za stol." (#75), which
+      every locked item and a tournament's Prijavi se open, and Napravi račun on Početna · Liga's night card.
+    - **Now**: both have Prijavi se as the big button (Prijava with `next`, as before) and "Nemaš račun? Registriraj
+      se" as the line under it, the sheet's earlier "Već imaš račun? Prijavi se" style. Prijava itself keeps "Nemaš
+      profil? Registriraj se". Reason: most people who see these are logged out, not new (a new phone, cleared
+      cookies, the app added to the home screen with cookies of its own), and the form on Registracija makes a second
+      account for them. Google on Registracija only logs into an account it knows.
+    - **The sheet's text**: "Za prijavu na turnir treba ti račun." / "Ovo vide samo igrači s računom." and then
+      "Prijavi se svojim, a ako ga još nemaš, registracija traje minutu." The earlier second sentence ("Traje minutu,
+      a s njim dobivaš i rejting, ligu…") spoke to someone making an account.
+    - **Not changed**: the invitation to a teammate (Nova ekipa, "Nema računa", #75) still links to Registracija: it
+      goes to someone the search didn't find, and its text says "napravi račun". Registracija has "Već imaš profil?
+      Prijavi se" for one who has an account after all.
+    - **Checked**: tsc, lint, unit tests (516 pass), and on the local copy as a guest at 390×844 and 375×667: the Liga
+      card and "Sjedni za stol." from Raspored and Rejting, Prijavi se to `/login?next=%2Fraspored`, Registriraj se to
+      `/signup?next=%2Fratings`, the sheet fits 375×667. **Not checked**: the sheet from a tournament's Prijavi se (the
+      local copy has no tournament open for sign-ups; the same sheet with the tournament's first sentence) and real
+      phones.

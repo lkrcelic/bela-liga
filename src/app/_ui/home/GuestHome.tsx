@@ -7,7 +7,6 @@ import {LeagueNightRow} from "@/app/_interfaces/league";
 import {leagueDateString} from "@/app/_lib/dates";
 import {currentLeagueHref} from "@/app/_lib/league";
 import {nightTimeLabel, seasonGlance} from "@/app/_lib/nights";
-import {authHref} from "@/app/_lib/publicPaths";
 import {TransitionLink} from "@/app/_lib/viewTransitions";
 import useGuestSheet from "@/app/_store/guestSheetStore";
 import {color, font, shadow, tint} from "@/app/_styles/tokens";
@@ -31,8 +30,9 @@ import React, {useEffect, useState} from "react";
 
 // Početna for someone without an account ("Gost i poziv" G1, G2): Prijava instead of the rating and the profile, the
 // switch Turniri · Liga (Turniri first, the pick remembered as a player's), the tournaments and Burza igrača as they
-// are, and the league locked: its next night with "Ligu prate i igraju samo igrači s računom" and Napravi račun, and
-// the tiles shown dimmed with a lock, opening "Sjedni za stol." On the computer, the same in the phone-wide column.
+// are, and the league locked: its next night with "Ligu prate i igraju samo igrači s računom", Prijavi se and under it
+// Registriraj se (as in "Sjedni za stol.", the login first), and the tiles shown dimmed with a lock, opening "Sjedni za
+// stol." On the computer, the same in the phone-wide column.
 export default function GuestHome() {
   const isDesktop = useIsDesktop();
   const [tab, setTab] = useState<HomeTab>(() => readHomeTab() ?? "turniri");
@@ -131,10 +131,20 @@ function GuestLeague() {
         </Box>
         <Box
           component={TransitionLink}
-          href={authHref("/signup", "/")}
+          href="/login"
           sx={{...buttonBase, height: 52, borderRadius: "16px", background: color.white, color: color.navy, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 700, textDecoration: "none"}}
         >
-          Napravi račun
+          Prijavi se
+        </Box>
+        <Box component="span" sx={{textAlign: "center", fontSize: 14.5, color: color.cream}}>
+          Nemaš račun?{" "}
+          <Box
+            component={TransitionLink}
+            href="/signup"
+            sx={{...buttonBase, display: "inline", fontWeight: 700, color: color.white, textDecoration: "underline", textUnderlineOffset: "3px"}}
+          >
+            Registriraj se
+          </Box>
         </Box>
       </Box>
 

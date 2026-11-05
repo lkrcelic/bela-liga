@@ -17,9 +17,11 @@ const SUITS = [
   {s: "♣", bg: color.cream, ink: color.ink, turn: 10},
 ];
 
-// "Sjedni za stol." ("Gost i poziv" G4): a navy sheet for someone without an account who pressed Prijavi se or something
-// locked. Napravi račun and Prijavi se both come back to the page that opened it (useGuestSheet's next). Mounted once
-// in the layout; nothing for a player who is logged in.
+// "Sjedni za stol." ("Gost i poziv" G4): a navy sheet for someone logged out who pressed Prijavi se or something
+// locked. Prijavi se is the big button and Registriraj se the line under it: most people who see this already have an
+// account (logged out, a new phone, the app on the home screen with its own cookies), so they shouldn't be led into
+// making a second one. Both come back to the page that opened it (useGuestSheet's next). Mounted once in the layout;
+// nothing for a player who is logged in.
 export default function GuestSheet() {
   const {open, next, why, close} = useGuestSheet();
   const signedIn = useAuthStore((s) => s.user != null);
@@ -69,23 +71,22 @@ export default function GuestSheet() {
           Sjedni za stol.
         </Box>
         <Box component="p" sx={{m: 0, fontSize: 16, lineHeight: 1.45, color: color.cream, textWrap: "pretty"}}>
-          {why === "signup"
-            ? "Za prijavu na turnir treba ti račun. Traje minutu, a s njim dobivaš i rejting, ligu i Burzu igrača."
-            : "Ovo vide samo igrači s računom. Traje minutu, a s njim dobivaš i rejting, ligu i prijave na turnire."}
+          {why === "signup" ? "Za prijavu na turnir treba ti račun." : "Ovo vide samo igrači s računom."} Prijavi se svojim, a ako ga još
+          nemaš, registracija traje minutu.
         </Box>
       </Box>
       <Box
         component={TransitionLink}
-        href={authHref("/signup", next)}
+        href={authHref("/login", next)}
         onClick={close}
         sx={{...link, height: 58, borderRadius: "18px", background: color.cream, color: color.ink, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 17, fontWeight: 700}}
       >
-        Napravi račun
+        Prijavi se
       </Box>
       <Box component="span" sx={{textAlign: "center", fontSize: 15, color: color.cream}}>
-        Već imaš račun?{" "}
-        <Box component={TransitionLink} href={authHref("/login", next)} onClick={close} sx={{...link, display: "inline", fontWeight: 700, color: color.white, textDecoration: "underline", textUnderlineOffset: "3px"}}>
-          Prijavi se
+        Nemaš račun?{" "}
+        <Box component={TransitionLink} href={authHref("/signup", next)} onClick={close} sx={{...link, display: "inline", fontWeight: 700, color: color.white, textDecoration: "underline", textUnderlineOffset: "3px"}}>
+          Registriraj se
         </Box>
       </Box>
     </Drawer>
