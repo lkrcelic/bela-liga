@@ -2,6 +2,13 @@
 
 What the commits changed for the people using the app, newest first. The reasons and details are in DECISIONS.md.
 
+## 07.11.2026 · Tu smo: jedan igrač je dovoljan, podebljano
+
+On development, not live yet.
+
+### Changed
+- **Potvrda dolaska**: the part saying one player is enough is now bold: on Početna before the tournament's window ("**jedan igrač stisne "Tu smo"**"), in the league's open window and in the sheet right after signing up for a tournament ("**Dovoljno je da potvrdi jedan od vas.**").
+
 ## 07.11.2026 · Natrag zatvara prozor
 
 On development, not live yet.

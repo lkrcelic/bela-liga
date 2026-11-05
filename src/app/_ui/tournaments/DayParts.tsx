@@ -459,7 +459,17 @@ export function BannedSignUp({until}: {until: string | null}) {
 export function JoinedSheet({open, onClose, t, team}: {open: boolean; onClose: () => void; t: TournamentDetail; team: string}) {
   const {opens, closes} = dayTimes(t);
   const steps = [
-    {title: `Od ${opens} potvrdi dolazak`, text: "Na stranici turnira klikni „Tu smo”. Dovoljno je da potvrdi jedan od vas."},
+    {
+      title: `Od ${opens} potvrdi dolazak`,
+      text: (
+        <>
+          Na stranici turnira klikni „Tu smo”.{" "}
+          <Box component="strong" sx={{fontWeight: 700}}>
+            Dovoljno je da potvrdi jedan od vas.
+          </Box>
+        </>
+      ),
+    },
     {title: `Bez potvrde do ${closes} ne igrate 1. kolo`, text: "Ako stignete kasnije, uskočite od sljedećeg kola."},
     {title: "Kasnite? Javite se organizatoru", text: "Broj organizatora je na stranici turnira (Nazovi · WhatsApp)."},
   ];
@@ -572,7 +582,11 @@ export function HomeArrival({t, busy, onAction}: {t: TournamentCard; busy: Arriv
     <Box sx={box} onClick={stop}>
       {head(<LockClockRoundedIcon aria-hidden />, "Potvrda dolaska")}
       <Box sx={{fontSize: 14, lineHeight: 1.45, color: color.cream}}>
-        {`Na dan turnira od ${opens} kad stignete, jedan igrač stisne "Tu smo" i ekipa ulazi u raspored.`}
+        Na dan turnira od {opens} kad stignete,{" "}
+        <Box component="strong" sx={{fontWeight: 700}}>
+          {`jedan igrač stisne "Tu smo"`}
+        </Box>{" "}
+        i ekipa ulazi u raspored.
       </Box>
       {tuSmo(true)}
     </Box>
