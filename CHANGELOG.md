@@ -2,6 +2,13 @@
 
 What the commits changed for the people using the app, newest first. The reasons and details are in DECISIONS.md.
 
+## 05.11.2026 · Registracija: najviše 20 računa na sat s jedne mreže
+
+On development, not live yet.
+
+### Players
+- **Registracija** takes at most 20 new accounts per hour from one address (counted in the database, so it holds on every server), so a script can't fill the player lists with junk accounts. The 21st gets "Previše registracija s ove mreže. Pokušaj ponovno za sat vremena."; a taken username or a wrong field doesn't count.
+
 ## 05.11.2026 · Nema uskakanja nakon zadnjeg kola
 
 On development, not live yet.
