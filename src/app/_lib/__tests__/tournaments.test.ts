@@ -17,6 +17,7 @@ import {
   prizeSummary,
   rankTeams,
   rulesLabel,
+  standingsOrderLabel,
   TableResult,
   tournamentPhase,
   lastKoloRemoval,
@@ -122,7 +123,7 @@ test("a whole tournament: 23 teams over 9 Kolos, nobody meets twice and no team 
     for (const [a, b] of pairs) {
       const bye = b === BYE_TEAM_ID;
       const wins1 = bye ? 2 : Math.floor(random() * 3);
-      tables.push({kolo, team1Id: a, team2Id: b, team1Wins: wins1, team2Wins: 2 - wins1, open: false, started: true, diff: bye ? 602 : Math.round((random() - 0.5) * 400), scored: true});
+      tables.push({kolo, team1Id: a, team2Id: b, team1Wins: wins1, team2Wins: 2 - wins1, open: false, started: true, diff: bye ? 602 : Math.round((random() - 0.5) * 400), scored: true, matches: 2});
     }
   };
   play(firstKoloPairs(ids, random), 1);
@@ -176,7 +177,7 @@ test("a player signs up with one team only", () => {
   assert.deepEqual(playersInOtherEntries([1, 2], []), []);
 });
 
-const table = (kolo: number, a: number, b: number, w1: number, w2: number, diff: number, open = false, started = true, scored = true): TableResult => ({
+const table = (kolo: number, a: number, b: number, w1: number, w2: number, diff: number, open = false, started = true, scored = true, matches = 2): TableResult => ({
   kolo,
   team1Id: a,
   team2Id: b,
@@ -186,6 +187,7 @@ const table = (kolo: number, a: number, b: number, w1: number, w2: number, diff:
   started,
   diff,
   scored,
+  matches,
 });
 
 test("the standings count tables played to the end: a win 2, a draw 1, the difference of every match, the bye too", () => {
@@ -203,6 +205,28 @@ test("the standings count tables played to the end: a win 2, a draw 1, the diffe
   const ranked = rankTeams([1, 2, 3, 4].map((id) => ({id, name: `T${id}`, totals: totals.get(id)!})));
   assert.deepEqual(ranked.map((t) => t.id), [3, 1, 4, 2]);
   assert.deepEqual(opponentsOf(tables).get(3), [BYE_TEAM_ID, 1]);
+});
+
+test("with one match a table (1 partija po kolu) a win is worth 1, the bye's and a no-show's too", () => {
+  const one = (kolo: number, a: number, b: number, w1: number, w2: number, diff: number) => table(kolo, a, b, w1, w2, diff, false, true, true, 1);
+  const tables = [one(1, 1, 2, 1, 0, 300), one(1, 3, BYE_TEAM_ID, 1, 0, 301), one(2, 1, 3, 0, 1, -150), one(2, 2, 4, 1, 0, 301)];
+  const totals = tournamentTotals([1, 2, 3, 4], tables);
+  assert.deepEqual(totals.get(1), {teamId: 1, played: 2, wins: 1, draws: 0, losses: 1, points: 1, difference: 150, live: false});
+  assert.deepEqual(totals.get(3), {teamId: 3, played: 2, wins: 2, draws: 0, losses: 0, points: 2, difference: 451, live: false});
+  assert.equal(totals.get(2)!.points, 1);
+  assert.equal(totals.get(4)!.points, 0);
+});
+
+test("a tournament that went to one match a table: each table counts by its own matches", () => {
+  // Kolo 1 at two matches a table (2:0, a win 2), Kolo 2 after Partija po kolu went to 1 (a win 1)
+  const tables = [table(1, 1, 2, 2, 0, 400), table(1, 3, 4, 1, 1, 20), table(2, 1, 3, 1, 0, 100, false, true, true, 1), table(2, 2, 4, 0, 1, -100, false, true, true, 1)];
+  const totals = tournamentTotals([1, 2, 3, 4], tables);
+  assert.deepEqual([1, 2, 3, 4].map((id) => totals.get(id)!.points), [3, 0, 1, 2]);
+});
+
+test("Poredak's order line says what a win is worth", () => {
+  assert.equal(standingsOrderLabel(2), "Redoslijed: bodovi (pobjeda 2, neriješeno 1), pa razlika bodova, pa međusobni omjer na turniru.");
+  assert.equal(standingsOrderLabel(1), "Redoslijed: bodovi (pobjeda 1), pa razlika bodova, pa međusobni omjer na turniru.");
 });
 
 test("equal points and difference go by name, in Croatian order", () => {

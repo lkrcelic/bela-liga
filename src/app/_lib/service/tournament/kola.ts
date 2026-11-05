@@ -41,6 +41,7 @@ const roundSelect = {
   team2_wins: true,
   active: true,
   attendance: true,
+  matches_per_round: true,
   matches: {select: {player_pair1_score: true, player_pair2_score: true}},
 } as const;
 
@@ -82,6 +83,7 @@ async function pairsFor(tx: Tx, number: number, rounds: RoundRow[], teamIds: num
       started: true,
       diff: r.matches.reduce((sum, m) => sum + m.player_pair1_score - m.player_pair2_score, 0),
       scored: r.attendance !== "SKIPPED",
+      matches: r.matches_per_round,
     }));
   const totals = tournamentTotals(teamIds, results);
   const names = new Map((await tx.team.findMany({where: {team_id: {in: teamIds}}, select: {team_id: true, team_name: true}})).map((t) => [t.team_id, t.team_name]));

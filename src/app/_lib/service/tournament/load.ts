@@ -258,6 +258,7 @@ export function toResult(t: LoadedTable): TableResult {
     started: tableStarted(t),
     diff: t.diff,
     scored: t.attendance !== "SKIPPED",
+    matches: t.matches_per_round,
   };
 }
 

@@ -104,6 +104,8 @@ export type TableResult = {
   diff: number;
   // false for a skipped table (Nedolazak za stol: nobody started or answered in 10 minutes): it isn't counted
   scored: boolean;
+  // the matches the table plays (Partija po kolu, 2 or 1): a match to 1001 is worth a point, so a table won is worth that many
+  matches: number;
 };
 
 export type TeamTotals = {
@@ -112,7 +114,7 @@ export type TeamTotals = {
   wins: number;
   draws: number;
   losses: number;
-  // a win 2, a draw 1
+  // a win 2 (1 with one match a table), a draw 1
   points: number;
   difference: number;
   // a table of the team is being played
@@ -120,8 +122,9 @@ export type TeamTotals = {
 };
 
 // Every team's totals from the tables played to the end, as in the league: a table won (more matches won) is a win,
-// equal matches a draw; the difference is of the points of every match played, the bye's 301:0 matches and a no-show's
-// 1001:700 too. A skipped table counts for nobody. Teams without a table yet have zeros.
+// worth a point a match (2, or 1 with one match a table), equal matches a draw (1); the difference is of the points of
+// every match played, the bye's 301:0 matches and a no-show's 1001:700 too. A skipped table counts for nobody. Teams
+// without a table yet have zeros.
 export function tournamentTotals(teamIds: number[], tables: TableResult[]): Map<number, TeamTotals> {
   const totals = new Map<number, TeamTotals>(
     teamIds.map((id) => [id, {teamId: id, played: 0, wins: 0, draws: 0, losses: 0, points: 0, difference: 0, live: false}])
@@ -149,13 +152,16 @@ export function tournamentTotals(teamIds: number[], tables: TableResult[]): Map<
       }
       if (!table.scored) continue;
       t.played += 1;
-      if (won > lost) t.wins += 1;
-      else if (won === lost) t.draws += 1;
-      else t.losses += 1;
+      if (won > lost) {
+        t.wins += 1;
+        t.points += table.matches;
+      } else if (won === lost) {
+        t.draws += 1;
+        t.points += 1;
+      } else t.losses += 1;
       t.difference += diff;
     }
   }
-  totals.forEach((t) => (t.points = 2 * t.wins + t.draws));
   return totals;
 }
 
@@ -211,6 +217,12 @@ export function daysUntilLabel(date: string, today: string): string {
 // Pravila igre's line: "1001 · zvanja" or "1001 · bez zvanja"
 export function rulesLabel(declarations: boolean): string {
   return declarations ? "1001 · zvanja" : "1001 · bez zvanja";
+}
+
+// How the standings are ordered, as Poredak tells the admin: a win is worth 1 with one match a table (no draws then)
+export function standingsOrderLabel(matchesPerRound: number): string {
+  const points = matchesPerRound === 1 ? "pobjeda 1" : "pobjeda 2, neriješeno 1";
+  return `Redoslijed: bodovi (${points}), pa razlika bodova, pa međusobni omjer na turniru.`;
 }
 
 // The format line: "9 kola" (two matches a table, as in a league) or "9 kola · 1 partija po kolu"

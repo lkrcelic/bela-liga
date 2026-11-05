@@ -20,6 +20,8 @@ const asResult = (t: LeagueTable): TableResult => ({
   started: true,
   diff: t.diff,
   scored: true,
+  // the league counts a table won 2 (update_team_score)
+  matches: 2,
 });
 
 // The rows in the league's order; of: a row's numbers. Without tables the head-to-head can't decide, and the name does.

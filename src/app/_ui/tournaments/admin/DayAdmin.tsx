@@ -323,5 +323,3 @@ export function ExcludedStandings({t}: {t: AdminTournament}) {
     </Box>
   );
 }
-
-export const STANDINGS_ORDER = "Redoslijed: bodovi (pobjeda 2, neriješeno 1), pa razlika bodova, pa međusobni omjer na turniru.";

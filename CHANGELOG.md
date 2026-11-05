@@ -2,6 +2,16 @@
 
 What the commits changed for the people using the app, newest first. The reasons and details are in DECISIONS.md.
 
+## 05.11.2026 · Turnir s jednom partijom: pobjeda 1 bod
+
+On development, not live yet.
+
+### Players
+- **Turniri**: in a tournament with **1 partija po kolu** a won table counts **1 bod** in Poredak (one partija to 1001 is worth one point); before, it counted 2. With two partije it stays 2 for a win and 1 for a draw. Tournaments already played show the new points too, and the Kolos made from now on are paired by them.
+
+### Admin
+- Poredak's note says **pobjeda 1** for a tournament with one partija po kolu, **pobjeda 2, neriješeno 1** for two.
+
 ## 05.11.2026 · Registracija: najviše 20 računa na sat s jedne mreže
 
 On development, not live yet.
