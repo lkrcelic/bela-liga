@@ -2,6 +2,13 @@
 
 What the commits changed for the people using the app, newest first. The reasons and details are in DECISIONS.md.
 
+## 06.11.2026 · Uredi večer i Nova večer na mobitelu
+
+On development, not live yet.
+
+### Admin
+- **Datumi** on the phone: in **Uredi večer** and **Nova večer** the fields scroll inside the sheet and **Spremi**, **Vrati na zadano**, **Makni večer** and **Dodaj večer** stay under them, so **Drugo mjesto**, an error or the keyboard no longer pushes them off the screen (iPhone SE, 360 px Android).
+
 ## 05.11.2026 · Prijava prije registracije
 
 On development, not live yet (DECISIONS #82).
