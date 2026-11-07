@@ -21,6 +21,7 @@ import {
   TableResult,
   tournamentPhase,
   koloRemovalOf,
+  koloRemovalWarns,
   removesResults,
   tournamentStatus,
   tournamentTotals,
@@ -97,23 +98,27 @@ test("Swiss: a meeting nobody can avoid is made and reported", () => {
   assert.deepEqual(swissPairs([]).pairs, []);
 });
 
-test("Obriši kolo: a Kolo nobody has made is one line of the plan; a made one takes the made Kolos after it", () => {
+test("Obriši kolo: any Kolo in any state goes, the tournament is one shorter, and made Kolos after it go with it", () => {
   const kolo = (number: number, published: boolean, played: boolean, done: boolean) => ({number, published, played, done});
   const played1 = kolo(1, true, true, true);
+  const live1 = kolo(1, true, true, false);
 
   // a tournament of one Kolo keeps it, and a number outside the plan is nothing to delete
   assert.equal(koloRemovalOf(1, 1, []), null);
+  assert.equal(koloRemovalOf(1, 1, [live1]), null);
   assert.equal(koloRemovalOf(3, 4, []), null);
   assert.equal(koloRemovalOf(3, 0, []), null);
 
-  // --- nothing made: deleting any of them only shortens the plan, and the rest move up a number ------------------
+  // --- nothing made: deleting any of them only shortens the plan ------------------------------------------------
   assert.deepEqual(koloRemovalOf(4, 2, []), {number: 2, step: "waiting", alsoGo: [], rounds: 3, ends: false, resultsGo: false});
-  assert.deepEqual(koloRemovalOf(4, 4, []), {number: 4, step: "waiting", alsoGo: [], rounds: 3, ends: false, resultsGo: false});
-  // Kolo 1 played, Kolo 3 of 3 still to come: one Kolo less, Kolo 2 stays as it is
-  assert.deepEqual(koloRemovalOf(3, 3, [played1]), {number: 3, step: "waiting", alsoGo: [], rounds: 2, ends: false, resultsGo: false});
+  assert.deepEqual(koloRemovalOf(4, 1, []), {number: 1, step: "waiting", alsoGo: [], rounds: 3, ends: false, resultsGo: false});
+  // the last one of the plan, with everything before it played: what stays is all played, so the tournament is over
+  assert.deepEqual(koloRemovalOf(2, 2, [played1]), {number: 2, step: "waiting", alsoGo: [], rounds: 1, ends: true, resultsGo: false});
+  // the same Kolo while Kolos are still to come after it: not the end
+  assert.deepEqual(koloRemovalOf(3, 2, [played1]), {number: 2, step: "waiting", alsoGo: [], rounds: 2, ends: false, resultsGo: false});
 
-  // --- a made Kolo: it and every made Kolo after it go, and the tournament ends before it ------------------------
-  const draft = koloRemovalOf(2, 2, [played1, kolo(2, false, false, false)]);
+  // --- a made Kolo: its tables go, and so do those of every made Kolo after it -----------------------------------
+  const draft = koloRemovalOf(2, 2, [played1, kolo(2, false, false, false)])!;
   assert.deepEqual(draft, {number: 2, step: "draft", alsoGo: [], rounds: 1, ends: true, resultsGo: false});
   assert.deepEqual(koloRemovalOf(2, 2, [played1, kolo(2, true, false, false)]), {number: 2, step: "out", alsoGo: [], rounds: 1, ends: true, resultsGo: false});
 
@@ -121,22 +126,32 @@ test("Obriši kolo: a Kolo nobody has made is one line of the plan; a made one t
   const live = koloRemovalOf(2, 2, [played1, kolo(2, true, true, false)])!;
   assert.deepEqual(live, {number: 2, step: "live", alsoGo: [], rounds: 1, ends: true, resultsGo: true});
   assert.equal(removesResults(live), true);
-  assert.equal(removesResults(draft!), false);
+  assert.equal(removesResults(draft), false);
   assert.equal(removesResults(koloRemovalOf(3, 3, [])!), false);
 
-  // Kolo 2 of four, with Kolos 3 and 4 made from its results: all three go and the tournament is left with Kolo 1
+  // Kolo 2 of four, with Kolos 3 and 4 made from its results: all three go, and the plan is left with three Kolos
   const middle = koloRemovalOf(4, 2, [played1, kolo(2, true, true, true), kolo(3, true, true, true), kolo(4, false, false, false)])!;
-  assert.deepEqual(middle, {number: 2, step: "played", alsoGo: [3, 4], rounds: 1, ends: true, resultsGo: true});
+  assert.deepEqual(middle, {number: 2, step: "played", alsoGo: [3, 4], rounds: 3, ends: false, resultsGo: true});
   assert.equal(removesResults(middle), true);
-  // the same, but only a draft follows it: nothing played goes, so no warning about results
+  // only a draft follows it: nothing played goes, so no warning about results — but the draft still goes
   const withDraft = koloRemovalOf(3, 2, [played1, kolo(2, true, false, false), kolo(3, false, false, false)])!;
-  assert.deepEqual(withDraft, {number: 2, step: "out", alsoGo: [3], rounds: 1, ends: true, resultsGo: false});
+  assert.deepEqual(withDraft, {number: 2, step: "out", alsoGo: [3], rounds: 2, ends: false, resultsGo: false});
   assert.equal(removesResults(withDraft), false);
 
-  // a made Kolo 1 can never go: the tournament would have none left
-  assert.equal(koloRemovalOf(3, 1, [played1]), null);
-  // but Kolo 1 of a plan where nothing is made is just one line less
-  assert.deepEqual(koloRemovalOf(3, 1, []), {number: 1, step: "waiting", alsoGo: [], rounds: 2, ends: true, resultsGo: false});
+  // --- Kolo 1 goes too, whatever state it is in (your screenshot: Kolo 1 Uživo, Kola 2-5 Čeka) -------------------
+  const first = koloRemovalOf(5, 1, [live1])!;
+  assert.deepEqual(first, {number: 1, step: "live", alsoGo: [], rounds: 4, ends: false, resultsGo: true});
+  assert.equal(removesResults(first), true);
+  // a played Kolo 1 with two more played after it: all three go and the plan has four Kolos left, none played
+  const restart = koloRemovalOf(5, 1, [played1, kolo(2, true, true, true), kolo(3, true, true, true)])!;
+  assert.deepEqual(restart, {number: 1, step: "played", alsoGo: [2, 3], rounds: 4, ends: false, resultsGo: true});
+
+  // --- the warning sign: anything but a Kolo nobody has made yet -------------------------------------------------
+  assert.equal(koloRemovalWarns(koloRemovalOf(4, 2, [])!), false);
+  assert.equal(koloRemovalWarns(draft), true);
+  assert.equal(koloRemovalWarns(first), true);
+  // a waiting Kolo that still drags a made one along is a warning too
+  assert.equal(koloRemovalWarns({number: 2, step: "waiting", alsoGo: [3], rounds: 3, ends: false, resultsGo: false}), true);
 });
 
 test("a whole tournament: 23 teams over 9 Kolos, nobody meets twice and no team has two byes", () => {

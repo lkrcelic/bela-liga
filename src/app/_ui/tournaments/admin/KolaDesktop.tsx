@@ -6,7 +6,7 @@ import {AdminTournament, KoloView} from "@/app/_interfaces/tournament";
 import {isByeTeam} from "@/app/_lib/bye";
 import {KoloPair} from "@/app/_lib/matching/tournamentPairing";
 import {nightLabel} from "@/app/_lib/nights";
-import {KOLO_MAX, KoloRemoval, koloRemovalOf, koloSteps, removesResults} from "@/app/_lib/tournaments";
+import {KOLO_MAX, KoloRemoval, koloRemovalOf, koloRemovalWarns, koloSteps, removesResults} from "@/app/_lib/tournaments";
 import {filterTables, TableFilter, tableColumns, TableRow, toTableRows} from "@/app/_lib/ui/tables";
 import useElementHeight from "@/app/_hooks/useElementHeight";
 import {count, NOUN} from "@/app/_lib/ui/text";
@@ -75,7 +75,7 @@ export function koloRemoval(t: AdminTournament, n: number): KoloRemoval | null {
   );
 }
 
-// What deleting this Kolo does, for its confirmation (a warning when results go too)
+// What deleting this Kolo does, for its confirmation: what goes with it, and what the tournament is left with
 export function koloRemovalText(r: KoloRemoval): string {
   const what = {
     waiting: `Kolo ${r.number} još nije složeno, pa se ništa ne briše. `,
@@ -88,7 +88,9 @@ export function koloRemovalText(r: KoloRemoval): string {
   const after = r.alsoGo.length
     ? `${r.alsoGo.length === 1 ? `I Kolo ${r.alsoGo[0]} se briše` : `Brišu se i kola ${r.alsoGo.join(", ")}`}, jer su složena po rezultatima ovog. `
     : "";
-  return `${what}${after}Turnir će imati ${count(r.rounds, NOUN.kolo)}.${r.ends ? " Sva kola prije njega su odigrana, pa je turnir time završen." : ""}`;
+  // the plan is one Kolo shorter, so whatever was after it keeps its place a number lower
+  const shift = r.number <= r.rounds ? "Kola iza njega pomiču se za jedan broj. " : "";
+  return `${what}${after}${shift}Turnir će imati ${count(r.rounds, NOUN.kolo)}.${r.ends ? " Sva kola koja ostaju su odigrana, pa je turnir time završen." : ""}`;
 }
 
 export const koloRemovalTitle = (r: KoloRemoval) => (removesResults(r) ? `Obrisati Kolo ${r.number} s rezultatima?` : `Obrisati Kolo ${r.number}?`);
@@ -520,7 +522,7 @@ function DeleteKoloDialog({removal, busy, error, onClose, onConfirm}: {removal: 
         {koloRemovalTitle(removal)}
       </Box>
       <Box sx={{display: "flex", gap: "12px", alignItems: "flex-start", p: "14px", borderRadius: "16px", background: tint.red[8], "& > svg": {fontSize: 26, color: color.red, flex: "none"}}}>
-        {removesResults(removal) ? <WarningRoundedIcon aria-hidden /> : <DeleteRoundedIcon aria-hidden />}
+        {koloRemovalWarns(removal) ? <WarningRoundedIcon aria-hidden /> : <DeleteRoundedIcon aria-hidden />}
         <Box component="p" sx={{m: 0, fontSize: 15, lineHeight: 1.5, color: color.ink}}>
           {koloRemovalText(removal)}
         </Box>

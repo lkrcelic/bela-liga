@@ -7,11 +7,12 @@ What the commits changed for the people using the app, newest first. The reasons
 Not deployed yet (DECISIONS #87).
 
 ### Admin
-- **Kola** na turniru: kanta je sad pored **svakog** kola, ne samo zadnjeg.
-- Kolo koje još nije složeno samo nestaje iz plana — kola iza njega pomaknu se za jedan broj i turnir ima jedno kolo manje. Ništa se ne briše.
-- Kolo koje **je** složeno povlači sa sobom i sva složena kola iza njega, jer su ona složena po njegovim rezultatima; turnir tada završava na kolima prije njega. Potvrda to izričito kaže ("Brišu se i kola 3, 4, jer su složena po rezultatima ovog.").
-- Ako se za stolovima kola koja se brišu već igralo, potvrda nosi **upozorenje** i piše **Obriši s rezultatima** — rezultati i rejting se tada računaju ponovo.
+- **Kola** na turniru: kanta je sad pored **svakog** kola, u bilo kojem statusu — Čeka, Skica, Objavljeno, Uživo ili Odigrano.
+- Turnir uvijek ima jedno kolo manje nakon brisanja, a kola iza obrisanog pomiču se za jedan broj.
+- Briše se ono što je složeno: stolovi tog kola i **svih složenih kola iza njega**, jer su ona složena po njegovim rezultatima. Kolo koje još nije složeno zato ne briše ništa — samo skrati plan. A brisanje Kola 1 usred turnira očisti odigrano i ostavi plan spreman da se složi ponovo.
+- Svako brisanje pita prije. Kolo koje nije u statusu **Čeka** nosi **upozorenje** i rečenicu po posljedici ("Brišu se i kola 3, 4, jer su složena po rezultatima ovog."). Ako se za nekim od tih stolova stvarno igralo, gumb piše **Obriši s rezultatima** i rejting se računa ponovo.
 - Turnir uvijek ostaje s barem jednim kolom.
+- Brisanje kola može admin na svim turnirima, a organizator samo na svojima.
 
 ## 07.11.2026 · Organizator: nova rola
 

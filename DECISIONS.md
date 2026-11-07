@@ -1704,5 +1704,19 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
       `alsoGo` (the Kolos that go with it), `rounds` (what is left) and `resultsGo`. On the phone every row of Kola has
       its own bin; on the computer the bin in the header deletes the Kolo that is open, which is the same thing with
       one Kolo on screen at a time.
-    - **Checked**: unit tests for the new rule (a plan with nothing made, a draft, one out, one being played, one
-      played, a middle Kolo with two made after it, and Kolo 1 in both states), tsc, lint, build.
+    - **Changed the same day, after you saw it** (screenshot of Kolo 1 "Uživo" with no bin: "Želim moći birati i kolo
+      u bilo kojem statusu. Kada brišem kolo koje nije u statusu 'čeka' dolazi mi modal neki jesam li siguran koje su
+      posljedice."): the first rule set the plan to `n - 1`, so a made Kolo 1 could never go (the tournament would
+      have none). The rule is now **the tournament is always one Kolo shorter**, whichever Kolo goes, and the Kolos
+      after it move up a number. What is *deleted* is unchanged: this Kolo's tables and those of every made Kolo
+      after it. So deleting Kolo 1 while it is being played clears what was played and leaves the plan one shorter,
+      ready to be made again — and the bin is on every row whatever the state.
+    - **The modal**: every bin asks first. A Kolo nobody has made yet gets the plain bin icon; **anything else** — a
+      draft, tables out, being played, played, or a Kolo that drags a made one with it — gets the warning triangle and
+      a sentence per consequence. "Obriši s rezultatima" and `?rezultati=1` stay only for the case where someone has
+      really sat down at one of the tables that go.
+    - **Who may**: the same as every other change to a tournament — an admin on any, an organizer on the ones they
+      made (`requireCan("tournament.manage.own")` then `refuseUnlessMine`, DECISIONS #86).
+    - **Checked**: unit tests for the new rule (nothing made, a draft, one out, one being played, one played, a middle
+      Kolo with two made after it, Kolo 1 live, Kolo 1 with two played Kolos after it, and the warning sign), tsc on
+      the files of this change, lint.

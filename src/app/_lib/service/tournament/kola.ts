@@ -214,13 +214,13 @@ export async function addKolo(tournamentId: number, n: number): Promise<void> {
   await ensureNextKoloDraft(tournamentId);
 }
 
-// Obriši kolo (the bin on every Kolo of Kola, DECISIONS #87): the tournament keeps at least one Kolo. A Kolo nobody
-// has made, with nothing made after it, is only a line in the plan — it goes, the Kolos after it move up a number and
-// the tournament is one shorter, with nothing deleted. A Kolo that IS made takes every made Kolo after it with it,
-// because those were paired by its results, and the tournament ends with the Kolos before it; their tables go too
-// (the bye's). A Kolo someone has played at goes only with withResults (the admin saw the warning): its games, the
-// ones being played too, go, and ratings are counted again without them. A second tap that finds it gone changes
-// nothing. A tournament whose Kolos are then all played is over.
+// Obriši kolo (the bin on every Kolo of Kola, whatever its state, DECISIONS #87): the tournament is one Kolo shorter
+// and keeps at least one, and the Kolos after the deleted one move up a number. What is deleted is this Kolo's tables
+// (the bye's too) and those of every made Kolo after it, because those were paired by its results — so deleting a
+// Kolo nobody has made deletes nothing at all, and deleting Kolo 1 of a tournament being played clears what was
+// played and leaves the plan ready to be made again. A Kolo someone has played at goes only with withResults (the
+// admin saw the warning): its games, the ones being played too, go, and ratings are counted again without them. A
+// second tap that finds it gone changes nothing. A tournament whose remaining Kolos are all played is over.
 export async function deleteKolo(tournamentId: number, n: number, {withResults = false}: {withResults?: boolean} = {}): Promise<void> {
   await prisma.$transaction(
     async (tx) => {
@@ -234,9 +234,8 @@ export async function deleteKolo(tournamentId: number, n: number, {withResults =
         where: {round_number: {gte: n}, tournamentRounds: {some: {tournament_id: tournamentId}}},
         select: {id: true, round_number: true, team1_id: true, team2_id: true, open: true, status: true, _count: {select: {matches: true, ongoingMatches: true}}},
       });
-      // a Kolo nobody has made, with nothing made after it, is only a line in the plan: the tournament is one shorter
-      // and the Kolos after it move up a number. Anything made cuts the tournament off here.
-      const left = tables.length ? n - 1 : t.rounds - 1;
+      // the tournament is always one Kolo shorter; what is deleted is the tables above, if there are any
+      const left = t.rounds - 1;
       if (left < 1) throw new InvalidResultError("Turnir mora imati barem jedno kolo.");
       const real = tables.filter((r) => !isByeTeam(r.team1_id) && !isByeTeam(r.team2_id));
       const startedAt = real.filter((r) => !r.open || r._count.matches > 0 || r._count.ongoingMatches > 0);

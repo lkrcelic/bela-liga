@@ -21,7 +21,7 @@ import {isByeTeam} from "@/app/_lib/bye";
 import {leagueDateString} from "@/app/_lib/dates";
 import {KoloPair} from "@/app/_lib/matching/tournamentPairing";
 import {nightLabel} from "@/app/_lib/nights";
-import {koloSteps, removesResults, standingsOrderLabel} from "@/app/_lib/tournaments";
+import {koloRemovalWarns, koloSteps, removesResults, standingsOrderLabel} from "@/app/_lib/tournaments";
 import {standingsTeamHref, toStandingsRows} from "@/app/_lib/ui/standings";
 import {TableRow} from "@/app/_lib/ui/tables";
 import {count, NOUN} from "@/app/_lib/ui/text";
@@ -703,7 +703,7 @@ function KolaTab({t, onOpen, onChanged}: {t: AdminTournament; onOpen: (kolo: num
           Dodaj kolo
         </Box>
       )}
-      {/* a Kolo with results warns that they go too (and only then are they deleted) */}
+      {/* every Kolo but one nobody has made yet is asked with the warning sign; "s rezultatima" only when results really go */}
       <ConfirmSheet
         open={removal != null}
         onClose={() => setAsking(null)}
@@ -711,7 +711,7 @@ function KolaTab({t, onOpen, onChanged}: {t: AdminTournament; onOpen: (kolo: num
         title={removal ? koloRemovalTitle(removal) : ""}
         text={removal ? koloRemovalText(removal) : ""}
         action={removal ? koloRemovalAction(removal) : ""}
-        icon={removal && removesResults(removal) ? <WarningRoundedIcon /> : <DeleteRoundedIcon />}
+        icon={removal && koloRemovalWarns(removal) ? <WarningRoundedIcon /> : <DeleteRoundedIcon />}
         busy={busy === "delete"}
         error={asking != null ? error : null}
       />
