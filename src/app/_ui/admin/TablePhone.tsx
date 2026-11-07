@@ -1,7 +1,6 @@
 "use client";
 
-import {addHandAPI, deleteHandAPI, finishTableMatchAPI, getTablePadAPI, HandTarget, NoWinnerError, updateHandAPI} from "@/app/_fetchers/admin/daily";
-import {NoWinnerAsk, NoWinnerConfirm} from "./NoWinnerConfirm";
+import {addHandAPI, deleteHandAPI, finishTableMatchAPI, getTablePadAPI, HandTarget, updateHandAPI} from "@/app/_fetchers/admin/daily";
 import {PadHand, PadMatch, TablePad} from "@/app/_interfaces/adminHand";
 import {currentMatchNumber, matchSlots, matchTabSub, roundWins} from "@/app/_lib/tableOverview";
 import {adminLineupHref, roundBackBy, roundHref, tableHref, tableScopeOf} from "@/app/_lib/ui/tableScope";
@@ -247,9 +246,6 @@ function MatchPhone({
   const [handSheet, setHandSheet] = useState<PadHand | null>(null);
   const [askDelete, setAskDelete] = useState(false);
   const [manual, setManual] = useState<{hand: PadHand | null; a: string; b: string} | null>(null);
-  // a change that leaves a finished match without a winner, waiting for the admin's Spremi svejedno (Odustani goes
-  // back to what was entered)
-  const [noWinner, setNoWinner] = useState<NoWinnerAsk | null>(null);
 
   const editingId = igra && igra !== "new" ? Number(igra) : null;
   const editing = editingId != null ? match?.hands.find((h) => h.id === editingId) ?? null : null;
@@ -307,43 +303,36 @@ function MatchPhone({
   }
 
   const target: HandTarget = match.kind === "finished" ? {kind: "finished", matchId: match.id} : {kind: "ongoing"};
-  // a change from the board's sheets: they close once it is saved, and stay open with the error when it isn't. allow:
-  // the admin confirmed "Meč ostaje bez pobjednika?", so the change is sent again allowed.
-  const runSheet = async (action: (allow: boolean) => Promise<unknown>, fallback: string, anyway = "Spremi svejedno", allow = false) => {
+  // a change from the board's sheets: they close once it is saved, and stay open with the error when it isn't
+  const runSheet = async (action: () => Promise<unknown>, fallback: string) => {
     setSaving(true);
     setError(null);
     try {
-      await action(allow);
+      await action();
       await reload();
-      setNoWinner(null);
       setHandSheet(null);
       setAskDelete(false);
       setManual(null);
     } catch (e) {
-      if (e instanceof NoWinnerError && !allow) {
-        setAskDelete(false);
-        setNoWinner({text: e.message, action: anyway, retry: () => runSheet(action, fallback, anyway, true)});
-      } else setError(e instanceof Error ? e.message : fallback);
+      setError(e instanceof Error ? e.message : fallback);
     }
     setSaving(false);
   };
 
   // ---------- the steps ----------
   if (korak && igra && entryFor === igra) {
-    const save = async (allow = false) => {
-      if (!canSave(entry) || (saving && !allow)) return;
+    const save = async () => {
+      if (!canSave(entry) || saving) return;
       setSaving(true);
       setError(null);
       try {
         const hand = toAdminHand(entry);
-        await (editing ? updateHandAPI(match.kind, editing.id, hand, allow) : addHandAPI(pad.roundId, target, hand, allow));
+        await (editing ? updateHandAPI(match.kind, editing.id, hand) : addHandAPI(pad.roundId, target, hand));
         await reload();
-        setNoWinner(null);
         setSaving(false);
         toBoard();
       } catch (e) {
-        if (e instanceof NoWinnerError && !allow) setNoWinner({text: e.message, action: "Spremi svejedno", retry: () => save(true)});
-        else setError(e instanceof Error ? e.message : "Igra nije spremljena.");
+        setError(e instanceof Error ? e.message : "Igra nije spremljena.");
         setSaving(false);
       }
     };
@@ -351,8 +340,7 @@ function MatchPhone({
     const wizard = (children: React.ReactNode) => (
       <Screen fill gap={0} sx={{pt: "calc(22px + env(safe-area-inset-top))"}}>
         {children}
-        {error && !noWinner && <ErrorNote sx={{mb: "10px"}}>{error}</ErrorNote>}
-        <NoWinnerConfirm ask={noWinner} phone busy={saving} error={noWinner ? error : null} onClose={() => setNoWinner(null)} />
+        {error && <ErrorNote sx={{mb: "10px"}}>{error}</ErrorNote>}
       </Screen>
     );
     const active: 0 | 1 = entry.active === 2 ? 1 : 0;
@@ -400,7 +388,7 @@ function MatchPhone({
           />
         </Box>
         <PointsKeypad onDigit={(d) => setEntry((s) => typeDigit(s, d))} onStiglja={() => setEntry((s) => setStiglja(s))} stiglja={entry.stiglja} onClear={() => setEntry((s) => clearPoints(s))} keysOff={entry.stiglja} />
-        <ActionPair onBack={stepBack} nextLabel="Spremi" onNext={() => save()} nextDisabled={!canSave(entry)} nextLoading={saving} />
+        <ActionPair onBack={stepBack} nextLabel="Spremi" onNext={save} nextDisabled={!canSave(entry)} nextLoading={saving} />
       </>
     );
   }
@@ -437,7 +425,7 @@ function MatchPhone({
   const saveManual = () => {
     if (!manual || !fields?.points || saving) return;
     const hand = {manual: true as const, points1: fields.points[0], points2: fields.points[1]};
-    runSheet((allow) => (manual.hand ? updateHandAPI(match.kind, manual.hand.id, hand, allow) : addHandAPI(pad.roundId, target, hand, allow)), "Igra nije spremljena.");
+    runSheet(() => (manual.hand ? updateHandAPI(match.kind, manual.hand.id, hand) : addHandAPI(pad.roundId, target, hand)), "Igra nije spremljena.");
   };
   const sub = `Meč ${number}${viewDone ? " · završen" : ""}`;
 
@@ -550,7 +538,7 @@ function MatchPhone({
       <ConfirmSheet
         open={handSheet != null && askDelete}
         onClose={() => setAskDelete(false)}
-        onConfirm={() => handSheet && runSheet((allow) => deleteHandAPI(match.kind, handSheet.id, allow), "Igra nije obrisana.", "Obriši svejedno")}
+        onConfirm={() => handSheet && runSheet(() => deleteHandAPI(match.kind, handSheet.id), "Igra nije obrisana.")}
         eyebrow={sub}
         title={handSheet ? `Obriši igru ${handIndex(handSheet)}?` : ""}
         text={handSheet ? `Igra ${handSheet.total1} : ${handSheet.total2} briše se iz Meča ${number}. Zbroj meča i poredak ponovno se računaju.` : ""}
@@ -642,7 +630,6 @@ function MatchPhone({
           </>
         )}
       </BottomSheet>
-      <NoWinnerConfirm ask={noWinner} phone busy={saving} error={noWinner ? error : null} onClose={() => setNoWinner(null)} />
     </Screen>
   );
 }

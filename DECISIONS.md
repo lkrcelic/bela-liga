@@ -1577,21 +1577,3 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
       winner), tsc, lint, and on a local copy in the browser: the board at 709:627 went to Meč 2 od 2 about 2 s after
       its deadline, and Spremi pressed after the deadline in Korak 3 led to Kraj kola with the hand not counted.
       **Not checked**: the Vercel preview and real phones.
-
-84. **A finished match left without a winner: a warning, not a refusal** (your note of 07.11.: "I don't want for it to
-    be refused but put modal warning. Sometimes that edit is needed.")
-    - **Before** (4a84639): a change of a finished match's hands that left both teams under the threshold (or level
-      after Vrijeme partije) was refused with "Meč bi ostao bez pobjednika (…)".
-    - **Now**: the server answers such a change with 409 and code `no_winner` and saves nothing; the scorepad (the
-      computer's dialog, the phone's sheet, as Obrisati kolo? and Obriši igru) shows **Meč ostaje bez pobjednika?**
-      with the score it would have. **Spremi svejedno** (or **Obriši svejedno** for a delete) sends the same change
-      again with `allow_no_winner=1`, and it is saved: the match then counts for neither team, and the round's wins,
-      the standings and, when the round's outcome changed, the ratings are recounted as for any other change.
-      **Odustani** closes the warning and keeps the entry, the hand sheet or Ručni unos as they were.
-    - **Not changed**: moving the win to the other team, or correcting a match that already had no winner, asks
-      nothing. The players' own scorepad isn't affected (it never edits a finished match).
-    - **Checked**: unit tests, the db test (the warning keeps the round as it was; confirmed, the match is 860:640, the
-      round 1:0 and still a win in the standings), lint, tsc, build, and on a local DB the delete of the hand that took
-      a 2:0 table's first match over 1001: the warning, Odustani (nothing changed), Obriši svejedno (860:640, Bez
-      pobjednika), at 390×844 and 1280×800. **Not clicked through**: the step-by-step correction (Ispravi korak po
-      korak) and Ručni unos reaching the warning; they use the same call as the delete.
