@@ -14,6 +14,7 @@ Not deployed yet (DECISIONS #86). Needs a migration on the database.
 - An **Organizator** can: make a tournament, and edit, run and cancel **the ones they made** (kola, Skica, Objavi, stolovi, rezultati, prijave, dolasci, Isključi ekipu); make a team and edit any team; open the **Igrači** list with names, teams and phone numbers.
 - An **Organizator** cannot: delete a tournament (only **Otkaži**), open or change anyone else's tournament, touch the league (Novo kolo, Upravljanje ligom, večeri, Datumi), delete a team, block a photo, see usernames, emails or birth dates, edit or delete a player, give a role, or open Sponzori, Burza moderation and Rejting.
 - The menu now shows each entry to whoever may use it, so an organizer's menu holds **Turniri**, **Ekipe**, **Igrači** and nothing of the league's.
+- On the phone the bottom bar shows only the tabs you may use, so an organizer's bar is **Turniri · Ekipe · Igrači**, and their Početna opens on their Turniri (Večer lige is the league's).
 - The tournaments made before this have no owner, so they stay the admin's.
 - **Zabrana prijava** stays the admin's for now: a ban is league wide and can't yet be tied to one tournament.
 

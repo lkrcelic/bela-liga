@@ -1668,6 +1668,11 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
     - **Scaled down from the plan**: `ban.manage.own` was going to let an organizer ban a sign-up on their own
       tournament, but **Zabrana prijava is league wide** — the API takes no tournament — so bans stay the admin's
       until a ban can be tied to one tournament. The capability exists in the map and is the admin's only.
+    - **Found on the deployment, not in the code**: the phone's bottom bar (`AdminTabBar`) listed all six screens for
+      anyone who got it, so an organizer saw Večer, Rejting and Sponzori — tabs leading nowhere they may go. Its items
+      now carry a capability each, as the computer's menu does. And `/` had no home for them (Večer lige is the
+      league's), so a phone that runs tournaments but not the league opens on their Turniri — the screen their bar
+      starts from, no new screen.
     - **Not migrated**: the other 54 `requireAdmin` routes an organizer may not reach anyway (the league, players,
       sponsors, ratings) stay as they are, as planned.
     - **Checked**: 537 unit tests (new: the capability map, ownership, the three privacy steps, the public role, the
