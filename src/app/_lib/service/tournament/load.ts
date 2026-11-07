@@ -61,6 +61,8 @@ export type LoadedTable = {
   // the players who played it (Tko igra)
   lineup: {player_id: number; team_id: number}[];
   matches_per_round: number;
+  // Vrijeme partije of this table alone (an admin set it when they unlocked it); null: the tournament's
+  game_minutes: number | null;
   // Nedolazak za stol: the answer (or SKIPPED), which team gave it and when
   attendance: "PRESENT" | "NO_SHOW" | "SKIPPED" | null;
   attendance_team_id: number | null;
@@ -141,6 +143,7 @@ export async function loadSnapshots(ids: number[], viewer: Viewer | null, db: Db
         status: true,
         published_at: true,
         matches_per_round: true,
+        game_minutes: true,
         attendance: true,
         attendance_team_id: true,
         attendance_at: true,
@@ -210,6 +213,7 @@ export async function loadSnapshots(ids: number[], viewer: Viewer | null, db: Db
         ongoing: r.ongoingMatches[0] ?? null,
         lineup: r.roundPlayers,
         matches_per_round: r.matches_per_round,
+        game_minutes: r.game_minutes,
         attendance: r.attendance,
         attendance_team_id: r.attendance_team_id,
         attendance_at: r.attendance_at,

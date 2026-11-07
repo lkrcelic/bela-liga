@@ -240,7 +240,8 @@ function koloTable(s: Snapshot, t: LoadedTable, now: Date): KoloTable {
       today: isTournamentDay(s.tournament.date, now),
     },
     now,
-    s.tournament.game_minutes,
+    // the table's own Vrijeme partije when an admin set one unlocking it, else the tournament's (DECISIONS #89)
+    t.game_minutes ?? s.tournament.game_minutes,
     leagueClock
   );
   return {
