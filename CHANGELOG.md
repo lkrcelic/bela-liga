@@ -2,6 +2,23 @@
 
 What the commits changed for the people using the app, newest first. The reasons and details are in DECISIONS.md.
 
+## 07.11.2026 · Korisničko ime vidljivo svima
+
+Not deployed yet (DECISIONS #88).
+
+### Players
+- **Korisničko ime je javno.** Na tuđem profilu u **Osobni podaci** sad piše i **Korisničko ime** (@handle), pored imena i prezimena.
+- **Početna · Liga** i **Raspored**: pod imenom svakog igrača tvoje ekipe piše njegov **@username** (na svom redu ti i dalje piše "(ti)").
+- **Moje ekipe** i **Ekipe** na profilu igrača: igrači su sad označeni svojim **@username** (puno ime se vidi na hover).
+- **Stranica ekipe**: pod imenom svakog igrača piše @username, ne više ime ekipe.
+- **Rejting**: detalj igrača otvara se s "@username · ekipa · N rundi", a **pretraga nalazi igrača i po korisničkom imenu**.
+- **Prijava ekipe na turnir**: suigrača sad tražiš po **imenu ili korisničkom imenu**, a svaki rezultat pokazuje @username.
+- Stranice koje se gledaju bez prijave (turniri, poredak) također pokazuju korisnička imena.
+
+### Changed
+- Napomena pod osobnim podacima sad točno kaže što ostaje privatno: **"Email, mobitel, datum rođenja i Pušač vidljivi su samo igraču i administratorima."** Mobitel uz to vidi i organizator.
+- Burza ostaje kakva je (oglas nosi ime autora, bez korisničkog imena), a **Tko igra ovu rundu?** za završenu rundu ostaje adminu — jer se tamo potvrđuje ko je igrao.
+
 ## 07.11.2026 · Brisanje bilo kojeg kola turnira
 
 Not deployed yet (DECISIONS #87).

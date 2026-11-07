@@ -1720,3 +1720,33 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
     - **Checked**: unit tests for the new rule (nothing made, a draft, one out, one being played, one played, a middle
       Kolo with two made after it, Kolo 1 live, Kolo 1 with two played Kolos after it, and the warning sign), tsc on
       the files of this change, lint.
+
+88. **Korisničko ime je javan podatak** (your request of 07.11.: "PORED IMENA I PREZIMENA DODAJ I USERNAME DA VIDE
+    DRUGI IGRAČI USERNAME MORA BITI VIDLJIV I DOSTUPAN", and on the league box of Početna: "ne da piše ime ekipe, nego
+    da piše kao i za mene et i onda username"; changes #40 and the username parts of #20, #46 and #49).
+    - **The rule**: the username leaves the private tier of `_lib/players/privacy.ts` and joins the public one, beside
+      the name, "Neaktivan" and the role. Your three answers set the scope: **everywhere** in the app, **searches match
+      it too**, and **logged-out visitors of the public pages see it as well**. Private are still the email, the birth
+      date and Pušač (the player themselves and admins), and the phone number (those two plus an organizer, #86).
+    - **Why**: the username is how a player is known in the league and how the admin finds them when adding them to a
+      team ("Po ovom imenu te administrator pronalazi kad te dodaje u ekipu.", #46). Hiding it made a player's page
+      show two rows and a lock, and left the handles the design had drawn (13e) out of the team cards.
+    - **What that removed**: `rosterUsername` is gone and `rosterView` only sorts the roster into Croatian name order;
+      `PlayerPublicResponseValidation` carries the username; `TeamMemberValidation.username`, `TeamOverviewPlayer`,
+      `RatingRow`, `EntryPlayer`, `MyLeague.players` and `DirectoryMember` all have it as a required field, so a
+      response that forgets it fails validation instead of quietly dropping the handle.
+    - **Where it shows now**: "Korisničko ime" is the third row of Osobni podaci on **every** player's page (the lock
+      note under it now names what is left private: "Email, mobitel, datum rođenja i Pušač vidljivi su samo igraču i
+      administratorima."); the **Početna · Liga** card and **Raspored** put `@username` under each player of the team
+      (your own row keeps "(ti)"); the team cards of Moj profil and a player's page show the handle on the chip with
+      the full name on hover (design 13e, finally); the Team page's second line is `@username` for everyone, not only
+      for you (`rosterSubline` was already written for it); **Rejting**'s detail opens with "@username · ekipa · N
+      rundi"; a round's teams and a tournament's entries carry it, for visitors too.
+    - **Searches**: Rejting's search and the teammate search of Prijava ekipe (`searchTeammates`, now `username
+      contains` beside the names) match a handle, and that sheet says "Ime ili korisničko ime suigrača" with the handle
+      under each hit. The admin's Igrači and Ekipe searches already did; an organizer now gets usernames there too.
+    - **Left as it was**: the Burza keeps the author's name without a handle (the board is one line per ad), and a
+      finished round's **Tko igra ovu rundu?** stays the admin's — the reason is no longer the usernames (#49) but the
+      screen itself, whose button confirms who played, and only an admin may save that (`saveLineup`).
+    - **Checked**: `npx tsc --noEmit` clean, `npm test` 536 tests green (the privacy, permissions, profiles, directory
+      and ratings tests now state the new rule), and the screens walked through on the dev server as two accounts.

@@ -98,7 +98,8 @@ export const KoloTableValidation = z.object({team1_id: z.number().int(), team2_i
 export type TournamentPlace = {name: string | null; address: string | null; url: string | null};
 
 // A player as a tournament's lists show them (the username only for an admin: they are private)
-export type EntryPlayer = {id: number; name: string; photo_url: string | null; username?: string};
+// username: public (#88), so every viewer gets it
+export type EntryPlayer = {id: number; name: string; photo_url: string | null; username: string};
 
 // Potvrda dolaska: when and by whom ("Potvrdio Marko u 9:43"; by is null for the admin's Označi dolazak)
 export type EntryArrival = {at: string; by: string | null; admin: boolean};

@@ -27,7 +27,7 @@ import React, {useEffect, useState} from "react";
 // Prijava ekipe (Claude Design "Natjecanja" F1–F4): the player picks one of their teams (each with all its players: who
 // of them plays is picked on Tko igra before every Kolo), or makes a new team with a teammate who has an account and
 // signs it up in the same step. A teammate without an account gets an invitation link instead, by WhatsApp or the
-// phone's sharing ("Gost i poziv" S1–S3). The search finds players by name only (usernames are private, DECISIONS #40).
+// phone's sharing ("Gost i poziv" S1–S3). The search finds players by name or username (both public, #88).
 
 type Props = {t: TournamentDetail; open: boolean; onClose: () => void; onDone: (status: "REGISTERED" | "WAITING", team: string) => void};
 
@@ -301,7 +301,7 @@ function NewTeamForm({
               <Box component="span" sx={{width: 18, fontFamily: font.display, fontWeight: 800, color: color.muted}}>
                 2
               </Box>
-              <SearchInput variant="paper" height={50} placeholder="Ime i prezime suigrača" aria-label="Traži suigrača" value={query} onChange={(e) => setQuery(e.target.value)} onClear={() => setQuery("")} sx={{flex: 1}} />
+              <SearchInput variant="paper" height={50} placeholder="Ime ili korisničko ime suigrača" aria-label="Traži suigrača" value={query} onChange={(e) => setQuery(e.target.value)} onClear={() => setQuery("")} sx={{flex: 1}} />
             </Box>
           )}
         </Box>
@@ -311,8 +311,14 @@ function NewTeamForm({
             {hits.map((h, i) => (
               <Box component="li" key={h.id} sx={{...slot, borderTop: i ? `1px solid ${color.line}` : "none"}}>
                 <InitialsAvatar name={h.name} src={h.photo_url} size={34} sx={{fontSize: 12}} />
-                <Box component="span" sx={{flex: 1, minWidth: 0, fontSize: 16, fontWeight: 600, ...ellipsis}}>
-                  {h.name}
+                {/* the name and, under it, the handle (#88) */}
+                <Box sx={{flex: 1, minWidth: 0, display: "flex", flexDirection: "column"}}>
+                  <Box component="span" sx={{fontSize: 16, fontWeight: 600, ...ellipsis}}>
+                    {h.name}
+                  </Box>
+                  <Box component="span" sx={{fontSize: 13, color: color.muted, ...ellipsis}}>
+                    @{h.username}
+                  </Box>
                 </Box>
                 <Box component="button" type="button" onClick={() => setPartner(h)} sx={{...buttonBase, height: 40, px: "14px", borderRadius: "12px", background: color.navy, color: color.white, fontSize: 14, fontWeight: 700}}>
                   Odaberi
@@ -385,7 +391,7 @@ function TeammateRules(invite: InviteActions) {
           <Box component="span" aria-hidden sx={icon}>
             <SearchRoundedIcon />
           </Box>
-          Upiši ime i prezime suigrača.
+          Upiši ime ili korisničko ime suigrača.
         </Box>
         <Box sx={rule}>
           <Box component="span" aria-hidden sx={icon}>

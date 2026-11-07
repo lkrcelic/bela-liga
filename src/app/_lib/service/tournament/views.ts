@@ -1,6 +1,5 @@
 import {isByeTeam, teamLabel} from "@/app/_lib/bye";
 import {Viewer} from "@/app/_lib/players/privacy";
-import {isAdminRole} from "@/app/_lib/players/admin";
 import {
   AdminTournament,
   ArrivalSummary,
@@ -27,13 +26,14 @@ import {tableState} from "@/app/_lib/tableState";
 import {windowOf} from "./day";
 import {LoadedEntry, LoadedPlayer, LoadedTable, Snapshot, tableStarted} from "./load";
 
-// The tournament API's answers, built from a snapshot (load.ts) for the viewer: the username of a player only for an
-// admin (they are private), the ratings only for someone logged in, and the viewer's own team picked out.
+// The tournament API's answers, built from a snapshot (load.ts) for the viewer: the username of every player (it is
+// public, #88, so a logged-out visitor sees it too), the ratings only for someone logged in, and the viewer's own
+// team picked out.
 
 const isoDay = (d: Date) => d.toISOString().slice(0, 10);
 
-function entryPlayer(p: LoadedPlayer, admin: boolean): EntryPlayer {
-  return {id: p.id, name: p.name, photo_url: p.photo_url, ...(admin && {username: p.username})};
+function entryPlayer(p: LoadedPlayer): EntryPlayer {
+  return {id: p.id, name: p.name, photo_url: p.photo_url, username: p.username};
 }
 
 // The average rating of a team's players (null without players or for a visitor)
@@ -78,12 +78,11 @@ export function dayOf(s: Snapshot, now: Date): TournamentDay | null {
 }
 
 export function entryView(s: Snapshot, e: LoadedEntry, viewer: Viewer | null): TournamentEntryView {
-  const admin = viewer != null && isAdminRole(viewer);
   return {
     team_id: e.team_id,
     team_name: e.team_name,
     photo_url: e.photo_url,
-    players: e.players.map((p) => entryPlayer(p, admin)),
+    players: e.players.map(entryPlayer),
     rating: teamRating(e, viewer),
     status: e.status,
     registered_at: e.registered_at.toISOString(),
@@ -138,7 +137,7 @@ export function cardView(s: Snapshot, viewer: Viewer | null): TournamentCard {
         team_name: mine.team_name,
         status: mine.status,
         position: mine.status === "WAITING" ? positionOf(s, mine.team_id) : null,
-        players: mine.players.map((p) => entryPlayer(p, admin)),
+        players: mine.players.map(entryPlayer),
         arrival: arrivalOf(mine),
         active: mine.active,
         excluded: exclusionOf(mine),
@@ -270,7 +269,7 @@ export function resultsView(s: Snapshot, viewer: Viewer | null): TournamentResul
     score: r.totals.points,
     active_round_count: r.totals.live ? 1 : 0,
     photo_url: s.teams.get(r.team_id)?.photo_url ?? null,
-    players: s.entries.find((e) => e.team_id === r.team_id)?.players.map((p) => (viewer && isAdminRole(viewer) ? p.username : p.name)) ?? [],
+    players: s.entries.find((e) => e.team_id === r.team_id)?.players.map((p) => p.username) ?? [],
     excluded: (() => {
       const e = s.entries.find((x) => x.team_id === r.team_id);
       return e ? exclusionOf(e) : null;
