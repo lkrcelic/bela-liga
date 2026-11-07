@@ -8,7 +8,6 @@ import TimerOffRoundedIcon from "@mui/icons-material/TimerOffRounded";
 import TimerRoundedIcon from "@mui/icons-material/TimerRounded";
 import {Box, Dialog} from "@mui/material";
 import {useEffect, useState} from "react";
-import {setServerOffset} from "./handFlow";
 
 // Vrijeme partije on the scorepad (Claude Design "Vrijeme partije" T1–T3): the time left in the board's head (muted grey, red
 // in the last 5 minutes), "Još 5:00 do kraja partije" once per match on the board's main screen, and what the board
@@ -29,9 +28,7 @@ export function useMatchClock(match: Pick<OngoingMatchExtendedResponse, "id" | "
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
     if (!match.server_now) return;
-    const o = Date.parse(match.server_now) - Date.now();
-    setOffset(o);
-    setServerOffset(o);
+    setOffset(Date.parse(match.server_now) - Date.now());
   }, [match.server_now]);
   const ends = match.ends_at ? new Date(match.ends_at).getTime() : null;
   useEffect(() => {
@@ -106,7 +103,7 @@ export function TimeWarning({matchId, clock}: {matchId: number; clock: MatchCloc
         </Box>
       </Box>
       <Box sx={{fontSize: 15, lineHeight: 1.45, color: color.ink2}}>
-        Kad vrijeme istekne, partija završava s rezultatom koji je tada upisan. Pobjeđuje ekipa s više bodova, a razlika bodova računa se normalno.
+        Kad vrijeme istekne, partija završava s rezultatom koji je tada upisan, a igra koja još nije spremljena ne računa se. Pobjeđuje ekipa s više bodova, a razlika bodova računa se normalno.
       </Box>
       <PrimaryButton onClick={close} sx={{alignSelf: "stretch", height: 54, fontSize: 16}}>
         U redu
@@ -115,8 +112,8 @@ export function TimeWarning({matchId, clock}: {matchId: number; clock: MatchCloc
   );
 }
 
-// What the board says once the time is up: the score entered counts (the match closes by itself), or with the score
-// level one more hand is played
+// What the board says once the time is up: the score entered counts (the match closes at once and the board moves on),
+// or with the score level one more hand is played
 export function TimeUpNote({tied}: {tied: boolean}) {
   return (
     <Box role="status" sx={{display: "flex", gap: "10px", p: "14px 16px", borderRadius: "18px", background: tied ? tint.gold[16] : tint.red[10], color: color.ink, fontSize: 15, lineHeight: 1.45, "& svg": {fontSize: 22, color: tied ? color.ink2 : color.red, flex: "none"}}}>
@@ -124,7 +121,7 @@ export function TimeUpNote({tied}: {tied: boolean}) {
       <span>
         {tied
           ? "Vrijeme je isteklo, rezultat je izjednačen. Igrajte još jedno miješanje. Nakon upisa te igre partija završava."
-          : "Vrijeme je isteklo. Partija završava s rezultatom koji je upisan: pobjeđuje ekipa s više bodova. Igra koja se upravo upisuje još se prima."}
+          : "Vrijeme je isteklo. Partija završava s rezultatom koji je upisan: pobjeđuje ekipa s više bodova."}
       </span>
     </Box>
   );

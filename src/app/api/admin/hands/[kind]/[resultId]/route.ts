@@ -7,14 +7,17 @@ import {deleteHand, updateHand} from "@/app/_lib/service/admin/hands";
 
 type Params = {params: {kind: string; resultId: string}};
 
-// kind: "ongoing" (a hand of the match being played) or "finished" (a hand of a finished match)
+// kind: "ongoing" (a hand of the match being played) or "finished" (a hand of a finished match). allow_no_winner=1: the
+// admin confirmed that a finished match is left without a winner.
+const allowNoWinner = (request: NextRequest) => ({allowNoWinner: request.nextUrl.searchParams.get("allow_no_winner") === "1"});
+
 export async function PUT(request: NextRequest, {params}: Params) {
   const auth = await requireAdmin(request);
   if (auth.response) return auth.response;
   try {
     const kind = HandKindValidation.parse(params.kind);
     const hand = AdminHandValidation.parse(await request.json());
-    await updateHand(kind, Number(params.resultId), hand);
+    await updateHand(kind, Number(params.resultId), hand, allowNoWinner(request));
     return NextResponse.json({ok: true}, {status: STATUS.OK});
   } catch (error) {
     return errorResponse(error, "Igra nije spremljena.");
@@ -25,7 +28,7 @@ export async function DELETE(request: NextRequest, {params}: Params) {
   const auth = await requireAdmin(request);
   if (auth.response) return auth.response;
   try {
-    await deleteHand(HandKindValidation.parse(params.kind), Number(params.resultId));
+    await deleteHand(HandKindValidation.parse(params.kind), Number(params.resultId), allowNoWinner(request));
     return new NextResponse(null, {status: STATUS.NoContent});
   } catch (error) {
     return errorResponse(error, "Igra nije obrisana.");

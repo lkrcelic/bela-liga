@@ -92,30 +92,34 @@ export default function ScoreBoardPage() {
     router.router.prefetch(`/ongoing-match/${matchId}/ongoing-result/new/trump-caller`);
   }, [router, matchId]);
 
-  // past the deadline the board asks every 5 s, so it follows the match the server closes
-  const timeUp = match.ends_at != null && new Date(match.ends_at).getTime() < Date.now() + (match.server_now ? Date.parse(match.server_now) - Date.now() : 0);
+  // Vrijeme partije: the time left. The server closes the match as soon as it is up (unless the score is level), so
+  // the board asks then and every 5 s after it, and follows the match to the next one or the table's result.
+  const clock = useMatchClock(match);
+  const tied = (match.player_pair1_score ?? 0) === (match.player_pair2_score ?? 0);
 
   // Several phones can follow the same match, so pick up hands entered elsewhere
+  const refresh = useCallback(async () => {
+    if (document.visibilityState !== "visible") return;
+    try {
+      setOngoingMatch(await getOngoingMatchAPI(matchId));
+    } catch (error) {
+      if (error instanceof OngoingMatchGoneError) await followFinishedMatch();
+    }
+  }, [matchId, setOngoingMatch, followFinishedMatch]);
   useEffect(() => {
-    const refresh = async () => {
-      if (document.visibilityState !== "visible") return;
-      try {
-        setOngoingMatch(await getOngoingMatchAPI(matchId));
-      } catch (error) {
-        if (error instanceof OngoingMatchGoneError) await followFinishedMatch();
-      }
-    };
-    const intervalId = setInterval(refresh, timeUp ? 5000 : 15000);
+    const intervalId = setInterval(refresh, clock.expired ? 5000 : 15000);
     document.addEventListener("visibilitychange", refresh);
     return () => {
       clearInterval(intervalId);
       document.removeEventListener("visibilitychange", refresh);
     };
-  }, [matchId, setOngoingMatch, followFinishedMatch, timeUp]);
-
-  // Vrijeme partije: the time left; once it is up the board asks more often (the server closes the match by itself)
-  const clock = useMatchClock(match);
-  const tied = (match.player_pair1_score ?? 0) === (match.player_pair2_score ?? 0);
+  }, [refresh, clock.expired]);
+  // the moment the time is up (a second later, so the server's clock is surely past it too)
+  useEffect(() => {
+    if (!clock.expired || tied) return;
+    const t = setTimeout(refresh, 1000);
+    return () => clearTimeout(t);
+  }, [clock.expired, tied, refresh]);
 
   const p = (side: 1 | 2) => (side === 1 ? match.player_pair1_score : match.player_pair2_score) ?? 0;
   const totals: [number, number] = [p(sides.left), p(sides.right)];

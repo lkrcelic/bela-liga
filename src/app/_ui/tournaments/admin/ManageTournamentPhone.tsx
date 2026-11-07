@@ -21,7 +21,7 @@ import {isByeTeam} from "@/app/_lib/bye";
 import {leagueDateString} from "@/app/_lib/dates";
 import {KoloPair} from "@/app/_lib/matching/tournamentPairing";
 import {nightLabel} from "@/app/_lib/nights";
-import {koloSteps, removesResults} from "@/app/_lib/tournaments";
+import {koloSteps, removesResults, standingsOrderLabel} from "@/app/_lib/tournaments";
 import {standingsTeamHref, toStandingsRows} from "@/app/_lib/ui/standings";
 import {TableRow} from "@/app/_lib/ui/tables";
 import {count, NOUN} from "@/app/_lib/ui/text";
@@ -80,7 +80,7 @@ import SaveRoundedIcon from "@mui/icons-material/SaveRounded";
 import WarningRoundedIcon from "@mui/icons-material/WarningRounded";
 import {Box} from "@mui/material";
 import {useSearchParams} from "next/navigation";
-import {ActiveSwitch, ArrivalButton, ArrivalChip, ArrivalSummaryLine, AtStartCard, dayOn, ExcludeControls, ExcludedStandings, ExclusionTag, STANDINGS_ORDER, TableStates, useTeamDay} from "./DayAdmin";
+import {ActiveSwitch, ArrivalButton, ArrivalChip, ArrivalSummaryLine, AtStartCard, dayOn, ExcludeControls, ExcludedStandings, ExclusionTag, TableStates, useTeamDay} from "./DayAdmin";
 import ScheduleRoundedIcon from "@mui/icons-material/ScheduleRounded";
 import BlockRoundedIcon from "@mui/icons-material/BlockRounded";
 import React, {useEffect, useState} from "react";
@@ -901,7 +901,7 @@ function StandingsTab({t}: {t: AdminTournament}) {
       </Box>
       <Card sx={{p: 0, overflow: "hidden"}}>{rows.length === 0 ? <EmptyState>Poredak će biti ovdje kad počne prvo kolo.</EmptyState> : <StandingsRows rows={rows} head rowHref={standingsTeamHref} />}</Card>
       <Box component="p" sx={{m: 0, px: "4px", fontSize: 13.5, lineHeight: 1.45, color: color.ink2}}>
-        {STANDINGS_ORDER} Crveni broj = ekipa trenutno igra.
+        {standingsOrderLabel(t.matches_per_round)} Crveni broj = ekipa trenutno igra.
       </Box>
       <ExcludedStandings t={t} />
       <OutlineButton height={52} onClick={() => router.push(`/turniri/${t.id}/poredak`)} sx={{flex: "none", fontSize: 16, borderWidth: "1.5px", borderColor: tint.navy[25], background: color.white}}>

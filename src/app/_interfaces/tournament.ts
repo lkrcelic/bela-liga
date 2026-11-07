@@ -181,6 +181,8 @@ export type TournamentCard = {
   // Automatska kola: the Kolos after the first are published by themselves
   auto_publish: boolean;
   day: TournamentDay | null;
+  // the last Kolo is made (draft or published): a team can't join any more (no Tu smo · Želimo uskočiti)
+  last_kolo_made: boolean;
   // the server's clock (ISO), for the countdowns
   server_now: string;
   // Otkazan: who cancelled it and when (admins only)

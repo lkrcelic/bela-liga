@@ -2,7 +2,7 @@
 
 import useResultStore from "@/app/_store/bela/resultStore";
 import {ActionPair, ErrorNote} from "@/app/_ui/sp";
-import {saveHand, takeWizardOrigin} from "@/app/ongoing-match/ui/handFlow";
+import {discardHand, matchClosed, saveHand, takeWizardOrigin} from "@/app/ongoing-match/ui/handFlow";
 import {PointsKeypad} from "@/app/ongoing-match/ui/WizardParts";
 import {useParams} from "next/navigation";
 import {navigateWithTransition, useTransitionRouter} from "@/app/_lib/viewTransitions";
@@ -21,15 +21,26 @@ export default function ScorePage({actionType}: ActionProps) {
   const empty = !result.player_pair1_game_points && !result.player_pair2_game_points;
   const keysOff = !!result.complete_victory;
 
+  const toBoard = () => {
+    if (takeWizardOrigin(Number(params.matchId))) navigateWithTransition(() => window.history.go(-3), "back");
+    else router.replace(`/ongoing-match/${params.matchId}`, "back");
+  };
+
   const save = async () => {
     if (saving || empty) return;
     setSaving(true);
     setError(null);
     try {
       await saveHand(Number(params.matchId), actionType === "UPDATE" ? params.resultId : null);
-      if (takeWizardOrigin(Number(params.matchId))) navigateWithTransition(() => window.history.go(-3), "back");
-      else router.replace(`/ongoing-match/${params.matchId}`, "back");
+      toBoard();
     } catch (e) {
+      // the time ran out while the hand was entered (or a teammate finished the match): the hand doesn't count, and
+      // the board follows the match to the next one or the table's result
+      if (await matchClosed(Number(params.matchId))) {
+        discardHand();
+        toBoard();
+        return;
+      }
       setError(e instanceof Error ? e.message : "Spremanje nije uspjelo.");
       setSaving(false);
     }

@@ -2,6 +2,7 @@
 
 import {cancelTournamentAPI, deleteTournamentAPI, updateTournamentAPI} from "@/app/_fetchers/tournament";
 import {AdminTournament} from "@/app/_interfaces/tournament";
+import {standingsOrderLabel} from "@/app/_lib/tournaments";
 import {standingsTeamHref, toStandingsRows} from "@/app/_lib/ui/standings";
 import {useTransitionRouter} from "@/app/_lib/viewTransitions";
 import {color, font} from "@/app/_styles/tokens";
@@ -51,7 +52,7 @@ export function StandingsDesktop({t}: {t: AdminTournament}) {
             Kako se računa
           </Box>
           <Box component="p" sx={{m: 0, fontSize: 15, lineHeight: 1.5}}>
-            Računa se sam nakon svake igre. Redoslijed: bodovi (pobjeda 2, neriješeno 1), pa razlika bodova, pa međusobni omjer na turniru.
+            Računa se sam nakon svake igre. {standingsOrderLabel(t.matches_per_round)}
           </Box>
           <OutlineButton height={50} onClick={() => router.push(`/turniri/${t.id}/poredak`)} sx={{fontSize: 15, borderWidth: "1.5px"}}>
             <OpenInNewRoundedIcon sx={{fontSize: 20}} />

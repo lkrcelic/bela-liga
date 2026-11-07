@@ -19,7 +19,7 @@ import {
   TournamentWinner,
 } from "@/app/_interfaces/tournament";
 import {waitingList} from "@/app/_lib/tournamentEntries";
-import {draftIsStale} from "@/app/_lib/tournaments";
+import {draftIsStale, lastKoloMade} from "@/app/_lib/tournaments";
 import {leagueClock} from "@/app/_lib/dates";
 import {displayName} from "@/app/_lib/players/names";
 import {arrivalPhase, DayEntry, isTournamentDay, startSwitch} from "@/app/_lib/tournamentDay";
@@ -172,6 +172,7 @@ export function cardView(s: Snapshot, viewer: Viewer | null): TournamentCard {
     game_minutes: t.game_minutes,
     auto_publish: t.auto_publish,
     day: dayOf(s, now),
+    last_kolo_made: lastKoloMade(s.kolos, t.rounds),
     server_now: now.toISOString(),
     ...(admin && {cancelled_info: t.cancelled_at ? {by: t.canceller ? displayName(t.canceller) : null, at: t.cancelled_at.toISOString()} : null}),
   };

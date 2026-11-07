@@ -10,13 +10,13 @@ export const TIME_UP = "Vrijeme partije je isteklo. Partija se zatvara s upisani
 
 // Saves a hand and adds it to the match score in one transaction, so the score can't drift from the hands.
 // `normalize` checks the hand and recomputes its totals (an admin's manual hand uses its own rule).
-// Vrijeme partije: after the deadline a player's hand is taken only when its entry started in time (and it comes within
-// the grace) or the score is level (one more hand); the match is then closed by time unless the score is still level.
-// An admin's hands don't depend on the time. Answers whether the hand closed the match.
+// Vrijeme partije: after the deadline a player's hand is taken only when the score is level (one more hand); the match
+// is then closed by time unless the score is still level. An admin's hands don't depend on the time. Answers whether
+// the hand closed the match.
 export async function createBelaResult(
     resultData: BelaResultCreateRequest,
     normalize: (r: BelaResultCreateRequest) => BelaResultCreateRequest = normalizeBelaResult,
-    {admin = false, entryStartedAt = null}: {admin?: boolean; entryStartedAt?: Date | null} = {},
+    {admin = false}: {admin?: boolean} = {},
 ): Promise<{closed: boolean}> {
     const result = normalize(resultData);
 
@@ -37,7 +37,7 @@ export async function createBelaResult(
 
         const timing = admin
             ? "on_time"
-            : handTiming({now: new Date(), endsAt: match.ends_at, tied: match.player_pair1_score === match.player_pair2_score, entryStartedAt});
+            : handTiming({now: new Date(), endsAt: match.ends_at, tied: match.player_pair1_score === match.player_pair2_score});
         if (timing === "too_late") throw new InvalidResultError(TIME_UP);
 
         await tx.ongoingBelaResult.create({data: transformBelaResult(result)});
@@ -52,7 +52,7 @@ export async function createBelaResult(
         return closesAfterHand(timing, tied);
     });
 
-    // the hand after the time: the match ends with it (the next match or the table's result follows, as after Završi meč)
+    // the extra hand after the time: the match ends with it (the next match or the table's result follows, as after Završi meč)
     if (closeNow) await closeByTime(result.match_id);
     return {closed: closeNow};
 }

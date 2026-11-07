@@ -4,7 +4,7 @@ import {AdminHand, HandKind, PadHand, PadMatch, TablePad} from "@/app/_interface
 import {BelaResultCreateRequest} from "@/app/_interfaces/belaResult";
 import {isByeTeam, teamLabel} from "@/app/_lib/bye";
 import {matchWinner} from "@/app/_lib/bela/scoring";
-import {declarationsError, InvalidResultError, normalizeBelaResult} from "@/app/_lib/validation/validateResult";
+import {declarationsError, InvalidResultError, NoWinnerWarning, normalizeBelaResult} from "@/app/_lib/validation/validateResult";
 import {transformBelaResult} from "@/app/_lib/helpers/databaseHelpers";
 import {createBelaResult} from "@/app/_lib/service/ongoingBelaResult/create";
 import {timeWinner} from "@/app/_lib/gameTime";
@@ -97,7 +97,8 @@ export async function getTablePad(roundId: number): Promise<TablePad> {
       score1: m.player_pair1_score,
       score2: m.player_pair2_score,
       threshold,
-      winner: matchWinner(m.player_pair1_score, m.player_pair2_score, threshold),
+      // a match closed by Vrijeme partije is won by the team with more points
+      winner: finishedMatchWinner(m),
       hands: m.belaResults.map(toPadHand),
     };
   });
@@ -151,19 +152,46 @@ function assertDeclarations(declarations: boolean, result: BelaResultCreateReque
   if (error) throw new InvalidResultError(error);
 }
 
+type FinishedScore = {player_pair1_score: number; player_pair2_score: number; score_threshold: number | null; time_expired: boolean};
+
+// The winner of a finished match: the team over the threshold with more points, or for one closed by Vrijeme partije
+// the team with more points
+export function finishedMatchWinner(m: FinishedScore): 1 | 2 | null {
+  return m.time_expired
+    ? timeWinner(m.player_pair1_score, m.player_pair2_score)
+    : matchWinner(m.player_pair1_score, m.player_pair2_score, m.score_threshold ?? DEFAULT_THRESHOLD);
+}
+
+// A change of a finished match's hands that leaves a match that had a winner without one: the warning the admin
+// confirms first, since the round then counts that match for neither team (a 2:0 can turn into a draw). Moving the win
+// to the other team, or correcting a match that already had no winner, needs no warning.
+export function noWinnerWarning(before: FinishedScore, after: FinishedScore): string | null {
+  if (finishedMatchWinner(before) == null || finishedMatchWinner(after) != null) return null;
+  const score = `${after.player_pair1_score}:${after.player_pair2_score}`;
+  const why = after.player_pair1_score === after.player_pair2_score ? score : `${score} i nitko nema ${after.score_threshold ?? DEFAULT_THRESHOLD}`;
+  return `Nakon ove promjene meč je ${why}, pa se ne broji nijednoj ekipi. Rezultat stola, poredak i rejting ponovno se računaju.`;
+}
+
+// Options of a change of a finished match: allowNoWinner, the admin confirmed the "Meč ostaje bez pobjednika" warning
+export type HandEditOptions = {allowNoWinner?: boolean};
+
 // After a finished match's hands changed: its score, the round's wins, and for a finished round the standings
-// (and the ratings when the round's outcome changed)
-async function recountFinishedMatch(tx: Tx, matchId: number) {
+// (and the ratings when the round's outcome changed). A match left without a winner needs the admin's confirmation.
+async function recountFinishedMatch(tx: Tx, matchId: number, allowNoWinner: boolean) {
   const sums = await tx.belaResult.aggregate({
     where: {match_id: matchId},
     _sum: {player_pair1_total_points: true, player_pair2_total_points: true},
   });
+  const before = await tx.match.findUniqueOrThrow({
+    where: {id: matchId},
+    select: {player_pair1_score: true, player_pair2_score: true, score_threshold: true, time_expired: true},
+  });
+  const score = {player_pair1_score: sums._sum.player_pair1_total_points ?? 0, player_pair2_score: sums._sum.player_pair2_total_points ?? 0};
+  const warning = allowNoWinner ? null : noWinnerWarning(before, {...before, ...score});
+  if (warning) throw new NoWinnerWarning(warning);
   const match = await tx.match.update({
     where: {id: matchId},
-    data: {
-      player_pair1_score: sums._sum.player_pair1_total_points ?? 0,
-      player_pair2_score: sums._sum.player_pair2_total_points ?? 0,
-    },
+    data: score,
     select: {round_id: true},
   });
   if (match.round_id == null) return;
@@ -182,11 +210,8 @@ async function recountFinishedMatch(tx: Tx, matchId: number) {
       matches: {select: {player_pair1_score: true, player_pair2_score: true, score_threshold: true, time_expired: true}},
     },
   });
-  // a match without a winner (nobody over the threshold after an edit) counts for neither team; one closed by Vrijeme
-  // partije goes to the team with more points
-  const winners = round.matches.map((m) =>
-    m.time_expired ? timeWinner(m.player_pair1_score, m.player_pair2_score) : matchWinner(m.player_pair1_score, m.player_pair2_score, m.score_threshold ?? DEFAULT_THRESHOLD)
-  );
+  // a match without a winner (the admin confirmed it) counts for neither team
+  const winners = round.matches.map(finishedMatchWinner);
   const team1Wins = winners.filter((w) => w === 1).length;
   const team2Wins = winners.filter((w) => w === 2).length;
   await tx.round.update({where: {id: round.id}, data: {team1_wins: team1Wins, team2_wins: team2Wins}});
@@ -202,19 +227,19 @@ async function recountFinishedMatch(tx: Tx, matchId: number) {
 }
 
 // Runs a change of a finished match's hands with the round locked, then recounts
-async function changeFinishedMatch(matchId: number, change: (tx: Tx) => Promise<void>) {
+async function changeFinishedMatch(matchId: number, change: (tx: Tx) => Promise<void>, options: HandEditOptions) {
   await prisma.$transaction(async (tx) => {
     const match = await tx.match.findUnique({where: {id: matchId}, select: {round_id: true}});
     if (!match) throw new NotFoundError("Meč ne postoji.");
     if (match.round_id != null) await lockRound(tx, match.round_id);
     await change(tx);
-    await recountFinishedMatch(tx, matchId);
+    await recountFinishedMatch(tx, matchId, options.allowNoWinner === true);
   }, {timeout: 60000});
 }
 
 export type HandTarget = {kind: "ongoing"} | {kind: "finished"; matchId: number};
 
-export async function addHand(roundId: number, target: HandTarget, hand: AdminHand): Promise<void> {
+export async function addHand(roundId: number, target: HandTarget, hand: AdminHand, options: HandEditOptions = {}): Promise<void> {
   const {declarations} = await assertEditableTable(roundId);
   if (target.kind === "ongoing") {
     // a table that hasn't started gets its first match here (refused when the round is over)
@@ -232,10 +257,10 @@ export async function addHand(roundId: number, target: HandTarget, hand: AdminHa
   assertDeclarations(declarations, result);
   await changeFinishedMatch(target.matchId, async (tx) => {
     await tx.belaResult.create({data: transformBelaResult(result)});
-  });
+  }, options);
 }
 
-export async function updateHand(kind: HandKind, resultId: number, hand: AdminHand): Promise<void> {
+export async function updateHand(kind: HandKind, resultId: number, hand: AdminHand, options: HandEditOptions = {}): Promise<void> {
   if (kind === "ongoing") {
     const stored = await prisma.ongoingBelaResult.findUnique({where: {result_id: resultId}, select: {match_id: true}});
     if (!stored) throw new NotFoundError("Igra ne postoji.");
@@ -261,10 +286,10 @@ export async function updateHand(kind: HandKind, resultId: number, hand: AdminHa
         data: announcements.map((a) => ({result_id: resultId, team: a.team, announcement_type: a.announcement_type})),
       });
     }
-  });
+  }, options);
 }
 
-export async function deleteHand(kind: HandKind, resultId: number): Promise<void> {
+export async function deleteHand(kind: HandKind, resultId: number, options: HandEditOptions = {}): Promise<void> {
   if (kind === "ongoing") {
     await prisma.$transaction(async (tx) => {
       const [hand] = await tx.$queryRaw<{match_id: number; player_pair1_total_points: number; player_pair2_total_points: number}[]>`
@@ -288,7 +313,7 @@ export async function deleteHand(kind: HandKind, resultId: number): Promise<void
   if (!stored) throw new NotFoundError("Igra ne postoji.");
   await changeFinishedMatch(stored.match_id, async (tx) => {
     await tx.belaResult.delete({where: {result_id: resultId}});
-  });
+  }, options);
 }
 
 // Finishes the table's match in progress (as "Završi meč" on the scoreboard)

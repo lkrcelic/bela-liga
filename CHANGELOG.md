@@ -2,16 +2,109 @@
 
 What the commits changed for the people using the app, newest first. The reasons and details are in DECISIONS.md.
 
-## 02.11.2026 · Natrag na kolo nakon osvježavanja
+## 07.11.2026 · Meč bez pobjednika: upozorenje umjesto zabrane
+
+On development, not live yet (DECISIONS #84).
+
+### Admin
+- On a table's scorepad (computer and phone), changing or deleting a hand of a **finished match** so that nobody is left over 1001 is no longer refused: **Meč ostaje bez pobjednika?** says what the score becomes ("Nakon ove promjene meč je 860:640 i nitko nema 1001, pa se ne broji nijednoj ekipi.") and asks first. **Spremi svejedno** / **Obriši svejedno** saves it, **Odustani** keeps what was entered.
+
+## 07.11.2026 · Vrijeme partije: kraj čim vrijeme istekne
+
+On development, not live yet (DECISIONS #83).
+
+### Players
+- When **Vrijeme partije** runs out, the match ends at once with the score entered then (the team with more points wins) and the board moves on to the next match or **Kraj kola** by itself; before, the board waited 2 minutes with no button and looked frozen. A level score still plays one more hand.
+- A hand still being entered when the time runs out doesn't count: **Spremi** takes the phone back to the table, which has moved on. The 5-minute warning now says "…a igra koja još nije spremljena ne računa se."
+
+### Admin
+- A table's scorepad shows the winner of a match closed by time (the team with more points); before, it showed no winner, since nobody had reached 1001.
+
+## 07.11.2026 · Tu smo: jedan igrač je dovoljan, podebljano
 
 On development, not live yet.
+
+### Changed
+- **Potvrda dolaska**: the part saying one player is enough is now bold: on Početna before the tournament's window ("**jedan igrač stisne "Tu smo"**"), in the league's open window and in the sheet right after signing up for a tournament ("**Dovoljno je da potvrdi jedan od vas.**").
+
+## 07.11.2026 · Natrag zatvara prozor
+
+On development, not live yet.
+
+### Changed
+- On the phone, **Back** (Android's back button or gesture, the browser's Back) closes the open sheet or full-screen window (Profilna slika, Uredi večer, the scorepad's Igra N and Ručni unos, **Pomakni i zumiraj**, a photo opened large) and keeps you on the page; before, it left the page and lost what was typed. With two open (the crop over Novi sponzor) it closes only the top one. While something is saving, Back leaves the sheet open.
+
+## 06.11.2026 · Uredi večer i Nova večer na mobitelu
+
+On development, not live yet.
+
+### Admin
+- **Datumi** on the phone: in **Uredi večer** and **Nova večer** the fields scroll inside the sheet and **Spremi**, **Vrati na zadano**, **Makni večer** and **Dodaj večer** stay under them, so **Drugo mjesto**, an error or the keyboard no longer pushes them off the screen (iPhone SE, 360 px Android).
+
+## 05.11.2026 · Prijava prije registracije
+
+On development, not live yet (DECISIONS #82).
+
+### Changed
+- **Sjedni za stol.** (a guest's Prijavi se on a tournament, or anything locked) has **Prijavi se** as its big button and **Nemaš račun? Registriraj se** under it; before, the big button was Napravi račun and led to Registracija.
+- Početna · Liga for a guest: the night's card has **Prijavi se** and **Nemaš račun? Registriraj se** under it, instead of only Napravi račun.
+
+## 05.11.2026 · Turnir s jednom partijom: pobjeda 1 bod
+
+On development, not live yet.
+
+### Players
+- **Turniri**: in a tournament with **1 partija po kolu** a won table counts **1 bod** in Poredak (one partija to 1001 is worth one point); before, it counted 2. With two partije it stays 2 for a win and 1 for a draw. Tournaments already played show the new points too, and the Kolos made from now on are paired by them.
+
+### Admin
+- Poredak's note says **pobjeda 1** for a tournament with one partija po kolu, **pobjeda 2, neriješeno 1** for two.
+
+## 05.11.2026 · Registracija: najviše 20 računa na sat s jedne mreže
+
+On development, not live yet.
+
+### Players
+- **Registracija** takes at most 20 new accounts per hour from one address (counted in the database, so it holds on every server), so a script can't fill the player lists with junk accounts. The 21st gets "Previše registracija s ove mreže. Pokušaj ponovno za sat vremena."; a taken username or a wrong field doesn't count.
+
+## 05.11.2026 · Nema uskakanja nakon zadnjeg kola
+
+On development, not live yet.
+
+### Players
+- **Liga**: once the night's last round (Kola po večeri) is published, a team that isn't here no longer gets **Tu smo · Želimo uskočiti** on Početna; the card says "Zadnje kolo večeri je već počelo, pa se više ne može uskočiti." The server refuses it too. A team already here can still press Odlazimo.
+- **Turniri**: once the last Kolo is made (a draft too), a team that doesn't play no longer gets **Tu smo · Želimo uskočiti** on the tournament's page or Početna ("Zadnje kolo je već složeno, pa se više ne može uskočiti."); the server refuses it, and the admin's Označi dolazak for a team that doesn't play as well.
+
+## 04.11.2026 · Registracija: datum rođenja i korisničko ime
+
+On development, not live yet.
+
+### Players
+- **Registracija** refuses a birth date that doesn't exist (31. 2.), is in the future or before 1900 ("Neispravan datum rođenja."), and a username with spaces or other signs than a–z, numbers, dot and underscore, as Moj profil does; before, 31. 2. was saved as 3. 3. A username typed with capitals is saved lowercase.
+
+## 04.11.2026 · Najnoviji igrači
+
+On development, not live yet.
+
+### Admin
+- The Igrači list (computer and phone) has **A–Ž | Najnoviji** under the search: Najnoviji puts the newest accounts first and shows on each row when the account was made ("od 03.11.2026"). The choice comes back with Back.
+
+## 03.11.2026 · Odigrani meč ostaje s pobjednikom
+
+On development, not live yet.
+
+### Admin
+- On a table's scorepad, changing or deleting a hand of a **finished match** is refused when the match would be left without a winner (e.g. "Meč bi ostao bez pobjednika (860:640, nitko nema 1001)."); before, the match silently counted for nobody and a 2:0 win could turn into a draw in the standings. Moving the win to the other team is still allowed.
+
+## 02.11.2026 · Natrag na kolo nakon osvježavanja
+
+Live since 02.11. (1a0eff3).
 
 ### Admin
 - On a table's scorepad, **Natrag na kolo N** goes to Dnevni poredak on that Kolo also after the page was reloaded in the middle of entering a hand; it no longer opens an empty Korak 2 whose Spremi can never be pressed. An old step reached with Back or Forward opens the table's board instead.
 
 ## 02.11.2026 · Broj ekipa umjesto igrača
 
-On development, not live yet.
+Live since 02.11. (1a0eff3).
 
 ### Changed
 - A tournament shows how many **teams** signed up ("1 ekipa", "12 ekipa"), not how many players, on its page, its card in the list, Početna's next-tournament card and Prijavljene ekipe; a team with more than two players no longer looks like several teams.

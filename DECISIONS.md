@@ -1531,3 +1531,67 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
     - **Tournament · Poredak**: until Kolo 1 is published only the teams that confirmed arrival (Tu smo or Označi
       dolazak) are listed, not every signed-up team; from Kolo 1 on it is as before. With none yet: "Ekipe koje potvrde
       dolazak bit će ovdje."
+
+82. **Prijava first, Registracija on request** (your note of 05.11.: "ljudi prečesto završe na registration ekranu a
+    trebali bi na login. Login je osnova, registracija je samo ako nemaš acc i odeš registriraj se").
+    - **Where they came from**: the middleware, the session check and Prijava in the header and the menu already went
+      to Prijava. Registracija came from the guest's two big buttons: Napravi račun in "Sjedni za stol." (#75), which
+      every locked item and a tournament's Prijavi se open, and Napravi račun on Početna · Liga's night card.
+    - **Now**: both have Prijavi se as the big button (Prijava with `next`, as before) and "Nemaš račun? Registriraj
+      se" as the line under it, the sheet's earlier "Već imaš račun? Prijavi se" style. Prijava itself keeps "Nemaš
+      profil? Registriraj se". Reason: most people who see these are logged out, not new (a new phone, cleared
+      cookies, the app added to the home screen with cookies of its own), and the form on Registracija makes a second
+      account for them. Google on Registracija only logs into an account it knows.
+    - **The sheet's text**: "Za prijavu na turnir treba ti račun." / "Ovo vide samo igrači s računom." and then
+      "Prijavi se svojim, a ako ga još nemaš, registracija traje minutu." The earlier second sentence ("Traje minutu,
+      a s njim dobivaš i rejting, ligu…") spoke to someone making an account.
+    - **Not changed**: the invitation to a teammate (Nova ekipa, "Nema računa", #75) still links to Registracija: it
+      goes to someone the search didn't find, and its text says "napravi račun". Registracija has "Već imaš profil?
+      Prijavi se" for one who has an account after all.
+    - **Checked**: tsc, lint, unit tests (516 pass), and on the local copy as a guest at 390×844 and 375×667: the Liga
+      card and "Sjedni za stol." from Raspored and Rejting, Prijavi se to `/login?next=%2Fraspored`, Registriraj se to
+      `/signup?next=%2Fratings`, the sheet fits 375×667. **Not checked**: the sheet from a tournament's Prijavi se (the
+      local copy has no tournament open for sign-ups; the same sheet with the tournament's first sentence) and real
+      phones.
+
+83. **Vrijeme partije: the match ends when the time is up, with no 2 minutes after it** (your report of 5.11. from the
+    tournament: the time ran out at Kolo 1's table 3, "partija se zaledi i sve stoji"; then "after time is up
+    automatically finish the game don't wait for 2 minutes"). Replaces #69's grace for a hand being entered.
+    - **What happened on 5.11.**: Zelinčani – Vlažna uzbuna's time was up at 19:11:13 at 709:627. The server waited
+      the 2 minutes of #69 for a hand whose entry had started in time, and the board showed "Vrijeme je isteklo…" with
+      no button and no countdown, so the table looked frozen. At 19:12:33 a manual 300:300 hand on the admin's
+      scorepad took it to 1009:927 and it was finished as a win to 1001. The winner and the difference (82) are the
+      same as a close by time would have given; it is stored without time_expired.
+    - **Now**: at the deadline the match closes with the score entered then, on the first read after it (the board
+      asks a second after the deadline and every 5 s from then on; the tournament's pages and the attention check
+      close it too), and the board moves on to the next match or Kraj kola. A level score still plays one more hand.
+    - **A hand being entered when the time runs out doesn't count**: the server refuses a player's hand after the
+      deadline unless the score was level, and Spremi then takes the phone back to the board, which follows the
+      closed match. The 5-minute warning says so ("…a igra koja još nije spremljena ne računa se."). The phone no
+      longer sends when the entry started (entry_started_at, which the server now ignores).
+    - **The admin's hands still don't depend on the time** (corrections after the night), and the admin's scorepad now
+      shows the winner of a match closed by time; it showed none, since nobody had reached 1001.
+    - **Checked**: unit tests (525), new database tests (`npm run test:db`, run on 5.11.: a match a second past its deadline closes
+      with the team ahead winning and opens the second match on a fresh clock, one still running stays open, a hand
+      after the deadline is refused, a level score takes one more hand that ends it, the admin's scorepad shows the
+      winner), tsc, lint, and on a local copy in the browser: the board at 709:627 went to Meč 2 od 2 about 2 s after
+      its deadline, and Spremi pressed after the deadline in Korak 3 led to Kraj kola with the hand not counted.
+      **Not checked**: the Vercel preview and real phones.
+
+84. **A finished match left without a winner: a warning, not a refusal** (your note of 07.11.: "I don't want for it to
+    be refused but put modal warning. Sometimes that edit is needed.")
+    - **Before** (4a84639): a change of a finished match's hands that left both teams under the threshold (or level
+      after Vrijeme partije) was refused with "Meč bi ostao bez pobjednika (…)".
+    - **Now**: the server answers such a change with 409 and code `no_winner` and saves nothing; the scorepad (the
+      computer's dialog, the phone's sheet, as Obrisati kolo? and Obriši igru) shows **Meč ostaje bez pobjednika?**
+      with the score it would have. **Spremi svejedno** (or **Obriši svejedno** for a delete) sends the same change
+      again with `allow_no_winner=1`, and it is saved: the match then counts for neither team, and the round's wins,
+      the standings and, when the round's outcome changed, the ratings are recounted as for any other change.
+      **Odustani** closes the warning and keeps the entry, the hand sheet or Ručni unos as they were.
+    - **Not changed**: moving the win to the other team, or correcting a match that already had no winner, asks
+      nothing. The players' own scorepad isn't affected (it never edits a finished match).
+    - **Checked**: unit tests, the db test (the warning keeps the round as it was; confirmed, the match is 860:640, the
+      round 1:0 and still a win in the standings), lint, tsc, build, and on a local DB the delete of the hand that took
+      a 2:0 table's first match over 1001: the warning, Odustani (nothing changed), Obriši svejedno (860:640, Bez
+      pobjednika), at 390×844 and 1280×800. **Not clicked through**: the step-by-step correction (Ispravi korak po
+      korak) and Ručni unos reaching the warning; they use the same call as the delete.
