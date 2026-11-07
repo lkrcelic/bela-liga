@@ -2,6 +2,13 @@
 
 What the commits changed for the people using the app, newest first. The reasons and details are in DECISIONS.md.
 
+## 07.11.2026 · Natrag zatvara prozor
+
+On development, not live yet.
+
+### Changed
+- On the phone, **Back** (Android's back button or gesture, the browser's Back) closes the open sheet or full-screen window (Profilna slika, Uredi večer, the scorepad's Igra N and Ručni unos, **Pomakni i zumiraj**, a photo opened large) and keeps you on the page; before, it left the page and lost what was typed. With two open (the crop over Novi sponzor) it closes only the top one. While something is saving, Back leaves the sheet open.
+
 ## 06.11.2026 · Uredi večer i Nova večer na mobitelu
 
 On development, not live yet.
