@@ -2,9 +2,16 @@
 
 What the commits changed for the people using the app, newest first. The reasons and details are in DECISIONS.md.
 
+## 07.11.2026 · Meč bez pobjednika: upozorenje umjesto zabrane
+
+Live since 07.11. (fd45c79, DECISIONS #84).
+
+### Admin
+- On a table's scorepad (computer and phone), changing or deleting a hand of a **finished match** so that nobody is left over 1001 is no longer refused: **Meč ostaje bez pobjednika?** says what the score becomes ("Nakon ove promjene meč je 860:640 i nitko nema 1001, pa se ne broji nijednoj ekipi.") and asks first. **Spremi svejedno** / **Obriši svejedno** saves it, **Odustani** keeps what was entered.
+
 ## 07.11.2026 · Vrijeme partije: kraj čim vrijeme istekne
 
-On development, not live yet (DECISIONS #83).
+Live since 07.11. (fd45c79, DECISIONS #83).
 
 ### Players
 - When **Vrijeme partije** runs out, the match ends at once with the score entered then (the team with more points wins) and the board moves on to the next match or **Kraj kola** by itself; before, the board waited 2 minutes with no button and looked frozen. A level score still plays one more hand.
@@ -15,28 +22,28 @@ On development, not live yet (DECISIONS #83).
 
 ## 07.11.2026 · Tu smo: jedan igrač je dovoljan, podebljano
 
-On development, not live yet.
+Live since 07.11. (fd45c79).
 
 ### Changed
 - **Potvrda dolaska**: the part saying one player is enough is now bold: on Početna before the tournament's window ("**jedan igrač stisne "Tu smo"**"), in the league's open window and in the sheet right after signing up for a tournament ("**Dovoljno je da potvrdi jedan od vas.**").
 
 ## 07.11.2026 · Natrag zatvara prozor
 
-On development, not live yet.
+Live since 07.11. (fd45c79).
 
 ### Changed
 - On the phone, **Back** (Android's back button or gesture, the browser's Back) closes the open sheet or full-screen window (Profilna slika, Uredi večer, the scorepad's Igra N and Ručni unos, **Pomakni i zumiraj**, a photo opened large) and keeps you on the page; before, it left the page and lost what was typed. With two open (the crop over Novi sponzor) it closes only the top one. While something is saving, Back leaves the sheet open.
 
 ## 06.11.2026 · Uredi večer i Nova večer na mobitelu
 
-On development, not live yet.
+Live since 07.11. (fd45c79).
 
 ### Admin
 - **Datumi** on the phone: in **Uredi večer** and **Nova večer** the fields scroll inside the sheet and **Spremi**, **Vrati na zadano**, **Makni večer** and **Dodaj večer** stay under them, so **Drugo mjesto**, an error or the keyboard no longer pushes them off the screen (iPhone SE, 360 px Android).
 
 ## 05.11.2026 · Prijava prije registracije
 
-On development, not live yet (DECISIONS #82).
+Live since 07.11. (fd45c79, DECISIONS #82).
 
 ### Changed
 - **Sjedni za stol.** (a guest's Prijavi se on a tournament, or anything locked) has **Prijavi se** as its big button and **Nemaš račun? Registriraj se** under it; before, the big button was Napravi račun and led to Registracija.
@@ -44,7 +51,7 @@ On development, not live yet (DECISIONS #82).
 
 ## 05.11.2026 · Turnir s jednom partijom: pobjeda 1 bod
 
-On development, not live yet.
+Live since 07.11. (fd45c79).
 
 ### Players
 - **Turniri**: in a tournament with **1 partija po kolu** a won table counts **1 bod** in Poredak (one partija to 1001 is worth one point); before, it counted 2. With two partije it stays 2 for a win and 1 for a draw. Tournaments already played show the new points too, and the Kolos made from now on are paired by them.
@@ -54,14 +61,14 @@ On development, not live yet.
 
 ## 05.11.2026 · Registracija: najviše 20 računa na sat s jedne mreže
 
-On development, not live yet.
+Live since 07.11. (fd45c79).
 
 ### Players
 - **Registracija** takes at most 20 new accounts per hour from one address (counted in the database, so it holds on every server), so a script can't fill the player lists with junk accounts. The 21st gets "Previše registracija s ove mreže. Pokušaj ponovno za sat vremena."; a taken username or a wrong field doesn't count.
 
 ## 05.11.2026 · Nema uskakanja nakon zadnjeg kola
 
-On development, not live yet.
+Live since 07.11. (fd45c79).
 
 ### Players
 - **Liga**: once the night's last round (Kola po večeri) is published, a team that isn't here no longer gets **Tu smo · Želimo uskočiti** on Početna; the card says "Zadnje kolo večeri je već počelo, pa se više ne može uskočiti." The server refuses it too. A team already here can still press Odlazimo.
@@ -69,21 +76,21 @@ On development, not live yet.
 
 ## 04.11.2026 · Registracija: datum rođenja i korisničko ime
 
-On development, not live yet.
+Live since 07.11. (fd45c79).
 
 ### Players
 - **Registracija** refuses a birth date that doesn't exist (31. 2.), is in the future or before 1900 ("Neispravan datum rođenja."), and a username with spaces or other signs than a–z, numbers, dot and underscore, as Moj profil does; before, 31. 2. was saved as 3. 3. A username typed with capitals is saved lowercase.
 
 ## 04.11.2026 · Najnoviji igrači
 
-On development, not live yet.
+Live since 07.11. (fd45c79).
 
 ### Admin
 - The Igrači list (computer and phone) has **A–Ž | Najnoviji** under the search: Najnoviji puts the newest accounts first and shows on each row when the account was made ("od 03.11.2026"). The choice comes back with Back.
 
 ## 03.11.2026 · Odigrani meč ostaje s pobjednikom
 
-On development, not live yet.
+Live since 07.11. (fd45c79).
 
 ### Admin
 - On a table's scorepad, changing or deleting a hand of a **finished match** is refused when the match would be left without a winner (e.g. "Meč bi ostao bez pobjednika (860:640, nitko nema 1001)."); before, the match silently counted for nobody and a 2:0 win could turn into a draw in the standings. Moving the win to the other team is still allowed.
@@ -104,7 +111,7 @@ Live since 02.11. (1a0eff3).
 
 ## 31.10.2026 · Nađi zamjenu do Tu smo
 
-On development, not live yet.
+Live since 02.11. (1a0eff3).
 
 ### Changed
 - Početna's Večeras card shows **Nađi zamjenu** only until **Tu smo** opens; from then on (Tu smo, Želimo uskočiti, the night under way) the button is gone.
@@ -113,7 +120,7 @@ On development, not live yet.
 
 ## 31.10.2026 · Poredak kao popis prisutnih
 
-On development, not live yet (DECISIONS #81).
+Live since 02.11. (1a0eff3, DECISIONS #81).
 
 ### Changed
 - **Dnevni poredak** in the league lists a team as soon as it presses **Tu smo** (or the admin switches it on), with zeros, so players see they are on tonight's list before the first round. A team that leaves without playing drops out.
@@ -121,7 +128,7 @@ On development, not live yet (DECISIONS #81).
 
 ## 31.10.2026 · Datum iza ponoći
 
-On development, not live yet.
+Live since 02.11. (1a0eff3).
 
 ### Changed
 - A tournament cancelled between midnight and 01:00 says the right day in **Otkazao …** (Turnir je otkazan and the list of tournaments, computer and phone); it used to say the day before.
@@ -130,7 +137,7 @@ On development, not live yet.
 
 ## 31.10.2026 · Liga: Okupljanje i Početak
 
-On development, not live yet (DECISIONS #80). Needs the migration 20261101120000_league_gathering_time on deploy.
+Live since 02.11. (1a0eff3, DECISIONS #80). The migration 20261101120000_league_gathering_time went with it.
 
 ### Added for players
 - Raspored's next night and Početna's Sljedeća večer say **Okupljanje od 18:30** beside the start time and place.
@@ -145,7 +152,7 @@ On development, not live yet (DECISIONS #80). Needs the migration 20261101120000
 
 ## 31.10.2026 · Datumi: Dodaj večer, premjesti večer, obriši odigranu
 
-On development, not live yet (DECISIONS #78, #79).
+Live since 02.11. (1a0eff3, DECISIONS #78, #79).
 
 ### Added for the admin
 - Upravljanje ligom · Datumi: **Dodaj večer** is a button (computer: over the list; phone: under Sljedeća večer) that opens **Nova večer**: date, time and place.
@@ -161,7 +168,7 @@ On development, not live yet (DECISIONS #78, #79).
 
 ## 31.10.2026 · Admin: popis turnira i Vrati turnir
 
-Live since 31.10.2026 (DECISIONS #77), except the Kolo's **point difference**, which is on development, not live yet.
+Live since 31.10.2026 (DECISIONS #77); the Kolo's **point difference** since 02.11. (1a0eff3).
 
 ### Added for the admin
 - Turniri (computer), Nadolazeći: the card shows the **last 5 sign-ups**, with **Prijave** and **Stranica**.
