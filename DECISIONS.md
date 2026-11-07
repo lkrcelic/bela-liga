@@ -1595,3 +1595,19 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
       a 2:0 table's first match over 1001: the warning, Odustani (nothing changed), Obriši svejedno (860:640, Bez
       pobjednika), at 390×844 and 1280×800. **Not clicked through**: the step-by-step correction (Ispravi korak po
       korak) and Ručni unos reaching the warning; they use the same call as the delete.
+
+85. **Vidljivost slike only behind the photo** (your request of 07.11. with a screenshot of the Ekipa page: "moramo
+    maknut ovo na mobitelu vidljivost ekipe a bome i na desktop pregledu. Vidljivost ekipe se uređuje klikom na sliku,
+    ne mora biti poseban gumb za to, uzima previše mjesta na ekranu… Isto vrijedi i za profilnu sliku i za sliku tima.")
+    - **Gone**: the "Tko vidi sliku ekipe · Vidljivost ›" card under the team's header on the phone, the "Tko vidi
+      sliku" row in Podaci on Moj profil's phone page, and the "Tko vidi moju sliku" card in Moj profil's third column
+      on the computer. They took a block of the screen each only to open what the photo itself opens.
+    - **Where it lives now**: tapping or clicking the photo (or Dodaj sliku). The phone's sheet already carried the
+      choice for both a player and a team; the computer's dialog carried it for a team, and now carries it for a
+      player too, under the file drop zone.
+    - **Blocked by the admin**: the two cards also explained the block on the computer, so the photo stayed dead there.
+      Now the photo opens on the computer as well and the dialog shows only the note and U redu, as the phone's sheet
+      does.
+    - **Checked**: tsc, lint, and in the browser on a local copy: Moj profil and Ekipa on a 375 px phone and on the
+      computer (the sections gone, the sheet and the dialog carrying the choice, a pick saved with no error, and the
+      blocked note in the computer's dialog). **Not checked**: the Vercel preview and real phones.

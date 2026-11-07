@@ -2,6 +2,15 @@
 
 What the commits changed for the people using the app, newest first. The reasons and details are in DECISIONS.md.
 
+## 07.11.2026 · Vidljivost slike samo klikom na sliku
+
+On development, not live yet (DECISIONS #85).
+
+### Players
+- **Tko vidi sliku** is set by tapping the photo, nowhere else. The separate card under the team's header (**Tko vidi sliku ekipe · Vidljivost ›**) and the **Tko vidi sliku** row in Podaci on Moj profil are gone from the phone, and the **Tko vidi moju sliku** card is gone from the computer's Moj profil — each took a block of screen only to open what the photo opens.
+- On the computer, **Profilna slika** now has the choice in the dialog, next to the photo, as **Slika ekipe** already did.
+- While an admin has blocked the photo, clicking it on the computer now says so; before, the photo did nothing there and the note sat in the card that is gone.
+
 ## 07.11.2026 · Meč bez pobjednika: upozorenje umjesto zabrane
 
 Live since 07.11. (fd45c79, DECISIONS #84).
