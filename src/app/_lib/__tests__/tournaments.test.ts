@@ -28,6 +28,7 @@ import {
   tournamentTotals,
 } from "@/app/_lib/tournaments";
 import {dateTile} from "@/app/_lib/nights";
+import {TournamentRequestValidation} from "@/app/_interfaces/tournament";
 
 // Turniri: pairing the Kolos, the waiting list, the standings and the words of the screens
 
@@ -449,4 +450,18 @@ test("Otvorene prijave: a closed tournament takes teams until it starts, an open
     assert.equal(open({phase}), false, phase);
     assert.equal(open({phase, openSignups: false}), false, phase);
   }
+});
+
+test("the tournament form's switch reaches the server: open_signups survives the request's validation", () => {
+  const body = {
+    name: "Kafić", date: "2026-12-01", gathering_time: null, start_time: null,
+    location_name: null, location_address: null, location_url: null,
+    rounds: 3, matches_per_round: 2, declarations: true, max_teams: null, entry_fee: 0,
+    rules_url: null, prizes: [], game_minutes: 35, auto_publish: false, organizer_phone: "0931234567",
+  };
+  // the field would be dropped without a line in the schema, and the tournament would quietly stay closed
+  assert.equal(TournamentRequestValidation.parse({...body, open_signups: true}).open_signups, true);
+  assert.equal(TournamentRequestValidation.parse({...body, open_signups: false}).open_signups, false);
+  // left out: a tournament is closed, as every tournament made before this was
+  assert.equal(TournamentRequestValidation.parse(body).open_signups, false);
 });

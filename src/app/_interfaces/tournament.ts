@@ -52,6 +52,8 @@ export const TournamentRequestValidation = z.object({
   game_minutes: z.number().int().min(GAME_MINUTES_MIN, GAME_MINUTES_ERROR).max(GAME_MINUTES_MAX, GAME_MINUTES_ERROR).default(35),
   // Automatska kola: the Kolos after the first are published by themselves
   auto_publish: z.boolean().default(false),
+  // Otvorene prijave: ekipe se mogu prijaviti i dok turnir traje, do zadnjeg kola (DECISIONS #88)
+  open_signups: z.boolean().default(false),
   // Telefon organizatora: required for a new tournament (checked by the service); an old one may stay without
   organizer_phone: z.string().trim().max(30).refine((v) => v === "" || isValidPhone(v), PHONE_ERROR).nullable().default(null),
 });
