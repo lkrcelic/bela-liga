@@ -1795,3 +1795,37 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
       team added mid-tournament coming in REGISTERED, active and marked arrived, a closed tournament refusing the
       same with "Turnir je već počeo", and the sign-ups stopping with "Zadnje kolo je već složeno" once the last Kolo
       existed.
+
+89. **Nedolazak za stol brže (3 / 5 / 8) i Otključaj partiju** (your message of 07.11.: "nakon što istekne 5 min i tek
+    nakon 8 se dozvoli odgovor to mi je presporo… Idemo sa A, i idemo sa time da admin uvijek može otključati partiju i
+    postaviti na nju custom vrijeme trajanja kod otključavanja").
+    - **The timings are rescaled, the three steps stay**: the question is up 3 minutes after the Kolo goes out, the
+      answers work from 5, the skip is at 8 (`NO_SHOW_ASK_MS`, `NO_SHOW_UNLOCK_MS`, `NO_SHOW_SKIP_MS`). Alternatives I
+      put to you: a 90-second pending answer with an undo instead of the lock, and making the times a setting of the
+      tournament. Reason for the plain rescale: the two minutes between the question and the answer are the whole guard
+      against an impatient answer, and nothing else in the flow has to change; the dead time falls from 10 minutes to 8
+      and, more importantly, the question reaches the phones while people are still looking at them.
+    - **Otključaj partiju is on every closed table of a tournament** (your answer: "Svaki zatvoreni stol"), on the admin
+      scorepad where the result is corrected anyway, with the reason it is locked written above it: Nedolazak,
+      Preskočen, Vrijeme isteklo or an ordinary Gotovo. The organizer has it on their own tournament, as they already
+      have Isključi / Vrati (#86). A league table is never locked by an answer and is corrected by entering games, so it
+      has none (your answer: "Samo turniri").
+    - **The unlock undoes the lock** (your answer: "Otključavanje poništi sve"): a Nedolazak drops the 1001:700 matches
+      its answer wrote, a Nedolazak or a Preskočen brings the excluded teams back into the tournament and lifts the
+      app's own ban from Kolo 1 (the players' bans under it with them), and a table closed by Vrijeme partije or played
+      out carries on with its last match — the finished match becomes the match being played again, with its hands, and
+      the win it was counted comes off the table's score. A match an admin has since entered hands into is real play, so
+      a Nedolazak unlock leaves it alone.
+    - **Custom Vrijeme partije at the unlock**: the minutes the admin picks (10–45 offered, Drugo for anything from
+      `GAME_MINUTES_MIN` to `GAME_MINUTES_MAX`) are written on the table itself (`Round.game_minutes`), and
+      `gameMinutesOf` reads the table's own limit before the tournament's or the league's. So the match resumed here and
+      every later match of that table run on it. Alternative: a deadline only on the resumed match; reason: the table's
+      own limit also covers the second Partija and a game started by the players afterwards.
+    - **The Kolos already made stay as they are** (your answer: "Dopusti uz upozorenje"): the confirmation says so and
+      the admin lays them out again if they want. Refusing the unlock while a next Kolo exists, or deleting those Kolos
+      with it, were the alternatives.
+    - **Checked**: unit tests for the new times and for the lock's kinds and sentences, and against a real Postgres for
+      all three unlocks (the Nedolazak with its ban, the Preskočen with both teams, Vrijeme isteklo resuming with its
+      hands and a new deadline), plus the whole flow clicked through on a phone-sized dev server: a locked table →
+      Otključaj partiju → 20 min → the table new again with the team back in the tournament, and an expired match → 15
+      min → the same match being played again with 15 minutes on it. tsc and lint clean.

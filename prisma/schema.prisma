@@ -634,6 +634,10 @@ model Round {
   matches_per_round Int @default(2)
   // zvanja are entered at the table; false (a tournament "bez zvanja"): only bela (20)
   declarations      Boolean @default(true)
+  // Vrijeme partije for this table alone: the minutes an admin chose when they unlocked it (Otključaj partiju,
+  // DECISIONS #89); null (every other table): its tournament's or its league's. CHECK in the migration script keeps it
+  // between GAME_MINUTES_MIN and GAME_MINUTES_MAX.
+  game_minutes  Int?
   // a tournament table's answer to "Jesu li … za stolom?" (Nedolazak za stol): who answered (attendance_team_id, one
   // of the two teams; the other one didn't come when it is NO_SHOW), which player and when; SKIPPED has no team. A
   // NO_SHOW or SKIPPED table isn't rated (CHECKs in the migration script)

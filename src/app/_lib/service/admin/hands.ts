@@ -8,6 +8,8 @@ import {declarationsError, InvalidResultError, NoWinnerWarning, normalizeBelaRes
 import {transformBelaResult} from "@/app/_lib/helpers/databaseHelpers";
 import {createBelaResult} from "@/app/_lib/service/ongoingBelaResult/create";
 import {timeWinner} from "@/app/_lib/gameTime";
+import {gameMinutesOf} from "@/app/_lib/service/match/timeLimit";
+import {lockKind} from "@/app/_lib/tableLock";
 import {updateOngoingBelaResult} from "@/app/_lib/service/ongoingBelaResult/update";
 import {createOngoingMatch} from "@/app/_lib/service/ongoingMatch/create";
 import {finishOngoingMatch, FinishMatchOutcome} from "@/app/_lib/service/match/finishOngoingMatch";
@@ -74,6 +76,25 @@ function toPadHand(h: StoredHand): PadHand {
   };
 }
 
+// What locked the table and, for a Nedolazak, the team that didn't come (Otključaj partiju, DECISIONS #89)
+function padLock(round: {
+  open: boolean;
+  attendance: string | null;
+  attendance_team_id: number | null;
+  team1_id: number;
+  team2_id: number;
+  team1: {team_id: number; team_name: string};
+  team2: {team_id: number; team_name: string};
+  matches: {time_expired: boolean}[];
+  _count: {ongoingMatches: number};
+}): TablePad["lock"] {
+  const kind = lockKind({open: round.open, attendance: round.attendance, matches: round.matches, ongoing: round._count.ongoingMatches});
+  if (!kind) return null;
+  const absentId = round.attendance_team_id == null ? null : round.attendance_team_id === round.team1_id ? round.team2_id : round.team1_id;
+  const absent = absentId == null ? null : teamLabel(absentId, (absentId === round.team1.team_id ? round.team1 : round.team2).team_name);
+  return {kind, absent: kind === "no_show" ? absent : null};
+}
+
 export async function getTablePad(roundId: number): Promise<TablePad> {
   const round = await prisma.round.findUnique({
     where: {id: roundId},
@@ -84,7 +105,7 @@ export async function getTablePad(roundId: number): Promise<TablePad> {
       tournamentRounds: {select: {tournament_id: true}},
       matches: {orderBy: {id: "asc"}, include: {belaResults: {orderBy: {result_id: "asc"}, include: handInclude}}},
       ongoingMatches: {orderBy: {id: "desc"}, take: 1, include: {belaResults: {orderBy: {result_id: "asc"}, include: handInclude}}},
-      _count: {select: {roundPlayers: true}},
+      _count: {select: {roundPlayers: true, ongoingMatches: true}},
     },
   });
   if (!round) throw new NotFoundError("Stol ne postoji.");
@@ -133,6 +154,9 @@ export async function getTablePad(roundId: number): Promise<TablePad> {
     done: !round.open,
     bye: isByeTeam(round.team1_id) || isByeTeam(round.team2_id),
     hasLineup: round._count.roundPlayers > 0,
+    // what locked the table, for Otključaj partiju (DECISIONS #89)
+    lock: padLock(round),
+    gameMinutes: await gameMinutesOf(prisma, round.id),
     matches,
   };
 }

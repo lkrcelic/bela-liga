@@ -2,6 +2,22 @@
 
 What the commits changed for the people using the app, newest first. The reasons and details are in DECISIONS.md.
 
+## 07.11.2026 · Brži upit za nedolazak i Otključaj partiju
+
+Not deployed yet (DECISIONS #89). Needs a migration on the database.
+
+### Players
+- **Upit "Jesu li … za stolom?" dolazi brže**: pojavi se **3 minute** nakon što kolo izađe (prije 5), odgovor radi **od 5. minute** (prije od 8.), a stol se preskače u **8. minuti** (prije u 10.). Ukupno čekanje je kraće za dvije minute, a pitanje stigne dok je mobitel još u ruci.
+
+### Admin
+- **Otključaj partiju** na svakom zaključanom stolu turnira, u semaforu stola. Iznad dugmeta piše zašto je zaključan: nedolazak, preskočen meč, isteklo Vrijeme partije ili odigrana runda.
+- Kod otključavanja biraš **koliko partija traje od sada** (10–45 min ili Drugo); to vrijeme vrijedi za **taj stol**, ne dira vrijeme turnira.
+- **Nedolazak**: otključavanje briše upisanih 1001 : 700, **vraća isključenu ekipu u turnir** i **ukida automatsku zabranu prijava** iz 1. kola. Stol je ponovo nov.
+- **Preskočen meč**: obje ekipe se vraćaju u turnir, stol je nov.
+- **Vrijeme isteklo / Gotovo**: zadnja partija se **nastavlja s upisanim igrama** i novim vremenom, a njena pobjeda se skida s rezultata stola dok se partija ponovo ne završi.
+- Upozorenje u potvrdi: **kola složena s tim rezultatom ostaju kakva jesu** — ako treba, složi ih ponovo.
+- Ligaški stolovi se ne otključavaju (ispravljaju se upisom igara, kao i dosad).
+
 ## 07.11.2026 · Korisničko ime vidljivo svima
 
 Not deployed yet (DECISIONS #88).
