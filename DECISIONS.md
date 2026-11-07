@@ -1821,6 +1821,13 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
       `gameMinutesOf` reads the table's own limit before the tournament's or the league's. So the match resumed here and
       every later match of that table run on it. Alternative: a deadline only on the resumed match; reason: the table's
       own limit also covers the second Partija and a game started by the players afterwards.
+    - **An unlocked table says Tu smo** (`attendance = PRESENT`, the admin as the answer): without it the table would
+      be open, today's, published long ago and with nothing played, which is exactly what the question asks about — the
+      clock would already be past the skip, so the next read of it would close the table again. PRESENT also keeps the
+      table rated (isRatedRound) and reads as "Ekipe su za stolom, igra još nije započela." in the Kolo's list.
+    - **A place taken while the team was out stays taken**: the lock let a confirmed waiting team in (fillPlaces), and
+      the unlock doesn't send it back out, so the tournament can hold one team more than its limit until the admin
+      sorts it out. Same as Vrati (#86), which also doesn't count places.
     - **The Kolos already made stay as they are** (your answer: "Dopusti uz upozorenje"): the confirmation says so and
       the admin lays them out again if they want. Refusing the unlock while a next Kolo exists, or deleting those Kolos
       with it, were the alternatives.

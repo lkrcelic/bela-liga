@@ -465,8 +465,9 @@ function MatchPhone({
             {pad.done ? "Runda je završena. Izmjene mijenjaju rezultat i poredak." : `Meč ${number} je završen. Izmjene mijenjaju rezultat i poredak.`}
           </Box>
         )}
-        {/* a locked table of a tournament: why, and Otključaj partiju (DECISIONS #89) */}
-        {viewDone && number === pad.matches.filter((m) => m.kind === "finished").length && <UnlockBox pad={pad} onDone={reload} />}
+        {/* a locked table of a tournament: why, and Otključaj partiju (DECISIONS #89); a table that isn't locked has
+            none of this, whichever match is open */}
+        {viewDone && <UnlockBox pad={pad} onDone={reload} />}
       </Box>
       <HandList rows={match.hands.map((h) => ({id: h.id, left: h.total1, right: h.total2}))} onOpen={openSheet} sx={{mt: "14px"}} />
       {!viewDone && (
