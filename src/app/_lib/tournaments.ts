@@ -57,6 +57,26 @@ export function signUpsOpenNow(t: {phase: TournamentPhase; registrationsOpen: bo
   return t.phase === "active" && t.openSignups && !t.lastKoloMade;
 }
 
+/**
+ * Whether a team coming in now counts as present, so its entry is written with Tu smo and active and the next Kolo's
+ * draft pairs it (DECISIONS #88, your words: "ako su se prijavili podrazumijeva se da su tamo").
+ *
+ * That starts at the **start time**, not at Kolo 1: between the two the day's switch has already decided who is here,
+ * so a team that signs up then is just as much here as one that signs up while a Kolo is played. Only a tournament
+ * with Otvorene prijave does this — a closed one keeps the old flow, where a team added late is marked by the admin.
+ */
+export function joinsAsPresent(t: {openSignups: boolean; dayClosed: boolean}): boolean {
+  return t.openSignups && t.dayClosed;
+}
+
+/**
+ * Switching Otvorene prijave off while the tournament is played closes the sign-ups with it. The database refuses a
+ * started tournament that keeps them open (Tournament_started_check), so without this the save would be a 500.
+ */
+export function signUpsCloseWithSwitch(t: {started: boolean; registrationsOpen: boolean; openSignupsAfter: boolean}): boolean {
+  return t.started && t.registrationsOpen && !t.openSignupsAfter;
+}
+
 // The most Kolos a tournament has (Tournament_rounds_check)
 export const KOLO_MAX = 20;
 
@@ -146,7 +166,7 @@ export type TableResult = {
   started: boolean;
   // team1's points minus team2's, over the matches played
   diff: number;
-  // false for a skipped table (Nedolazak za stol: nobody started or answered in 10 minutes): it isn't counted
+  // false for a skipped table (Nedolazak za stol: nobody started or answered in 8 minutes): it isn't counted
   scored: boolean;
   // the matches the table plays (Partija po kolu, 2 or 1): a match to 1001 is worth a point, so a table won is worth that many
   matches: number;

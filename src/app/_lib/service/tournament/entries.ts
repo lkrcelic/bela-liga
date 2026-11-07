@@ -10,8 +10,9 @@ import {teamNameTaken} from "@/app/_lib/service/team/update";
 import {TEAM_NAME_TAKEN} from "@/app/_interfaces/team";
 import {CandidateTeam, RegistrationRequest} from "@/app/_interfaces/tournament";
 import {playersInOtherEntries, signUpStatus} from "@/app/_lib/tournamentEntries";
+import {joinsAsPresent} from "@/app/_lib/tournaments";
 import {hasRoom} from "@/app/_lib/tournamentDay";
-import {dayEntries, LAST_KOLO_MADE, lastKoloIsMade} from "./day";
+import {dayClosed, dayEntries, LAST_KOLO_MADE, lastKoloIsMade} from "./day";
 import {BYE_TEAM_ID} from "@/app/_lib/bye";
 import {banDay} from "@/app/_lib/bans";
 import {activeBans, banReason} from "@/app/_lib/service/bans/bans";
@@ -42,18 +43,21 @@ async function lockOpenTournament(tx: Tx, tournamentId: number) {
  * right up to the moment its last Kolo is made — after that there is no next Kolo to come into, the same rule that
  * stops Tu smo · Želimo uskočiti.
  *
- * `during` says the tournament is already running, so the team that comes in counts as present: it is marked arrived
- * and plays from the next Kolo, or waits (confirmed) when the tournament is full.
+ * `during` says the day's switch has already run on a tournament with Otvorene prijave, so the team that comes in
+ * counts as present: it is marked arrived and plays from the next Kolo, or waits (confirmed) when the tournament is
+ * full. That starts at the start time, not at Kolo 1 — between the two, a team that signs up is just as much here.
+ * A tournament without Otvorene prijave is untouched by all of this.
  */
 async function lockTournamentForEntry(tx: Tx, tournamentId: number): Promise<{t: Awaited<ReturnType<typeof lockOpenTournament>>; during: boolean}> {
   await lockTournament(tx, tournamentId);
   const t = await tx.tournament.findUnique({where: {tournament_id: tournamentId}});
   if (!t) throw new NotFoundError(TOURNAMENT_NOT_FOUND);
   if (t.cancelled_at) throw new InvalidResultError("Turnir je otkazan.");
-  if (!t.started_at) return {t, during: false};
-  if (!t.open_signups) throw new InvalidResultError(TOURNAMENT_STARTED);
-  if (await lastKoloIsMade(tx, t)) throw new InvalidResultError(LAST_KOLO_MADE);
-  return {t, during: true};
+  if (t.started_at) {
+    if (!t.open_signups) throw new InvalidResultError(TOURNAMENT_STARTED);
+    if (await lastKoloIsMade(tx, t)) throw new InvalidResultError(LAST_KOLO_MADE);
+  }
+  return {t, during: joinsAsPresent({openSignups: t.open_signups, dayClosed: dayClosed(t)})};
 }
 
 // A team's players with an account (deleted ones are left out)
@@ -196,8 +200,13 @@ export async function admitTeam(tournamentId: number, teamId: number): Promise<v
 // but the switch — the Kolos already made stay as they are.
 export async function setRegistrationsOpen(tournamentId: number, open: boolean): Promise<void> {
   await prisma.$transaction(async (tx) => {
-    const {during} = await lockTournamentForEntry(tx, tournamentId);
-    if (open && !during) await dropDrafts(tx, tournamentId);
+    await lockTournament(tx, tournamentId);
+    const t = await tx.tournament.findUnique({where: {tournament_id: tournamentId}});
+    if (!t) throw new NotFoundError(TOURNAMENT_NOT_FOUND);
+    if (t.cancelled_at) throw new InvalidResultError("Turnir je otkazan.");
+    // a started tournament may keep its sign-ups open only with Otvorene prijave (Tournament_started_check)
+    if (t.started_at && !t.open_signups) throw new InvalidResultError(TOURNAMENT_STARTED);
+    if (open && !t.started_at) await dropDrafts(tx, tournamentId);
     await tx.tournament.update({where: {tournament_id: tournamentId}, data: {registrations_open: open}});
   });
 }

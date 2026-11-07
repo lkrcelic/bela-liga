@@ -11,6 +11,7 @@ import {AdminTournament, MyLastTable, MyResult, MyTeamOption, TournamentCard, To
 import {activeBans} from "@/app/_lib/service/bans/bans";
 import {banDay} from "@/app/_lib/bans";
 import {teamLabel} from "@/app/_lib/bye";
+import {lastKoloMade, signUpsCloseWithSwitch, signUpsOpenNow} from "@/app/_lib/tournaments";
 import {playersInOtherEntries, rebalance} from "@/app/_lib/tournamentEntries";
 import {normalizePhone} from "@/app/_lib/phone";
 import {ORGANIZER_PHONE_REQUIRED} from "@/app/_interfaces/tournament";
@@ -119,7 +120,10 @@ export async function updateTournament(id: number, request: TournamentRequest): 
       if (next.declarations !== t.declarations) await tx.round.updateMany({where: drafts, data: {declarations: next.declarations}});
     }
 
-    await tx.tournament.update({where: {tournament_id: id}, data: next});
+    // Otvorene prijave switched off while the tournament is played: the sign-ups close with it, because a started
+    // tournament may not keep them open (Tournament_started_check) — the row would be refused by the database
+    const closes = signUpsCloseWithSwitch({started: t.started_at != null, registrationsOpen: t.registrations_open, openSignupsAfter: next.open_signups});
+    await tx.tournament.update({where: {tournament_id: id}, data: {...next, ...(closes && {registrations_open: false})}});
     await savePrizes(tx, id, request.prizes);
     if (next.max_teams !== t.max_teams) {
       if (!t.started_at && !t.arrival_closed_at) await applyLimit(tx, id, next.max_teams);
@@ -305,7 +309,9 @@ export async function getTournamentDetail(id: number, viewer: Viewer | null): Pr
   const t = s.tournament;
   const [teams, result, bans] = await Promise.all([
     // Prijavi ekipu: before the start as ever, and all through a tournament with Otvorene prijave (DECISIONS #88)
-    viewer && cardView(s, viewer).signups_open_now ? myTeams(s, viewer) : Promise.resolve([]),
+    viewer && signUpsOpenNow({phase: s.phase, registrationsOpen: t.registrations_open, openSignups: t.open_signups, lastKoloMade: lastKoloMade(s.kolos, t.rounds)})
+      ? myTeams(s, viewer)
+      : Promise.resolve([]),
     myResult(s, viewer),
     viewer ? activeBans({playerIds: [viewer.id]}) : Promise.resolve(null),
   ]);

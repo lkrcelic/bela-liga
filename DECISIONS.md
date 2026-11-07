@@ -1778,5 +1778,20 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
       and that now works while it is played too (before, the switch was refused after the start).
     - **Not changed**: the number of Kolos, the limit, the standings. A team that comes in at Kolo 4 has played fewer
       Kolos and stands lower for it; that is the tournament, not a fault.
-    - **Checked**: unit tests for the rule (both kinds before the start, during, at the last Kolo, with the switch
-      closed, and finished or cancelled), tsc on the files of this change, lint.
+    - **Three holes found going over it again** (your "provjeri još jednom logike u kodu"), all fixed:
+      1. **Switching the setting off mid-tournament was a 500.** `Tournament_started_check` refuses a started
+         tournament with its sign-ups open, and Podaci writes `open_signups` without touching `registrations_open`.
+         Turning Cijeli turnir back to Do početka now closes the sign-ups in the same save (`signUpsCloseWithSwitch`).
+      2. **A team signing up between the start time and Kolo 1 was not marked present.** The flag read `started_at`,
+         which is set only when Kolo 1 is published, so in that window the entry was written without Tu smo. It now
+         reads the day's switch (`dayClosed`), which is where "the tournament is under way" really begins
+         (`joinsAsPresent`). A tournament without Otvorene prijave is untouched: the gate that refuses a late team
+         still reads `started_at`, so the admin's existing "označi pa ih uključi prekidačem" flow is as it was.
+      3. **The Prijave switch refused itself** once the last Kolo was made, because it shared the entry's guard. It
+         has its own check now, so the admin can close the sign-ups of an open tournament at any point.
+    - **Checked**: unit tests for the rules (both kinds before the start, during, at the last Kolo, with the switch
+      closed, finished or cancelled; who counts as present; what switching the setting off does), tsc on the files of
+      this change, lint, and on the live development app: Kolo 1 made and published without closing the sign-ups, a
+      team added mid-tournament coming in REGISTERED, active and marked arrived, a closed tournament refusing the
+      same with "Turnir je već počeo", and the sign-ups stopping with "Zadnje kolo je već složeno" once the last Kolo
+      existed.

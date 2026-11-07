@@ -22,6 +22,8 @@ import {
   tournamentPhase,
   koloRemovalOf,
   koloRemovalWarns,
+  joinsAsPresent,
+  signUpsCloseWithSwitch,
   signUpsOpenNow,
   removesResults,
   tournamentStatus,
@@ -464,4 +466,24 @@ test("the tournament form's switch reaches the server: open_signups survives the
   assert.equal(TournamentRequestValidation.parse({...body, open_signups: false}).open_signups, false);
   // left out: a tournament is closed, as every tournament made before this was
   assert.equal(TournamentRequestValidation.parse(body).open_signups, false);
+});
+
+test("Otvorene prijave: who counts as present, and what switching the setting off does", () => {
+  // a team that comes in once the day's switch has run is here: that starts at the start time, not at Kolo 1
+  assert.equal(joinsAsPresent({openSignups: true, dayClosed: true}), true);
+  // before the start it signs up like anyone: it still has to press Tu smo
+  assert.equal(joinsAsPresent({openSignups: true, dayClosed: false}), false);
+  // a tournament without Otvorene prijave keeps the old flow in both cases
+  assert.equal(joinsAsPresent({openSignups: false, dayClosed: true}), false);
+  assert.equal(joinsAsPresent({openSignups: false, dayClosed: false}), false);
+
+  // switching the setting off while it is played closes the sign-ups: the database refuses a started tournament
+  // that keeps them open (Tournament_started_check), so the save would be a 500 without this
+  assert.equal(signUpsCloseWithSwitch({started: true, registrationsOpen: true, openSignupsAfter: false}), true);
+  // nothing to close
+  assert.equal(signUpsCloseWithSwitch({started: true, registrationsOpen: false, openSignupsAfter: false}), false);
+  // it stays open: that is the whole point of the setting
+  assert.equal(signUpsCloseWithSwitch({started: true, registrationsOpen: true, openSignupsAfter: true}), false);
+  // before the start the sign-ups are the admin's own business, whatever the setting says
+  assert.equal(signUpsCloseWithSwitch({started: false, registrationsOpen: true, openSignupsAfter: false}), false);
 });

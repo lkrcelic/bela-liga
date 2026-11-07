@@ -28,7 +28,7 @@ export function windowOf(t: {date: Date; gathering_time: string | null; start_ti
 }
 
 // The day's switch has run, or the tournament started some other way (Kolo 1 published, or no start time)
-const dayClosed = (t: {arrival_closed_at: Date | null; started_at: Date | null}) => t.arrival_closed_at != null || t.started_at != null;
+export const dayClosed = (t: {arrival_closed_at: Date | null; started_at: Date | null}) => t.arrival_closed_at != null || t.started_at != null;
 
 export async function dayEntries(tx: Tx, tournamentId: number): Promise<DayEntry[]> {
   const rows = await tx.tournamentTeam.findMany({
