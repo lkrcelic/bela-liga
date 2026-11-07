@@ -214,11 +214,13 @@ export async function addKolo(tournamentId: number, n: number): Promise<void> {
   await ensureNextKoloDraft(tournamentId);
 }
 
-// Obriši kolo (the bin on Kola's last Kolo): the tournament is one Kolo shorter, but keeps at least one. Only the last
-// Kolo goes (the ones after a Kolo were paired by its results): a Kolo still to come, a draft, or a Kolo out, its
-// tables going with it (the bye's too). A Kolo someone has played at goes only with withResults (the admin saw the
-// warning): its games, the ones being played too, go, and ratings are counted again without them. A second tap that
-// finds it gone changes nothing. A tournament whose Kolos are then all played is over.
+// Obriši kolo (the bin on every Kolo of Kola, DECISIONS #87): the tournament keeps at least one Kolo. A Kolo nobody
+// has made, with nothing made after it, is only a line in the plan — it goes, the Kolos after it move up a number and
+// the tournament is one shorter, with nothing deleted. A Kolo that IS made takes every made Kolo after it with it,
+// because those were paired by its results, and the tournament ends with the Kolos before it; their tables go too
+// (the bye's). A Kolo someone has played at goes only with withResults (the admin saw the warning): its games, the
+// ones being played too, go, and ratings are counted again without them. A second tap that finds it gone changes
+// nothing. A tournament whose Kolos are then all played is over.
 export async function deleteKolo(tournamentId: number, n: number, {withResults = false}: {withResults?: boolean} = {}): Promise<void> {
   await prisma.$transaction(
     async (tx) => {
@@ -226,18 +228,26 @@ export async function deleteKolo(tournamentId: number, n: number, {withResults =
       const t = await tx.tournament.findUnique({where: {tournament_id: tournamentId}, select: {rounds: true, cancelled_at: true}});
       if (!t) throw new NotFoundError(TOURNAMENT_NOT_FOUND);
       if (t.cancelled_at) throw new InvalidResultError("Turnir je otkazan.");
-      if (n > t.rounds) return;
-      if (n !== t.rounds) throw new InvalidResultError(`Briše se samo zadnje kolo, Kolo ${t.rounds}.`);
-      if (t.rounds <= 1) throw new InvalidResultError("Turnir mora imati barem jedno kolo.");
+      if (n < 1 || n > t.rounds) return;
+      // this Kolo and every Kolo after it that is made: those were paired by this one's results, so they go together
       const tables = await tx.round.findMany({
-        where: {round_number: n, tournamentRounds: {some: {tournament_id: tournamentId}}},
-        select: {id: true, team1_id: true, team2_id: true, open: true, status: true, _count: {select: {matches: true, ongoingMatches: true}}},
+        where: {round_number: {gte: n}, tournamentRounds: {some: {tournament_id: tournamentId}}},
+        select: {id: true, round_number: true, team1_id: true, team2_id: true, open: true, status: true, _count: {select: {matches: true, ongoingMatches: true}}},
       });
+      // a Kolo nobody has made, with nothing made after it, is only a line in the plan: the tournament is one shorter
+      // and the Kolos after it move up a number. Anything made cuts the tournament off here.
+      const left = tables.length ? n - 1 : t.rounds - 1;
+      if (left < 1) throw new InvalidResultError("Turnir mora imati barem jedno kolo.");
       const real = tables.filter((r) => !isByeTeam(r.team1_id) && !isByeTeam(r.team2_id));
-      const played = real.some((r) => !r.open || r._count.matches > 0 || r._count.ongoingMatches > 0);
-      if (played && !withResults) throw new InvalidResultError(`Za stolovima Kola ${n} se već igra ili je odigrano: brisanje briše i rezultate. Otvori kolo ponovo pa potvrdi.`);
+      const startedAt = real.filter((r) => !r.open || r._count.matches > 0 || r._count.ongoingMatches > 0);
+      if (startedAt.length > 0 && !withResults) {
+        const kola = Array.from(new Set(startedAt.map((r) => r.round_number ?? 0))).sort((a, b) => a - b);
+        throw new InvalidResultError(
+          `Za stolovima ${kola.length > 1 ? `kola ${kola.join(", ")}` : `Kola ${kola[0]}`} se već igra ili je odigrano: brisanje briše i rezultate. Potvrdi brisanje s rezultatima.`
+        );
+      }
       await dropTables(tx, tables.map((r) => r.id));
-      await tx.tournament.update({where: {tournament_id: tournamentId}, data: {rounds: n - 1}});
+      await tx.tournament.update({where: {tournament_id: tournamentId}, data: {rounds: left}});
       // a table played to the end changed ratings: count them again without it
       if (real.some((r) => !r.open && r.status === "PUBLISHED")) await replayRatings(tx);
     },

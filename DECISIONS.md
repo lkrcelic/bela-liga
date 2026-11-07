@@ -1682,3 +1682,27 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
       admin — `created_by` written on Novi turnir, an organizer refused (403) on another's and on an ownerless
       tournament for both reading and writing, an admin allowed everywhere, and Turniri listing only the organizer's
       own. **Not checked**: the screens in a browser, the Vercel preview, and a real phone.
+
+87. **Obriši kolo on every Kolo, not only the last** (your screenshot of the Kola list with four "Čeka" Kolos and a bin
+    only on Kolo 4: "DODAJ BIRSANJE PORED SVAKOG KOLA", then "WARNING AKO SE BRIŠE KOLO KOJE JE VEĆ KREIRANO")
+    - **Why it was only the last one**: a Kolo is paired from the results of the ones before it, so deleting one from
+      the middle and leaving the rest would keep pairings that were never earned.
+    - **The rule now**, which keeps that true and still puts a bin on every row: what happens depends on whether the
+      Kolo is **made** (has tables — a draft or published).
+      - **Not made, and nothing made after it**: it is only a line in the plan. It goes, the Kolos after it move up a
+        number, and the tournament has one Kolo less. Nothing is deleted. In your screenshot — four Kolos, none made
+        — deleting Kolo 2 leaves three.
+      - **Made**: it takes **every made Kolo after it** with it, because those came from its results, and the
+        tournament ends with the Kolos before it.
+    - **One Kolo always stays**, so a made Kolo 1 can't go (the tournament would have none).
+    - **The warning**: the confirmation says what this Kolo is (still to come, a draft, out, being played, played),
+      names the Kolos that go with it ("Brišu se i kola 3, 4, jer su složena po rezultatima ovog."), and ends with how
+      many Kolos the tournament is left with. Results are only deleted when someone has actually sat down at one of
+      the tables that go; only then does the sheet show the warning triangle and read "Obriši s rezultatima", and only
+      then does the request carry `?rezultati=1`.
+    - **Where**: `koloRemovalOf(rounds, n, kolos)` in `_lib/tournaments.ts` replaces `lastKoloRemoval`, and carries
+      `alsoGo` (the Kolos that go with it), `rounds` (what is left) and `resultsGo`. On the phone every row of Kola has
+      its own bin; on the computer the bin in the header deletes the Kolo that is open, which is the same thing with
+      one Kolo on screen at a time.
+    - **Checked**: unit tests for the new rule (a plan with nothing made, a draft, one out, one being played, one
+      played, a middle Kolo with two made after it, and Kolo 1 in both states), tsc, lint, build.

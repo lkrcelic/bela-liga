@@ -2,6 +2,17 @@
 
 What the commits changed for the people using the app, newest first. The reasons and details are in DECISIONS.md.
 
+## 07.11.2026 · Brisanje bilo kojeg kola turnira
+
+Not deployed yet (DECISIONS #87).
+
+### Admin
+- **Kola** na turniru: kanta je sad pored **svakog** kola, ne samo zadnjeg.
+- Kolo koje još nije složeno samo nestaje iz plana — kola iza njega pomaknu se za jedan broj i turnir ima jedno kolo manje. Ništa se ne briše.
+- Kolo koje **je** složeno povlači sa sobom i sva složena kola iza njega, jer su ona složena po njegovim rezultatima; turnir tada završava na kolima prije njega. Potvrda to izričito kaže ("Brišu se i kola 3, 4, jer su složena po rezultatima ovog.").
+- Ako se za stolovima kola koja se brišu već igralo, potvrda nosi **upozorenje** i piše **Obriši s rezultatima** — rezultati i rejting se tada računaju ponovo.
+- Turnir uvijek ostaje s barem jednim kolom.
+
 ## 07.11.2026 · Organizator: nova rola
 
 Not deployed yet (DECISIONS #86). Needs a migration on the database.

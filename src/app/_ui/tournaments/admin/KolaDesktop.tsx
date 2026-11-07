@@ -6,7 +6,7 @@ import {AdminTournament, KoloView} from "@/app/_interfaces/tournament";
 import {isByeTeam} from "@/app/_lib/bye";
 import {KoloPair} from "@/app/_lib/matching/tournamentPairing";
 import {nightLabel} from "@/app/_lib/nights";
-import {KOLO_MAX, KoloRemoval, koloSteps, lastKoloRemoval, removesResults} from "@/app/_lib/tournaments";
+import {KOLO_MAX, KoloRemoval, koloRemovalOf, koloSteps, removesResults} from "@/app/_lib/tournaments";
 import {filterTables, TableFilter, tableColumns, TableRow, toTableRows} from "@/app/_lib/ui/tables";
 import useElementHeight from "@/app/_hooks/useElementHeight";
 import {count, NOUN} from "@/app/_lib/ui/text";
@@ -61,12 +61,13 @@ export function koloRows(view: KoloView): TableRow[] {
   return toTableRows(view.tables.map((x) => ({...x, team1: {team_name: x.team1.team_name}, team2: {team_name: x.team2.team_name}})));
 }
 
-// Obriši kolo: the tournament's last Kolo while nobody has played at it (null: it can't go, or the tournament is
-// cancelled)
-export function koloRemoval(t: AdminTournament): KoloRemoval | null {
+// Obriši kolo for one Kolo of the tournament — any of them, not only the last (null: it can't go, or the tournament
+// is cancelled)
+export function koloRemoval(t: AdminTournament, n: number): KoloRemoval | null {
   if (t.phase === "cancelled") return null;
-  return lastKoloRemoval(
+  return koloRemovalOf(
     t.rounds,
+    n,
     t.results.kolos.map((k) => {
       const rows = koloRows(k);
       return {number: k.number, published: k.published, played: rows.some((r) => !r.bye && r.started), done: rows.length > 0 && rows.every((r) => r.done)};
@@ -74,16 +75,20 @@ export function koloRemoval(t: AdminTournament): KoloRemoval | null {
   );
 }
 
-// What deleting the last Kolo does, for its confirmation (a warning when results go too)
+// What deleting this Kolo does, for its confirmation (a warning when results go too)
 export function koloRemovalText(r: KoloRemoval): string {
   const what = {
-    waiting: "",
+    waiting: `Kolo ${r.number} još nije složeno, pa se ništa ne briše. `,
     draft: `Skica Kola ${r.number} se briše. `,
     out: `Stolovi Kola ${r.number} se brišu i igrači ih više ne vide. `,
     live: `Za stolovima Kola ${r.number} se igra: igre koje traju se prekidaju, a svi rezultati tog kola se brišu. Poredak i rejting se računaju ponovo. `,
     played: `Kolo ${r.number} je odigrano: svi njegovi rezultati se brišu, a poredak i rejting se računaju ponovo. `,
   }[r.step];
-  return `${what}Turnir će imati ${count(r.number - 1, NOUN.kolo)}.${r.ends ? " Sva kola prije njega su odigrana, pa je turnir time završen." : ""}`;
+  // a made Kolo takes the made Kolos after it: they were paired by its results
+  const after = r.alsoGo.length
+    ? `${r.alsoGo.length === 1 ? `I Kolo ${r.alsoGo[0]} se briše` : `Brišu se i kola ${r.alsoGo.join(", ")}`}, jer su složena po rezultatima ovog. `
+    : "";
+  return `${what}${after}Turnir će imati ${count(r.rounds, NOUN.kolo)}.${r.ends ? " Sva kola prije njega su odigrana, pa je turnir time završen." : ""}`;
 }
 
 export const koloRemovalTitle = (r: KoloRemoval) => (removesResults(r) ? `Obrisati Kolo ${r.number} s rezultatima?` : `Obrisati Kolo ${r.number}?`);
@@ -148,8 +153,8 @@ export default function KolaDesktop({t, kolo, onKolo, onChanged, reload}: Props)
     );
   const publish = () => run("publish", () => publishKoloAPI(t.id, kolo), () => setRepeats([]));
   // Dodaj kolo: one more at the end (a finished tournament's new Kolo is drafted at once, so it opens); Obriši kolo:
-  // the last one, its results too after the warning
-  const removal = koloRemoval(t);
+  // the Kolo that is open, its results too after the warning
+  const removal = koloRemoval(t, kolo);
   const addable = canAddKolo(t);
   const [askDelete, setAskDelete] = useState(false);
   const add = () =>

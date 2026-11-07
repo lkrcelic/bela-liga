@@ -20,7 +20,7 @@ import {
   standingsOrderLabel,
   TableResult,
   tournamentPhase,
-  lastKoloRemoval,
+  koloRemovalOf,
   removesResults,
   tournamentStatus,
   tournamentTotals,
@@ -97,22 +97,46 @@ test("Swiss: a meeting nobody can avoid is made and reported", () => {
   assert.deepEqual(swissPairs([]).pairs, []);
 });
 
-test("Obriši kolo: only the last Kolo, one Kolo stays, and one with results says so", () => {
+test("Obriši kolo: a Kolo nobody has made is one line of the plan; a made one takes the made Kolos after it", () => {
   const kolo = (number: number, published: boolean, played: boolean, done: boolean) => ({number, published, played, done});
-  assert.equal(lastKoloRemoval(1, []), null);
-  // before the start: one Kolo less
-  assert.deepEqual(lastKoloRemoval(3, []), {number: 3, step: "waiting", ends: false});
-  // Kolo 2 being played, Kolo 3 to come
-  assert.deepEqual(lastKoloRemoval(3, [kolo(1, true, true, true), kolo(2, true, true, false)]), {number: 3, step: "waiting", ends: false});
-  // the last Kolo is a draft, or out but not started: it goes with its tables and the tournament is over
-  assert.deepEqual(lastKoloRemoval(2, [kolo(1, true, true, true), kolo(2, false, false, false)]), {number: 2, step: "draft", ends: true});
-  assert.deepEqual(lastKoloRemoval(2, [kolo(1, true, true, true), kolo(2, true, false, false)]), {number: 2, step: "out", ends: true});
-  // someone plays at it, or it is played: it goes with its results
-  const live = lastKoloRemoval(2, [kolo(1, true, true, true), kolo(2, true, true, false)]);
-  assert.deepEqual(live, {number: 2, step: "live", ends: true});
-  assert.equal(removesResults(live!), true);
-  assert.deepEqual(lastKoloRemoval(2, [kolo(1, true, true, true), kolo(2, true, true, true)]), {number: 2, step: "played", ends: true});
-  assert.equal(removesResults(lastKoloRemoval(3, [])!), false);
+  const played1 = kolo(1, true, true, true);
+
+  // a tournament of one Kolo keeps it, and a number outside the plan is nothing to delete
+  assert.equal(koloRemovalOf(1, 1, []), null);
+  assert.equal(koloRemovalOf(3, 4, []), null);
+  assert.equal(koloRemovalOf(3, 0, []), null);
+
+  // --- nothing made: deleting any of them only shortens the plan, and the rest move up a number ------------------
+  assert.deepEqual(koloRemovalOf(4, 2, []), {number: 2, step: "waiting", alsoGo: [], rounds: 3, ends: false, resultsGo: false});
+  assert.deepEqual(koloRemovalOf(4, 4, []), {number: 4, step: "waiting", alsoGo: [], rounds: 3, ends: false, resultsGo: false});
+  // Kolo 1 played, Kolo 3 of 3 still to come: one Kolo less, Kolo 2 stays as it is
+  assert.deepEqual(koloRemovalOf(3, 3, [played1]), {number: 3, step: "waiting", alsoGo: [], rounds: 2, ends: false, resultsGo: false});
+
+  // --- a made Kolo: it and every made Kolo after it go, and the tournament ends before it ------------------------
+  const draft = koloRemovalOf(2, 2, [played1, kolo(2, false, false, false)]);
+  assert.deepEqual(draft, {number: 2, step: "draft", alsoGo: [], rounds: 1, ends: true, resultsGo: false});
+  assert.deepEqual(koloRemovalOf(2, 2, [played1, kolo(2, true, false, false)]), {number: 2, step: "out", alsoGo: [], rounds: 1, ends: true, resultsGo: false});
+
+  // someone plays at it, or it is played: its results go too, so it is asked with a warning
+  const live = koloRemovalOf(2, 2, [played1, kolo(2, true, true, false)])!;
+  assert.deepEqual(live, {number: 2, step: "live", alsoGo: [], rounds: 1, ends: true, resultsGo: true});
+  assert.equal(removesResults(live), true);
+  assert.equal(removesResults(draft!), false);
+  assert.equal(removesResults(koloRemovalOf(3, 3, [])!), false);
+
+  // Kolo 2 of four, with Kolos 3 and 4 made from its results: all three go and the tournament is left with Kolo 1
+  const middle = koloRemovalOf(4, 2, [played1, kolo(2, true, true, true), kolo(3, true, true, true), kolo(4, false, false, false)])!;
+  assert.deepEqual(middle, {number: 2, step: "played", alsoGo: [3, 4], rounds: 1, ends: true, resultsGo: true});
+  assert.equal(removesResults(middle), true);
+  // the same, but only a draft follows it: nothing played goes, so no warning about results
+  const withDraft = koloRemovalOf(3, 2, [played1, kolo(2, true, false, false), kolo(3, false, false, false)])!;
+  assert.deepEqual(withDraft, {number: 2, step: "out", alsoGo: [3], rounds: 1, ends: true, resultsGo: false});
+  assert.equal(removesResults(withDraft), false);
+
+  // a made Kolo 1 can never go: the tournament would have none left
+  assert.equal(koloRemovalOf(3, 1, [played1]), null);
+  // but Kolo 1 of a plan where nothing is made is just one line less
+  assert.deepEqual(koloRemovalOf(3, 1, []), {number: 1, step: "waiting", alsoGo: [], rounds: 2, ends: true, resultsGo: false});
 });
 
 test("a whole tournament: 23 teams over 9 Kolos, nobody meets twice and no team has two byes", () => {

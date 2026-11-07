@@ -46,24 +46,49 @@ export function lastKoloMade(kolos: KoloSummary[], rounds: number): boolean {
 // The most Kolos a tournament has (Tournament_rounds_check)
 export const KOLO_MAX = 20;
 
-// Obriši kolo on the admin's Kola: the last Kolo can go, as long as one Kolo stays (the Kolos after one were paired by
-// its results, so they go from the end). Its step: still to come, a draft, out with nobody playing yet, or with
-// results (being played or played: they go too, after a warning). played: someone sat down at one of its tables (the
-// bye's aside); done: every table of it is over. ends: every Kolo before it is played to the end, so deleting it ends
-// the tournament. null: the last Kolo can't go.
-export type KoloRemoval = {number: number; step: "waiting" | "draft" | "out" | "live" | "played"; ends: boolean};
+/**
+ * Obriši kolo on the admin's Kola: **any** Kolo can go, not only the last one (DECISIONS #87). What happens depends
+ * on whether it is made:
+ *
+ * - a Kolo nobody has made yet, with nothing made after it, is only a line in the plan: it goes, the Kolos after it
+ *   move up a number, and the tournament has one Kolo less.
+ * - a Kolo that is made takes **every made Kolo after it** with it, because those were paired by its results. The
+ *   tournament then ends with the Kolos before it.
+ *
+ * One Kolo always stays. `step` is what this Kolo is: still to come, a draft, out with nobody playing yet, being
+ * played, or played (the last two take results with them, so they are asked with a warning). `alsoGo` are the made
+ * Kolos after it that go too. `rounds` is what the tournament is left with, and `ends` means every Kolo before it is
+ * played to the end, so deleting it ends the tournament. null: this Kolo can't go.
+ */
+export type KoloRemoval = {
+  number: number;
+  step: "waiting" | "draft" | "out" | "live" | "played";
+  alsoGo: number[];
+  rounds: number;
+  ends: boolean;
+  // someone has sat down at one of the Kolos that go (this one or a later made one), so results go too
+  resultsGo: boolean;
+};
 
-export function lastKoloRemoval(rounds: number, kolos: {number: number; published: boolean; played: boolean; done: boolean}[]): KoloRemoval | null {
-  if (rounds <= 1) return null;
+export type KoloState = {number: number; published: boolean; played: boolean; done: boolean};
+
+export function koloRemovalOf(rounds: number, n: number, kolos: KoloState[]): KoloRemoval | null {
+  if (n < 1 || n > rounds) return null;
   const byNumber = new Map(kolos.map((k) => [k.number, k]));
-  const last = byNumber.get(rounds);
-  const ends = Array.from({length: rounds - 1}, (_, i) => byNumber.get(i + 1)).every((k) => k != null && k.published && k.done);
-  const step = !last ? "waiting" : !last.published ? "draft" : !last.played ? "out" : last.done ? "played" : "live";
-  return {number: rounds, step, ends};
+  const mine = byNumber.get(n);
+  // every Kolo from this one on that is made: they go together
+  const made = kolos.filter((k) => k.number >= n).map((k) => k.number).sort((a, b) => a - b);
+  // a Kolo nobody has made, with nothing made after it, is one line of the plan; anything made cuts the tournament here
+  const left = made.length ? n - 1 : rounds - 1;
+  if (left < 1) return null;
+  const step = !mine ? "waiting" : !mine.published ? "draft" : !mine.played ? "out" : mine.done ? "played" : "live";
+  const ends = Array.from({length: n - 1}, (_, i) => byNumber.get(i + 1)).every((k) => k != null && k.published && k.done);
+  const resultsGo = kolos.some((k) => k.number >= n && k.played);
+  return {number: n, step, alsoGo: made.filter((x) => x !== n), rounds: left, ends, resultsGo};
 }
 
-// Deleting this Kolo deletes results too (the warning)
-export const removesResults = (r: KoloRemoval) => r.step === "live" || r.step === "played";
+// Deleting this Kolo deletes results too (the warning): its own, or those of the made Kolos that go with it
+export const removesResults = (r: KoloRemoval) => r.resultsGo;
 
 // Each of the tournament's Kolos as the admin's list shows it (Kola): played, being played, a draft waiting to be
 // published, or still to come

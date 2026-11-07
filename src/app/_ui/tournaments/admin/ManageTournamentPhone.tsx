@@ -573,14 +573,15 @@ function AddTeamSheet({t, onClose, onAdded}: {t: AdminTournament; onClose: () =>
 function KolaTab({t, onOpen, onChanged}: {t: AdminTournament; onOpen: (kolo: number) => void; onChanged: (t: AdminTournament) => void}) {
   const [busy, setBusy] = useState<"make" | "add" | "delete" | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [asking, setAsking] = useState(false);
+  // which Kolo's bin was tapped (the sheet asks about it)
+  const [asking, setAsking] = useState<number | null>(null);
   const steps = koloSteps(t.rounds, t.results.kolos.map((k) => ({number: k.number, published: k.published, tables: k.tables.length, done: k.tables.filter((x) => !x.open).length, live: 0})));
   const next = t.next_kolo;
   // the Kolo to make by hand: Kolo 1 (once sign-ups are closed; until then why not), or a later one the app didn't
   // make by itself when its Kolo before was played
   const toMake = next != null && !t.results.kolos.some((k) => k.number === next.number) && (next.number === 1 || next.ready) ? next : null;
-  // Obriši kolo: the last Kolo, while nobody has played at it; Dodaj kolo: one more, up to 20
-  const removal = koloRemoval(t);
+  // Obriši kolo: any Kolo, its results too after the warning; Dodaj kolo: one more, up to 20
+  const removal = asking == null ? null : koloRemoval(t, asking);
   const canAdd = canAddKolo(t);
 
   const run = async (what: "make" | "add" | "delete", call: () => Promise<AdminTournament>, then?: () => void) => {
@@ -588,7 +589,7 @@ function KolaTab({t, onOpen, onChanged}: {t: AdminTournament; onOpen: (kolo: num
     setError(null);
     try {
       onChanged(await call());
-      setAsking(false);
+      setAsking(null);
       then?.();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Nije uspjelo.");
@@ -623,7 +624,7 @@ function KolaTab({t, onOpen, onChanged}: {t: AdminTournament; onOpen: (kolo: num
           </PrimaryButton>
         </Box>
       )}
-      {error && !asking && <ErrorNote>{error}</ErrorNote>}
+      {error && asking == null && <ErrorNote>{error}</ErrorNote>}
       <Box component="ul" aria-label="Kola turnira" sx={{flex: "none", listStyle: "none", m: 0, p: 0, background: color.white, borderRadius: "22px", overflow: "hidden", boxShadow: shadow.card}}>
         {steps.map((s, i) => {
           const view = t.results.kolos.find((k) => k.number === s.number);
@@ -650,15 +651,15 @@ function KolaTab({t, onOpen, onChanged}: {t: AdminTournament; onOpen: (kolo: num
               </Box>
             </>
           );
-          // the bin of the last Kolo that can still go
-          const bin = removal?.number === s.number && (
+          // every Kolo that can go has its own bin (DECISIONS #87)
+          const bin = koloRemoval(t, s.number) != null && (
             <Box
               component="button"
               type="button"
               aria-label={`Obriši Kolo ${s.number}`}
               onClick={() => {
                 setError(null);
-                setAsking(true);
+                setAsking(s.number);
               }}
               disabled={busy != null}
               sx={{...buttonBase, width: 44, height: 44, flex: "none", mr: "6px", borderRadius: "12px", color: color.faint, display: "flex", alignItems: "center", justifyContent: "center", "& svg": {fontSize: 22}, "&:active": {color: color.red}}}
@@ -704,15 +705,15 @@ function KolaTab({t, onOpen, onChanged}: {t: AdminTournament; onOpen: (kolo: num
       )}
       {/* a Kolo with results warns that they go too (and only then are they deleted) */}
       <ConfirmSheet
-        open={asking && removal != null}
-        onClose={() => setAsking(false)}
+        open={removal != null}
+        onClose={() => setAsking(null)}
         onConfirm={() => removal && run("delete", () => deleteKoloAPI(t.id, removal.number, removesResults(removal)))}
         title={removal ? koloRemovalTitle(removal) : ""}
         text={removal ? koloRemovalText(removal) : ""}
         action={removal ? koloRemovalAction(removal) : ""}
         icon={removal && removesResults(removal) ? <WarningRoundedIcon /> : <DeleteRoundedIcon />}
         busy={busy === "delete"}
-        error={asking ? error : null}
+        error={asking != null ? error : null}
       />
     </>
   );
