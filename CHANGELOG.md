@@ -2,9 +2,14 @@
 
 What the commits changed for the people using the app, newest first. The reasons and details are in DECISIONS.md.
 
+## 07.11.2026 · Raspored duge lige se skrola i na Androidu
+
+### Players
+- **Raspored** on the phone: a league with many nights (the test league has 480) can be scrolled again on Android. The list of nights was a box that could scroll by a fraction of a pixel of its own, and on Android the finger stayed in it, so the page under it didn't move; now the whole page scrolls, as it already did on the iPhone. On the computer the list still scrolls inside its card.
+
 ## 07.11.2026 · Vidljivost slike samo klikom na sliku
 
-On development, not live yet (DECISIONS #85).
+Live since 07.11. (f1524b2, DECISIONS #85).
 
 ### Players
 - **Tko vidi sliku** is set by tapping the photo, nowhere else. The separate card under the team's header (**Tko vidi sliku ekipe · Vidljivost ›**) and the **Tko vidi sliku** row in Podaci on Moj profil are gone from the phone, and the **Tko vidi moju sliku** card is gone from the computer's Moj profil — each took a block of screen only to open what the photo opens.
