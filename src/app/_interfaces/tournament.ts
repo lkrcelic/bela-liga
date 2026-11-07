@@ -185,6 +185,9 @@ export type TournamentCard = {
   last_kolo_made: boolean;
   // the server's clock (ISO), for the countdowns
   server_now: string;
+  // whether the viewer runs this tournament: an admin any, an organizer the one they made (DECISIONS #86). Every
+  // Upravljanje button asks this, not the admin role.
+  can_manage: boolean;
   // Otkazan: who cancelled it and when (admins only)
   cancelled_info?: {by: string | null; at: string} | null;
 };

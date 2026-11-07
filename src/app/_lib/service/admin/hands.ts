@@ -14,7 +14,8 @@ import {finishOngoingMatch, FinishMatchOutcome} from "@/app/_lib/service/match/f
 import {lockRound} from "@/app/_lib/service/round/finish";
 import {ROUND_NOT_PUBLISHED} from "@/app/_lib/roundStatus";
 import {isRatedRound, recalcTeamScores, replayRatings} from "./recalc";
-import {NotFoundError} from "./tables";
+import {NotFoundError, refuseUnlessMyTable} from "./tables";
+import type {Viewer} from "@/app/_lib/players/privacy";
 
 // The admin scorepad of a Daily table: every hand of the match being played and of the finished matches can be
 // added, changed or deleted. Changing a finished match recounts its score, the round's wins, the standings and,
@@ -258,6 +259,20 @@ export async function addHand(roundId: number, target: HandTarget, hand: AdminHa
   await changeFinishedMatch(target.matchId, async (tx) => {
     await tx.belaResult.create({data: transformBelaResult(result)});
   }, options);
+}
+
+/**
+ * Whose hand it is. These two routes get only a hand's id, so the table it was played at is looked up through its
+ * match, and the table says whose it is (refuseUnlessMyTable, DECISIONS #86). A hand with no table left (its round was
+ * deleted) is nobody's but the admin's.
+ */
+export async function refuseUnlessMyHand(kind: HandKind, resultId: number, viewer: Viewer): Promise<void> {
+  const roundId =
+    kind === "ongoing"
+      ? (await prisma.ongoingBelaResult.findUnique({where: {result_id: resultId}, select: {match: {select: {round_id: true}}}}))?.match.round_id
+      : (await prisma.belaResult.findUnique({where: {result_id: resultId}, select: {match: {select: {round_id: true}}}}))?.match.round_id;
+  if (roundId == null) throw new NotFoundError("Igra ne postoji.");
+  await refuseUnlessMyTable(roundId, viewer);
 }
 
 export async function updateHand(kind: HandKind, resultId: number, hand: AdminHand, options: HandEditOptions = {}): Promise<void> {

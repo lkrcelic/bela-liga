@@ -1,7 +1,7 @@
 import {NextRequest, NextResponse} from "next/server";
 import {STATUS} from "@/app/_lib/statusCodes";
 import {errorResponse} from "@/app/_lib/apiErrors";
-import {requireAdmin} from "@/app/_lib/service/auth/requireUser";
+import {requireCan} from "@/app/_lib/service/auth/requireUser";
 import {z} from "zod";
 import {signOff} from "@/app/_lib/service/tournament/entries";
 import {adminSetActive, adminSetArrival, excludeTeam, restoreTeam} from "@/app/_lib/service/tournament/day";
@@ -19,7 +19,7 @@ const TeamDayValidation = z.object({
 
 // The admin's buttons for a team on the tournament's day: {arrived}, {active} or {excluded}
 export async function PATCH(request: NextRequest, {params}: {params: {id: string; teamId: string}}) {
-  const auth = await requireAdmin(request);
+  const auth = await requireCan(request, "tournament.manage.own");
   if (auth.response) return auth.response;
   const id = tournamentIdOf(params.id);
   if (id == null) return tournamentNotFound();
@@ -38,7 +38,7 @@ export async function PATCH(request: NextRequest, {params}: {params: {id: string
 
 // Makni ekipu (admin), without a notice; the first team waiting comes in
 export async function DELETE(request: NextRequest, {params}: {params: {id: string; teamId: string}}) {
-  const auth = await requireAdmin(request);
+  const auth = await requireCan(request, "tournament.manage.own");
   if (auth.response) return auth.response;
   const id = tournamentIdOf(params.id);
   if (id == null) return tournamentNotFound();

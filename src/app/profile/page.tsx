@@ -7,6 +7,7 @@ import {updateSmokerAPI} from "@/app/_fetchers/player/updateSmoker";
 import {updateUsernameAPI} from "@/app/_fetchers/player/updateUsername";
 import useIsDesktop from "@/app/_hooks/useIsDesktop";
 import useLogout from "@/app/_hooks/useLogout";
+import {useRole} from "@/app/_hooks/useCan";
 import useMyTeams from "@/app/_hooks/useMyTeams";
 import useNavStack from "@/app/_hooks/useNavStack";
 import {useMyRating} from "@/app/_hooks/useRatings";
@@ -34,6 +35,7 @@ import {
   ellipsis,
   ErrorNote,
   PrimaryButton,
+  RoleTag,
   Screen,
   ScrollArea,
   SectionLabel,
@@ -102,6 +104,8 @@ export default function ProfilePage() {
       ? {rating: player?.rating ?? null, change: null, rounds: 0, rank: null, total: ratedPlayers, provisional: ratingsLoaded}
       : null;
   const blocked = photo.info.photo_blocked;
+  // what I am: the same label a player's page shows beside their name (DECISIONS #86)
+  const role = useRole();
   const hero = (desktop: boolean) => (
     <ProfileHero
       desktop={desktop}
@@ -124,6 +128,7 @@ export default function ProfilePage() {
       belowName={!desktop && player && !blocked && !photo.info.photo_url ? <AddPhotoPill onClick={() => setPhotoOpen(true)} /> : undefined}
       rating={rating}
       ratingHref={myRating ? ratingPath(myRating.id) : "/ratings"}
+      tag={<RoleTag role={role} size={desktop ? "md" : "sm"} />}
     />
   );
 

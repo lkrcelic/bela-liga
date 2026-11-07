@@ -8,8 +8,11 @@ generator client {
   previewFeatures = ["views"]
 }
 
+// What a player may do. ADMIN runs the whole league; ORGANIZER makes tournaments and runs their own (DECISIONS #86);
+// PLAYER plays. Which role may do what is in the code, not here: _lib/auth/permissions.ts.
 enum RoleEnum {
   ADMIN
+  ORGANIZER
   PLAYER
 }
 
@@ -94,6 +97,7 @@ model Player {
   teamPhotosUpdated              Team[]                          @relation("TeamPhotoUpdater")
   tournamentEntries              TournamentTeam[]                @relation("TournamentRegistrar")
   tournamentsCancelled           Tournament[]                    @relation("TournamentCanceller")
+  tournamentsCreated             Tournament[]                    @relation("TournamentCreator")
   tournamentArrivals             TournamentTeam[]                @relation("TournamentArrival")
   roundAttendances               Round[]                         @relation("RoundAttendance")
   signupBans                     SignupBan[]                     @relation("SignupBanPlayer")
@@ -201,6 +205,9 @@ model Tournament {
   // start time, which has no arrival window)
   arrival_closed_at  DateTime?
   created_at         DateTime  @default(now())
+  // Whose tournament it is: the organizer who made it, or the admin. Null for the tournaments made before the role
+  // came in — nobody owns them, so only an admin touches them (_lib/auth/ownership.ts). Never changed afterwards.
+  created_by         Int?
 
   // Relationships
   tournamentTeams  TournamentTeam[]
@@ -208,7 +215,10 @@ model Tournament {
   teamScore        TeamScore[]
   prizes           TournamentPrize[]
   canceller        Player?          @relation("TournamentCanceller", fields: [cancelled_by], references: [id], onDelete: SetNull)
+  creator          Player?          @relation("TournamentCreator", fields: [created_by], references: [id], onDelete: SetNull)
   signupBans       SignupBan[]
+
+  @@index([created_by])
 }
 
 // Nagrade: what each place gets, in order (place 1 = first)

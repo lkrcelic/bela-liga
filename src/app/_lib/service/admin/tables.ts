@@ -10,6 +10,10 @@ import {newTableNumber, planSeats} from "@/app/_lib/tableSeats";
 import {leagueNight} from "@/app/_lib/dates";
 import {lockTournament} from "@/app/_lib/service/tournament/lock";
 import {assertMayPlay} from "@/app/_lib/service/bans/bans";
+import {can} from "@/app/_lib/auth/permissions";
+import {canManageTournament, NOT_YOUR_TOURNAMENT} from "@/app/_lib/auth/ownership";
+import {ForbiddenError} from "@/app/_lib/auth/forbidden";
+import type {Viewer} from "@/app/_lib/players/privacy";
 
 // Admin edits of a night's tables (a "round number" of a league on a date is a set of tables, one Round row each), and
 // of a tournament's Kolo (its tables with that round number). A table whose teams change loses what was played at it;
@@ -74,6 +78,22 @@ export async function tableCompetition(roundId: number, db: Tx | typeof prisma =
   if (league) return {kind: "league", id: league.league_id};
   if (tournament) return {kind: "tournament", id: tournament.tournament_id};
   return null;
+}
+
+/**
+ * Whose table it is (DECISIONS #86). The scorepad routes get only a round id — no league, no tournament — so they look
+ * up what the table belongs to: a league night is the admin's, a tournament's Kolo is whoever runs that tournament.
+ * Two indexed lookups and then one row by its key, so it costs next to nothing before the write.
+ */
+export async function refuseUnlessMyTable(roundId: number, viewer: Viewer): Promise<void> {
+  const competition = await tableCompetition(roundId);
+  if (!competition) throw new NotFoundError("Stol ne postoji.");
+  if (competition.kind === "league") {
+    if (!can(viewer, "league.manage")) throw new ForbiddenError();
+    return;
+  }
+  const tournament = await prisma.tournament.findUnique({where: {tournament_id: competition.id}, select: {created_by: true}});
+  if (!tournament || !canManageTournament(viewer, tournament)) throw new ForbiddenError(NOT_YOUR_TOURNAMENT);
 }
 
 // The table and the league or tournament it belongs to, with that locked for edits (same lock as round creation)

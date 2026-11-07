@@ -2,6 +2,21 @@
 
 What the commits changed for the people using the app, newest first. The reasons and details are in DECISIONS.md.
 
+## 07.11.2026 · Organizator: nova rola
+
+Not deployed yet (DECISIONS #86). Needs a migration on the database.
+
+### Players
+- Beside your name on **Moj profil** there is now a label saying what you are: **Admin** or **Organizator**. A player has none. The same label is on a player's page, on the phone and on the computer, so everyone sees who runs the league and who runs tournaments.
+
+### Admin
+- **Rola** replaces the **Admin** switch in "Uredi osobne podatke" and on a player's phone page: **Igrač**, **Organizator** or **Administrator**, with a line under it saying what each one does. The old rules hold — you can't take your own administrator role, and the last administrator stays one.
+- An **Organizator** can: make a tournament, and edit, run and cancel **the ones they made** (kola, Skica, Objavi, stolovi, rezultati, prijave, dolasci, Isključi ekipu); make a team and edit any team; open the **Igrači** list with names, teams and phone numbers.
+- An **Organizator** cannot: delete a tournament (only **Otkaži**), open or change anyone else's tournament, touch the league (Novo kolo, Upravljanje ligom, večeri, Datumi), delete a team, block a photo, see usernames, emails or birth dates, edit or delete a player, give a role, or open Sponzori, Burza moderation and Rejting.
+- The menu now shows each entry to whoever may use it, so an organizer's menu holds **Turniri**, **Ekipe**, **Igrači** and nothing of the league's.
+- The tournaments made before this have no owner, so they stay the admin's.
+- **Zabrana prijava** stays the admin's for now: a ban is league wide and can't yet be tied to one tournament.
+
 ## 07.11.2026 · Raspored duge lige se skrola i na Androidu
 
 Live since 07.11. (f1524b2; the deploy 6480d45 carries this entry).

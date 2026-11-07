@@ -1,6 +1,6 @@
 "use client";
 
-import useAdminPhone from "@/app/_hooks/useAdminPhone";
+import useManagePhone from "@/app/_hooks/useManagePhone";
 import useIsDesktop from "@/app/_hooks/useIsDesktop";
 import {useSelectedLeagueId} from "@/app/_hooks/useLeagues";
 import {DesktopOnlyNote} from "@/app/_ui/sp";
@@ -12,7 +12,7 @@ import {useEffect} from "react";
 export default function CreateRound() {
   const router = useTransitionRouter();
   const isDesktop = useIsDesktop();
-  const adminPhone = useAdminPhone();
+  const adminPhone = useManagePhone("league.manage");
   const selectedLeague = useSelectedLeagueId();
   const goes = isDesktop || adminPhone;
 

@@ -128,7 +128,8 @@ function winnerOf(s: Snapshot): TournamentWinner | null {
 
 export function cardView(s: Snapshot, viewer: Viewer | null): TournamentCard {
   const t = s.tournament;
-  const admin = viewer != null && isAdminRole(viewer);
+  // whoever runs THIS tournament: an admin any, an organizer the one they made (load.ts sets it)
+  const admin = s.admin;
   const registered = s.entries.filter((e) => e.status === "REGISTERED");
   const mine = myEntryOf(s, viewer);
   const me: MyEntry | null = mine
@@ -174,6 +175,7 @@ export function cardView(s: Snapshot, viewer: Viewer | null): TournamentCard {
     day: dayOf(s, now),
     last_kolo_made: lastKoloMade(s.kolos, t.rounds),
     server_now: now.toISOString(),
+    can_manage: admin,
     ...(admin && {cancelled_info: t.cancelled_at ? {by: t.canceller ? displayName(t.canceller) : null, at: t.cancelled_at.toISOString()} : null}),
   };
 }

@@ -1611,3 +1611,69 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
     - **Checked**: tsc, lint, and in the browser on a local copy: Moj profil and Ekipa on a 375 px phone and on the
       computer (the sections gone, the sheet and the dialog carrying the choice, a pick saved with no error, and the
       blocked note in the computer's dialog). **Not checked**: the Vercel preview and real phones.
+
+86. **Organizator: a third role, and a foundation for the ones after it** (your request of 07.11.: "Dodavanje
+    kreator user-a… Kreator može kreirati turnire dodavati ekipe i uređivati ekipe. Ne smije brisati ni uređivati
+    tunrire koji nisu njegovi. Ono želim da on može uređivati i voditi turnire… Dodaj opciju za dodavanje kreatora
+    tamo gdje se dodaje i kao admin", and then: "ovo nije jedina rola koju cemo uvest bit će ih još u budućnosti pa
+    želim odmah sada napraviti podlogu koja je jednostavna brza i da radi… fokus samo na kod". The name was settled
+    as **ORGANIZER / Organizator**, and after three rounds of questions the foundation as a **map in the code**, not
+    RBAC tables: "idemo s mapom u kodu".)
+    - **Why no tables**: a permission in a table has to be written into three databases (the local copy, the Neon
+      preview, production) and drifts between them; a permission in the code is one line in a diff, is type checked,
+      and is the same everywhere a build is. You said the redeploy on a new right is no obstacle. Speed was never the
+      argument and isn't claimed as one: permissions ride along with the login's query either way.
+    - **Three layers, kept apart.** A capability says WHAT (`_lib/auth/permissions.ts`), ownership says WHOSE
+      (`_lib/auth/ownership.ts`), privacy says HOW MUCH of a player's data is seen (`_lib/players/privacy.ts`).
+      Mixing any two into one check is what made `useAdminPhone` ambiguous, see below.
+    - **A new role costs one line**: its entry in `BY_ROLE`. No route and no screen is touched. `rolesOf()` in
+      `_lib/auth/roles.ts` is the only place in the app that reads `player_role`, so several roles per player would be
+      a change to that one function.
+    - **What an organizer may do**: Novi turnir; edit, run and cancel **their own** tournament (its Kolos, Skica,
+      Objavi, tables, results, sign-ups, arrivals, Isključi); make a team and edit any team; the Igrači directory
+      with names, teams and phone numbers. **Not**: delete a tournament (only Otkaži — a tournament carries results
+      and ratings), touch anyone else's tournament, the league (Novo kolo, Upravljanje ligom, nights, Datumi),
+      delete a team, Zabrani novu sliku, usernames / emails / birth dates, editing or deleting a player, giving a
+      role, Sponzori, Burza moderation, Rejting.
+    - **Ownership**: `Tournament.created_by`, written once when the tournament is made and never changed. The
+      tournaments made before this are `null`: nobody owns them, so only an admin touches them. Two owners later
+      would be a join table and a change to `canManageTournament` alone.
+    - **The guards**: `requireCan(req, cap)` beside `requireAdmin` (which stays and means "only ADMIN"); ownership is
+      a second check inside the handler, because the write services take no viewer — `refuseUnlessMine` for a
+      tournament, `refuseUnlessMyTable` / `refuseUnlessMyHand` for the scorepad, which get only a round or a hand id
+      and look up what it belongs to. `getAdminTournament` refuses by itself, so every read is covered for free.
+      `__tests__/adminGuards.test.ts` now also scans that every `requireCan` handler under a tournament, a table or a
+      hand checks whose it is.
+    - **Four things found before the code was written**, which changed the order of the work:
+      1. `errorResponse` had no 403 branch, so an ownership refusal would have been a logged 500. `ForbiddenError`
+         and that branch came first.
+      2. Tournament reads funnel through `getAdminTournament(id, viewer)`, but the writes take no viewer, so the
+         guard had to go in the routes, modelled on `refuseIfFinished`.
+      3. `useAdminPhone` meant two things at once — which layout, and whether you are allowed — at 16 places. It is
+         now `useManagePhone(cap)` (layout + the screen's own capability) and `useCan(cap)` (permission). Without the
+         split an organizer would have got Večer lige, Upravljanje ligom and Novo kolo.
+      4. The admin switch existed twice with different saving (the computer's panel on Spremi, the phone's at once);
+         changing only one would have sent `is_admin` and quietly overwritten the role.
+    - **The scorepad** (`admin/tables/[roundId]`, `admin/hands/[kind]/[resultId]`) had no path to a tournament at
+      all; without it an organizer couldn't run their own turnir. `TournamentRound` already has an index on
+      `round_id`, so the lookup is one indexed read.
+    - **Rola instead of a switch**: "Uredi osobne podatke" (computer) and Rola (phone) now pick Igrač / Organizator /
+      Administrator — one column, one field, and room for the next role. The API takes `role`; `is_admin` is gone
+      from the request. The old rules still hold: you can't take your own admin role, and the last active admin stays
+      one (every change away from ADMIN counts as a demotion).
+    - **The role is public, on purpose**: `is_admin` used to be in the private part of a player's data, seen only by
+      an admin. The label on a profile needs it, so `role` is in the public part — every logged-in player sees who
+      runs the league and who runs tournaments. `RoleTag` draws it beside the name on Moj profil and on a player's
+      page, on the phone and on the computer (it had it on neither before); a plain player gets no label.
+    - **Scaled down from the plan**: `ban.manage.own` was going to let an organizer ban a sign-up on their own
+      tournament, but **Zabrana prijava is league wide** — the API takes no tournament — so bans stay the admin's
+      until a ban can be tied to one tournament. The capability exists in the map and is the admin's only.
+    - **Not migrated**: the other 54 `requireAdmin` routes an organizer may not reach anyway (the league, players,
+      sponsors, ratings) stay as they are, as planned.
+    - **Checked**: 537 unit tests (new: the capability map, ownership, the three privacy steps, the public role, the
+      role tuple, the 403 branch, and the route scan for ownership), tsc, lint, and on a throwaway Postgres loaded
+      from a copy of the schema: the migration chain rebuilt from empty gives exactly the schema ("No difference
+      detected"), the enum reads `{ADMIN,ORGANIZER,PLAYER}`, and with a real organizer, a second organizer and an
+      admin — `created_by` written on Novi turnir, an organizer refused (403) on another's and on an ownerless
+      tournament for both reading and writing, an admin allowed everywhere, and Turniri listing only the organizer's
+      own. **Not checked**: the screens in a browser, the Vercel preview, and a real phone.

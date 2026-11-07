@@ -1,9 +1,14 @@
 import {RoleEnum} from "@prisma/client";
+import type {Role} from "@/app/_lib/auth/roles";
 import {z} from "zod";
 import {isValidPhone, normalizePhone, PHONE_ERROR} from "@/app/_lib/phone";
 import {normalizeUsername, usernameError} from "@/app/_lib/validation/username";
 import {isIsoDate} from "@/app/_lib/nights";
 import {PHOTO_VISIBILITIES} from "@/app/_interfaces/photo";
+
+// zod needs a tuple; the one list of roles is in _lib/auth/roles.ts and the test keeps the two the same
+const ROLES_TUPLE = ["ADMIN", "ORGANIZER", "PLAYER"] as const;
+export const ROLE_ERROR = "Odaberi rolu.";
 
 const DATE_FORMAT = /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$/;
 const NO_CHANGES = "Nema promjena za spremanje.";
@@ -78,7 +83,9 @@ export const AdminPlayerUpdateValidation = z
     phone: PhoneField,
     birth_date: BirthDateField.nullable(),
     smoker: z.boolean(),
-    is_admin: z.boolean(),
+    // Rola: Igrač / Organizator / Administrator. One column, so one field — two switches for one column would
+    // contradict each other, and a third role would need a third switch (DECISIONS #86).
+    role: z.enum(ROLES_TUPLE, {errorMap: () => ({message: ROLE_ERROR})}),
   })
   .partial()
   .refine((o) => Object.values(o).some((v) => v !== undefined), NO_CHANGES);
@@ -104,12 +111,17 @@ export type AdminPlayerRow = {
   last_name: string;
   // the full name, or "Igrač bez imena"
   name: string;
-  username: string;
+  // private: the player themselves and an admin (an organizer gets names and teams, not usernames)
+  username?: string;
+  // Zovi: an admin and an organizer (they call the teams of their tournament); left out for everyone else
+  phone?: string | null;
   // in Croatian name order
   teams: {team_id: number; team_name: string}[];
   active: boolean;
   // an admin; the rating rounded (the admin's phone Igrači list)
   admin?: boolean;
+  // ADMIN or ORGANIZER, for the row's tag; left out for a plain player
+  role?: Role;
   rating?: number;
   // the avatar (an admin sees every photo); null = the initials
   photo_url?: string | null;
@@ -158,6 +170,8 @@ export const PLAYER_DEACTIVATED = "Igrač je deaktiviran.";
 // A player on a page (privacy filter in _lib/players/privacy.ts): everyone gets the first five fields; the personal
 // keys are ABSENT (not null) unless the viewer is the player or an admin
 export type PlayerView = {id: number; first_name: string; last_name: string; name: string; active: boolean} & Partial<{
+  // ADMIN or ORGANIZER, for the label on the profile; left out for a plain player (privacy.ts, publicRole)
+  role: Role;
   username: string;
   email: string;
   phone: string | null;

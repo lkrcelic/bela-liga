@@ -61,11 +61,21 @@ const API = join(__dirname, "..", "..", "api");
 const METHOD = "GET|POST|PUT|PATCH|DELETE";
 const MUTATING = new Set(["POST", "PUT", "PATCH", "DELETE"]);
 
+// What counts as a guard: requireAdmin means "only ADMIN", requireCan asks the capability map (DECISIONS #86), so a
+// route more than one role may reach is guarded by requireCan — never by nothing.
+const GUARD = /require(Admin|Can)\(/;
+
+// A tournament's own handlers must also say WHOSE tournament it is: capability first, then ownership. getAdminTournament
+// and refuseIfFinished refuse by themselves; the writes that never read the tournament call refuseUnlessMine.
+const OWNERSHIP = /refuseUnlessMine\(|refuseUnlessMyTable\(|refuseUnlessMyHand\(|getAdminTournament\(|refuseIfFinished\(/;
+// The folders whose handlers act on one tournament, one of its tables, or a hand played at one: a round of its own
+const OWNED_DIRS = ["admin/tournaments/[id]", "admin/tables", "admin/hands"];
+
 // "path METHOD" → why it doesn't call requireAdmin: the handlers in the scanned folders that players use too
 const ALLOWED_WITHOUT_ADMIN: Record<string, string> = {
   "rounds/[id]/lineup/route.ts PUT": "Tko igra ovu rundu?: a player of either team confirms the lineup (canPlayRound)",
   "matches/route.ts POST": "the players of the round finish their match (canPlayRound)",
-  "teams/[id]/route.ts PATCH": "any player of the team chooses who sees its photo; renaming and blocking photos check the admin role in the handler",
+  "teams/[id]/route.ts PATCH": "any player of the team chooses who sees its photo; renaming asks team.edit and blocking photos team.moderate in the handler",
   "teams/[id]/photo/route.ts PUT": "any player of the team sets its photo (teamPhotoChangeError); an admin may not",
   "teams/[id]/photo/route.ts DELETE": "a player of the team or an admin removes its photo (teamPhotoChangeError)",
   "tournaments/[id]/registrations/route.ts POST": "a player signs up a team they play in, or a new one with a partner (signUp checks it)",
@@ -118,9 +128,17 @@ function scan(paths: string[]): Handler[] {
 
 function missingAdmin(handlers: Handler[]): string[] {
   return handlers
-    .filter((h) => !h.body.includes("requireAdmin("))
+    .filter((h) => !GUARD.test(h.body))
     .map((h) => `${h.file} ${h.method}`)
     .filter((key) => !(key in ALLOWED_WITHOUT_ADMIN));
+}
+
+// A handler of one tournament that more than one role may reach (requireCan) and doesn't check whose tournament it is.
+// A requireAdmin handler needs no ownership: only an admin gets in, and an admin owns everything.
+function missingOwnership(handlers: Handler[]): string[] {
+  return handlers
+    .filter((h) => OWNED_DIRS.some((dir) => h.file.startsWith(dir)) && h.body.includes("requireCan(") && !OWNERSHIP.test(h.body))
+    .map((h) => `${h.file} ${h.method}`);
 }
 
 test("the scan finds each handler and its own body", () => {
@@ -157,6 +175,23 @@ test("a one-line handler doesn't borrow the next handler's check", () => {
   assert.deepEqual(missingAdmin(handlersIn(source, "y/route.ts")), ["y/route.ts GET"]);
 });
 
+test("requireCan counts as a guard, and a tournament handler must also check whose it is", () => {
+  const source = [
+    `export async function POST(req) {`,
+    `  const auth = await requireCan(req, "tournament.manage.own");`,
+    `  await refuseUnlessMine(id, auth.user);`,
+    `}`,
+    `export async function DELETE(req) {`,
+    `  const auth = await requireCan(req, "tournament.manage.own");`,
+    `}`,
+  ].join("\n");
+  const found = handlersIn(source, "admin/tournaments/[id]/kola/route.ts");
+  // both are guarded…
+  assert.deepEqual(missingAdmin(found), []);
+  // …but only one says whose tournament it is
+  assert.deepEqual(missingOwnership(found), ["admin/tournaments/[id]/kola/route.ts DELETE"]);
+});
+
 test("every admin endpoint calls requireAdmin", () => {
   // every handler, reads included
   const adminFiles = [
@@ -183,6 +218,12 @@ test("every admin endpoint calls requireAdmin", () => {
   const mutations = scan(Object.values(groups).flat()).filter((h) => MUTATING.has(h.method));
   assert.ok(adminHandlers.length > 0 && mutations.length > 0);
   assert.deepEqual(missingAdmin([...adminHandlers, ...mutations]), []);
+});
+
+test("every handler of one tournament, table or hand checks whose it is", () => {
+  const handlers = scan(routeFiles(join(API, "admin")));
+  for (const dir of OWNED_DIRS) assert.ok(handlers.some((h) => h.file.startsWith(dir)), `no routes found under api/${dir}`);
+  assert.deepEqual(missingOwnership(handlers), []);
 });
 
 test("the allowlist only names handlers that exist", () => {
