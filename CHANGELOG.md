@@ -2,6 +2,13 @@
 
 What the commits changed for the people using the app, newest first. The reasons and details are in DECISIONS.md.
 
+## 07.11.2026 · Meč bez pobjednika: upozorenje umjesto zabrane
+
+On development, not live yet (DECISIONS #84).
+
+### Admin
+- On a table's scorepad (computer and phone), changing or deleting a hand of a **finished match** so that nobody is left over 1001 is no longer refused: **Meč ostaje bez pobjednika?** says what the score becomes ("Nakon ove promjene meč je 860:640 i nitko nema 1001, pa se ne broji nijednoj ekipi.") and asks first. **Spremi svejedno** / **Obriši svejedno** saves it, **Odustani** keeps what was entered.
+
 ## 07.11.2026 · Vrijeme partije: kraj čim vrijeme istekne
 
 On development, not live yet (DECISIONS #83).
