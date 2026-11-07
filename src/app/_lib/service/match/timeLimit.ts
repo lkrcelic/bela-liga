@@ -1,14 +1,14 @@
 import {Prisma} from "@prisma/client";
 import {prisma} from "@/app/_lib/prisma";
-import {closesByTime, GAME_MINUTES_DEFAULT, LATE_HAND_GRACE_MS, matchDeadline} from "@/app/_lib/gameTime";
+import {closesByTime, GAME_MINUTES_DEFAULT, matchDeadline} from "@/app/_lib/gameTime";
 import {InvalidResultError} from "@/app/_lib/validation/validateResult";
 import {finishOngoingMatch, MatchAlreadyFinishedError} from "@/app/_lib/service/match/finishOngoingMatch";
 import {afterTableClosed} from "@/app/_lib/service/tournament/kola";
 
-// Vrijeme partije on the server: a match gets its deadline when it starts, and a match whose time (and the grace for a
-// hand being entered) is over is closed with the score entered then, by whichever request comes first (the scorepads
-// ask every 15 seconds; the tournament's pages and the admin's do too, and so does /api/cron/tick once a scheduler
-// calls it). Matches started before the limit came in have no deadline.
+// Vrijeme partije on the server: a match gets its deadline when it starts, and a match whose time is up is closed with
+// the score entered then, by whichever request comes first (the scorepads ask at the deadline and every 5 seconds after
+// it; the tournament's pages and the admin's ask too, and so does /api/cron/tick once a scheduler calls it). Matches
+// started before the limit came in have no deadline.
 
 type Db = Prisma.TransactionClient | typeof prisma;
 
@@ -42,13 +42,13 @@ export async function closeByTime(ongoingMatchId: number): Promise<boolean> {
   }
 }
 
-// Closes every match whose time and grace are over (of these tables, or all), unless its score is level (one more
-// hand is played then). Answers with the tables whose match was closed.
+// Closes every match whose time is up (of these tables, or all), unless its score is level (one more hand is played
+// then). Answers with the tables whose match was closed.
 export async function expireDueMatches({roundIds, matchId}: {roundIds?: number[]; matchId?: number} = {}): Promise<number[]> {
   const now = new Date();
   const due = await prisma.ongoingMatch.findMany({
     where: {
-      ends_at: {lt: new Date(now.getTime() - LATE_HAND_GRACE_MS)},
+      ends_at: {lt: now},
       ...(roundIds && {round_id: {in: roundIds}}),
       ...(matchId != null && {id: matchId}),
     },

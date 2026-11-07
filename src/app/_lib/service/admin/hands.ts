@@ -97,7 +97,8 @@ export async function getTablePad(roundId: number): Promise<TablePad> {
       score1: m.player_pair1_score,
       score2: m.player_pair2_score,
       threshold,
-      winner: matchWinner(m.player_pair1_score, m.player_pair2_score, threshold),
+      // a match closed by Vrijeme partije is won by the team with more points
+      winner: finishedMatchWinner(m),
       hands: m.belaResults.map(toPadHand),
     };
   });

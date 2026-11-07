@@ -1553,3 +1553,27 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
       `/signup?next=%2Fratings`, the sheet fits 375×667. **Not checked**: the sheet from a tournament's Prijavi se (the
       local copy has no tournament open for sign-ups; the same sheet with the tournament's first sentence) and real
       phones.
+
+83. **Vrijeme partije: the match ends when the time is up, with no 2 minutes after it** (your report of 5.11. from the
+    tournament: the time ran out at Kolo 1's table 3, "partija se zaledi i sve stoji"; then "after time is up
+    automatically finish the game don't wait for 2 minutes"). Replaces #69's grace for a hand being entered.
+    - **What happened on 5.11.**: Zelinčani – Vlažna uzbuna's time was up at 19:11:13 at 709:627. The server waited
+      the 2 minutes of #69 for a hand whose entry had started in time, and the board showed "Vrijeme je isteklo…" with
+      no button and no countdown, so the table looked frozen. At 19:12:33 a manual 300:300 hand on the admin's
+      scorepad took it to 1009:927 and it was finished as a win to 1001. The winner and the difference (82) are the
+      same as a close by time would have given; it is stored without time_expired.
+    - **Now**: at the deadline the match closes with the score entered then, on the first read after it (the board
+      asks a second after the deadline and every 5 s from then on; the tournament's pages and the attention check
+      close it too), and the board moves on to the next match or Kraj kola. A level score still plays one more hand.
+    - **A hand being entered when the time runs out doesn't count**: the server refuses a player's hand after the
+      deadline unless the score was level, and Spremi then takes the phone back to the board, which follows the
+      closed match. The 5-minute warning says so ("…a igra koja još nije spremljena ne računa se."). The phone no
+      longer sends when the entry started (entry_started_at, which the server now ignores).
+    - **The admin's hands still don't depend on the time** (corrections after the night), and the admin's scorepad now
+      shows the winner of a match closed by time; it showed none, since nobody had reached 1001.
+    - **Checked**: unit tests (525), new database tests (`npm run test:db`, run on 5.11.: a match a second past its deadline closes
+      with the team ahead winning and opens the second match on a fresh clock, one still running stays open, a hand
+      after the deadline is refused, a level score takes one more hand that ends it, the admin's scorepad shows the
+      winner), tsc, lint, and on a local copy in the browser: the board at 709:627 went to Meč 2 od 2 about 2 s after
+      its deadline, and Spremi pressed after the deadline in Korak 3 led to Kraj kola with the hand not counted.
+      **Not checked**: the Vercel preview and real phones.

@@ -2,6 +2,17 @@
 
 What the commits changed for the people using the app, newest first. The reasons and details are in DECISIONS.md.
 
+## 07.11.2026 · Vrijeme partije: kraj čim vrijeme istekne
+
+On development, not live yet (DECISIONS #83).
+
+### Players
+- When **Vrijeme partije** runs out, the match ends at once with the score entered then (the team with more points wins) and the board moves on to the next match or **Kraj kola** by itself; before, the board waited 2 minutes with no button and looked frozen. A level score still plays one more hand.
+- A hand still being entered when the time runs out doesn't count: **Spremi** takes the phone back to the table, which has moved on. The 5-minute warning now says "…a igra koja još nije spremljena ne računa se."
+
+### Admin
+- A table's scorepad shows the winner of a match closed by time (the team with more points); before, it showed no winner, since nobody had reached 1001.
+
 ## 07.11.2026 · Tu smo: jedan igrač je dovoljan, podebljano
 
 On development, not live yet.

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import {test} from "node:test";
-import {clockLabel, closesAfterHand, closesByTime, handTiming, LATE_HAND_GRACE_MS, matchDeadline, timeWinner} from "@/app/_lib/gameTime";
+import {clockLabel, closesAfterHand, closesByTime, handTiming, matchDeadline, timeWinner} from "@/app/_lib/gameTime";
 
 // Vrijeme partije: the deadline, the hands after it, and closing a match by time
 
@@ -17,25 +17,20 @@ test("a hand before the time is up is on time; without a limit always", () => {
   assert.equal(handTiming({now: at(90), endsAt: null, tied: false}), "on_time");
 });
 
-test("after the time: a hand started in time comes within the grace, a level score gets one more hand", () => {
-  assert.equal(handTiming({now: at(36), endsAt: ends, tied: false, entryStartedAt: at(34, 30)}), "late_entry");
-  // started after the time: refused
-  assert.equal(handTiming({now: at(36), endsAt: ends, tied: false, entryStartedAt: at(35, 10)}), "too_late");
-  // past the grace: refused even if started in time
-  assert.equal(handTiming({now: new Date(ends.getTime() + LATE_HAND_GRACE_MS + 1000), endsAt: ends, tied: false, entryStartedAt: at(34)}), "too_late");
+test("after the time: a hand is refused, even one being entered when it ran out; a level score gets one more hand", () => {
+  assert.equal(handTiming({now: at(35, 1), endsAt: ends, tied: false}), "too_late");
   assert.equal(handTiming({now: at(50), endsAt: ends, tied: true}), "extra_hand");
 });
 
-test("a hand after the time ends the match unless the score is still level", () => {
-  assert.equal(closesAfterHand("late_entry", false), true);
-  assert.equal(closesAfterHand("late_entry", true), false);
+test("the extra hand ends the match unless the score is still level", () => {
   assert.equal(closesAfterHand("extra_hand", false), true);
+  assert.equal(closesAfterHand("extra_hand", true), false);
   assert.equal(closesAfterHand("on_time", false), false);
 });
 
-test("nobody finishing: the match closes by itself after the time and the grace, not while level", () => {
-  assert.equal(closesByTime({now: at(36), endsAt: ends, tied: false}), false);
-  assert.equal(closesByTime({now: at(37, 1), endsAt: ends, tied: false}), true);
+test("nobody finishing: the match closes by itself as soon as the time is up, not while level", () => {
+  assert.equal(closesByTime({now: at(35), endsAt: ends, tied: false}), false);
+  assert.equal(closesByTime({now: at(35, 1), endsAt: ends, tied: false}), true);
   assert.equal(closesByTime({now: at(60), endsAt: ends, tied: true}), false);
   assert.equal(closesByTime({now: at(60), endsAt: null, tied: false}), false);
 });
