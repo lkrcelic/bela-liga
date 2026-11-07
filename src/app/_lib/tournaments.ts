@@ -43,6 +43,20 @@ export function lastKoloMade(kolos: KoloSummary[], rounds: number): boolean {
   return kolos.some((k) => k.number >= rounds);
 }
 
+/**
+ * Whether a team can sign up at this very moment (Otvorene prijave, DECISIONS #88).
+ *
+ * A closed tournament takes teams only before it starts — the start time shuts the sign-ups for good. An open one
+ * takes them all through the tournament, until its last Kolo is made (a draft counts): after that there is no next
+ * Kolo to come into, the same line the Tu smo · Želimo uskočiti button stops at. The admin's own Prijave switch wins
+ * over both, and a cancelled or finished tournament takes nobody.
+ */
+export function signUpsOpenNow(t: {phase: TournamentPhase; registrationsOpen: boolean; openSignups: boolean; lastKoloMade: boolean}): boolean {
+  if (!t.registrationsOpen) return false;
+  if (t.phase === "upcoming") return true;
+  return t.phase === "active" && t.openSignups && !t.lastKoloMade;
+}
+
 // The most Kolos a tournament has (Tournament_rounds_check)
 export const KOLO_MAX = 20;
 

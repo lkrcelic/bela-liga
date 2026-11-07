@@ -1750,3 +1750,33 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
       screen itself, whose button confirms who played, and only an admin may save that (`saveLineup`).
     - **Checked**: `npx tsc --noEmit` clean, `npm test` 536 tests green (the privacy, permissions, profiles, directory
       and ratings tests now state the new rule), and the screens walked through on the dev server as two accounts.
+
+88. **Otvorene prijave: a tournament you can join while it is played** (your request of 07.11.: "želim imati mogućnost
+    otvorenog turnira da se ljudi mogu prijaviti tokom cijelog turnira. Ali ne mogu se prijaviti kad počne zadnje
+    kolo… čim se ekipa prijavi da automatski uđe u sljedeće kolo… da bude za neke turnire gdje se igra u kafiću i sad
+    neko uskoči", then: "admin/organizator ima mogućnost dodavanja ekipa dok turnir traje isto kao i prije turnira")
+    - **The switch**: Podaci gets **Prijave · Do početka / Cijeli turnir**, beside Iduća kola, which it is modelled on.
+      `Tournament.open_signups`, false by default, so every tournament that exists keeps working exactly as before.
+    - **Do početka** (as until now): the start time's switch closes the sign-ups for good.
+    - **Cijeli turnir**: the start time still decides who is present (the teams that didn't press Tu smo go inactive,
+      the confirmed waiting teams come in) — it only stops closing the sign-ups. They close by themselves the moment
+      the **last Kolo is made**, a draft counting, which is the line Tu smo · Želimo uskočiti already stops at
+      (LAST_KOLO_MADE). Your answer: that line, not the publishing of the last Kolo.
+    - **A team that signs up while the tournament runs counts as present** (your words: "ako su se prijavili
+      podrazumijeva se da su tamo"): the entry is written arrived and active, so the next Kolo's draft pairs it
+      without anyone pressing anything. Full tournament: it goes on the waiting list **confirmed**, so it comes in by
+      itself as soon as a place opens (fillPlaces) — your answer, the waiting list stays as it is.
+    - **Dodaj ekipu is the same**: the admin's and the organizer's Dodaj ekipu works during such a tournament, on the
+      phone and on the computer, and the team is in (or waiting) at once, marked arrived by the admin.
+    - **A draft already made**: the team joins the first Kolo that is **made after** it comes in. If the next Kolo's
+      draft is already standing, the app marks that draft stale, as it already does when the playing teams change, and
+      you choose whether to lay it out again — your answer, "pitaj me svaki put". With Automatska kola there is no
+      such window: the Kolo goes out the moment it is made.
+    - **Kolo 1**: "Prvo zatvori prijave, zatim složi Kolo 1" does not apply to an open tournament — it would never be
+      able to start. Kolo 1 is made from whoever is here, and the sign-ups go on.
+    - **The Prijave switch still wins**: the admin can close the sign-ups of an open tournament by hand at any time,
+      and that now works while it is played too (before, the switch was refused after the start).
+    - **Not changed**: the number of Kolos, the limit, the standings. A team that comes in at Kolo 4 has played fewer
+      Kolos and stands lower for it; that is the tournament, not a fault.
+    - **Checked**: unit tests for the rule (both kinds before the start, during, at the last Kolo, with the switch
+      closed, and finished or cancelled), tsc on the files of this change, lint.

@@ -74,6 +74,7 @@ export type TournamentRequest = {
   prizes: {prize: string; description: string}[];
   game_minutes: number;
   auto_publish: boolean;
+  open_signups: boolean;
   organizer_phone: string | null;
 };
 
@@ -181,6 +182,10 @@ export type TournamentCard = {
   game_minutes: number;
   // Automatska kola: the Kolos after the first are published by themselves
   auto_publish: boolean;
+  // Otvorene prijave: teams sign up while the tournament is played, up to its last Kolo (DECISIONS #88)
+  open_signups: boolean;
+  // whether a team can sign up at this very moment (the switch, the phase and the last Kolo together)
+  signups_open_now: boolean;
   day: TournamentDay | null;
   // the last Kolo is made (draft or published): a team can't join any more (no Tu smo · Želimo uskočiti)
   last_kolo_made: boolean;

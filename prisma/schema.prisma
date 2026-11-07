@@ -192,6 +192,9 @@ model Tournament {
   // admin's Skica (Kolo 1 still waits for Objavi). Read each time a Kolo is made by itself, so it can be switched on
   // or off during the tournament
   auto_publish       Boolean   @default(false)
+  // Otvorene prijave: ekipe se mogu prijaviti i dok turnir traje, do zadnjeg kola (DECISIONS #88). A team that signs
+  // up then counts as arrived and plays from the next Kolo. False = the start time closes sign-ups, as before.
+  open_signups       Boolean   @default(false)
   // Telefon organizatora: required for a new tournament (the old ones have none); the players call it or write on
   // WhatsApp from the tournament's page
   organizer_phone    String?   @db.VarChar(30)

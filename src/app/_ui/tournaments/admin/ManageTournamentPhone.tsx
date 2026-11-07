@@ -351,7 +351,9 @@ function EntriesTab({t, waiting, onChanged}: {t: AdminTournament; waiting: boole
   // the tournament's day before Kolo 1 (Tu smo, Aktivna), or the tournament under way (Isključi, Vrati)
   const onDay = dayOn(t);
   const started = t.started_at != null && t.phase !== "cancelled";
-  const editable = t.phase === "upcoming" && !(t.day?.phase === "closed");
+  // Dodaj ekipu: before the start, and all through a tournament with Otvorene prijave, where the team comes straight
+  // in (or onto the waiting list) and plays from the next Kolo (DECISIONS #88)
+  const editable = (t.phase === "upcoming" && !(t.day?.phase === "closed")) || (t.phase === "active" && t.signups_open_now);
   const list = waiting ? t.waiting_list : t.entries;
   const next = t.waiting_list[0];
 
@@ -399,6 +401,9 @@ function EntriesTab({t, waiting, onChanged}: {t: AdminTournament; waiting: boole
         <InfoNote icon={<InfoRoundedIcon />}>Turnir je krenuo: isključi umjesto briši. Isključena ekipa ne igra ostala kola, a odigrana ostaju u poretku.</InfoNote>
       ) : (
         <InfoNote icon={<InfoRoundedIcon />}>Početak je prošao: prijave su zatvorene. Ekipe koje stignu kasnije označi pa ih uključi prekidačem.</InfoNote>
+      )}
+      {t.phase === "active" && t.signups_open_now && (
+        <InfoNote icon={<InfoRoundedIcon />}>Prijave su otvorene cijeli turnir: dodana ekipa odmah je u turniru (ili na listi čekanja) i igra od idućeg kola.</InfoNote>
       )}
       {(error || day.error) && !asking && <ErrorNote>{error ?? day.error}</ErrorNote>}
       <Box sx={{display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: "10px", px: "6px"}}>

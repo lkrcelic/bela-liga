@@ -16,6 +16,11 @@ type Tx = Prisma.TransactionClient;
 export const DAY_NOT_STARTED = "Potvrda dolaska još nije otvorena.";
 export const LAST_KOLO_MADE = "Zadnje kolo je već složeno: više se ne može uskočiti.";
 
+// The tournament's last Kolo exists (a draft counts): there is no next Kolo to come into
+export async function lastKoloIsMade(tx: Tx, t: {tournament_id: number; rounds: number}): Promise<boolean> {
+  return (await tx.round.count({where: {tournamentRounds: {some: {tournament_id: t.tournament_id}}, round_number: {gte: t.rounds}}})) > 0;
+}
+
 const isoDay = (d: Date) => d.toISOString().slice(0, 10);
 
 export function windowOf(t: {date: Date; gathering_time: string | null; start_time: string | null}) {
@@ -25,7 +30,7 @@ export function windowOf(t: {date: Date; gathering_time: string | null; start_ti
 // The day's switch has run, or the tournament started some other way (Kolo 1 published, or no start time)
 const dayClosed = (t: {arrival_closed_at: Date | null; started_at: Date | null}) => t.arrival_closed_at != null || t.started_at != null;
 
-async function dayEntries(tx: Tx, tournamentId: number): Promise<DayEntry[]> {
+export async function dayEntries(tx: Tx, tournamentId: number): Promise<DayEntry[]> {
   const rows = await tx.tournamentTeam.findMany({
     where: {tournament_id: tournamentId},
     select: {team_id: true, status: true, registered_at: true, arrived_at: true, active: true, excluded_at: true},
@@ -49,8 +54,9 @@ export async function fillPlaces(tx: Tx, tournamentId: number, maxTeams: number 
   }
 }
 
-// The start time's switch (run by the clock once Početak has come): sign-ups close, the teams in that didn't confirm
-// become inactive (still signed up), and the confirmed waiting teams come in while there is room. Once.
+// The start time's switch (run by the clock once Početak has come): sign-ups close (a tournament with Otvorene
+// prijave keeps them open), the teams in that didn't confirm become inactive (still signed up), and the confirmed
+// waiting teams come in while there is room. Once.
 export async function closeArrival(tx: Tx, tournamentId: number, now: Date): Promise<boolean> {
   const t = await tx.tournament.findUnique({where: {tournament_id: tournamentId}});
   if (!t || t.cancelled_at || dayClosed(t)) return false;
@@ -59,7 +65,8 @@ export async function closeArrival(tx: Tx, tournamentId: number, now: Date): Pro
   const {inactive, admitted} = startSwitch(await dayEntries(tx, tournamentId), t.max_teams);
   if (inactive.length > 0) await tx.tournamentTeam.updateMany({where: {tournament_id: tournamentId, team_id: {in: inactive}}, data: {active: false}});
   for (const teamId of admitted) await tx.tournamentTeam.update({where: entryKey(tournamentId, teamId), data: {status: "REGISTERED", active: true}});
-  await tx.tournament.update({where: {tournament_id: tournamentId}, data: {arrival_closed_at: now, registrations_open: false}});
+  // Otvorene prijave: the switch still decides who is here, but sign-ups stay open for the rest of the tournament
+  await tx.tournament.update({where: {tournament_id: tournamentId}, data: {arrival_closed_at: now, ...(t.open_signups ? {} : {registrations_open: false})}});
   return true;
 }
 
@@ -130,10 +137,7 @@ export async function arrivalAction(tournamentId: number, viewer: Viewer, action
 // made (a draft too) there is no next Kolo: a team that doesn't play can't join.
 async function joinFromNextKolo(tx: Tx, t: {tournament_id: number; max_teams: number | null; rounds: number}, teamId: number, by: {arrived_by: number | null; arrived_by_admin: boolean}, now: Date) {
   const entry = await tx.tournamentTeam.findUniqueOrThrow({where: entryKey(t.tournament_id, teamId)});
-  if (!(entry.status === "REGISTERED" && entry.active)) {
-    const made = await tx.round.count({where: {tournamentRounds: {some: {tournament_id: t.tournament_id}}, round_number: {gte: t.rounds}}});
-    if (made > 0) throw new InvalidResultError(LAST_KOLO_MADE);
-  }
+  if (!(entry.status === "REGISTERED" && entry.active) && (await lastKoloIsMade(tx, t))) throw new InvalidResultError(LAST_KOLO_MADE);
   const arrival = entry.arrived_at ? {} : {arrived_at: now, ...by};
   if (entry.status === "REGISTERED") {
     if (entry.active) {

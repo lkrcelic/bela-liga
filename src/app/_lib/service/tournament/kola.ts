@@ -108,7 +108,8 @@ export async function makeKoloDraft(tournamentId: number, {redo = false}: {redo?
     const draft = rounds.filter((r) => r.status !== "PUBLISHED");
     if (draft.length > 0 && !redo) return {number, tables: draft.length, repeats: []};
 
-    if (number === 1 && t.registrations_open) throw new InvalidResultError("Prvo zatvori prijave, zatim složi Kolo 1.");
+    // Otvorene prijave: the teams keep coming all tournament, so Kolo 1 is made from whoever is here (DECISIONS #88)
+    if (number === 1 && t.registrations_open && !t.open_signups) throw new InvalidResultError("Prvo zatvori prijave, zatim složi Kolo 1.");
     if (number > 1 && rounds.some((r) => r.status === "PUBLISHED" && r.round_number === last && r.open)) {
       throw new InvalidResultError(`Kolo ${last} još traje: sljedeće se slaže kad svi stolovi završe.`);
     }
@@ -165,11 +166,12 @@ export async function publishKolo(tournamentId: number, number: number): Promise
     if (draftIsStale(draft, await playingTeams(tx, tournamentId))) throw new StaleDraftError();
     const now = new Date();
     await tx.round.updateMany({where: {id: {in: tables.map((r) => r.id)}}, data: {status: "PUBLISHED", published_at: now, draft_order: null}});
-    // the tournament starts: no more sign-ups, and the arrival window is over (who plays was decided by the draft)
+    // the tournament starts: the arrival window is over (who plays was decided by the draft) and sign-ups close —
+    // unless it has Otvorene prijave, where they stay open until the last Kolo is made (DECISIONS #88)
     if (number === 1) {
       await tx.tournament.update({
         where: {tournament_id: tournamentId},
-        data: {started_at: now, registrations_open: false, arrival_closed_at: t.arrival_closed_at ?? now},
+        data: {started_at: now, ...(t.open_signups ? {} : {registrations_open: false}), arrival_closed_at: t.arrival_closed_at ?? now},
       });
     }
     return {publishedAt: now.toISOString()};

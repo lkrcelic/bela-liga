@@ -129,8 +129,9 @@ function TeamOnNavy({name, players, meId}: {name: string; players: {id: number; 
   );
 }
 
-// The navy card of a tournament before it starts (R1–R4): signed up (the team, its players, where and when), on the
-// waiting list, open for sign-ups (Prijavi se), or closed
+// The navy card of a tournament before it starts (R1–R4), and of one with Otvorene prijave while it is played
+// (DECISIONS #88): signed up (the team, its players, where and when), on the waiting list, open for sign-ups
+// (Prijavi se), or closed
 export function SignUpCard({t, meId, onSignUp, signedIn}: {t: TournamentDetail; meId: number | null; onSignUp: () => void; signedIn: boolean}) {
   const showGuestSheet = useGuestSheet((s) => s.show);
   const card = {flex: "none", borderRadius: "24px", background: color.navy, color: color.white, p: "18px", display: "flex", flexDirection: "column", gap: "14px", boxShadow: shadow.hero} as const;
@@ -153,7 +154,7 @@ export function SignUpCard({t, meId, onSignUp, signedIn}: {t: TournamentDetail; 
     );
   }
   const full = t.max_teams != null && t.teams >= t.max_teams;
-  const open = t.registrations_open;
+  const open = t.signups_open_now;
   return (
     <Box component="section" aria-label={open ? "Prijave otvorene" : "Prijave zatvorene"} sx={card}>
       <Box sx={{display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px"}}>
@@ -696,7 +697,7 @@ export function UpcomingCard({t}: {t: TournamentCard}) {
             {t.me.status === "WAITING" ? <HourglassTopRoundedIcon aria-hidden /> : <CheckCircleRoundedIcon aria-hidden />}
             {t.me.status === "WAITING" ? "Čekaš" : "Prijavljeni"}
           </Box>
-        ) : t.registrations_open ? (
+        ) : t.signups_open_now ? (
           <Box
             {...(guest ? {component: "button", type: "button", onClick: () => showGuestSheet(`${tournamentHref(t.id)}?prijava=1`, "signup")} : {component: TransitionLink, href: tournamentHref(t.id)})}
             sx={{...buttonBase, flex: "none", ml: "auto", height: 44, display: "flex", alignItems: "center", gap: "2px", pl: "12px", pr: "6px", borderRadius: "12px", background: color.navy, color: color.white, fontSize: 15, fontWeight: 700, textDecoration: "none", "& svg": {fontSize: 20}}}

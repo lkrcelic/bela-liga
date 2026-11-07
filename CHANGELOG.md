@@ -19,6 +19,22 @@ Not deployed yet (DECISIONS #88).
 - Napomena pod osobnim podacima sad točno kaže što ostaje privatno: **"Email, mobitel, datum rođenja i Pušač vidljivi su samo igraču i administratorima."** Mobitel uz to vidi i organizator.
 - Burza ostaje kakva je (oglas nosi ime autora, bez korisničkog imena), a **Tko igra ovu rundu?** za završenu rundu ostaje adminu — jer se tamo potvrđuje ko je igrao.
 
+## 07.11.2026 · Otvoreni turnir: prijave cijelo vrijeme
+
+Not deployed yet (DECISIONS #88). Needs a migration on the database.
+
+### Admin
+- U **Podacima** turnira je novi izbor **Prijave · Do početka / Cijeli turnir**, pored **Iduća kola**. Svi postojeći turniri su **Do početka**, dakle rade kao i dosad.
+- **Cijeli turnir**: ekipe se mogu prijaviti i dok turnir traje, sve dok se ne složi zadnje kolo. U vrijeme početka i dalje se odlučuje tko je tu (tko nije stisnuo Tu smo postaje neaktivan), samo se prijave ne zatvaraju.
+- **Dodaj ekipu** radi i usred takvog turnira, na telefonu i na računalu: ekipa je odmah u turniru ili na listi čekanja i igra od idućeg kola.
+- Kod otvorenog turnira **Kolo 1 se slaže bez zatvaranja prijava** — složi se s onima koji su tu, a prijave idu dalje.
+- Prekidač **Prijave otvorene/zatvorene** sad radi i dok turnir traje, pa ih možeš zatvoriti ručno kad god.
+
+### Players
+- Na turniru s otvorenim prijavama **Prijavi se** stoji i dok se igra. Tko se prijavi usred turnira broji se kao prisutan i igra od idućeg kola — ne mora stiskati Tu smo.
+- Ako je turnir pun, prijava ide na listu čekanja i ulazi sama čim se mjesto oslobodi.
+- Kad se složi zadnje kolo, prijave se zatvaraju.
+
 ## 07.11.2026 · Brisanje bilo kojeg kola turnira
 
 Not deployed yet (DECISIONS #87).

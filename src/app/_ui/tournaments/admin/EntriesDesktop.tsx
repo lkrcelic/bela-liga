@@ -32,7 +32,9 @@ export default function EntriesDesktop({t, waiting, onChanged}: Props) {
   const [confirm, setConfirm] = useState<number | null>(null);
   const [busy, setBusy] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const editable = t.phase === "upcoming";
+  // Dodaj ekipu: before the start, and all through a tournament with Otvorene prijave, where the team comes straight
+  // in (or onto the waiting list) and plays from the next Kolo (DECISIONS #88)
+  const editable = t.phase === "upcoming" || (t.phase === "active" && t.signups_open_now);
   const list = (waiting ? t.waiting_list : t.entries).filter((e) => matchesQuery(`${e.team_name} ${e.players.map((p) => `${p.name} ${p.username ?? ""}`).join(" ")}`, query));
   const next = t.waiting_list[0];
   const cols = waiting ? "36px minmax(0,1fr) minmax(0,1.3fr) 120px 150px 44px" : "minmax(0,1fr) minmax(0,1.4fr) 110px 44px";
@@ -110,9 +112,11 @@ export default function EntriesDesktop({t, waiting, onChanged}: Props) {
         )}
         {editable && (
           <InfoNote icon={<InfoRoundedIcon />}>
-            {waiting
-              ? "Kad se ekipa odjavi, prva s liste ulazi automatski, bez obavijesti. „Ubaci u turnir” je ručno i povećava broj ekipa za jedan."
-              : "Ekipa se može dodati samo ako bar dva igrača imaju račun. Micanje ekipe je bez obavijesti; prva s liste čekanja ulazi automatski."}
+            {t.phase === "active"
+              ? "Prijave su otvorene cijeli turnir: dodana ekipa odmah je u turniru (ili na listi čekanja) i igra od idućeg kola."
+              : waiting
+                ? "Kad se ekipa odjavi, prva s liste ulazi automatski, bez obavijesti. „Ubaci u turnir” je ručno i povećava broj ekipa za jedan."
+                : "Ekipa se može dodati samo ako bar dva igrača imaju račun. Micanje ekipe je bez obavijesti; prva s liste čekanja ulazi automatski."}
           </InfoNote>
         )}
       </Box>

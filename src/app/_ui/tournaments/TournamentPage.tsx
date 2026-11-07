@@ -50,7 +50,7 @@ export default function TournamentPage({id}: {id: number}) {
   const live = t?.phase === "active" || (t?.day != null && t.day.phase !== "before" && t.phase === "upcoming");
   if ((live ? 20_000 : undefined) !== every) setEvery(live ? 20_000 : undefined);
   useEffect(() => {
-    if (t && params.get("prijava") === "1" && signedIn && t.phase === "upcoming" && t.registrations_open && !t.me) setSheet(true);
+    if (t && params.get("prijava") === "1" && signedIn && t.signups_open_now && !t.me) setSheet(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [t?.id]);
 
@@ -138,6 +138,9 @@ export default function TournamentPage({id}: {id: number}) {
                 <NoShowWinCard last={wonWithoutPlay} kolo={(t.live_kolo ?? 0) + 1 <= t.rounds ? (t.live_kolo ?? 0) + 1 : null} />
               ) : t.me && (t.me.status === "WAITING" || !t.me.active || t.me.plays_from) ? (
                 <ArrivalCard t={t} busy={arrivalBusy} error={arrivalError} onAction={arrival} />
+              ) : !t.me && t.signups_open_now ? (
+                // Otvorene prijave: a team can still come in while the tournament is played (DECISIONS #88)
+                <SignUpCard t={t} meId={meId} signedIn={signedIn} onSignUp={() => setSheet(true)} />
               ) : (
                 t.me?.status === "REGISTERED" && <WaitingCard team={t.me.team_name} kolo={t.live_kolo} onLeave={() => arrival("leave")} leaving={arrivalBusy === "leave"} />
               )}

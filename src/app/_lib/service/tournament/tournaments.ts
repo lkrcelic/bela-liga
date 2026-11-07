@@ -47,6 +47,7 @@ function fields(r: TournamentRequest) {
     rules_url: blankToNull(r.rules_url),
     game_minutes: r.game_minutes,
     auto_publish: r.auto_publish,
+    open_signups: r.open_signups,
     organizer_phone: normalizePhone(r.organizer_phone),
   };
 }
@@ -303,7 +304,8 @@ export async function getTournamentDetail(id: number, viewer: Viewer | null): Pr
   const s = await snapshotOrThrow(id, viewer);
   const t = s.tournament;
   const [teams, result, bans] = await Promise.all([
-    viewer && s.phase === "upcoming" && t.registrations_open ? myTeams(s, viewer) : Promise.resolve([]),
+    // Prijavi ekipu: before the start as ever, and all through a tournament with Otvorene prijave (DECISIONS #88)
+    viewer && cardView(s, viewer).signups_open_now ? myTeams(s, viewer) : Promise.resolve([]),
     myResult(s, viewer),
     viewer ? activeBans({playerIds: [viewer.id]}) : Promise.resolve(null),
   ]);

@@ -22,6 +22,7 @@ import {
   tournamentPhase,
   koloRemovalOf,
   koloRemovalWarns,
+  signUpsOpenNow,
   removesResults,
   tournamentStatus,
   tournamentTotals,
@@ -423,4 +424,29 @@ test("joining ends once the last Kolo is made, a draft of it too", async () => {
   assert.equal(lastKoloMade([kolo(1, true), kolo(2, true)], 3), false);
   assert.equal(lastKoloMade([kolo(1, true), kolo(2, true), kolo(3, false)], 3), true);
   assert.equal(lastKoloMade([kolo(1, true), kolo(2, true), kolo(3, true)], 3), true);
+});
+
+test("Otvorene prijave: a closed tournament takes teams until it starts, an open one until its last Kolo is made", () => {
+  const open = (over: Partial<Parameters<typeof signUpsOpenNow>[0]> = {}) =>
+    signUpsOpenNow({phase: "active", registrationsOpen: true, openSignups: true, lastKoloMade: false, ...over});
+
+  // before the start both kinds take teams, as they always did
+  assert.equal(open({phase: "upcoming", openSignups: false}), true);
+  assert.equal(open({phase: "upcoming", openSignups: true}), true);
+
+  // a closed tournament takes nobody once it is being played
+  assert.equal(open({openSignups: false}), false);
+  // an open one does, right up to the moment its last Kolo is made (a draft counts)
+  assert.equal(open(), true);
+  assert.equal(open({lastKoloMade: true}), false);
+
+  // the admin's own Prijave switch wins over everything
+  assert.equal(open({registrationsOpen: false}), false);
+  assert.equal(open({phase: "upcoming", registrationsOpen: false}), false);
+
+  // a tournament that is over or cancelled takes nobody, open or not
+  for (const phase of ["finished", "cancelled"] as const) {
+    assert.equal(open({phase}), false, phase);
+    assert.equal(open({phase, openSignups: false}), false, phase);
+  }
 });

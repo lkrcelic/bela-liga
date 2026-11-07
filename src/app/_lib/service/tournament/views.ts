@@ -18,7 +18,7 @@ import {
   TournamentWinner,
 } from "@/app/_interfaces/tournament";
 import {waitingList} from "@/app/_lib/tournamentEntries";
-import {draftIsStale, lastKoloMade} from "@/app/_lib/tournaments";
+import {draftIsStale, lastKoloMade, signUpsOpenNow} from "@/app/_lib/tournaments";
 import {leagueClock} from "@/app/_lib/dates";
 import {displayName} from "@/app/_lib/players/names";
 import {arrivalPhase, DayEntry, isTournamentDay, startSwitch} from "@/app/_lib/tournamentDay";
@@ -171,6 +171,15 @@ export function cardView(s: Snapshot, viewer: Viewer | null): TournamentCard {
     my_place: place > 0 ? place : null,
     game_minutes: t.game_minutes,
     auto_publish: t.auto_publish,
+    open_signups: t.open_signups,
+    // whether a team can still sign up right now: before the start as ever, and during a tournament with Otvorene
+    // prijave until its last Kolo is made (DECISIONS #88)
+    signups_open_now: signUpsOpenNow({
+      phase: s.phase,
+      registrationsOpen: t.registrations_open,
+      openSignups: t.open_signups,
+      lastKoloMade: lastKoloMade(s.kolos, t.rounds),
+    }),
     day: dayOf(s, now),
     last_kolo_made: lastKoloMade(s.kolos, t.rounds),
     server_now: now.toISOString(),
@@ -311,7 +320,8 @@ export function nextKolo(s: Snapshot): AdminTournament["next_kolo"] {
   const number = last + 1;
   if (number > s.tournament.rounds) return null;
   if (number === 1) {
-    if (s.tournament.registrations_open) return {number, ready: false, reason: "Prvo zatvori prijave, zatim složi Kolo 1."};
+    // Otvorene prijave: Kolo 1 is made from whoever is here; the sign-ups go on (DECISIONS #88)
+    if (s.tournament.registrations_open && !s.tournament.open_signups) return {number, ready: false, reason: "Prvo zatvori prijave, zatim složi Kolo 1."};
     if (s.entries.filter((e) => e.status === "REGISTERED" && e.active && !e.excluded_at).length < 2) return {number, ready: false, reason: "Za kolo trebaju barem dvije aktivne ekipe."};
     return {number, ready: true, reason: null};
   }
