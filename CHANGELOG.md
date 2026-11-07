@@ -4,6 +4,8 @@ What the commits changed for the people using the app, newest first. The reasons
 
 ## 07.11.2026 · Raspored duge lige se skrola i na Androidu
 
+Live since 07.11. (f1524b2; the deploy 6480d45 carries this entry).
+
 ### Players
 - **Raspored** on the phone: a league with many nights (the test league has 480) can be scrolled again on Android. The list of nights was a box that could scroll by a fraction of a pixel of its own, and on Android the finger stayed in it, so the page under it didn't move; now the whole page scrolls, as it already did on the iPhone. On the computer the list still scrolls inside its card.
 
