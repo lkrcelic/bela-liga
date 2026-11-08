@@ -1842,3 +1842,20 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
       hands and a new deadline), plus the whole flow clicked through on a phone-sized dev server: a locked table →
       Otključaj partiju → 20 min → the table new again with the team back in the tournament, and an expired match → 15
       min → the same match being played again with 15 minutes on it. tsc and lint clean.
+
+90. **Broj iz Burze vide samo prijavljeni igrači** (issue #11, found by the code scan: `curl /api/burza` without a
+    cookie returned every ad's `phone`).
+    - **What changed**: an ad's phone number is no longer in the public answer. `toView` runs it through
+      `phoneForViewer` (`_lib/burzaStatus.ts`): its author always sees it, a logged-in player sees it while the ad is
+      up, and nobody who isn't logged in sees it at all. `phoneNeedsLogin` adds `phone_hidden: true` to such an ad, so
+      the ad's page keeps its Kontakt card with "Broj vide igrači s računom." and **Prijavi se da vidiš broj**, which
+      opens "Sjedni za stol." with `next` set to the ad (#75) and so comes back to the number.
+    - **The ads stay public** (#29, #75: "only burza" stays open to a guest): the list, the kinds, the teams, the
+      names, the ratings and the notes are unchanged, and a shared link still opens the ad. Only the number waits for
+      a login. `listOpenPosts` therefore filters on "the ad has a number" (`phone != null || phone_hidden`), not on the
+      number it shows — otherwise Burza would be empty for a guest, since an availability ad without any number is the
+      one that must stay out of the list.
+    - **Why not close Burza altogether**: a guest is meant to read the ads (that is what the public page is for); the
+      number is what a bot would harvest. Name and rating are as public as a tournament's teams, the number isn't.
+    - Not done here: `GET /api/burza` still lists every open ad without pagination (the same issue's second note; a
+      separate performance ticket covers the query).

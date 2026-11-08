@@ -2,6 +2,14 @@
 
 What the commits changed for the people using the app, newest first. The reasons and details are in DECISIONS.md.
 
+## 09.11.2026 · Broj iz oglasa vide samo prijavljeni igrači
+
+Not deployed yet (DECISIONS #90).
+
+### Players
+- **Broj telefona iz Burze više nije javan.** Oglasi se i dalje vide bez prijave (i dalje se mogu dijeliti), ali na oglasu bez prijave stoji „Broj vide igrači s računom.“ i dugme **Prijavi se da vidiš broj**, koje nakon prijave vrati na taj isti oglas. Prijavljeni igrači vide broj, Nazovi i WhatsApp kao i dosad, a svoj oglas i dalje vidiš cijeli.
+- Razlog: broj si dao da te nađe suigrač, a ne da ga s interneta pokupi bot (spam, WhatsApp prijevare).
+
 ## 08.11.2026 · Poziv za instalaciju ne vraća se svaki put
 
 Not deployed yet.
