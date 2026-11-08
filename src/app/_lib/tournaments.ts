@@ -129,6 +129,18 @@ export const removesResults = (r: KoloRemoval) => r.resultsGo;
 // Anything but a Kolo nobody has made yet: the confirmation says what the deletion costs and carries the warning sign
 export const koloRemovalWarns = (r: KoloRemoval) => r.step !== "waiting" || r.alsoGo.length > 0;
 
+/**
+ * Someone has sat down at this table: it is closed, a match was played at it, or one is being played. Word for word
+ * the question the server asks before it deletes a Kolo (deleteKolo), so the confirmation and the refusal can never
+ * disagree — a table whose match an admin finished without a winner is open with no wins on it, and reading only the
+ * wins left the dialog saying plain "Obriši kolo" while the server refused and asked for the results to be confirmed,
+ * which that dialog could not then offer. The bye's table is nobody's play.
+ */
+export function tableWasPlayed(t: {team1Id: number; team2Id: number; open: boolean; matches: number; ongoing: number}): boolean {
+  if (isByeTeam(t.team1Id) || isByeTeam(t.team2Id)) return false;
+  return !t.open || t.matches > 0 || t.ongoing > 0;
+}
+
 // Each of the tournament's Kolos as the admin's list shows it (Kola): played, being played, a draft waiting to be
 // published, or still to come
 export type KoloStep = "played" | "live" | "draft" | "waiting";

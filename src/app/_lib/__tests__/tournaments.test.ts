@@ -26,6 +26,7 @@ import {
   signUpsCloseWithSwitch,
   signUpsOpenNow,
   removesResults,
+  tableWasPlayed,
   tournamentStatus,
   tournamentTotals,
 } from "@/app/_lib/tournaments";
@@ -100,6 +101,29 @@ test("Swiss: a meeting nobody can avoid is made and reported", () => {
   assert.equal(plan.repeats.length, 1);
   assert.deepEqual(swissPairs([swiss(9, 0, 0)]).pairs, [[9, BYE_TEAM_ID]]);
   assert.deepEqual(swissPairs([]).pairs, []);
+});
+
+test("someone sat down at this table: the same question the server asks before it deletes a Kolo", () => {
+  const t = (o: Partial<{team1Id: number; team2Id: number; open: boolean; matches: number; ongoing: number}> = {}) => ({
+    team1Id: 1,
+    team2Id: 2,
+    open: true,
+    matches: 0,
+    ongoing: 0,
+    ...o,
+  });
+  // a table nobody has touched: out, open, nothing played
+  assert.equal(tableWasPlayed(t()), false);
+  // closed: played, or closed by Nedolazak, Preskočen or the clock — all of them count
+  assert.equal(tableWasPlayed(t({open: false})), true);
+  // a game is running at it
+  assert.equal(tableWasPlayed(t({ongoing: 1})), true);
+  // a match was played and the table is still open for the second: the wins can be 0 (a match an admin finished
+  // without a winner), so the match itself is what counts, not the score
+  assert.equal(tableWasPlayed(t({matches: 1})), true);
+  // the bye's table is nobody's play, however it looks
+  assert.equal(tableWasPlayed(t({team1Id: BYE_TEAM_ID, open: false, matches: 2})), false);
+  assert.equal(tableWasPlayed(t({team2Id: BYE_TEAM_ID, open: false, matches: 2})), false);
 });
 
 test("Obriši kolo: any Kolo in any state goes, the tournament is one shorter, and made Kolos after it go with it", () => {

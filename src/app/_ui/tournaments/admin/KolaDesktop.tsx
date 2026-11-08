@@ -6,7 +6,7 @@ import {AdminTournament, KoloView} from "@/app/_interfaces/tournament";
 import {isByeTeam} from "@/app/_lib/bye";
 import {KoloPair} from "@/app/_lib/matching/tournamentPairing";
 import {nightLabel} from "@/app/_lib/nights";
-import {KOLO_MAX, KoloRemoval, koloRemovalOf, koloRemovalWarns, koloSteps, removesResults} from "@/app/_lib/tournaments";
+import {KOLO_MAX, KoloRemoval, koloRemovalOf, koloRemovalWarns, koloSteps, removesResults, tableWasPlayed} from "@/app/_lib/tournaments";
 import {filterTables, TableFilter, tableColumns, TableRow, toTableRows} from "@/app/_lib/ui/tables";
 import useElementHeight from "@/app/_hooks/useElementHeight";
 import {count, NOUN} from "@/app/_lib/ui/text";
@@ -70,7 +70,12 @@ export function koloRemoval(t: AdminTournament, n: number): KoloRemoval | null {
     n,
     t.results.kolos.map((k) => {
       const rows = koloRows(k);
-      return {number: k.number, published: k.published, played: rows.some((r) => !r.bye && r.started), done: rows.length > 0 && rows.every((r) => r.done)};
+      // played: the same question the server asks (tableWasPlayed), not the table row's `started`, which reads the
+      // wins and so misses a match finished without a winner
+      const played = k.tables.some((x) =>
+        tableWasPlayed({team1Id: x.team1_id, team2Id: x.team2_id, open: x.open, matches: x.matches.length, ongoing: x.ongoingMatches.length})
+      );
+      return {number: k.number, published: k.published, played, done: rows.length > 0 && rows.every((r) => r.done)};
     })
   );
 }

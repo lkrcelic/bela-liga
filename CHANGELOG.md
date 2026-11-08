@@ -69,6 +69,7 @@ Not deployed yet (DECISIONS #87).
 - Svako brisanje pita prije. Kolo koje nije u statusu **Čeka** nosi **upozorenje** i rečenicu po posljedici ("Brišu se i kola 3, 4, jer su složena po rezultatima ovog."). Ako se za nekim od tih stolova stvarno igralo, gumb piše **Obriši s rezultatima** i rejting se računa ponovo.
 - Turnir uvijek ostaje s barem jednim kolom.
 - Brisanje kola može admin na svim turnirima, a organizator samo na svojima.
+- Gumb **Obriši s rezultatima** se pojavi i kad je za stolom odigran meč **bez pobjednika** — prije je potvrda nudila samo **Obriši kolo**, a brisanje bi zatim bilo odbijeno s "Potvrdi brisanje s rezultatima", pa se iz tog dijaloga nije moglo dalje.
 
 ## 07.11.2026 · Organizator: nova rola
 
