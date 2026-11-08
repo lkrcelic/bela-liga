@@ -136,6 +136,12 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
     SamsungInternet/support#123). Its sheet says so and opens the page in Chrome instead, with a copy-link fallback.
     The manifest and the missing service worker aren't the cause and stay as they are. Drop the detour once Samsung
     fixes its package.
+    - **A dismissed sheet stays away for a week** (issue #18): "Nastavi u pregledniku" and a swipe away write the
+      moment into `localStorage` (`bela.installDismissed`, `_lib/installSnooze.ts`), and Home doesn't offer the
+      install again while it is recent. On a league night a player in the browser returns to Početna after every
+      round, and the sheet used to cover "Započni igru" each time. The login page keeps offering it
+      (`<InstallSheet ignoreSnooze />`), so there is still a way to install on purpose; storage that can't be read
+      (private mode) counts as "not dismissed".
 
 28. **League nights** (design "Burza igrača · spojeno", 11b "Datumi lige").
     - A league keeps its nights (`LeagueNight`). Create League fills them in from the start date, end date and play

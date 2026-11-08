@@ -2,6 +2,14 @@
 
 What the commits changed for the people using the app, newest first. The reasons and details are in DECISIONS.md.
 
+## 08.11.2026 · Poziv za instalaciju ne vraća se svaki put
+
+Not deployed yet.
+
+### Players
+- **„Nastavi u pregledniku“ se pamti.** Poziv „Belatronika radi bolje kao aplikacija“ više ne skače preko Početne na svakom povratku — kad ga odbiješ (ili ga odmakneš), miran je **tjedan dana** na tom telefonu. Na večeri lige se nakon svakog kola vraćaš na Početnu i dosad ti je svaki put prekrio **Započni igru**.
+- Poziv i dalje stoji na **Prijavi**, pa ga možeš otvoriti kad poželiš instalirati aplikaciju.
+
 ## 08.11.2026 · Polja na telefonu više ne zumiraju stranicu
 
 Not deployed yet.
