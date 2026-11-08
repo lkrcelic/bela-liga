@@ -2,6 +2,13 @@
 
 What the commits changed for the people using the app, newest first. The reasons and details are in DECISIONS.md.
 
+## 08.11.2026 · Polja na telefonu više ne zumiraju stranicu
+
+Not deployed yet.
+
+### Admin
+- **iPhone više ne zumira stranicu** kad staneš u polje: "Traži ekipu" (Novo kolo · Promijeni, Skica kola), "Dodaj ekipu · ime ekipe", "Dodaj igrača", "Dodaj u ligu", "Dodaj u ekipu", "Traži ekipu ili igrača" u Upravljanju turnirom i **Bilješke lige** sad su 16 px umjesto 15, pa se više ne moraš odzumirati usred večeri lige. Na računalu su polja ista kao prije.
+
 ## 07.11.2026 · Brži upit za nedolazak i Otključaj partiju
 
 Not deployed yet (DECISIONS #89). Needs a migration on the database.
