@@ -8,19 +8,22 @@ import {KoloPair} from "@/app/_lib/matching/tournamentPairing";
 import {nightLabel} from "@/app/_lib/nights";
 import {KOLO_MAX, KoloRemoval, koloRemovalOf, koloRemovalWarns, koloSteps, removesResults, tableWasPlayed} from "@/app/_lib/tournaments";
 import {filterTables, TableFilter, tableColumns, TableRow, toTableRows} from "@/app/_lib/ui/tables";
+import {toStandingsRows} from "@/app/_lib/ui/standings";
 import useElementHeight from "@/app/_hooks/useElementHeight";
 import {count, NOUN} from "@/app/_lib/ui/text";
 import {useTransitionRouter} from "@/app/_lib/viewTransitions";
 import {color, font, shadow, tint} from "@/app/_styles/tokens";
 import {ConfirmRemove, EditToggle, NewTableButton, PairDialog, RowActions, useTableEdits} from "@/app/league/[leagueId]/daily-standings/ui/RoundEditing";
 import {DesktopTableRow, TABLE_ROW_HEIGHT} from "@/app/league/[leagueId]/daily-standings/ui/RoundTables";
-import {buttonBase, Card, EmptyState, ErrorNote, IconCircleButton, InfoNote, LiveDot, NARROW_DESKTOP, OutlineButton, PrimaryButton, Segmented, Spinner} from "@/app/_ui/sp";
+import {buttonBase, Card, EmptyState, ErrorNote, IconCircleButton, InfoNote, LiveDot, NARROW_DESKTOP, OutlineButton, PrimaryButton, Segmented, Spinner, StandingsGrid} from "@/app/_ui/sp";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
 import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
 import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
 import EditRoundedIcon from "@mui/icons-material/EditRounded";
+import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import EmojiEventsRoundedIcon from "@mui/icons-material/EmojiEventsRounded";
+import FullscreenRoundedIcon from "@mui/icons-material/FullscreenRounded";
 import InfoRoundedIcon from "@mui/icons-material/InfoRounded";
 import OpenInNewRoundedIcon from "@mui/icons-material/OpenInNewRounded";
 import RadioButtonCheckedRoundedIcon from "@mui/icons-material/RadioButtonCheckedRounded";
@@ -164,6 +167,7 @@ export default function KolaDesktop({t, kolo, onKolo, onChanged, reload}: Props)
   const removal = koloRemoval(t, kolo);
   const addable = canAddKolo(t);
   const [askDelete, setAskDelete] = useState(false);
+  const [full, setFull] = useState(false);
   const add = () =>
     run("add", () => addKoloAPI(t.id, t.rounds + 1), (next) => {
       const draft = next.results.kolos.find((k) => !k.published);
@@ -289,6 +293,12 @@ export default function KolaDesktop({t, kolo, onKolo, onChanged, reload}: Props)
               />
             )}
             {editing && <NewTableButton onClick={() => edits.setPair({kind: "new", tableNumber: rows.reduce((m, r) => Math.max(m, r.table), 0) + 1})} />}
+            {/* the Kolo over the whole screen, for the screen at the club: the tables and the standings beside them */}
+            {view.published && (
+              <IconCircleButton label="Preko cijelog ekrana" size={38} onClick={() => setFull(true)} sx={{borderRadius: "12px", boxShadow: "none", background: color.lineFill, "& svg": {fontSize: 22}}}>
+                <FullscreenRoundedIcon />
+              </IconCircleButton>
+            )}
             {t.phase !== "finished" && (
               <EditToggle
                 editing={editing}
@@ -361,6 +371,7 @@ export default function KolaDesktop({t, kolo, onKolo, onChanged, reload}: Props)
           </Box>
         )}
         </Box>
+        {full && view && <KoloFullscreen t={t} kolo={kolo} rows={rows} live={live} done={done} onClose={() => setFull(false)} />}
         {askDelete && removal && (
           <DeleteKoloDialog removal={removal} busy={busy === "delete"} error={error} onClose={() => setAskDelete(false)} onConfirm={remove} />
         )}
@@ -540,6 +551,103 @@ function DeleteKoloDialog({removal, busy, error, onClose, onConfirm}: {removal: 
         <PrimaryButton height={52} bg={color.red} onClick={onConfirm} loading={busy} sx={{flex: 1, fontSize: 16, borderRadius: "16px", boxShadow: "none"}}>
           {koloRemovalAction(removal)}
         </PrimaryButton>
+      </Box>
+    </Dialog>
+  );
+}
+
+// Kolo preko cijelog ekrana (the computer only): the Kolo's tables on two thirds of the screen and the tournament's
+// standings on the last third, for the screen at the club. Nothing is edited here — the same rows (DesktopTableRow)
+// and the same standings table (StandingsGrid) as the tabs Kola and Poredak, only bigger and without the shell. The
+// page under it keeps refreshing every 15 s while the tournament is played, so the view follows the games by itself.
+export function KoloFullscreen({t, kolo, rows, live, done, onClose}: {t: AdminTournament; kolo: number; rows: TableRow[]; live: number; done: number; onClose: () => void}) {
+  const [areaRef, areaHeight] = useElementHeight<HTMLDivElement>();
+  const twoColumns = tableColumns(rows.length, areaHeight == null ? undefined : Math.floor(areaHeight / TABLE_ROW_HEIGHT)) > 1;
+  const standings = toStandingsRows(t.results.standings);
+  const titleId = useId();
+
+  // the browser's own full screen too, so the tabs and the address bar go away; it needs the click that opened the
+  // view, and a browser that refuses it just shows the view over the page
+  useEffect(() => {
+    const el = document.documentElement;
+    el.requestFullscreen?.({navigationUI: "hide"}).catch(() => {});
+    return () => {
+      if (document.fullscreenElement) document.exitFullscreen?.().catch(() => {});
+    };
+  }, []);
+
+  const headCard = {flex: "none", display: "flex", alignItems: "center", gap: "10px", p: "14px 20px"} as const;
+  return (
+    <Dialog open fullScreen onClose={onClose} aria-labelledby={titleId} PaperProps={{sx: {background: color.cream, display: "flex", flexDirection: "column"}}}>
+      <Box sx={{flex: "none", display: "flex", alignItems: "center", gap: "16px", p: "18px 24px 14px"}}>
+        <Box sx={{flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: "2px"}}>
+          <Box component="span" sx={{fontSize: 14, fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", color: color.muted}}>
+            {nightLabel(t.date)} · {t.name}
+          </Box>
+          <Box component="h2" id={titleId} sx={{m: 0, fontFamily: font.display, fontSize: 38, fontWeight: 800, lineHeight: 1.05}}>
+            Kolo {kolo} od {t.rounds}
+          </Box>
+        </Box>
+        {live > 0 && (
+          <Box component="span" sx={{flex: "none", height: 38, display: "flex", alignItems: "center", gap: "8px", px: "14px", borderRadius: "12px", background: tint.red[10], color: color.red, fontSize: 16, fontWeight: 700}}>
+            <LiveDot size={9} />
+            {count(live, NOUN.stol)} uživo
+          </Box>
+        )}
+        <Box component="span" sx={{flex: "none", fontSize: 16, color: color.ink2}}>
+          Gotovo {done} od {rows.length}
+        </Box>
+        <IconCircleButton label="Zatvori cijeli ekran" size={46} onClick={onClose} sx={{borderRadius: "14px", boxShadow: "none", background: color.white, "& svg": {fontSize: 26}}}>
+          <CloseRoundedIcon />
+        </IconCircleButton>
+      </Box>
+      <Box sx={{flex: 1, minHeight: 0, display: "grid", gridTemplateColumns: "minmax(0,2fr) minmax(0,1fr)", gap: "20px", p: "0 24px 24px"}}>
+        <Card component="section" aria-label={`Kolo ${kolo}`} sx={{minHeight: 0, display: "flex", flexDirection: "column", overflow: "hidden", borderRadius: "24px"}}>
+          <Box ref={areaRef} sx={{flex: 1, minHeight: 0, display: "flex", flexDirection: "column"}}>
+            {rows.length === 0 ? (
+              <EmptyState>Ovo kolo nema stolova.</EmptyState>
+            ) : (
+              <Box
+                component="ul"
+                aria-label={`Kolo ${kolo}: ${count(rows.length, NOUN.stol)}`}
+                sx={{
+                  listStyle: "none",
+                  m: 0,
+                  p: 0,
+                  flex: 1,
+                  minHeight: 0,
+                  overflowY: "auto",
+                  display: "grid",
+                  gridTemplateColumns: twoColumns ? "minmax(0,1fr) minmax(0,1fr)" : "minmax(0,1fr)",
+                  alignContent: "start",
+                  ...(twoColumns && {"& > li:nth-of-type(odd)": {borderRight: `1px solid ${color.divider}`}}),
+                  [NARROW_DESKTOP]: {gridTemplateColumns: "minmax(0,1fr)", "& > li:nth-of-type(odd)": {borderRight: "none"}},
+                }}
+              >
+                {rows.map((row) => (
+                  <DesktopTableRow key={row.id} t={row} dense={false} />
+                ))}
+              </Box>
+            )}
+          </Box>
+        </Card>
+        <Card component="section" aria-label="Poredak" sx={{minHeight: 0, display: "flex", flexDirection: "column", overflow: "hidden", borderRadius: "24px"}}>
+          <Box sx={headCard}>
+            <Box component="h3" sx={{m: 0, fontFamily: font.display, fontSize: 24, fontWeight: 800}}>
+              Poredak
+            </Box>
+            <Box component="span" sx={{fontSize: 14, color: color.ink2}}>
+              {t.completed_kolos === 0 ? "Prije prvog kola" : `Nakon ${t.completed_kolos} od ${t.rounds} kola`}
+            </Box>
+          </Box>
+          {standings.length === 0 ? (
+            <EmptyState>Poredak će biti ovdje kad počne prvo kolo.</EmptyState>
+          ) : (
+            <Box sx={{flex: 1, minHeight: 0, overflowY: "auto"}}>
+              <StandingsGrid rows={standings} dense caption={`Poredak turnira ${t.name}`} />
+            </Box>
+          )}
+        </Card>
       </Box>
     </Dialog>
   );
