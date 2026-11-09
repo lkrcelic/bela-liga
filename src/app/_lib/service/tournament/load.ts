@@ -4,6 +4,8 @@ import {isByeTeam} from "@/app/_lib/bye";
 import {visibleRounds} from "@/app/_lib/roundStatus";
 import {Viewer} from "@/app/_lib/players/privacy";
 import {isAdminRole} from "@/app/_lib/players/admin";
+import {can} from "@/app/_lib/auth/permissions";
+import {canManageTournament} from "@/app/_lib/auth/ownership";
 import {displayName} from "@/app/_lib/players/names";
 import {playerPhotoUrls, teamPhotoUrls} from "@/app/_lib/service/players/photos";
 import {completedKolos, KoloSummary, liveKolo, rankTeams, TableResult, TeamTotals, tournamentPhase, TournamentPhase, tournamentTotals} from "@/app/_lib/tournaments";
@@ -59,6 +61,8 @@ export type LoadedTable = {
   // the players who played it (Tko igra)
   lineup: {player_id: number; team_id: number}[];
   matches_per_round: number;
+  // Vrijeme partije of this table alone (an admin set it when they unlocked it); null: the tournament's
+  game_minutes: number | null;
   // Nedolazak za stol: the answer (or SKIPPED), which team gave it and when
   attendance: "PRESENT" | "NO_SHOW" | "SKIPPED" | null;
   attendance_team_id: number | null;
@@ -98,7 +102,9 @@ export const tableStarted = (t: Pick<LoadedTable, "active" | "played" | "ongoing
 // The snapshots of these tournaments (unknown ids are left out), in the order of ids
 export async function loadSnapshots(ids: number[], viewer: Viewer | null, db: Db = prisma): Promise<Snapshot[]> {
   if (ids.length === 0) return [];
-  const admin = viewer != null && isAdminRole(viewer);
+  // Whether an unpublished Kolo (the Skica) is read at all. A viewer who manages some tournament may see a draft, but
+  // only of a tournament that is theirs — which tournament that is, is decided per snapshot below (canManageTournament).
+  const manages = viewer != null && (isAdminRole(viewer) || can(viewer, "tournament.manage.own"));
   const [tournaments, entries, rounds] = await Promise.all([
     db.tournament.findMany({
       where: {tournament_id: {in: ids}},
@@ -121,7 +127,7 @@ export async function loadSnapshots(ids: number[], viewer: Viewer | null, db: Db
       },
     }),
     db.round.findMany({
-      where: {tournamentRounds: {some: {tournament_id: {in: ids}}}, ...visibleRounds(admin)},
+      where: {tournamentRounds: {some: {tournament_id: {in: ids}}}, ...visibleRounds(manages)},
       orderBy: [{round_number: "asc"}, {table_number: "asc"}, {id: "asc"}],
       select: {
         id: true,
@@ -137,6 +143,7 @@ export async function loadSnapshots(ids: number[], viewer: Viewer | null, db: Db
         status: true,
         published_at: true,
         matches_per_round: true,
+        game_minutes: true,
         attendance: true,
         attendance_team_id: true,
         attendance_at: true,
@@ -181,7 +188,12 @@ export async function loadSnapshots(ids: number[], viewer: Viewer | null, db: Db
         excluded_reason: e.excluded_reason,
       }));
 
-      const ownRounds = rounds.filter((r) => r.tournamentRounds.some((tr) => tr.tournament_id === tournament.tournament_id));
+      // Upravljanje turnirom: an admin on any tournament, an organizer on the one they made (ownership.ts)
+      const admin = canManageTournament(viewer, tournament);
+      // a draft Kolo was read for every tournament of this batch, so a tournament that isn't the viewer's drops it again
+      const ownRounds = rounds.filter(
+        (r) => r.tournamentRounds.some((tr) => tr.tournament_id === tournament.tournament_id) && (admin || r.status === "PUBLISHED")
+      );
       const tables: LoadedTable[] = ownRounds.map((r) => ({
         id: r.id,
         kolo: r.round_number ?? 0,
@@ -201,6 +213,7 @@ export async function loadSnapshots(ids: number[], viewer: Viewer | null, db: Db
         ongoing: r.ongoingMatches[0] ?? null,
         lineup: r.roundPlayers,
         matches_per_round: r.matches_per_round,
+        game_minutes: r.game_minutes,
         attendance: r.attendance,
         attendance_team_id: r.attendance_team_id,
         attendance_at: r.attendance_at,

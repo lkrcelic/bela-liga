@@ -52,6 +52,8 @@ export const TournamentRequestValidation = z.object({
   game_minutes: z.number().int().min(GAME_MINUTES_MIN, GAME_MINUTES_ERROR).max(GAME_MINUTES_MAX, GAME_MINUTES_ERROR).default(35),
   // Automatska kola: the Kolos after the first are published by themselves
   auto_publish: z.boolean().default(false),
+  // Otvorene prijave: ekipe se mogu prijaviti i dok turnir traje, do zadnjeg kola (DECISIONS #88)
+  open_signups: z.boolean().default(false),
   // Telefon organizatora: required for a new tournament (checked by the service); an old one may stay without
   organizer_phone: z.string().trim().max(30).refine((v) => v === "" || isValidPhone(v), PHONE_ERROR).nullable().default(null),
 });
@@ -74,6 +76,7 @@ export type TournamentRequest = {
   prizes: {prize: string; description: string}[];
   game_minutes: number;
   auto_publish: boolean;
+  open_signups: boolean;
   organizer_phone: string | null;
 };
 
@@ -98,7 +101,8 @@ export const KoloTableValidation = z.object({team1_id: z.number().int(), team2_i
 export type TournamentPlace = {name: string | null; address: string | null; url: string | null};
 
 // A player as a tournament's lists show them (the username only for an admin: they are private)
-export type EntryPlayer = {id: number; name: string; photo_url: string | null; username?: string};
+// username: public (#88), so every viewer gets it
+export type EntryPlayer = {id: number; name: string; photo_url: string | null; username: string};
 
 // Potvrda dolaska: when and by whom ("Potvrdio Marko u 9:43"; by is null for the admin's Označi dolazak)
 export type EntryArrival = {at: string; by: string | null; admin: boolean};
@@ -180,11 +184,18 @@ export type TournamentCard = {
   game_minutes: number;
   // Automatska kola: the Kolos after the first are published by themselves
   auto_publish: boolean;
+  // Otvorene prijave: teams sign up while the tournament is played, up to its last Kolo (DECISIONS #88)
+  open_signups: boolean;
+  // whether a team can sign up at this very moment (the switch, the phase and the last Kolo together)
+  signups_open_now: boolean;
   day: TournamentDay | null;
   // the last Kolo is made (draft or published): a team can't join any more (no Tu smo · Želimo uskočiti)
   last_kolo_made: boolean;
   // the server's clock (ISO), for the countdowns
   server_now: string;
+  // whether the viewer runs this tournament: an admin any, an organizer the one they made (DECISIONS #86). Every
+  // Upravljanje button asks this, not the admin role.
+  can_manage: boolean;
   // Otkazan: who cancelled it and when (admins only)
   cancelled_info?: {by: string | null; at: string} | null;
 };

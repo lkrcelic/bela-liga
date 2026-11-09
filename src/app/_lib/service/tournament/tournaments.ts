@@ -4,11 +4,14 @@ import {Viewer} from "@/app/_lib/players/privacy";
 import {displayName} from "@/app/_lib/players/names";
 import {InvalidResultError} from "@/app/_lib/validation/validateResult";
 import {NotFoundError} from "@/app/_lib/service/admin/tables";
+import {ForbiddenError} from "@/app/_lib/auth/forbidden";
+import {canManageTournament, NOT_YOUR_TOURNAMENT, ownTournamentFilter} from "@/app/_lib/auth/ownership";
 import {playerPhotoUrls, teamPhotoUrls} from "@/app/_lib/service/players/photos";
 import {AdminTournament, MyLastTable, MyResult, MyTeamOption, TournamentCard, TournamentDetail, TournamentRequest, TournamentResults} from "@/app/_interfaces/tournament";
 import {activeBans} from "@/app/_lib/service/bans/bans";
 import {banDay} from "@/app/_lib/bans";
 import {teamLabel} from "@/app/_lib/bye";
+import {lastKoloMade, signUpsCloseWithSwitch, signUpsOpenNow} from "@/app/_lib/tournaments";
 import {playersInOtherEntries, rebalance} from "@/app/_lib/tournamentEntries";
 import {normalizePhone} from "@/app/_lib/phone";
 import {ORGANIZER_PHONE_REQUIRED} from "@/app/_interfaces/tournament";
@@ -22,6 +25,7 @@ import {adminView, cardView, entriesList, myEntryOf, myMatches, resultsView} fro
 type Tx = Prisma.TransactionClient;
 
 export const TOURNAMENT_NOT_FOUND = "Turnir ne postoji.";
+export {NOT_YOUR_TOURNAMENT};
 export const STARTED_LOCKED = "Turnir je počeo: datum se više ne mijenja.";
 
 const dateValue = (iso: string) => new Date(`${iso}T00:00:00.000Z`);
@@ -44,6 +48,7 @@ function fields(r: TournamentRequest) {
     rules_url: blankToNull(r.rules_url),
     game_minutes: r.game_minutes,
     auto_publish: r.auto_publish,
+    open_signups: r.open_signups,
     organizer_phone: normalizePhone(r.organizer_phone),
   };
 }
@@ -57,10 +62,11 @@ async function savePrizes(tx: Tx, tournamentId: number, prizes: TournamentReques
 }
 
 // Novi turnir: it is published at once, with sign-ups open. The organizer's phone is required.
-export async function createTournament(request: TournamentRequest): Promise<number> {
+export async function createTournament(request: TournamentRequest, createdBy: number): Promise<number> {
   if (!normalizePhone(request.organizer_phone)) throw new InvalidResultError(ORGANIZER_PHONE_REQUIRED);
   return prisma.$transaction(async (tx) => {
-    const t = await tx.tournament.create({data: fields(request), select: {tournament_id: true}});
+    // whose tournament it is, written once and never changed (ownership.ts)
+    const t = await tx.tournament.create({data: {...fields(request), created_by: createdBy}, select: {tournament_id: true}});
     await savePrizes(tx, t.tournament_id, request.prizes);
     return t.tournament_id;
   });
@@ -114,7 +120,10 @@ export async function updateTournament(id: number, request: TournamentRequest): 
       if (next.declarations !== t.declarations) await tx.round.updateMany({where: drafts, data: {declarations: next.declarations}});
     }
 
-    await tx.tournament.update({where: {tournament_id: id}, data: next});
+    // Otvorene prijave switched off while the tournament is played: the sign-ups close with it, because a started
+    // tournament may not keep them open (Tournament_started_check) — the row would be refused by the database
+    const closes = signUpsCloseWithSwitch({started: t.started_at != null, registrationsOpen: t.registrations_open, openSignupsAfter: next.open_signups});
+    await tx.tournament.update({where: {tournament_id: id}, data: {...next, ...(closes && {registrations_open: false})}});
     await savePrizes(tx, id, request.prizes);
     if (next.max_teams !== t.max_teams) {
       if (!t.started_at && !t.arrival_closed_at) await applyLimit(tx, id, next.max_teams);
@@ -173,8 +182,8 @@ export async function deleteTournament(id: number): Promise<void> {
 // ---------- reading ----------
 
 // The tournaments the lists show (newest date first)
-async function tournamentIds(): Promise<number[]> {
-  const rows = await prisma.tournament.findMany({orderBy: [{date: "desc"}, {tournament_id: "desc"}], select: {tournament_id: true}, take: 200});
+async function tournamentIds(where?: Prisma.TournamentWhereInput): Promise<number[]> {
+  const rows = await prisma.tournament.findMany({where, orderBy: [{date: "desc"}, {tournament_id: "desc"}], select: {tournament_id: true}, take: 200});
   return rows.map((r) => r.tournament_id);
 }
 
@@ -184,9 +193,12 @@ export async function listTournaments(viewer: Viewer | null): Promise<Tournament
   return snapshots.map((s) => cardView(s, viewer));
 }
 
-// The admin's Turniri list
+// The admin's Turniri list: an admin sees every tournament, an organizer only the ones they made ("moji turniri")
 export async function listAdminTournaments(viewer: Viewer): Promise<TournamentCard[]> {
-  return listTournaments(viewer);
+  const mine = ownTournamentFilter(viewer);
+  const ids = await tournamentIds(mine ?? undefined);
+  const snapshots = await loadSnapshots(ids, viewer);
+  return snapshots.map((s) => cardView(s, viewer));
 }
 
 async function snapshotOrThrow(id: number, viewer: Viewer | null): Promise<Snapshot> {
@@ -296,7 +308,10 @@ export async function getTournamentDetail(id: number, viewer: Viewer | null): Pr
   const s = await snapshotOrThrow(id, viewer);
   const t = s.tournament;
   const [teams, result, bans] = await Promise.all([
-    viewer && s.phase === "upcoming" && t.registrations_open ? myTeams(s, viewer) : Promise.resolve([]),
+    // Prijavi ekipu: before the start as ever, and all through a tournament with Otvorene prijave (DECISIONS #88)
+    viewer && signUpsOpenNow({phase: s.phase, registrationsOpen: t.registrations_open, openSignups: t.open_signups, lastKoloMade: lastKoloMade(s.kolos, t.rounds)})
+      ? myTeams(s, viewer)
+      : Promise.resolve([]),
     myResult(s, viewer),
     viewer ? activeBans({playerIds: [viewer.id]}) : Promise.resolve(null),
   ]);
@@ -321,7 +336,10 @@ export async function getTournamentResults(id: number, viewer: Viewer | null): P
   return resultsView(await snapshotOrThrow(id, viewer), viewer);
 }
 
-// Upravljanje turnirom
+// Upravljanje turnirom. Only whoever runs this tournament reads it: an admin any tournament, an organizer the one they
+// made (DECISIONS #86). The snapshot already holds the row, so the check costs nothing.
 export async function getAdminTournament(id: number, viewer: Viewer): Promise<AdminTournament> {
-  return adminView(await snapshotOrThrow(id, viewer), viewer);
+  const s = await snapshotOrThrow(id, viewer);
+  if (!canManageTournament(viewer, s.tournament)) throw new ForbiddenError(NOT_YOUR_TOURNAMENT);
+  return adminView(s, viewer);
 }

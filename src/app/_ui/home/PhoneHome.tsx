@@ -1,7 +1,7 @@
 "use client";
 
 import useBurza from "@/app/_hooks/useBurza";
-import useIsAdmin from "@/app/_hooks/useIsAdmin";
+import {useManages} from "@/app/_hooks/useCan";
 import useAdminViewStore from "@/app/_store/adminViewStore";
 import {useSelectedLeagueId} from "@/app/_hooks/useLeagues";
 import useMySchedule from "@/app/_hooks/useMySchedule";
@@ -48,7 +48,7 @@ export default function PhoneHome() {
   const router = useTransitionRouter();
   // the profile button shows the player's photo, when there is one
   const me = useAuthStore((s) => s.user);
-  const isAdmin = useIsAdmin();
+  const isAdmin = useManages();
   const setAdminView = useAdminViewStore((st) => st.setView);
   const {me: myRating} = useMyRating();
   const {schedule} = useMySchedule();

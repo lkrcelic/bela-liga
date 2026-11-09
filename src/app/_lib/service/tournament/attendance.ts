@@ -13,9 +13,9 @@ import {lockTournament} from "./lock";
 import {afterTableClosed} from "./kola";
 
 // Nedolazak za stol: a published table of today's tournament where no game has started is asked "Jesu li … za
-// stolom?" 5 minutes after its Kolo went out; the answer works from 8 minutes. Da, tu su: the question is gone and they
+// stolom?" 3 minutes after its Kolo went out; the answer works from 5 minutes. Da, tu su: the question is gone and they
 // play. Ne, nisu došli: the answering team wins every match of the table 1001:700 and the other team is out of the rest
-// of the tournament. With no game and no answer at 10 minutes the match is skipped (not scored) and both teams are
+// of the tournament. With no game and no answer at 8 minutes the match is skipped (not scored) and both teams are
 // out. In Kolo 1 the team that didn't come (both, for a skipped match) also gets a ban on sign-ups: it had confirmed
 // arrival. The first answer counts for the whole table. Neither kind of table is rated.
 
@@ -103,7 +103,7 @@ async function applyNoShow(tx: Tx, table: Table, answeringTeam: number, by: numb
   await fillPlaces(tx, t.tournament_id, t.max_teams);
 }
 
-// The skip at 10 minutes: closed without a result, both teams out (and banned after Kolo 1)
+// The skip at 8 minutes: closed without a result, both teams out (and banned after Kolo 1)
 async function applySkip(tx: Tx, table: Table, now: Date) {
   const t = table.tournamentRounds[0].tournament;
   await tx.round.update({where: {id: table.id}, data: {attendance: "SKIPPED", attendance_at: now, open: false, active: false}});
@@ -114,7 +114,7 @@ async function applySkip(tx: Tx, table: Table, now: Date) {
   await fillPlaces(tx, t.tournament_id, t.max_teams);
 }
 
-// Skips the tournament's tables whose 10 minutes are over (the clock). Answers with the tables it closed.
+// Skips the tournament's tables whose 8 minutes are over (the clock). Answers with the tables it closed.
 export async function skipDueTables(tournamentId: number, now = new Date()): Promise<number[]> {
   const today = tournamentDays(now);
   const candidates = await prisma.round.findMany({

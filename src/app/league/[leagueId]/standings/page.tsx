@@ -4,7 +4,7 @@ import {useScrollMemory} from "@/app/_hooks/useBackRestore";
 import useIsDesktop from "@/app/_hooks/useIsDesktop";
 import useLeagues, {useLeagueList} from "@/app/_hooks/useLeagues";
 import useMyTeams from "@/app/_hooks/useMyTeams";
-import useAdminPhone from "@/app/_hooks/useAdminPhone";
+import useManagePhone from "@/app/_hooks/useManagePhone";
 import useNavStack from "@/app/_hooks/useNavStack";
 import useShortWindow from "@/app/_hooks/useShortWindow";
 import {useLeagueStandings} from "@/app/_hooks/useStandings";
@@ -61,7 +61,7 @@ function LeagueStandings() {
   const highlightTeamId = highlightParam(useSearchParams().get("team"));
   const router = useTransitionRouter();
   const isDesktop = useIsDesktop();
-  const adminPhone = useAdminPhone();
+  const adminPhone = useManagePhone("league.manage");
   const short = useShortWindow();
   const leagues = useLeagues(leagueId);
   const {teams} = useMyTeams();

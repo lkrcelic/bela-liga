@@ -2,7 +2,7 @@
 
 import {createOngoingMatchAPI} from "@/app/_fetchers/ongoingMatch/create";
 import {getLineupAPI, saveLineupAPI} from "@/app/_fetchers/round/lineup";
-import useAdminPhone from "@/app/_hooks/useAdminPhone";
+import useManagePhone from "@/app/_hooks/useManagePhone";
 import useIsDesktop from "@/app/_hooks/useIsDesktop";
 import AdminBadge from "@/app/_ui/admin/AdminBadge";
 import {sameLineup} from "@/app/_lib/lineup";
@@ -47,7 +47,10 @@ export default function LineupPage() {
   const id = Number(roundId);
   const router = useTransitionRouter();
   const isDesktop = useIsDesktop();
-  const adminPhone = useAdminPhone();
+  // the phone's scorepad: a league night is the admin's, a tournament's Kolo whoever runs tournaments (the server
+  // then says whose tournament it is)
+  const leaguePhone = useManagePhone("league.manage");
+  const tournamentPhone = useManagePhone("tournament.manage.own");
   const search = useSearchParams();
   // ?league= (a league night's table) or ?turnir= (a tournament's): the admin's scorepad of that table asked for it
   const padLeague = Number(search.get("league")) || null;
@@ -156,6 +159,7 @@ export default function LineupPage() {
     </Box>
   );
 
+  const adminPhone = padScope?.kind === "tournament" ? tournamentPhone : leaguePhone;
   if (padScope && !isDesktop && !adminPhone) return <DesktopOnlyNote />;
   if (isDesktop) {
     return (

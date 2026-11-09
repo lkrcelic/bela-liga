@@ -21,7 +21,7 @@ import {isByeTeam} from "@/app/_lib/bye";
 import {leagueDateString} from "@/app/_lib/dates";
 import {KoloPair} from "@/app/_lib/matching/tournamentPairing";
 import {nightLabel} from "@/app/_lib/nights";
-import {koloSteps, removesResults, standingsOrderLabel} from "@/app/_lib/tournaments";
+import {koloRemovalWarns, koloSteps, removesResults, standingsOrderLabel} from "@/app/_lib/tournaments";
 import {standingsTeamHref, toStandingsRows} from "@/app/_lib/ui/standings";
 import {TableRow} from "@/app/_lib/ui/tables";
 import {count, NOUN} from "@/app/_lib/ui/text";
@@ -351,7 +351,9 @@ function EntriesTab({t, waiting, onChanged}: {t: AdminTournament; waiting: boole
   // the tournament's day before Kolo 1 (Tu smo, Aktivna), or the tournament under way (Isključi, Vrati)
   const onDay = dayOn(t);
   const started = t.started_at != null && t.phase !== "cancelled";
-  const editable = t.phase === "upcoming" && !(t.day?.phase === "closed");
+  // Dodaj ekipu: before the start, and all through a tournament with Otvorene prijave, where the team comes straight
+  // in (or onto the waiting list) and plays from the next Kolo (DECISIONS #88)
+  const editable = (t.phase === "upcoming" && !(t.day?.phase === "closed")) || (t.phase === "active" && t.signups_open_now);
   const list = waiting ? t.waiting_list : t.entries;
   const next = t.waiting_list[0];
 
@@ -399,6 +401,9 @@ function EntriesTab({t, waiting, onChanged}: {t: AdminTournament; waiting: boole
         <InfoNote icon={<InfoRoundedIcon />}>Turnir je krenuo: isključi umjesto briši. Isključena ekipa ne igra ostala kola, a odigrana ostaju u poretku.</InfoNote>
       ) : (
         <InfoNote icon={<InfoRoundedIcon />}>Početak je prošao: prijave su zatvorene. Ekipe koje stignu kasnije označi pa ih uključi prekidačem.</InfoNote>
+      )}
+      {t.phase === "active" && t.signups_open_now && (
+        <InfoNote icon={<InfoRoundedIcon />}>Prijave su otvorene cijeli turnir: dodana ekipa odmah je u turniru (ili na listi čekanja) i igra od idućeg kola.</InfoNote>
       )}
       {(error || day.error) && !asking && <ErrorNote>{error ?? day.error}</ErrorNote>}
       <Box sx={{display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: "10px", px: "6px"}}>
@@ -573,14 +578,15 @@ function AddTeamSheet({t, onClose, onAdded}: {t: AdminTournament; onClose: () =>
 function KolaTab({t, onOpen, onChanged}: {t: AdminTournament; onOpen: (kolo: number) => void; onChanged: (t: AdminTournament) => void}) {
   const [busy, setBusy] = useState<"make" | "add" | "delete" | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [asking, setAsking] = useState(false);
+  // which Kolo's bin was tapped (the sheet asks about it)
+  const [asking, setAsking] = useState<number | null>(null);
   const steps = koloSteps(t.rounds, t.results.kolos.map((k) => ({number: k.number, published: k.published, tables: k.tables.length, done: k.tables.filter((x) => !x.open).length, live: 0})));
   const next = t.next_kolo;
   // the Kolo to make by hand: Kolo 1 (once sign-ups are closed; until then why not), or a later one the app didn't
   // make by itself when its Kolo before was played
   const toMake = next != null && !t.results.kolos.some((k) => k.number === next.number) && (next.number === 1 || next.ready) ? next : null;
-  // Obriši kolo: the last Kolo, while nobody has played at it; Dodaj kolo: one more, up to 20
-  const removal = koloRemoval(t);
+  // Obriši kolo: any Kolo, its results too after the warning; Dodaj kolo: one more, up to 20
+  const removal = asking == null ? null : koloRemoval(t, asking);
   const canAdd = canAddKolo(t);
 
   const run = async (what: "make" | "add" | "delete", call: () => Promise<AdminTournament>, then?: () => void) => {
@@ -588,7 +594,7 @@ function KolaTab({t, onOpen, onChanged}: {t: AdminTournament; onOpen: (kolo: num
     setError(null);
     try {
       onChanged(await call());
-      setAsking(false);
+      setAsking(null);
       then?.();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Nije uspjelo.");
@@ -623,7 +629,7 @@ function KolaTab({t, onOpen, onChanged}: {t: AdminTournament; onOpen: (kolo: num
           </PrimaryButton>
         </Box>
       )}
-      {error && !asking && <ErrorNote>{error}</ErrorNote>}
+      {error && asking == null && <ErrorNote>{error}</ErrorNote>}
       <Box component="ul" aria-label="Kola turnira" sx={{flex: "none", listStyle: "none", m: 0, p: 0, background: color.white, borderRadius: "22px", overflow: "hidden", boxShadow: shadow.card}}>
         {steps.map((s, i) => {
           const view = t.results.kolos.find((k) => k.number === s.number);
@@ -650,15 +656,15 @@ function KolaTab({t, onOpen, onChanged}: {t: AdminTournament; onOpen: (kolo: num
               </Box>
             </>
           );
-          // the bin of the last Kolo that can still go
-          const bin = removal?.number === s.number && (
+          // every Kolo that can go has its own bin (DECISIONS #87)
+          const bin = koloRemoval(t, s.number) != null && (
             <Box
               component="button"
               type="button"
               aria-label={`Obriši Kolo ${s.number}`}
               onClick={() => {
                 setError(null);
-                setAsking(true);
+                setAsking(s.number);
               }}
               disabled={busy != null}
               sx={{...buttonBase, width: 44, height: 44, flex: "none", mr: "6px", borderRadius: "12px", color: color.faint, display: "flex", alignItems: "center", justifyContent: "center", "& svg": {fontSize: 22}, "&:active": {color: color.red}}}
@@ -702,17 +708,17 @@ function KolaTab({t, onOpen, onChanged}: {t: AdminTournament; onOpen: (kolo: num
           Dodaj kolo
         </Box>
       )}
-      {/* a Kolo with results warns that they go too (and only then are they deleted) */}
+      {/* every Kolo but one nobody has made yet is asked with the warning sign; "s rezultatima" only when results really go */}
       <ConfirmSheet
-        open={asking && removal != null}
-        onClose={() => setAsking(false)}
+        open={removal != null}
+        onClose={() => setAsking(null)}
         onConfirm={() => removal && run("delete", () => deleteKoloAPI(t.id, removal.number, removesResults(removal)))}
         title={removal ? koloRemovalTitle(removal) : ""}
         text={removal ? koloRemovalText(removal) : ""}
         action={removal ? koloRemovalAction(removal) : ""}
-        icon={removal && removesResults(removal) ? <WarningRoundedIcon /> : <DeleteRoundedIcon />}
+        icon={removal && koloRemovalWarns(removal) ? <WarningRoundedIcon /> : <DeleteRoundedIcon />}
         busy={busy === "delete"}
-        error={asking ? error : null}
+        error={asking != null ? error : null}
       />
     </>
   );

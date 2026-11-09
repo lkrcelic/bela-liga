@@ -62,7 +62,7 @@ export const getAttentionAPI = () => send<Attention>("/api/tournaments/attention
 export const answerAttendanceAPI = (roundId: number, answer: "PRESENT" | "NO_SHOW") =>
   send<{outcome: "PRESENT" | "NO_SHOW" | "SKIPPED" | "STARTED"}>(`/api/rounds/${roundId}/attendance`, "POST", {answer}, "Odgovor nije spremljen.");
 
-export type TeammateHit = {id: number; name: string; photo_url: string | null};
+export type TeammateHit = {id: number; name: string; username: string; photo_url: string | null};
 export const searchTeammatesAPI = (q: string) => send<TeammateHit[]>(`/api/players/search?q=${encodeURIComponent(q)}`, "GET", undefined, "Igrači se nisu učitali.");
 
 // ---------- admin ----------

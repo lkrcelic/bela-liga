@@ -24,10 +24,10 @@ import {usePathname} from "next/navigation";
 import React, {useCallback, useEffect, useRef, useState} from "react";
 
 // Nedolazak za stol on the players' phones (Claude Design "Nedolazak za stol" N2–N4, N7). On a tournament day the app
-// asks the server, on every screen, whether the player's table is waiting for an answer: 5 minutes after the Kolo went
+// asks the server, on every screen, whether the player's table is waiting for an answer: 3 minutes after the Kolo went
 // out with no game started, "Jesu li … za stolom?" covers the app and can't be closed (no X, no Back; it is there again
-// after a reload) until someone of the table answers; the buttons work from 8 minutes. Da, tu su opens the game; Ne,
-// nisu došli asks once more what happens, then the table is won 1001:700. A skipped match (10 minutes, no answer) is
+// after a reload) until someone of the table answers; the buttons work from 5 minutes. Da, tu su opens the game; Ne,
+// nisu došli asks once more what happens, then the table is won 1001:700. A skipped match (8 minutes, no answer) is
 // told once (Razumijem). The server decides every time; the phone only counts down. Never on the login pages.
 
 const SEEN_KEY = "bela.skippedSeen";

@@ -2,9 +2,10 @@
 
 import {addHandAPI, deleteHandAPI, finishTableMatchAPI, getTablePadAPI, HandTarget, NoWinnerError, updateHandAPI} from "@/app/_fetchers/admin/daily";
 import {PadHand, PadMatch, TablePad} from "@/app/_interfaces/adminHand";
-import useAdminPhone from "@/app/_hooks/useAdminPhone";
-import useIsAdmin from "@/app/_hooks/useIsAdmin";
+import useManagePhone from "@/app/_hooks/useManagePhone";
+import useCan from "@/app/_hooks/useCan";
 import TablePhone from "@/app/_ui/admin/TablePhone";
+import {UnlockBox} from "@/app/_ui/admin/UnlockTable";
 import {NoWinnerAsk, NoWinnerConfirm} from "@/app/_ui/admin/NoWinnerConfirm";
 import useIsDesktop from "@/app/_hooks/useIsDesktop";
 import useShortWindow from "@/app/_hooks/useShortWindow";
@@ -31,18 +32,22 @@ const THRESHOLD = 1001;
 // its own layout of it (TablePhone, DECISIONS #59). Anyone else gets Pregled stola, read-only (DECISIONS #60), and
 // the player whose own table it is, still to be played, goes into the game.
 export default function TableScorepad() {
+  // the same page serves a league night's table and a tournament's: a league's is the admin's, a tournament's belongs
+  // to whoever runs that tournament (the server then says whose it is, DECISIONS #86)
+  const scope = tableScopeOf(useParams<{leagueId?: string; id?: string}>());
+  const cap = scope.kind === "league" ? "league.manage" : "tournament.manage.own";
   const isDesktop = useIsDesktop();
-  const isAdmin = useIsAdmin();
-  const adminPhone = useAdminPhone();
-  if (isDesktop && isAdmin) return <TableScorepadDesktop />;
-  return adminPhone ? <TablePhone /> : <TablePreview />;
+  const canManage = useCan(cap);
+  const managePhone = useManagePhone(cap);
+  if (isDesktop && canManage) return <TableScorepadDesktop />;
+  return managePhone ? <TablePhone /> : <TablePreview />;
 }
 
 function TableScorepadDesktop() {
   const params = useParams<{leagueId?: string; id?: string; roundId: string}>();
   const scope = tableScopeOf(params);
   const roundId = Number(params.roundId);
-  const isAdmin = useIsAdmin();
+  const isAdmin = useCan(scope.kind === "league" ? "league.manage" : "tournament.manage.own");
   const router = useTransitionRouter();
   // a short window (1024×640): a smaller header, so the entry panel needs less scrolling
   const short = useShortWindow();
@@ -157,7 +162,7 @@ function TableScorepadDesktop() {
     >
       {!isAdmin ? (
         <Card>
-          <EmptyState>Samo administrator može uređivati stolove.</EmptyState>
+          <EmptyState>Ovaj stol možeš samo pogledati.</EmptyState>
         </Card>
       ) : loadError ? (
         <ErrorNote onRetry={load}>{loadError}</ErrorNote>
@@ -215,6 +220,8 @@ function TableScorepadDesktop() {
                 )}
               </Box>
             )}
+            {/* a locked table of a tournament: why it is locked, and Otključaj partiju (DECISIONS #89) */}
+            <UnlockBox pad={pad} onDone={load} />
             <Box sx={{display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,1fr)", gap: "14px"}}>
               {([0, 1] as const).map((i) => (
                 <ScorePanel

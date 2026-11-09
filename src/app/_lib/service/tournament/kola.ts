@@ -108,7 +108,8 @@ export async function makeKoloDraft(tournamentId: number, {redo = false}: {redo?
     const draft = rounds.filter((r) => r.status !== "PUBLISHED");
     if (draft.length > 0 && !redo) return {number, tables: draft.length, repeats: []};
 
-    if (number === 1 && t.registrations_open) throw new InvalidResultError("Prvo zatvori prijave, zatim složi Kolo 1.");
+    // Otvorene prijave: the teams keep coming all tournament, so Kolo 1 is made from whoever is here (DECISIONS #88)
+    if (number === 1 && t.registrations_open && !t.open_signups) throw new InvalidResultError("Prvo zatvori prijave, zatim složi Kolo 1.");
     if (number > 1 && rounds.some((r) => r.status === "PUBLISHED" && r.round_number === last && r.open)) {
       throw new InvalidResultError(`Kolo ${last} još traje: sljedeće se slaže kad svi stolovi završe.`);
     }
@@ -165,11 +166,12 @@ export async function publishKolo(tournamentId: number, number: number): Promise
     if (draftIsStale(draft, await playingTeams(tx, tournamentId))) throw new StaleDraftError();
     const now = new Date();
     await tx.round.updateMany({where: {id: {in: tables.map((r) => r.id)}}, data: {status: "PUBLISHED", published_at: now, draft_order: null}});
-    // the tournament starts: no more sign-ups, and the arrival window is over (who plays was decided by the draft)
+    // the tournament starts: the arrival window is over (who plays was decided by the draft) and sign-ups close —
+    // unless it has Otvorene prijave, where they stay open until the last Kolo is made (DECISIONS #88)
     if (number === 1) {
       await tx.tournament.update({
         where: {tournament_id: tournamentId},
-        data: {started_at: now, registrations_open: false, arrival_closed_at: t.arrival_closed_at ?? now},
+        data: {started_at: now, ...(t.open_signups ? {} : {registrations_open: false}), arrival_closed_at: t.arrival_closed_at ?? now},
       });
     }
     return {publishedAt: now.toISOString()};
@@ -214,11 +216,13 @@ export async function addKolo(tournamentId: number, n: number): Promise<void> {
   await ensureNextKoloDraft(tournamentId);
 }
 
-// Obriši kolo (the bin on Kola's last Kolo): the tournament is one Kolo shorter, but keeps at least one. Only the last
-// Kolo goes (the ones after a Kolo were paired by its results): a Kolo still to come, a draft, or a Kolo out, its
-// tables going with it (the bye's too). A Kolo someone has played at goes only with withResults (the admin saw the
-// warning): its games, the ones being played too, go, and ratings are counted again without them. A second tap that
-// finds it gone changes nothing. A tournament whose Kolos are then all played is over.
+// Obriši kolo (the bin on every Kolo of Kola, whatever its state, DECISIONS #87): the tournament is one Kolo shorter
+// and keeps at least one, and the Kolos after the deleted one move up a number. What is deleted is this Kolo's tables
+// (the bye's too) and those of every made Kolo after it, because those were paired by its results — so deleting a
+// Kolo nobody has made deletes nothing at all, and deleting Kolo 1 of a tournament being played clears what was
+// played and leaves the plan ready to be made again. A Kolo someone has played at goes only with withResults (the
+// admin saw the warning): its games, the ones being played too, go, and ratings are counted again without them. A
+// second tap that finds it gone changes nothing. A tournament whose remaining Kolos are all played is over.
 export async function deleteKolo(tournamentId: number, n: number, {withResults = false}: {withResults?: boolean} = {}): Promise<void> {
   await prisma.$transaction(
     async (tx) => {
@@ -226,18 +230,25 @@ export async function deleteKolo(tournamentId: number, n: number, {withResults =
       const t = await tx.tournament.findUnique({where: {tournament_id: tournamentId}, select: {rounds: true, cancelled_at: true}});
       if (!t) throw new NotFoundError(TOURNAMENT_NOT_FOUND);
       if (t.cancelled_at) throw new InvalidResultError("Turnir je otkazan.");
-      if (n > t.rounds) return;
-      if (n !== t.rounds) throw new InvalidResultError(`Briše se samo zadnje kolo, Kolo ${t.rounds}.`);
-      if (t.rounds <= 1) throw new InvalidResultError("Turnir mora imati barem jedno kolo.");
+      if (n < 1 || n > t.rounds) return;
+      // this Kolo and every Kolo after it that is made: those were paired by this one's results, so they go together
       const tables = await tx.round.findMany({
-        where: {round_number: n, tournamentRounds: {some: {tournament_id: tournamentId}}},
-        select: {id: true, team1_id: true, team2_id: true, open: true, status: true, _count: {select: {matches: true, ongoingMatches: true}}},
+        where: {round_number: {gte: n}, tournamentRounds: {some: {tournament_id: tournamentId}}},
+        select: {id: true, round_number: true, team1_id: true, team2_id: true, open: true, status: true, _count: {select: {matches: true, ongoingMatches: true}}},
       });
+      // the tournament is always one Kolo shorter; what is deleted is the tables above, if there are any
+      const left = t.rounds - 1;
+      if (left < 1) throw new InvalidResultError("Turnir mora imati barem jedno kolo.");
       const real = tables.filter((r) => !isByeTeam(r.team1_id) && !isByeTeam(r.team2_id));
-      const played = real.some((r) => !r.open || r._count.matches > 0 || r._count.ongoingMatches > 0);
-      if (played && !withResults) throw new InvalidResultError(`Za stolovima Kola ${n} se već igra ili je odigrano: brisanje briše i rezultate. Otvori kolo ponovo pa potvrdi.`);
+      const startedAt = real.filter((r) => !r.open || r._count.matches > 0 || r._count.ongoingMatches > 0);
+      if (startedAt.length > 0 && !withResults) {
+        const kola = Array.from(new Set(startedAt.map((r) => r.round_number ?? 0))).sort((a, b) => a - b);
+        throw new InvalidResultError(
+          `Za stolovima ${kola.length > 1 ? `kola ${kola.join(", ")}` : `Kola ${kola[0]}`} se već igra ili je odigrano: brisanje briše i rezultate. Potvrdi brisanje s rezultatima.`
+        );
+      }
       await dropTables(tx, tables.map((r) => r.id));
-      await tx.tournament.update({where: {tournament_id: tournamentId}, data: {rounds: n - 1}});
+      await tx.tournament.update({where: {tournament_id: tournamentId}, data: {rounds: left}});
       // a table played to the end changed ratings: count them again without it
       if (real.some((r) => !r.open && r.status === "PUBLISHED")) await replayRatings(tx);
     },

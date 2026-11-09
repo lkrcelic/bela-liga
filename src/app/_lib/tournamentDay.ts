@@ -1,8 +1,8 @@
 // A tournament's day. Potvrda dolaska: a team confirms it has come (Tu smo) from Okupljanje until Početak; at the start
 // time the teams that didn't become inactive (still signed up) and the confirmed teams of the waiting list come in, in
 // waiting-list order, as long as there are fewer active teams than the limit. Nedolazak za stol: a published table where
-// no game has started gets the question "Jesu li … za stolom?" 5 minutes after its Kolo went out, it can be answered
-// from 8 minutes, and at 10 minutes the match is skipped. All times are the server's. Framework free so it can be unit
+// no game has started gets the question "Jesu li … za stolom?" 3 minutes after its Kolo went out, it can be answered
+// from 5 minutes, and at 8 minutes the match is skipped. All times are the server's. Framework free so it can be unit
 // tested.
 import {leagueDateString, leagueMoment, leagueNightString} from "@/app/_lib/dates";
 
@@ -75,9 +75,11 @@ export function hasRoom(entries: DayEntry[], maxTeams: number | null): boolean {
 
 // ---------- Nedolazak za stol ----------
 
-export const NO_SHOW_ASK_MS = 5 * 60_000;
-export const NO_SHOW_UNLOCK_MS = 8 * 60_000;
-export const NO_SHOW_SKIP_MS = 10 * 60_000;
+// The question comes early because the team that is at the table waits for it, and the two minutes before the answer
+// are the whole buffer against an impatient answer: a team walking to its table is still in time (DECISIONS #89)
+export const NO_SHOW_ASK_MS = 3 * 60_000;
+export const NO_SHOW_UNLOCK_MS = 5 * 60_000;
+export const NO_SHOW_SKIP_MS = 8 * 60_000;
 
 export type NoShowTimes = {ask: Date; unlock: Date; skip: Date};
 

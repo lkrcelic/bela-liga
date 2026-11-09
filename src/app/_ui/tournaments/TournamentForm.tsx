@@ -38,6 +38,7 @@ export type TournamentDraft = {
   gameMinutes: string;
   // Iduća kola: published by themselves (Automatski) or after the admin's Objavi (Ručno)
   autoPublish: boolean;
+  openSignups: boolean;
 };
 
 // Bela pravila igre v1.5 (Macaklin Social Club), the rules every new tournament starts with
@@ -59,6 +60,7 @@ export const EMPTY_TOURNAMENT: TournamentDraft = {
   phone: "",
   gameMinutes: "35",
   autoPublish: false,
+  openSignups: false,
 };
 
 type Source = Pick<
@@ -78,6 +80,7 @@ type Source = Pick<
   | "organizer_phone"
   | "game_minutes"
   | "auto_publish"
+  | "open_signups"
 >;
 
 export function draftOf(t: Source): TournamentDraft {
@@ -97,6 +100,7 @@ export function draftOf(t: Source): TournamentDraft {
     phone: t.organizer_phone ?? "",
     gameMinutes: String(t.game_minutes),
     autoPublish: t.auto_publish,
+    openSignups: t.open_signups,
   };
 }
 
@@ -153,6 +157,7 @@ export function draftPayload(d: TournamentDraft): TournamentRequest {
     prizes: d.prizes.filter((p) => p.prize.trim()).map((p) => ({prize: p.prize.trim(), description: p.description.trim()})),
     game_minutes: Number(d.gameMinutes),
     auto_publish: d.autoPublish,
+    open_signups: d.openSignups,
     organizer_phone: text(d.phone),
   };
 }
@@ -362,6 +367,17 @@ export function TournamentFields({form, locks, compact = false, sx}: {form: Tour
         {d.autoPublish
           ? "Kad svi stolovi kola završe, iduće kolo se složi po poretku i odmah objavi, bez skice. Kolo 1 objavljuješ ti."
           : "Kad svi stolovi kola završe, iduće kolo se složi kao skica koju pregledaš i objaviš."}
+      </Box>
+      <Choice<"pocetak" | "cijeli">
+        label="Prijave"
+        value={d.openSignups ? "cijeli" : "pocetak"}
+        items={[{key: "pocetak", label: "Do početka"}, {key: "cijeli", label: "Cijeli turnir"}]}
+        onChange={(v) => set("openSignups", v === "cijeli")}
+      />
+      <Box sx={{mt: "-6px", pl: "4px", fontSize: 13, lineHeight: 1.45, color: color.muted}}>
+        {d.openSignups
+          ? "Ekipe se mogu prijaviti i dok turnir traje, sve do zadnjeg kola. Tko se prijavi usred turnira broji se kao prisutan i igra od idućeg kola, a kad je turnir pun čeka na listi čekanja."
+          : "U vrijeme početka prijave se zatvaraju i nitko se više ne može prijaviti."}
       </Box>
       <Box>
         <TextField

@@ -3,6 +3,7 @@
 import {MyEntry, MyLastTable, TournamentCard, TournamentDetail} from "@/app/_interfaces/tournament";
 import {banDay} from "@/app/_lib/bans";
 import {telHref, whatsappHref} from "@/app/_lib/phone";
+import {NO_SHOW_SKIP_MS} from "@/app/_lib/tournamentDay";
 import {color, font, shadow, tint} from "@/app/_styles/tokens";
 import {BottomSheet, buttonBase, Card, ConfirmSheet, ErrorNote, PrimaryButton, Spinner} from "@/app/_ui/sp";
 import BlockRoundedIcon from "@mui/icons-material/BlockRounded";
@@ -369,7 +370,7 @@ function exclusionLines(t: TournamentDetail): {title: string; lines: {icon: Reac
   }
   if (x.reason === "SKIPPED") {
     return {
-      title: `Meč za ${last?.table_number != null ? `Stolom ${last.table_number}` : "vašim stolom"} u Kolu ${x.kolo} nije započeo ni 10 minuta nakon početka kola i nitko nije prijavio nedolazak.`,
+      title: `Meč za ${last?.table_number != null ? `Stolom ${last.table_number}` : "vašim stolom"} u Kolu ${x.kolo} nije započeo ni ${NO_SHOW_SKIP_MS / 60_000} minuta nakon početka kola i nitko nije prijavio nedolazak.`,
       lines: [
         {icon: <BlockRoundedIcon />, text: `Meč se ne boduje. Ne igrate ostala kola.${ban ? " Dobili ste i zabranu prijava na turnire na mjesec dana." : ""}`},
         ...(stays ? [stays] : []),

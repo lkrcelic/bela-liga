@@ -68,18 +68,18 @@ test("during the tournament a place freed lets the first confirmed waiting team 
   assert.equal(hasRoom([entry(1, "REGISTERED", 1, true), entry(3, "REGISTERED", 3, true, {excluded: true})], 2), true);
 });
 
-test("Nedolazak za stol: the question at 5, answers from 8, the skip at 10 minutes", () => {
+test("Nedolazak za stol: the question at 3, answers from 5, the skip at 8 minutes", () => {
   const out = new Date("2026-10-31T10:00:00Z");
   const times = noShowTimes(out);
-  assert.equal(times.ask.toISOString(), "2026-10-31T10:05:00.000Z");
-  assert.equal(times.unlock.toISOString(), "2026-10-31T10:08:00.000Z");
-  assert.equal(times.skip.toISOString(), "2026-10-31T10:10:00.000Z");
+  assert.equal(times.ask.toISOString(), "2026-10-31T10:03:00.000Z");
+  assert.equal(times.unlock.toISOString(), "2026-10-31T10:05:00.000Z");
+  assert.equal(times.skip.toISOString(), "2026-10-31T10:08:00.000Z");
   const at = (m: number, s = 0) => new Date(out.getTime() + m * 60_000 + s * 1000);
-  assert.equal(noShowStep(out, at(4, 59)), "waiting");
-  assert.equal(noShowStep(out, at(5)), "asking");
-  assert.equal(noShowStep(out, at(8)), "answerable");
-  assert.equal(noShowStep(out, at(9, 59)), "answerable");
-  assert.equal(noShowStep(out, at(10)), "due");
+  assert.equal(noShowStep(out, at(2, 59)), "waiting");
+  assert.equal(noShowStep(out, at(3)), "asking");
+  assert.equal(noShowStep(out, at(5)), "answerable");
+  assert.equal(noShowStep(out, at(7, 59)), "answerable");
+  assert.equal(noShowStep(out, at(8)), "due");
 });
 
 test("a ban's length: weeks, months to the last day of a short month, years, Trajno", () => {
@@ -125,10 +125,10 @@ const clock = (d: Date) => leagueClock(d);
 test("the admin's table statuses", () => {
   const at = (m: number, s = 0) => new Date(Date.parse("2026-10-31T10:00:00Z") + m * 60_000 + s * 1000);
   assert.equal(tableState(base, at(2), 35, clock).label, "Novo");
-  const asking = tableState(base, at(8, 8), 35, clock);
+  const asking = tableState(base, at(6, 8), 35, clock);
   assert.equal(asking.kind, "asking");
   assert.equal(asking.label, "Upit · 1:52");
-  assert.equal(asking.note, "Igra nije počela. U 11:10 obje ekipe ispadaju iz turnira.");
+  assert.equal(asking.note, "Igra nije počela. U 11:08 obje ekipe ispadaju iz turnira.");
   assert.equal(tableState({...base, started: true}, at(20), 35, clock).label, "Uživo");
   const noShow = tableState({...base, open: false, attendance: "NO_SHOW", attendance_at: at(8), answered_by: "Dalmatinci", other: "Purgeri"}, at(9), 35, clock);
   assert.equal(noShow.label, "Nedolazak");

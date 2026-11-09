@@ -6,6 +6,8 @@ import {
   endsOn,
   nightGone,
   partnerError,
+  phoneForViewer,
+  phoneNeedsLogin,
   postStatus,
   RepostFacts,
   repostError,
@@ -227,6 +229,7 @@ const base: BurzaPost = {
   as_partner: false,
   note: "",
   phone: "+385 91 555 1234",
+  phone_hidden: false,
   mine: false,
   can_close: false,
   busy_team: null,
@@ -468,7 +471,7 @@ test("Moji oglasi says what each ad is and when it closes", () => {
 });
 
 test("Tko traži zamjenu? lists the player first, then the active teammates", () => {
-  const p = (id: number, me = false, active = true) => ({id, name: `Igrač ${id}`, rating: 1500, me, active});
+  const p = (id: number, me = false, active = true) => ({id, name: `Igrač ${id}`, username: `igrac${id}`, rating: 1500, me, active});
   assert.deepEqual(substituteRoster([p(1), p(2, false, false), p(3, true), p(4)]).map((x) => x.id), [3, 1, 4]);
   assert.deepEqual(substituteRoster([]), []);
 });
@@ -491,4 +494,24 @@ test("a partner ad whose league has ended can't go up again", () => {
   assert.equal(repostBlocked({...minePartner, status: "CLOSED", ends_on: "2026-12-15"}, today), null);
   assert.equal(repostBlocked({...minePartner, status: "CLOSED", ends_on: null}, today), null);
   assert.equal(repostBlocked({...mine, status: "EXPIRED", ends_on: "2026-09-29"}, today), null);
+});
+
+test("an ad's number needs a login: a guest gets none, its author always sees it", () => {
+  const number = "+385 91 555 1234";
+  const open = {signedIn: true, mine: false, closed: false};
+  // a logged-in player on an open ad: the number, as before
+  assert.equal(phoneForViewer(number, open), number);
+  assert.equal(phoneNeedsLogin(number, open), false);
+  // nobody logged in: no number, and the ad's page offers Prijavi se (GET /api/burza can't be harvested)
+  const guest = {...open, signedIn: false};
+  assert.equal(phoneForViewer(number, guest), null);
+  assert.equal(phoneNeedsLogin(number, guest), true);
+  // a closed ad: only its author, and no login prompt (the page says it is closed)
+  const closed = {...open, closed: true};
+  assert.equal(phoneForViewer(number, closed), null);
+  assert.equal(phoneForViewer(number, {...closed, mine: true}), number);
+  assert.equal(phoneNeedsLogin(number, {...closed, signedIn: false}), false);
+  // an availability ad without any number: nothing to hide, nothing to offer
+  assert.equal(phoneForViewer(null, open), null);
+  assert.equal(phoneNeedsLogin(null, guest), false);
 });

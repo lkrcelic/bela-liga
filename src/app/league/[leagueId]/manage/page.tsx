@@ -1,6 +1,6 @@
 "use client";
 
-import useAdminPhone from "@/app/_hooks/useAdminPhone";
+import useManagePhone from "@/app/_hooks/useManagePhone";
 import useIsDesktop from "@/app/_hooks/useIsDesktop";
 import ManagePhone from "@/app/_ui/admin/ManagePhone";
 import useLeagues from "@/app/_hooks/useLeagues";
@@ -87,7 +87,7 @@ function removalNote(played: number | null): string {
 // is edited on the computer
 export default function ManageLeague() {
   const isDesktop = useIsDesktop();
-  const adminPhone = useAdminPhone();
+  const adminPhone = useManagePhone("league.manage");
   if (isDesktop) return <ManageLeagueDesktop />;
   return adminPhone ? <ManagePhone /> : <DesktopOnlyNote />;
 }

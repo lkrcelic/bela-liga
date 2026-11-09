@@ -136,6 +136,12 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
     SamsungInternet/support#123). Its sheet says so and opens the page in Chrome instead, with a copy-link fallback.
     The manifest and the missing service worker aren't the cause and stay as they are. Drop the detour once Samsung
     fixes its package.
+    - **A dismissed sheet stays away for a week** (issue #18): "Nastavi u pregledniku" and a swipe away write the
+      moment into `localStorage` (`bela.installDismissed`, `_lib/installSnooze.ts`), and Home doesn't offer the
+      install again while it is recent. On a league night a player in the browser returns to Početna after every
+      round, and the sheet used to cover "Započni igru" each time. The login page keeps offering it
+      (`<InstallSheet ignoreSnooze />`), so there is still a way to install on purpose; storage that can't be read
+      (private mode) counts as "not dismissed".
 
 28. **League nights** (design "Burza igrača · spojeno", 11b "Datumi lige").
     - A league keeps its nights (`LeagueNight`). Create League fills them in from the start date, end date and play
@@ -1611,3 +1617,245 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
     - **Checked**: tsc, lint, and in the browser on a local copy: Moj profil and Ekipa on a 375 px phone and on the
       computer (the sections gone, the sheet and the dialog carrying the choice, a pick saved with no error, and the
       blocked note in the computer's dialog). **Not checked**: the Vercel preview and real phones.
+
+86. **Organizator: a third role, and a foundation for the ones after it** (your request of 07.11.: "Dodavanje
+    kreator user-a… Kreator može kreirati turnire dodavati ekipe i uređivati ekipe. Ne smije brisati ni uređivati
+    tunrire koji nisu njegovi. Ono želim da on može uređivati i voditi turnire… Dodaj opciju za dodavanje kreatora
+    tamo gdje se dodaje i kao admin", and then: "ovo nije jedina rola koju cemo uvest bit će ih još u budućnosti pa
+    želim odmah sada napraviti podlogu koja je jednostavna brza i da radi… fokus samo na kod". The name was settled
+    as **ORGANIZER / Organizator**, and after three rounds of questions the foundation as a **map in the code**, not
+    RBAC tables: "idemo s mapom u kodu".)
+    - **Why no tables**: a permission in a table has to be written into three databases (the local copy, the Neon
+      preview, production) and drifts between them; a permission in the code is one line in a diff, is type checked,
+      and is the same everywhere a build is. You said the redeploy on a new right is no obstacle. Speed was never the
+      argument and isn't claimed as one: permissions ride along with the login's query either way.
+    - **Three layers, kept apart.** A capability says WHAT (`_lib/auth/permissions.ts`), ownership says WHOSE
+      (`_lib/auth/ownership.ts`), privacy says HOW MUCH of a player's data is seen (`_lib/players/privacy.ts`).
+      Mixing any two into one check is what made `useAdminPhone` ambiguous, see below.
+    - **A new role costs one line**: its entry in `BY_ROLE`. No route and no screen is touched. `rolesOf()` in
+      `_lib/auth/roles.ts` is the only place in the app that reads `player_role`, so several roles per player would be
+      a change to that one function.
+    - **What an organizer may do**: Novi turnir; edit, run and cancel **their own** tournament (its Kolos, Skica,
+      Objavi, tables, results, sign-ups, arrivals, Isključi); make a team and edit any team; the Igrači directory
+      with names, teams and phone numbers. **Not**: delete a tournament (only Otkaži — a tournament carries results
+      and ratings), touch anyone else's tournament, the league (Novo kolo, Upravljanje ligom, nights, Datumi),
+      delete a team, Zabrani novu sliku, usernames / emails / birth dates, editing or deleting a player, giving a
+      role, Sponzori, Burza moderation, Rejting.
+    - **Ownership**: `Tournament.created_by`, written once when the tournament is made and never changed. The
+      tournaments made before this are `null`: nobody owns them, so only an admin touches them. Two owners later
+      would be a join table and a change to `canManageTournament` alone.
+    - **The guards**: `requireCan(req, cap)` beside `requireAdmin` (which stays and means "only ADMIN"); ownership is
+      a second check inside the handler, because the write services take no viewer — `refuseUnlessMine` for a
+      tournament, `refuseUnlessMyTable` / `refuseUnlessMyHand` for the scorepad, which get only a round or a hand id
+      and look up what it belongs to. `getAdminTournament` refuses by itself, so every read is covered for free.
+      `__tests__/adminGuards.test.ts` now also scans that every `requireCan` handler under a tournament, a table or a
+      hand checks whose it is.
+    - **Four things found before the code was written**, which changed the order of the work:
+      1. `errorResponse` had no 403 branch, so an ownership refusal would have been a logged 500. `ForbiddenError`
+         and that branch came first.
+      2. Tournament reads funnel through `getAdminTournament(id, viewer)`, but the writes take no viewer, so the
+         guard had to go in the routes, modelled on `refuseIfFinished`.
+      3. `useAdminPhone` meant two things at once — which layout, and whether you are allowed — at 16 places. It is
+         now `useManagePhone(cap)` (layout + the screen's own capability) and `useCan(cap)` (permission). Without the
+         split an organizer would have got Večer lige, Upravljanje ligom and Novo kolo.
+      4. The admin switch existed twice with different saving (the computer's panel on Spremi, the phone's at once);
+         changing only one would have sent `is_admin` and quietly overwritten the role.
+    - **The scorepad** (`admin/tables/[roundId]`, `admin/hands/[kind]/[resultId]`) had no path to a tournament at
+      all; without it an organizer couldn't run their own turnir. `TournamentRound` already has an index on
+      `round_id`, so the lookup is one indexed read.
+    - **Rola instead of a switch**: "Uredi osobne podatke" (computer) and Rola (phone) now pick Igrač / Organizator /
+      Administrator — one column, one field, and room for the next role. The API takes `role`; `is_admin` is gone
+      from the request. The old rules still hold: you can't take your own admin role, and the last active admin stays
+      one (every change away from ADMIN counts as a demotion).
+    - **The role is public, on purpose**: `is_admin` used to be in the private part of a player's data, seen only by
+      an admin. The label on a profile needs it, so `role` is in the public part — every logged-in player sees who
+      runs the league and who runs tournaments. `RoleTag` draws it beside the name on Moj profil and on a player's
+      page, on the phone and on the computer (it had it on neither before); a plain player gets no label.
+    - **Scaled down from the plan**: `ban.manage.own` was going to let an organizer ban a sign-up on their own
+      tournament, but **Zabrana prijava is league wide** — the API takes no tournament — so bans stay the admin's
+      until a ban can be tied to one tournament. The capability exists in the map and is the admin's only.
+    - **Found on the deployment, not in the code**: the phone's bottom bar (`AdminTabBar`) listed all six screens for
+      anyone who got it, so an organizer saw Večer, Rejting and Sponzori — tabs leading nowhere they may go. Its items
+      now carry a capability each, as the computer's menu does. And `/` had no home for them (Večer lige is the
+      league's), so a phone that runs tournaments but not the league opens on their Turniri — the screen their bar
+      starts from, no new screen.
+    - **Not migrated**: the other 54 `requireAdmin` routes an organizer may not reach anyway (the league, players,
+      sponsors, ratings) stay as they are, as planned.
+    - **Checked**: 537 unit tests (new: the capability map, ownership, the three privacy steps, the public role, the
+      role tuple, the 403 branch, and the route scan for ownership), tsc, lint, and on a throwaway Postgres loaded
+      from a copy of the schema: the migration chain rebuilt from empty gives exactly the schema ("No difference
+      detected"), the enum reads `{ADMIN,ORGANIZER,PLAYER}`, and with a real organizer, a second organizer and an
+      admin — `created_by` written on Novi turnir, an organizer refused (403) on another's and on an ownerless
+      tournament for both reading and writing, an admin allowed everywhere, and Turniri listing only the organizer's
+      own. **Not checked**: the screens in a browser, the Vercel preview, and a real phone.
+
+87. **Obriši kolo on every Kolo, not only the last** (your screenshot of the Kola list with four "Čeka" Kolos and a bin
+    only on Kolo 4: "DODAJ BIRSANJE PORED SVAKOG KOLA", then "WARNING AKO SE BRIŠE KOLO KOJE JE VEĆ KREIRANO")
+    - **Why it was only the last one**: a Kolo is paired from the results of the ones before it, so deleting one from
+      the middle and leaving the rest would keep pairings that were never earned.
+    - **The rule now**, which keeps that true and still puts a bin on every row: what happens depends on whether the
+      Kolo is **made** (has tables — a draft or published).
+      - **Not made, and nothing made after it**: it is only a line in the plan. It goes, the Kolos after it move up a
+        number, and the tournament has one Kolo less. Nothing is deleted. In your screenshot — four Kolos, none made
+        — deleting Kolo 2 leaves three.
+      - **Made**: it takes **every made Kolo after it** with it, because those came from its results, and the
+        tournament ends with the Kolos before it.
+    - **One Kolo always stays**, so a made Kolo 1 can't go (the tournament would have none).
+    - **The warning**: the confirmation says what this Kolo is (still to come, a draft, out, being played, played),
+      names the Kolos that go with it ("Brišu se i kola 3, 4, jer su složena po rezultatima ovog."), and ends with how
+      many Kolos the tournament is left with. Results are only deleted when someone has actually sat down at one of
+      the tables that go; only then does the sheet show the warning triangle and read "Obriši s rezultatima", and only
+      then does the request carry `?rezultati=1`.
+    - **Where**: `koloRemovalOf(rounds, n, kolos)` in `_lib/tournaments.ts` replaces `lastKoloRemoval`, and carries
+      `alsoGo` (the Kolos that go with it), `rounds` (what is left) and `resultsGo`. On the phone every row of Kola has
+      its own bin; on the computer the bin in the header deletes the Kolo that is open, which is the same thing with
+      one Kolo on screen at a time.
+    - **Changed the same day, after you saw it** (screenshot of Kolo 1 "Uživo" with no bin: "Želim moći birati i kolo
+      u bilo kojem statusu. Kada brišem kolo koje nije u statusu 'čeka' dolazi mi modal neki jesam li siguran koje su
+      posljedice."): the first rule set the plan to `n - 1`, so a made Kolo 1 could never go (the tournament would
+      have none). The rule is now **the tournament is always one Kolo shorter**, whichever Kolo goes, and the Kolos
+      after it move up a number. What is *deleted* is unchanged: this Kolo's tables and those of every made Kolo
+      after it. So deleting Kolo 1 while it is being played clears what was played and leaves the plan one shorter,
+      ready to be made again — and the bin is on every row whatever the state.
+    - **The modal**: every bin asks first. A Kolo nobody has made yet gets the plain bin icon; **anything else** — a
+      draft, tables out, being played, played, or a Kolo that drags a made one with it — gets the warning triangle and
+      a sentence per consequence. "Obriši s rezultatima" and `?rezultati=1` stay only for the case where someone has
+      really sat down at one of the tables that go.
+    - **Who may**: the same as every other change to a tournament — an admin on any, an organizer on the ones they
+      made (`requireCan("tournament.manage.own")` then `refuseUnlessMine`, DECISIONS #86).
+    - **Checked**: unit tests for the new rule (nothing made, a draft, one out, one being played, one played, a middle
+      Kolo with two made after it, Kolo 1 live, Kolo 1 with two played Kolos after it, and the warning sign), tsc on
+      the files of this change, lint.
+
+88. **Korisničko ime je javan podatak** (your request of 07.11.: "PORED IMENA I PREZIMENA DODAJ I USERNAME DA VIDE
+    DRUGI IGRAČI USERNAME MORA BITI VIDLJIV I DOSTUPAN", and on the league box of Početna: "ne da piše ime ekipe, nego
+    da piše kao i za mene et i onda username"; changes #40 and the username parts of #20, #46 and #49).
+    - **The rule**: the username leaves the private tier of `_lib/players/privacy.ts` and joins the public one, beside
+      the name, "Neaktivan" and the role. Your three answers set the scope: **everywhere** in the app, **searches match
+      it too**, and **logged-out visitors of the public pages see it as well**. Private are still the email, the birth
+      date and Pušač (the player themselves and admins), and the phone number (those two plus an organizer, #86).
+    - **Why**: the username is how a player is known in the league and how the admin finds them when adding them to a
+      team ("Po ovom imenu te administrator pronalazi kad te dodaje u ekipu.", #46). Hiding it made a player's page
+      show two rows and a lock, and left the handles the design had drawn (13e) out of the team cards.
+    - **What that removed**: `rosterUsername` is gone and `rosterView` only sorts the roster into Croatian name order;
+      `PlayerPublicResponseValidation` carries the username; `TeamMemberValidation.username`, `TeamOverviewPlayer`,
+      `RatingRow`, `EntryPlayer`, `MyLeague.players` and `DirectoryMember` all have it as a required field, so a
+      response that forgets it fails validation instead of quietly dropping the handle.
+    - **Where it shows now**: "Korisničko ime" is the third row of Osobni podaci on **every** player's page (the lock
+      note under it now names what is left private: "Email, mobitel, datum rođenja i Pušač vidljivi su samo igraču i
+      administratorima."); the **Početna · Liga** card and **Raspored** put `@username` under each player of the team
+      (your own row keeps "(ti)"); the team cards of Moj profil and a player's page show the handle on the chip with
+      the full name on hover (design 13e, finally); the Team page's second line is `@username` for everyone, not only
+      for you (`rosterSubline` was already written for it); **Rejting**'s detail opens with "@username · ekipa · N
+      rundi"; a round's teams and a tournament's entries carry it, for visitors too.
+    - **Searches**: Rejting's search and the teammate search of Prijava ekipe (`searchTeammates`, now `username
+      contains` beside the names) match a handle, and that sheet says "Ime ili korisničko ime suigrača" with the handle
+      under each hit. The admin's Igrači and Ekipe searches already did; an organizer now gets usernames there too.
+    - **Left as it was**: the Burza keeps the author's name without a handle (the board is one line per ad), and a
+      finished round's **Tko igra ovu rundu?** stays the admin's — the reason is no longer the usernames (#49) but the
+      screen itself, whose button confirms who played, and only an admin may save that (`saveLineup`).
+    - **Checked**: `npx tsc --noEmit` clean, `npm test` 536 tests green (the privacy, permissions, profiles, directory
+      and ratings tests now state the new rule), and the screens walked through on the dev server as two accounts.
+
+88. **Otvorene prijave: a tournament you can join while it is played** (your request of 07.11.: "želim imati mogućnost
+    otvorenog turnira da se ljudi mogu prijaviti tokom cijelog turnira. Ali ne mogu se prijaviti kad počne zadnje
+    kolo… čim se ekipa prijavi da automatski uđe u sljedeće kolo… da bude za neke turnire gdje se igra u kafiću i sad
+    neko uskoči", then: "admin/organizator ima mogućnost dodavanja ekipa dok turnir traje isto kao i prije turnira")
+    - **The switch**: Podaci gets **Prijave · Do početka / Cijeli turnir**, beside Iduća kola, which it is modelled on.
+      `Tournament.open_signups`, false by default, so every tournament that exists keeps working exactly as before.
+    - **Do početka** (as until now): the start time's switch closes the sign-ups for good.
+    - **Cijeli turnir**: the start time still decides who is present (the teams that didn't press Tu smo go inactive,
+      the confirmed waiting teams come in) — it only stops closing the sign-ups. They close by themselves the moment
+      the **last Kolo is made**, a draft counting, which is the line Tu smo · Želimo uskočiti already stops at
+      (LAST_KOLO_MADE). Your answer: that line, not the publishing of the last Kolo.
+    - **A team that signs up while the tournament runs counts as present** (your words: "ako su se prijavili
+      podrazumijeva se da su tamo"): the entry is written arrived and active, so the next Kolo's draft pairs it
+      without anyone pressing anything. Full tournament: it goes on the waiting list **confirmed**, so it comes in by
+      itself as soon as a place opens (fillPlaces) — your answer, the waiting list stays as it is.
+    - **Dodaj ekipu is the same**: the admin's and the organizer's Dodaj ekipu works during such a tournament, on the
+      phone and on the computer, and the team is in (or waiting) at once, marked arrived by the admin.
+    - **A draft already made**: the team joins the first Kolo that is **made after** it comes in. If the next Kolo's
+      draft is already standing, the app marks that draft stale, as it already does when the playing teams change, and
+      you choose whether to lay it out again — your answer, "pitaj me svaki put". With Automatska kola there is no
+      such window: the Kolo goes out the moment it is made.
+    - **Kolo 1**: "Prvo zatvori prijave, zatim složi Kolo 1" does not apply to an open tournament — it would never be
+      able to start. Kolo 1 is made from whoever is here, and the sign-ups go on.
+    - **The Prijave switch still wins**: the admin can close the sign-ups of an open tournament by hand at any time,
+      and that now works while it is played too (before, the switch was refused after the start).
+    - **Not changed**: the number of Kolos, the limit, the standings. A team that comes in at Kolo 4 has played fewer
+      Kolos and stands lower for it; that is the tournament, not a fault.
+    - **Three holes found going over it again** (your "provjeri još jednom logike u kodu"), all fixed:
+      1. **Switching the setting off mid-tournament was a 500.** `Tournament_started_check` refuses a started
+         tournament with its sign-ups open, and Podaci writes `open_signups` without touching `registrations_open`.
+         Turning Cijeli turnir back to Do početka now closes the sign-ups in the same save (`signUpsCloseWithSwitch`).
+      2. **A team signing up between the start time and Kolo 1 was not marked present.** The flag read `started_at`,
+         which is set only when Kolo 1 is published, so in that window the entry was written without Tu smo. It now
+         reads the day's switch (`dayClosed`), which is where "the tournament is under way" really begins
+         (`joinsAsPresent`). A tournament without Otvorene prijave is untouched: the gate that refuses a late team
+         still reads `started_at`, so the admin's existing "označi pa ih uključi prekidačem" flow is as it was.
+      3. **The Prijave switch refused itself** once the last Kolo was made, because it shared the entry's guard. It
+         has its own check now, so the admin can close the sign-ups of an open tournament at any point.
+    - **Checked**: unit tests for the rules (both kinds before the start, during, at the last Kolo, with the switch
+      closed, finished or cancelled; who counts as present; what switching the setting off does), tsc on the files of
+      this change, lint, and on the live development app: Kolo 1 made and published without closing the sign-ups, a
+      team added mid-tournament coming in REGISTERED, active and marked arrived, a closed tournament refusing the
+      same with "Turnir je već počeo", and the sign-ups stopping with "Zadnje kolo je već složeno" once the last Kolo
+      existed.
+
+89. **Nedolazak za stol brže (3 / 5 / 8) i Otključaj partiju** (your message of 07.11.: "nakon što istekne 5 min i tek
+    nakon 8 se dozvoli odgovor to mi je presporo… Idemo sa A, i idemo sa time da admin uvijek može otključati partiju i
+    postaviti na nju custom vrijeme trajanja kod otključavanja").
+    - **The timings are rescaled, the three steps stay**: the question is up 3 minutes after the Kolo goes out, the
+      answers work from 5, the skip is at 8 (`NO_SHOW_ASK_MS`, `NO_SHOW_UNLOCK_MS`, `NO_SHOW_SKIP_MS`). Alternatives I
+      put to you: a 90-second pending answer with an undo instead of the lock, and making the times a setting of the
+      tournament. Reason for the plain rescale: the two minutes between the question and the answer are the whole guard
+      against an impatient answer, and nothing else in the flow has to change; the dead time falls from 10 minutes to 8
+      and, more importantly, the question reaches the phones while people are still looking at them.
+    - **Otključaj partiju is on every closed table of a tournament** (your answer: "Svaki zatvoreni stol"), on the admin
+      scorepad where the result is corrected anyway, with the reason it is locked written above it: Nedolazak,
+      Preskočen, Vrijeme isteklo or an ordinary Gotovo. The organizer has it on their own tournament, as they already
+      have Isključi / Vrati (#86). A league table is never locked by an answer and is corrected by entering games, so it
+      has none (your answer: "Samo turniri").
+    - **The unlock undoes the lock** (your answer: "Otključavanje poništi sve"): a Nedolazak drops the 1001:700 matches
+      its answer wrote, a Nedolazak or a Preskočen brings the excluded teams back into the tournament and lifts the
+      app's own ban from Kolo 1 (the players' bans under it with them), and a table closed by Vrijeme partije or played
+      out carries on with its last match — the finished match becomes the match being played again, with its hands, and
+      the win it was counted comes off the table's score. A match an admin has since entered hands into is real play, so
+      a Nedolazak unlock leaves it alone.
+    - **Custom Vrijeme partije at the unlock**: the minutes the admin picks (10–45 offered, Drugo for anything from
+      `GAME_MINUTES_MIN` to `GAME_MINUTES_MAX`) are written on the table itself (`Round.game_minutes`), and
+      `gameMinutesOf` reads the table's own limit before the tournament's or the league's. So the match resumed here and
+      every later match of that table run on it. Alternative: a deadline only on the resumed match; reason: the table's
+      own limit also covers the second Partija and a game started by the players afterwards.
+    - **An unlocked table says Tu smo** (`attendance = PRESENT`, the admin as the answer): without it the table would
+      be open, today's, published long ago and with nothing played, which is exactly what the question asks about — the
+      clock would already be past the skip, so the next read of it would close the table again. PRESENT also keeps the
+      table rated (isRatedRound) and reads as "Ekipe su za stolom, igra još nije započela." in the Kolo's list.
+    - **A place taken while the team was out stays taken**: the lock let a confirmed waiting team in (fillPlaces), and
+      the unlock doesn't send it back out, so the tournament can hold one team more than its limit until the admin
+      sorts it out. Same as Vrati (#86), which also doesn't count places.
+    - **The Kolos already made stay as they are** (your answer: "Dopusti uz upozorenje"): the confirmation says so and
+      the admin lays them out again if they want. Refusing the unlock while a next Kolo exists, or deleting those Kolos
+      with it, were the alternatives.
+    - **Checked**: unit tests for the new times and for the lock's kinds and sentences, and against a real Postgres for
+      all three unlocks (the Nedolazak with its ban, the Preskočen with both teams, Vrijeme isteklo resuming with its
+      hands and a new deadline), plus the whole flow clicked through on a phone-sized dev server: a locked table →
+      Otključaj partiju → 20 min → the table new again with the team back in the tournament, and an expired match → 15
+      min → the same match being played again with 15 minutes on it. tsc and lint clean.
+
+90. **Broj iz Burze vide samo prijavljeni igrači** (issue #11, found by the code scan: `curl /api/burza` without a
+    cookie returned every ad's `phone`).
+    - **What changed**: an ad's phone number is no longer in the public answer. `toView` runs it through
+      `phoneForViewer` (`_lib/burzaStatus.ts`): its author always sees it, a logged-in player sees it while the ad is
+      up, and nobody who isn't logged in sees it at all. `phoneNeedsLogin` adds `phone_hidden: true` to such an ad, so
+      the ad's page keeps its Kontakt card with "Broj vide igrači s računom." and **Prijavi se da vidiš broj**, which
+      opens "Sjedni za stol." with `next` set to the ad (#75) and so comes back to the number.
+    - **The ads stay public** (#29, #75: "only burza" stays open to a guest): the list, the kinds, the teams, the
+      names, the ratings and the notes are unchanged, and a shared link still opens the ad. Only the number waits for
+      a login. `listOpenPosts` therefore filters on "the ad has a number" (`phone != null || phone_hidden`), not on the
+      number it shows — otherwise Burza would be empty for a guest, since an availability ad without any number is the
+      one that must stay out of the list.
+    - **Why not close Burza altogether**: a guest is meant to read the ads (that is what the public page is for); the
+      number is what a bot would harvest. Name and rating are as public as a tournament's teams, the number isn't.
+    - Not done here: `GET /api/burza` still lists every open ad without pagination (the same issue's second note; a
+      separate performance ticket covers the query).

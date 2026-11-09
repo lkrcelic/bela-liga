@@ -20,12 +20,18 @@ import {
   standingsOrderLabel,
   TableResult,
   tournamentPhase,
-  lastKoloRemoval,
+  koloRemovalOf,
+  koloRemovalWarns,
+  joinsAsPresent,
+  signUpsCloseWithSwitch,
+  signUpsOpenNow,
   removesResults,
+  tableWasPlayed,
   tournamentStatus,
   tournamentTotals,
 } from "@/app/_lib/tournaments";
 import {dateTile} from "@/app/_lib/nights";
+import {TournamentRequestValidation} from "@/app/_interfaces/tournament";
 
 // Turniri: pairing the Kolos, the waiting list, the standings and the words of the screens
 
@@ -97,22 +103,83 @@ test("Swiss: a meeting nobody can avoid is made and reported", () => {
   assert.deepEqual(swissPairs([]).pairs, []);
 });
 
-test("Obriši kolo: only the last Kolo, one Kolo stays, and one with results says so", () => {
+test("someone sat down at this table: the same question the server asks before it deletes a Kolo", () => {
+  const t = (o: Partial<{team1Id: number; team2Id: number; open: boolean; matches: number; ongoing: number}> = {}) => ({
+    team1Id: 1,
+    team2Id: 2,
+    open: true,
+    matches: 0,
+    ongoing: 0,
+    ...o,
+  });
+  // a table nobody has touched: out, open, nothing played
+  assert.equal(tableWasPlayed(t()), false);
+  // closed: played, or closed by Nedolazak, Preskočen or the clock — all of them count
+  assert.equal(tableWasPlayed(t({open: false})), true);
+  // a game is running at it
+  assert.equal(tableWasPlayed(t({ongoing: 1})), true);
+  // a match was played and the table is still open for the second: the wins can be 0 (a match an admin finished
+  // without a winner), so the match itself is what counts, not the score
+  assert.equal(tableWasPlayed(t({matches: 1})), true);
+  // the bye's table is nobody's play, however it looks
+  assert.equal(tableWasPlayed(t({team1Id: BYE_TEAM_ID, open: false, matches: 2})), false);
+  assert.equal(tableWasPlayed(t({team2Id: BYE_TEAM_ID, open: false, matches: 2})), false);
+});
+
+test("Obriši kolo: any Kolo in any state goes, the tournament is one shorter, and made Kolos after it go with it", () => {
   const kolo = (number: number, published: boolean, played: boolean, done: boolean) => ({number, published, played, done});
-  assert.equal(lastKoloRemoval(1, []), null);
-  // before the start: one Kolo less
-  assert.deepEqual(lastKoloRemoval(3, []), {number: 3, step: "waiting", ends: false});
-  // Kolo 2 being played, Kolo 3 to come
-  assert.deepEqual(lastKoloRemoval(3, [kolo(1, true, true, true), kolo(2, true, true, false)]), {number: 3, step: "waiting", ends: false});
-  // the last Kolo is a draft, or out but not started: it goes with its tables and the tournament is over
-  assert.deepEqual(lastKoloRemoval(2, [kolo(1, true, true, true), kolo(2, false, false, false)]), {number: 2, step: "draft", ends: true});
-  assert.deepEqual(lastKoloRemoval(2, [kolo(1, true, true, true), kolo(2, true, false, false)]), {number: 2, step: "out", ends: true});
-  // someone plays at it, or it is played: it goes with its results
-  const live = lastKoloRemoval(2, [kolo(1, true, true, true), kolo(2, true, true, false)]);
-  assert.deepEqual(live, {number: 2, step: "live", ends: true});
-  assert.equal(removesResults(live!), true);
-  assert.deepEqual(lastKoloRemoval(2, [kolo(1, true, true, true), kolo(2, true, true, true)]), {number: 2, step: "played", ends: true});
-  assert.equal(removesResults(lastKoloRemoval(3, [])!), false);
+  const played1 = kolo(1, true, true, true);
+  const live1 = kolo(1, true, true, false);
+
+  // a tournament of one Kolo keeps it, and a number outside the plan is nothing to delete
+  assert.equal(koloRemovalOf(1, 1, []), null);
+  assert.equal(koloRemovalOf(1, 1, [live1]), null);
+  assert.equal(koloRemovalOf(3, 4, []), null);
+  assert.equal(koloRemovalOf(3, 0, []), null);
+
+  // --- nothing made: deleting any of them only shortens the plan ------------------------------------------------
+  assert.deepEqual(koloRemovalOf(4, 2, []), {number: 2, step: "waiting", alsoGo: [], rounds: 3, ends: false, resultsGo: false});
+  assert.deepEqual(koloRemovalOf(4, 1, []), {number: 1, step: "waiting", alsoGo: [], rounds: 3, ends: false, resultsGo: false});
+  // the last one of the plan, with everything before it played: what stays is all played, so the tournament is over
+  assert.deepEqual(koloRemovalOf(2, 2, [played1]), {number: 2, step: "waiting", alsoGo: [], rounds: 1, ends: true, resultsGo: false});
+  // the same Kolo while Kolos are still to come after it: not the end
+  assert.deepEqual(koloRemovalOf(3, 2, [played1]), {number: 2, step: "waiting", alsoGo: [], rounds: 2, ends: false, resultsGo: false});
+
+  // --- a made Kolo: its tables go, and so do those of every made Kolo after it -----------------------------------
+  const draft = koloRemovalOf(2, 2, [played1, kolo(2, false, false, false)])!;
+  assert.deepEqual(draft, {number: 2, step: "draft", alsoGo: [], rounds: 1, ends: true, resultsGo: false});
+  assert.deepEqual(koloRemovalOf(2, 2, [played1, kolo(2, true, false, false)]), {number: 2, step: "out", alsoGo: [], rounds: 1, ends: true, resultsGo: false});
+
+  // someone plays at it, or it is played: its results go too, so it is asked with a warning
+  const live = koloRemovalOf(2, 2, [played1, kolo(2, true, true, false)])!;
+  assert.deepEqual(live, {number: 2, step: "live", alsoGo: [], rounds: 1, ends: true, resultsGo: true});
+  assert.equal(removesResults(live), true);
+  assert.equal(removesResults(draft), false);
+  assert.equal(removesResults(koloRemovalOf(3, 3, [])!), false);
+
+  // Kolo 2 of four, with Kolos 3 and 4 made from its results: all three go, and the plan is left with three Kolos
+  const middle = koloRemovalOf(4, 2, [played1, kolo(2, true, true, true), kolo(3, true, true, true), kolo(4, false, false, false)])!;
+  assert.deepEqual(middle, {number: 2, step: "played", alsoGo: [3, 4], rounds: 3, ends: false, resultsGo: true});
+  assert.equal(removesResults(middle), true);
+  // only a draft follows it: nothing played goes, so no warning about results — but the draft still goes
+  const withDraft = koloRemovalOf(3, 2, [played1, kolo(2, true, false, false), kolo(3, false, false, false)])!;
+  assert.deepEqual(withDraft, {number: 2, step: "out", alsoGo: [3], rounds: 2, ends: false, resultsGo: false});
+  assert.equal(removesResults(withDraft), false);
+
+  // --- Kolo 1 goes too, whatever state it is in (your screenshot: Kolo 1 Uživo, Kola 2-5 Čeka) -------------------
+  const first = koloRemovalOf(5, 1, [live1])!;
+  assert.deepEqual(first, {number: 1, step: "live", alsoGo: [], rounds: 4, ends: false, resultsGo: true});
+  assert.equal(removesResults(first), true);
+  // a played Kolo 1 with two more played after it: all three go and the plan has four Kolos left, none played
+  const restart = koloRemovalOf(5, 1, [played1, kolo(2, true, true, true), kolo(3, true, true, true)])!;
+  assert.deepEqual(restart, {number: 1, step: "played", alsoGo: [2, 3], rounds: 4, ends: false, resultsGo: true});
+
+  // --- the warning sign: anything but a Kolo nobody has made yet -------------------------------------------------
+  assert.equal(koloRemovalWarns(koloRemovalOf(4, 2, [])!), false);
+  assert.equal(koloRemovalWarns(draft), true);
+  assert.equal(koloRemovalWarns(first), true);
+  // a waiting Kolo that still drags a made one along is a warning too
+  assert.equal(koloRemovalWarns({number: 2, step: "waiting", alsoGo: [3], rounds: 3, ends: false, resultsGo: false}), true);
 });
 
 test("a whole tournament: 23 teams over 9 Kolos, nobody meets twice and no team has two byes", () => {
@@ -384,4 +451,63 @@ test("joining ends once the last Kolo is made, a draft of it too", async () => {
   assert.equal(lastKoloMade([kolo(1, true), kolo(2, true)], 3), false);
   assert.equal(lastKoloMade([kolo(1, true), kolo(2, true), kolo(3, false)], 3), true);
   assert.equal(lastKoloMade([kolo(1, true), kolo(2, true), kolo(3, true)], 3), true);
+});
+
+test("Otvorene prijave: a closed tournament takes teams until it starts, an open one until its last Kolo is made", () => {
+  const open = (over: Partial<Parameters<typeof signUpsOpenNow>[0]> = {}) =>
+    signUpsOpenNow({phase: "active", registrationsOpen: true, openSignups: true, lastKoloMade: false, ...over});
+
+  // before the start both kinds take teams, as they always did
+  assert.equal(open({phase: "upcoming", openSignups: false}), true);
+  assert.equal(open({phase: "upcoming", openSignups: true}), true);
+
+  // a closed tournament takes nobody once it is being played
+  assert.equal(open({openSignups: false}), false);
+  // an open one does, right up to the moment its last Kolo is made (a draft counts)
+  assert.equal(open(), true);
+  assert.equal(open({lastKoloMade: true}), false);
+
+  // the admin's own Prijave switch wins over everything
+  assert.equal(open({registrationsOpen: false}), false);
+  assert.equal(open({phase: "upcoming", registrationsOpen: false}), false);
+
+  // a tournament that is over or cancelled takes nobody, open or not
+  for (const phase of ["finished", "cancelled"] as const) {
+    assert.equal(open({phase}), false, phase);
+    assert.equal(open({phase, openSignups: false}), false, phase);
+  }
+});
+
+test("the tournament form's switch reaches the server: open_signups survives the request's validation", () => {
+  const body = {
+    name: "Kafić", date: "2026-12-01", gathering_time: null, start_time: null,
+    location_name: null, location_address: null, location_url: null,
+    rounds: 3, matches_per_round: 2, declarations: true, max_teams: null, entry_fee: 0,
+    rules_url: null, prizes: [], game_minutes: 35, auto_publish: false, organizer_phone: "0931234567",
+  };
+  // the field would be dropped without a line in the schema, and the tournament would quietly stay closed
+  assert.equal(TournamentRequestValidation.parse({...body, open_signups: true}).open_signups, true);
+  assert.equal(TournamentRequestValidation.parse({...body, open_signups: false}).open_signups, false);
+  // left out: a tournament is closed, as every tournament made before this was
+  assert.equal(TournamentRequestValidation.parse(body).open_signups, false);
+});
+
+test("Otvorene prijave: who counts as present, and what switching the setting off does", () => {
+  // a team that comes in once the day's switch has run is here: that starts at the start time, not at Kolo 1
+  assert.equal(joinsAsPresent({openSignups: true, dayClosed: true}), true);
+  // before the start it signs up like anyone: it still has to press Tu smo
+  assert.equal(joinsAsPresent({openSignups: true, dayClosed: false}), false);
+  // a tournament without Otvorene prijave keeps the old flow in both cases
+  assert.equal(joinsAsPresent({openSignups: false, dayClosed: true}), false);
+  assert.equal(joinsAsPresent({openSignups: false, dayClosed: false}), false);
+
+  // switching the setting off while it is played closes the sign-ups: the database refuses a started tournament
+  // that keeps them open (Tournament_started_check), so the save would be a 500 without this
+  assert.equal(signUpsCloseWithSwitch({started: true, registrationsOpen: true, openSignupsAfter: false}), true);
+  // nothing to close
+  assert.equal(signUpsCloseWithSwitch({started: true, registrationsOpen: false, openSignupsAfter: false}), false);
+  // it stays open: that is the whole point of the setting
+  assert.equal(signUpsCloseWithSwitch({started: true, registrationsOpen: true, openSignupsAfter: true}), false);
+  // before the start the sign-ups are the admin's own business, whatever the setting says
+  assert.equal(signUpsCloseWithSwitch({started: false, registrationsOpen: true, openSignupsAfter: false}), false);
 });

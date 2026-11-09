@@ -57,6 +57,7 @@ import GroupRoundedIcon from "@mui/icons-material/GroupRounded";
 import InfoRoundedIcon from "@mui/icons-material/InfoRounded";
 import {Box} from "@mui/material";
 import {useParams, useSearchParams} from "next/navigation";
+import {UnlockBox} from "@/app/_ui/admin/UnlockTable";
 import React, {useCallback, useEffect, useRef, useState} from "react";
 
 const THRESHOLD = 1001;
@@ -301,7 +302,8 @@ function MatchPhone({
     return (
       <Screen>
         <BoardTop pad={pad} onBack={() => router.replace(base, "back")} />
-        <EmptyState>Ovaj meč još ne može početi.</EmptyState>
+        <EmptyState>{pad.lock ? "Za ovim stolom nema odigranih igara." : "Ovaj meč još ne može početi."}</EmptyState>
+        <UnlockBox pad={pad} onDone={reload} />
       </Screen>
     );
   }
@@ -463,6 +465,9 @@ function MatchPhone({
             {pad.done ? "Runda je završena. Izmjene mijenjaju rezultat i poredak." : `Meč ${number} je završen. Izmjene mijenjaju rezultat i poredak.`}
           </Box>
         )}
+        {/* a locked table of a tournament: why, and Otključaj partiju (DECISIONS #89); a table that isn't locked has
+            none of this, whichever match is open */}
+        {viewDone && <UnlockBox pad={pad} onDone={reload} />}
       </Box>
       <HandList rows={match.hands.map((h) => ({id: h.id, left: h.total1, right: h.total2}))} onOpen={openSheet} sx={{mt: "14px"}} />
       {!viewDone && (

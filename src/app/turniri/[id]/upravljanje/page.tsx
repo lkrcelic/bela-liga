@@ -1,6 +1,6 @@
 "use client";
 
-import useAdminPhone from "@/app/_hooks/useAdminPhone";
+import useManagePhone from "@/app/_hooks/useManagePhone";
 import useIsDesktop from "@/app/_hooks/useIsDesktop";
 import {DesktopOnlyNote} from "@/app/_ui/sp";
 import ManageTournamentDesktop from "@/app/_ui/tournaments/admin/ManageTournamentDesktop";
@@ -12,7 +12,7 @@ export default function ManageTournamentPage() {
   const params = useParams<{id: string}>();
   const id = Number(params.id);
   const isDesktop = useIsDesktop();
-  const adminPhone = useAdminPhone();
+  const adminPhone = useManagePhone("tournament.manage.own");
   if (isDesktop) return <ManageTournamentDesktop id={id} />;
   return adminPhone ? <ManageTournamentPhone id={id} /> : <DesktopOnlyNote />;
 }

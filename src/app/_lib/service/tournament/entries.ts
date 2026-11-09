@@ -10,6 +10,9 @@ import {teamNameTaken} from "@/app/_lib/service/team/update";
 import {TEAM_NAME_TAKEN} from "@/app/_interfaces/team";
 import {CandidateTeam, RegistrationRequest} from "@/app/_interfaces/tournament";
 import {playersInOtherEntries, signUpStatus} from "@/app/_lib/tournamentEntries";
+import {joinsAsPresent} from "@/app/_lib/tournaments";
+import {hasRoom} from "@/app/_lib/tournamentDay";
+import {dayClosed, dayEntries, LAST_KOLO_MADE, lastKoloIsMade} from "./day";
 import {BYE_TEAM_ID} from "@/app/_lib/bye";
 import {banDay} from "@/app/_lib/bans";
 import {activeBans, banReason} from "@/app/_lib/service/bans/bans";
@@ -33,6 +36,28 @@ async function lockOpenTournament(tx: Tx, tournamentId: number) {
   if (t.cancelled_at) throw new InvalidResultError("Turnir je otkazan.");
   if (t.started_at) throw new InvalidResultError(TOURNAMENT_STARTED);
   return t;
+}
+
+/**
+ * The same, but a tournament with **Otvorene prijave** also takes teams while it is being played (DECISIONS #88),
+ * right up to the moment its last Kolo is made — after that there is no next Kolo to come into, the same rule that
+ * stops Tu smo · Želimo uskočiti.
+ *
+ * `during` says the day's switch has already run on a tournament with Otvorene prijave, so the team that comes in
+ * counts as present: it is marked arrived and plays from the next Kolo, or waits (confirmed) when the tournament is
+ * full. That starts at the start time, not at Kolo 1 — between the two, a team that signs up is just as much here.
+ * A tournament without Otvorene prijave is untouched by all of this.
+ */
+async function lockTournamentForEntry(tx: Tx, tournamentId: number): Promise<{t: Awaited<ReturnType<typeof lockOpenTournament>>; during: boolean}> {
+  await lockTournament(tx, tournamentId);
+  const t = await tx.tournament.findUnique({where: {tournament_id: tournamentId}});
+  if (!t) throw new NotFoundError(TOURNAMENT_NOT_FOUND);
+  if (t.cancelled_at) throw new InvalidResultError("Turnir je otkazan.");
+  if (t.started_at) {
+    if (!t.open_signups) throw new InvalidResultError(TOURNAMENT_STARTED);
+    if (await lastKoloIsMade(tx, t)) throw new InvalidResultError(LAST_KOLO_MADE);
+  }
+  return {t, during: joinsAsPresent({openSignups: t.open_signups, dayClosed: dayClosed(t)})};
 }
 
 // A team's players with an account (deleted ones are left out)
@@ -65,7 +90,17 @@ async function assertCanEnter(tx: Tx, tournamentId: number, team: Awaited<Return
   }
 }
 
-async function enter(tx: Tx, tournamentId: number, teamId: number, maxTeams: number | null, by: number | null) {
+async function enter(tx: Tx, tournamentId: number, teamId: number, maxTeams: number | null, by: number | null, during = false, byAdmin = false) {
+  if (during) {
+    // the tournament is running: whoever signs up now is here (so, arrived), and plays from the next Kolo while
+    // there is room — else they wait, confirmed, and come in as soon as a place opens (fillPlaces)
+    const entries = await dayEntries(tx, tournamentId);
+    const status = hasRoom(entries, maxTeams) ? "REGISTERED" : "WAITING";
+    await tx.tournamentTeam.create({
+      data: {tournament_id: tournamentId, team_id: teamId, status, registered_by: by, active: true, arrived_at: new Date(), arrived_by: byAdmin ? null : by, arrived_by_admin: byAdmin},
+    });
+    return status;
+  }
   const registered = await tx.tournamentTeam.count({where: {tournament_id: tournamentId, status: "REGISTERED"}});
   const status = signUpStatus(registered, maxTeams);
   await tx.tournamentTeam.create({data: {tournament_id: tournamentId, team_id: teamId, status, registered_by: by}});
@@ -82,7 +117,7 @@ export async function signUp(tournamentId: number, viewer: Viewer, request: Regi
   }
   try {
     return await prisma.$transaction(async (tx) => {
-      const t = await lockOpenTournament(tx, tournamentId);
+      const {t, during} = await lockTournamentForEntry(tx, tournamentId);
       if (!t.registrations_open) throw new InvalidResultError(SIGN_UPS_CLOSED);
       // a banned player signs up no team and makes no new one
       const mine = (await activeBans({playerIds: [viewer.id]}, tx)).players.get(viewer.id);
@@ -103,7 +138,7 @@ export async function signUp(tournamentId: number, viewer: Viewer, request: Regi
       const team = await rosterOf(tx, teamId);
       if (!team.players.some((p) => p.id === viewer.id)) throw new InvalidResultError("Možeš prijaviti samo ekipu u kojoj igraš.");
       await assertCanEnter(tx, tournamentId, team, viewer.id);
-      const status = await enter(tx, tournamentId, teamId, t.max_teams, viewer.id);
+      const status = await enter(tx, tournamentId, teamId, t.max_teams, viewer.id, during);
       return {teamId, status};
     }, {timeout: 20_000});
   } catch (error) {
@@ -142,9 +177,9 @@ export async function signOff(tournamentId: number, teamId: number, viewer: View
 // The admin's Dodaj ekipu: in while there is room, else on the waiting list
 export async function adminAddTeam(tournamentId: number, teamId: number): Promise<"REGISTERED" | "WAITING"> {
   return prisma.$transaction(async (tx) => {
-    const t = await lockOpenTournament(tx, tournamentId);
+    const {t, during} = await lockTournamentForEntry(tx, tournamentId);
     await assertCanEnter(tx, tournamentId, await rosterOf(tx, teamId));
-    return enter(tx, tournamentId, teamId, t.max_teams, null);
+    return enter(tx, tournamentId, teamId, t.max_teams, null, during, true);
   }, {timeout: 20_000});
 }
 
@@ -160,11 +195,18 @@ export async function admitTeam(tournamentId: number, teamId: number): Promise<v
   });
 }
 
-// Prijave otvorene / zatvorene. Opening them again drops a Kolo 1 draft: it is made once the teams are final.
+// Prijave otvorene / zatvorene. Before the start, opening them again drops a Kolo 1 draft: it is made once the teams
+// are final. On a tournament with Otvorene prijave the switch works while it is played too, and then changes nothing
+// but the switch — the Kolos already made stay as they are.
 export async function setRegistrationsOpen(tournamentId: number, open: boolean): Promise<void> {
   await prisma.$transaction(async (tx) => {
-    await lockOpenTournament(tx, tournamentId);
-    if (open) await dropDrafts(tx, tournamentId);
+    await lockTournament(tx, tournamentId);
+    const t = await tx.tournament.findUnique({where: {tournament_id: tournamentId}});
+    if (!t) throw new NotFoundError(TOURNAMENT_NOT_FOUND);
+    if (t.cancelled_at) throw new InvalidResultError("Turnir je otkazan.");
+    // a started tournament may keep its sign-ups open only with Otvorene prijave (Tournament_started_check)
+    if (t.started_at && !t.open_signups) throw new InvalidResultError(TOURNAMENT_STARTED);
+    if (open && !t.started_at) await dropDrafts(tx, tournamentId);
     await tx.tournament.update({where: {tournament_id: tournamentId}, data: {registrations_open: open}});
   });
 }

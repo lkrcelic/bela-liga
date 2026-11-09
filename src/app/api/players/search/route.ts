@@ -6,8 +6,8 @@ import {searchTeammates} from "@/app/_lib/service/players/search";
 
 export const dynamic = "force-dynamic";
 
-// A teammate for a new team (a tournament's Nova ekipa): players with an account by first and last name only, as
-// Rejting's search (usernames are private), without the player searching
+// A teammate for a new team (a tournament's Nova ekipa): players with an account by name or username, as Rejting's
+// search (both are public, #88), without the player searching
 export async function GET(request: NextRequest) {
   const auth = await requireUser(request);
   if (auth.response) return auth.response;

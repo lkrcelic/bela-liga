@@ -1,8 +1,8 @@
 "use client";
 
 import {ScrollMemory, useScrollMemory} from "@/app/_hooks/useBackRestore";
-import useAdminPhone from "@/app/_hooks/useAdminPhone";
-import useIsAdmin from "@/app/_hooks/useIsAdmin";
+import useManagePhone from "@/app/_hooks/useManagePhone";
+import useCan from "@/app/_hooks/useCan";
 import useElementHeight from "@/app/_hooks/useElementHeight";
 import useIsDesktop from "@/app/_hooks/useIsDesktop";
 import useLeagueTeams from "@/app/_hooks/useLeagueTeams";
@@ -67,9 +67,9 @@ export default function DailyStandings() {
   const router = useTransitionRouter();
   const searchParams = useSearchParams();
   const isDesktop = useIsDesktop();
-  const isAdmin = useIsAdmin();
+  const isAdmin = useCan("league.manage");
   // the admin's phone (admin-mobile 18–22): Back, Osvježi, editing the round's tables, and the tables open
-  const adminPhone = useAdminPhone();
+  const adminPhone = useManagePhone("league.manage");
   const leagues = useLeagues(leagueId);
   const {teams} = useMyTeams();
   const myTeamNames = useMemo(() => teams.map((t) => t.team_name), [teams]);

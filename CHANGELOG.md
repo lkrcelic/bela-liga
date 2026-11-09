@@ -2,7 +2,110 @@
 
 What the commits changed for the people using the app, newest first. The reasons and details are in DECISIONS.md.
 
+## 09.11.2026 · Broj iz oglasa vide samo prijavljeni igrači
+
+Not deployed yet (DECISIONS #90).
+
+### Players
+- **Broj telefona iz Burze više nije javan.** Oglasi se i dalje vide bez prijave (i dalje se mogu dijeliti), ali na oglasu bez prijave stoji „Broj vide igrači s računom.“ i dugme **Prijavi se da vidiš broj**, koje nakon prijave vrati na taj isti oglas. Prijavljeni igrači vide broj, Nazovi i WhatsApp kao i dosad, a svoj oglas i dalje vidiš cijeli.
+- Razlog: broj si dao da te nađe suigrač, a ne da ga s interneta pokupi bot (spam, WhatsApp prijevare).
+
+## 08.11.2026 · Poziv za instalaciju ne vraća se svaki put
+
+Not deployed yet.
+
+### Players
+- **„Nastavi u pregledniku“ se pamti.** Poziv „Belatronika radi bolje kao aplikacija“ više ne skače preko Početne na svakom povratku — kad ga odbiješ (ili ga odmakneš), miran je **tjedan dana** na tom telefonu. Na večeri lige se nakon svakog kola vraćaš na Početnu i dosad ti je svaki put prekrio **Započni igru**.
+- Poziv i dalje stoji na **Prijavi**, pa ga možeš otvoriti kad poželiš instalirati aplikaciju.
+
+## 08.11.2026 · Polja na telefonu više ne zumiraju stranicu
+
+Not deployed yet.
+
+### Admin
+- **iPhone više ne zumira stranicu** kad staneš u polje: "Traži ekipu" (Novo kolo · Promijeni, Skica kola), "Dodaj ekipu · ime ekipe", "Dodaj igrača", "Dodaj u ligu", "Dodaj u ekipu", "Traži ekipu ili igrača" u Upravljanju turnirom i **Bilješke lige** sad su 16 px umjesto 15, pa se više ne moraš odzumirati usred večeri lige. Na računalu su polja ista kao prije.
+
+## 07.11.2026 · Brži upit za nedolazak i Otključaj partiju
+
+Not deployed yet (DECISIONS #89). Needs a migration on the database.
+
+### Players
+- **Upit "Jesu li … za stolom?" dolazi brže**: pojavi se **3 minute** nakon što kolo izađe (prije 5), odgovor radi **od 5. minute** (prije od 8.), a stol se preskače u **8. minuti** (prije u 10.). Ukupno čekanje je kraće za dvije minute, a pitanje stigne dok je mobitel još u ruci.
+
+### Admin
+- **Otključaj partiju** na svakom zaključanom stolu turnira, u semaforu stola. Iznad dugmeta piše zašto je zaključan: nedolazak, preskočen meč, isteklo Vrijeme partije ili odigrana runda.
+- Kod otključavanja biraš **koliko partija traje od sada** (10–45 min ili Drugo); to vrijeme vrijedi za **taj stol**, ne dira vrijeme turnira.
+- **Nedolazak**: otključavanje briše upisanih 1001 : 700, **vraća isključenu ekipu u turnir** i **ukida automatsku zabranu prijava** iz 1. kola. Stol je ponovo nov.
+- **Preskočen meč**: obje ekipe se vraćaju u turnir, stol je nov.
+- **Vrijeme isteklo / Gotovo**: zadnja partija se **nastavlja s upisanim igrama** i novim vremenom, a njena pobjeda se skida s rezultata stola dok se partija ponovo ne završi.
+- Upozorenje u potvrdi: **kola složena s tim rezultatom ostaju kakva jesu** — ako treba, složi ih ponovo.
+- Ligaški stolovi se ne otključavaju (ispravljaju se upisom igara, kao i dosad).
+
+## 07.11.2026 · Korisničko ime vidljivo svima
+
+Not deployed yet (DECISIONS #88).
+
+### Players
+- **Korisničko ime je javno.** Na tuđem profilu u **Osobni podaci** sad piše i **Korisničko ime** (@handle), pored imena i prezimena.
+- **Početna · Liga** i **Raspored**: pod imenom svakog igrača tvoje ekipe piše njegov **@username** (na svom redu ti i dalje piše "(ti)").
+- **Moje ekipe** i **Ekipe** na profilu igrača: igrači su sad označeni svojim **@username** (puno ime se vidi na hover).
+- **Stranica ekipe**: pod imenom svakog igrača piše @username, ne više ime ekipe.
+- **Rejting**: detalj igrača otvara se s "@username · ekipa · N rundi", a **pretraga nalazi igrača i po korisničkom imenu**.
+- **Prijava ekipe na turnir**: suigrača sad tražiš po **imenu ili korisničkom imenu**, a svaki rezultat pokazuje @username.
+- Stranice koje se gledaju bez prijave (turniri, poredak) također pokazuju korisnička imena.
+
+### Changed
+- Napomena pod osobnim podacima sad točno kaže što ostaje privatno: **"Email, mobitel, datum rođenja i Pušač vidljivi su samo igraču i administratorima."** Mobitel uz to vidi i organizator.
+- Burza ostaje kakva je (oglas nosi ime autora, bez korisničkog imena), a **Tko igra ovu rundu?** za završenu rundu ostaje adminu — jer se tamo potvrđuje ko je igrao.
+
+## 07.11.2026 · Otvoreni turnir: prijave cijelo vrijeme
+
+Not deployed yet (DECISIONS #88). Needs a migration on the database.
+
+### Admin
+- U **Podacima** turnira je novi izbor **Prijave · Do početka / Cijeli turnir**, pored **Iduća kola**. Svi postojeći turniri su **Do početka**, dakle rade kao i dosad.
+- **Cijeli turnir**: ekipe se mogu prijaviti i dok turnir traje, sve dok se ne složi zadnje kolo. U vrijeme početka i dalje se odlučuje tko je tu (tko nije stisnuo Tu smo postaje neaktivan), samo se prijave ne zatvaraju.
+- **Dodaj ekipu** radi i usred takvog turnira, na telefonu i na računalu: ekipa je odmah u turniru ili na listi čekanja i igra od idućeg kola.
+- Kod otvorenog turnira **Kolo 1 se slaže bez zatvaranja prijava** — složi se s onima koji su tu, a prijave idu dalje.
+- Prekidač **Prijave otvorene/zatvorene** sad radi i dok turnir traje, pa ih možeš zatvoriti ručno kad god.
+
+### Players
+- Na turniru s otvorenim prijavama **Prijavi se** stoji i dok se igra. Tko se prijavi usred turnira broji se kao prisutan i igra od idućeg kola — ne mora stiskati Tu smo.
+- Ako je turnir pun, prijava ide na listu čekanja i ulazi sama čim se mjesto oslobodi.
+- Kad se složi zadnje kolo, prijave se zatvaraju.
+
+## 07.11.2026 · Brisanje bilo kojeg kola turnira
+
+Not deployed yet (DECISIONS #87).
+
+### Admin
+- **Kola** na turniru: kanta je sad pored **svakog** kola, u bilo kojem statusu — Čeka, Skica, Objavljeno, Uživo ili Odigrano.
+- Turnir uvijek ima jedno kolo manje nakon brisanja, a kola iza obrisanog pomiču se za jedan broj.
+- Briše se ono što je složeno: stolovi tog kola i **svih složenih kola iza njega**, jer su ona složena po njegovim rezultatima. Kolo koje još nije složeno zato ne briše ništa — samo skrati plan. A brisanje Kola 1 usred turnira očisti odigrano i ostavi plan spreman da se složi ponovo.
+- Svako brisanje pita prije. Kolo koje nije u statusu **Čeka** nosi **upozorenje** i rečenicu po posljedici ("Brišu se i kola 3, 4, jer su složena po rezultatima ovog."). Ako se za nekim od tih stolova stvarno igralo, gumb piše **Obriši s rezultatima** i rejting se računa ponovo.
+- Turnir uvijek ostaje s barem jednim kolom.
+- Brisanje kola može admin na svim turnirima, a organizator samo na svojima.
+- Gumb **Obriši s rezultatima** se pojavi i kad je za stolom odigran meč **bez pobjednika** — prije je potvrda nudila samo **Obriši kolo**, a brisanje bi zatim bilo odbijeno s "Potvrdi brisanje s rezultatima", pa se iz tog dijaloga nije moglo dalje.
+
+## 07.11.2026 · Organizator: nova rola
+
+Not deployed yet (DECISIONS #86). Needs a migration on the database.
+
+### Players
+- Beside your name on **Moj profil** there is now a label saying what you are: **Admin** or **Organizator**. A player has none. The same label is on a player's page, on the phone and on the computer, so everyone sees who runs the league and who runs tournaments.
+
+### Admin
+- **Rola** replaces the **Admin** switch in "Uredi osobne podatke" and on a player's phone page: **Igrač**, **Organizator** or **Administrator**, with a line under it saying what each one does. The old rules hold — you can't take your own administrator role, and the last administrator stays one.
+- An **Organizator** can: make a tournament, and edit, run and cancel **the ones they made** (kola, Skica, Objavi, stolovi, rezultati, prijave, dolasci, Isključi ekipu); make a team and edit any team; open the **Igrači** list with names, teams and phone numbers.
+- An **Organizator** cannot: delete a tournament (only **Otkaži**), open or change anyone else's tournament, touch the league (Novo kolo, Upravljanje ligom, večeri, Datumi), delete a team, block a photo, see usernames, emails or birth dates, edit or delete a player, give a role, or open Sponzori, Burza moderation and Rejting.
+- The menu now shows each entry to whoever may use it, so an organizer's menu holds **Turniri**, **Ekipe**, **Igrači** and nothing of the league's.
+- On the phone the bottom bar shows only the tabs you may use, so an organizer's bar is **Turniri · Ekipe · Igrači**, and their Početna opens on their Turniri (Večer lige is the league's).
+- The tournaments made before this have no owner, so they stay the admin's.
+- **Zabrana prijava** stays the admin's for now: a ban is league wide and can't yet be tied to one tournament.
+
 ## 07.11.2026 · Raspored duge lige se skrola i na Androidu
+
+Live since 07.11. (f1524b2; the deploy 6480d45 carries this entry).
 
 ### Players
 - **Raspored** on the phone: a league with many nights (the test league has 480) can be scrolled again on Android. The list of nights was a box that could scroll by a fraction of a pixel of its own, and on Android the finger stayed in it, so the page under it didn't move; now the whole page scrolls, as it already did on the iPhone. On the computer the list still scrolls inside its card.

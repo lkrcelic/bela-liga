@@ -1,6 +1,7 @@
 "use client";
 
-import useAdminPhone from "@/app/_hooks/useAdminPhone";
+import useManagePhone from "@/app/_hooks/useManagePhone";
+import useCan from "@/app/_hooks/useCan";
 import useAdminPlayers from "@/app/_hooks/useAdminPlayers";
 import {reloadLeagues, useLeagueList} from "@/app/_hooks/useLeagues";
 import useNavStack from "@/app/_hooks/useNavStack";
@@ -184,9 +185,15 @@ export function TeamPagePhone({teamId}: {teamId: number}) {
   const overview = useTeamOverview(teamId);
   const team = overview.data;
   const nav = useNavStack(team?.team.name ?? null);
-  const adminPhone = useAdminPhone();
+  // the name and the players are team editing (admin or organizer); Zabrani sliku, the leagues, the ban and Obriši
+  // ekipu are the admin's, each behind its own capability (DECISIONS #86)
+  const editPhone = useManagePhone("team.edit");
+  const canModerate = useCan("team.moderate");
+  const canLeagues = useCan("league.manage");
+  const canBan = useCan("ban.manage.all");
+  const canDelete = useCan("team.delete");
   const actions = useTeamAdmin(overview);
-  const admin = adminPhone && team?.viewer.admin ? actions : null;
+  const admin = editPhone && team ? actions : null;
   const photo = useTeamPhoto(overview);
   const [photoOpen, setPhotoOpen] = useState(false);
   const settings = photoSettings(team);
@@ -195,7 +202,7 @@ export function TeamPagePhone({teamId}: {teamId: number}) {
       {team ? (
         <>
           <Hero team={team} desktop={false} rename={admin?.rename} photo={photo} onPhoto={() => setPhotoOpen(true)} />
-          {admin && (
+          {admin && canModerate && (
             <PhotoAdminCard
               target={{kind: "team", id: team.team.id}}
               name={team.team.name}
@@ -208,10 +215,12 @@ export function TeamPagePhone({teamId}: {teamId: number}) {
             <PhotoSheet kind="team" photo={photo} name={team.team.name} letters={teamInitial(team.team.name)} open={photoOpen} onClose={() => setPhotoOpen(false)} />
           )}
           <PhonePlayers team={team} admin={admin} />
-          <PhoneLeagues team={team} admin={admin} />
+          <PhoneLeagues team={team} admin={canLeagues ? admin : null} />
           <PhoneNights nights={team.nights} teamId={team.team.id} />
-          {admin && <BanSection target={{kind: "team", id: team.team.id, name: team.team.name, players: team.players.map((p) => ({id: p.id, name: p.name, username: p.username}))}} />}
-          {admin && <DeleteTeam team={team} phone />}
+          {admin && canBan && (
+            <BanSection target={{kind: "team", id: team.team.id, name: team.team.name, players: team.players.map((p) => ({id: p.id, name: p.name, username: p.username}))}} />
+          )}
+          {admin && canDelete && <DeleteTeam team={team} phone />}
         </>
       ) : (
         <PageStatus kind="team" overview={overview} nav={nav} />

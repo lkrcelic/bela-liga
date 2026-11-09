@@ -1,6 +1,6 @@
 "use client";
 
-import useAdminPhone from "@/app/_hooks/useAdminPhone";
+import useManagePhone from "@/app/_hooks/useManagePhone";
 import {AdminTabBar} from "@/app/_ui/admin/AdminTabBar";
 import {getPlayerRatingAPI} from "@/app/_fetchers/ratings";
 import {type ScrollMemory, useRestoredState, useScrollMemory} from "@/app/_hooks/useBackRestore";
@@ -157,7 +157,7 @@ function useSearch(setQuery: (q: string) => void, scroller: ScrollMemory) {
 
 function PhoneList({all, visible, me, error, reload, query, setQuery, onMore}: ListProps) {
   const router = useTransitionRouter();
-  const adminPhone = useAdminPhone();
+  const adminPhone = useManagePhone("rating.manage");
   const [info, setInfo] = useState<InfoView | null>(null);
   // Back from a player's detail finds the list where it was left
   const scroller = useScrollMemory("ratings");

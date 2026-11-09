@@ -43,27 +43,103 @@ export function lastKoloMade(kolos: KoloSummary[], rounds: number): boolean {
   return kolos.some((k) => k.number >= rounds);
 }
 
+/**
+ * Whether a team can sign up at this very moment (Otvorene prijave, DECISIONS #88).
+ *
+ * A closed tournament takes teams only before it starts — the start time shuts the sign-ups for good. An open one
+ * takes them all through the tournament, until its last Kolo is made (a draft counts): after that there is no next
+ * Kolo to come into, the same line the Tu smo · Želimo uskočiti button stops at. The admin's own Prijave switch wins
+ * over both, and a cancelled or finished tournament takes nobody.
+ */
+export function signUpsOpenNow(t: {phase: TournamentPhase; registrationsOpen: boolean; openSignups: boolean; lastKoloMade: boolean}): boolean {
+  if (!t.registrationsOpen) return false;
+  if (t.phase === "upcoming") return true;
+  return t.phase === "active" && t.openSignups && !t.lastKoloMade;
+}
+
+/**
+ * Whether a team coming in now counts as present, so its entry is written with Tu smo and active and the next Kolo's
+ * draft pairs it (DECISIONS #88, your words: "ako su se prijavili podrazumijeva se da su tamo").
+ *
+ * That starts at the **start time**, not at Kolo 1: between the two the day's switch has already decided who is here,
+ * so a team that signs up then is just as much here as one that signs up while a Kolo is played. Only a tournament
+ * with Otvorene prijave does this — a closed one keeps the old flow, where a team added late is marked by the admin.
+ */
+export function joinsAsPresent(t: {openSignups: boolean; dayClosed: boolean}): boolean {
+  return t.openSignups && t.dayClosed;
+}
+
+/**
+ * Switching Otvorene prijave off while the tournament is played closes the sign-ups with it. The database refuses a
+ * started tournament that keeps them open (Tournament_started_check), so without this the save would be a 500.
+ */
+export function signUpsCloseWithSwitch(t: {started: boolean; registrationsOpen: boolean; openSignupsAfter: boolean}): boolean {
+  return t.started && t.registrationsOpen && !t.openSignupsAfter;
+}
+
 // The most Kolos a tournament has (Tournament_rounds_check)
 export const KOLO_MAX = 20;
 
-// Obriši kolo on the admin's Kola: the last Kolo can go, as long as one Kolo stays (the Kolos after one were paired by
-// its results, so they go from the end). Its step: still to come, a draft, out with nobody playing yet, or with
-// results (being played or played: they go too, after a warning). played: someone sat down at one of its tables (the
-// bye's aside); done: every table of it is over. ends: every Kolo before it is played to the end, so deleting it ends
-// the tournament. null: the last Kolo can't go.
-export type KoloRemoval = {number: number; step: "waiting" | "draft" | "out" | "live" | "played"; ends: boolean};
+/**
+ * Obriši kolo on the admin's Kola: **any** Kolo can go, whatever its state (DECISIONS #87) — still to come, a draft,
+ * out, being played or played. The tournament always has one Kolo less afterwards, and the Kolos after the deleted
+ * one move up a number.
+ *
+ * What is actually deleted is the deleted Kolo's tables **and those of every made Kolo after it**, because those were
+ * paired by its results. So deleting a Kolo nobody has made yet deletes nothing at all: it is only a line in the plan.
+ * Deleting Kolo 1 of a tournament being played clears what was played and leaves the plan one Kolo shorter, ready to
+ * be made again.
+ *
+ * One Kolo always stays, so a tournament of one Kolo can't lose it. `step` is what this Kolo is; `alsoGo` are the made
+ * Kolos after it that go too; `rounds` is what the tournament is left with; `resultsGo` means someone has sat down at
+ * one of the tables that go, so results and ratings change; `ends` means the Kolos that stay are all played, so
+ * deleting this one ends the tournament. null: this Kolo can't go.
+ */
+export type KoloRemoval = {
+  number: number;
+  step: "waiting" | "draft" | "out" | "live" | "played";
+  alsoGo: number[];
+  rounds: number;
+  ends: boolean;
+  resultsGo: boolean;
+};
 
-export function lastKoloRemoval(rounds: number, kolos: {number: number; published: boolean; played: boolean; done: boolean}[]): KoloRemoval | null {
-  if (rounds <= 1) return null;
+export type KoloState = {number: number; published: boolean; played: boolean; done: boolean};
+
+export function koloRemovalOf(rounds: number, n: number, kolos: KoloState[]): KoloRemoval | null {
+  if (n < 1 || n > rounds) return null;
+  // a tournament has to keep a Kolo
+  const left = rounds - 1;
+  if (left < 1) return null;
   const byNumber = new Map(kolos.map((k) => [k.number, k]));
-  const last = byNumber.get(rounds);
-  const ends = Array.from({length: rounds - 1}, (_, i) => byNumber.get(i + 1)).every((k) => k != null && k.published && k.done);
-  const step = !last ? "waiting" : !last.published ? "draft" : !last.played ? "out" : last.done ? "played" : "live";
-  return {number: rounds, step, ends};
+  const mine = byNumber.get(n);
+  // this Kolo and every made Kolo after it: their tables go together
+  const made = kolos.filter((k) => k.number >= n).map((k) => k.number).sort((a, b) => a - b);
+  const step = !mine ? "waiting" : !mine.published ? "draft" : !mine.played ? "out" : mine.done ? "played" : "live";
+  // what stays is Kolo 1..n-1, so the tournament is over only when the deleted one was the last and the rest are played
+  const ends = left === n - 1 && Array.from({length: n - 1}, (_, i) => byNumber.get(i + 1)).every((k) => k != null && k.published && k.done);
+  const resultsGo = kolos.some((k) => k.number >= n && k.played);
+  return {number: n, step, alsoGo: made.filter((x) => x !== n), rounds: left, ends, resultsGo};
 }
 
-// Deleting this Kolo deletes results too (the warning)
-export const removesResults = (r: KoloRemoval) => r.step === "live" || r.step === "played";
+// Deleting this Kolo deletes results too: its own, or those of the made Kolos that go with it. The confirmation then
+// reads "Obriši s rezultatima" and the request carries ?rezultati=1.
+export const removesResults = (r: KoloRemoval) => r.resultsGo;
+
+// Anything but a Kolo nobody has made yet: the confirmation says what the deletion costs and carries the warning sign
+export const koloRemovalWarns = (r: KoloRemoval) => r.step !== "waiting" || r.alsoGo.length > 0;
+
+/**
+ * Someone has sat down at this table: it is closed, a match was played at it, or one is being played. Word for word
+ * the question the server asks before it deletes a Kolo (deleteKolo), so the confirmation and the refusal can never
+ * disagree — a table whose match an admin finished without a winner is open with no wins on it, and reading only the
+ * wins left the dialog saying plain "Obriši kolo" while the server refused and asked for the results to be confirmed,
+ * which that dialog could not then offer. The bye's table is nobody's play.
+ */
+export function tableWasPlayed(t: {team1Id: number; team2Id: number; open: boolean; matches: number; ongoing: number}): boolean {
+  if (isByeTeam(t.team1Id) || isByeTeam(t.team2Id)) return false;
+  return !t.open || t.matches > 0 || t.ongoing > 0;
+}
 
 // Each of the tournament's Kolos as the admin's list shows it (Kola): played, being played, a draft waiting to be
 // published, or still to come
@@ -102,7 +178,7 @@ export type TableResult = {
   started: boolean;
   // team1's points minus team2's, over the matches played
   diff: number;
-  // false for a skipped table (Nedolazak za stol: nobody started or answered in 10 minutes): it isn't counted
+  // false for a skipped table (Nedolazak za stol: nobody started or answered in 8 minutes): it isn't counted
   scored: boolean;
   // the matches the table plays (Partija po kolu, 2 or 1): a match to 1001 is worth a point, so a table won is worth that many
   matches: number;

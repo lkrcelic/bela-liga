@@ -1,7 +1,7 @@
 import {NextRequest, NextResponse} from "next/server";
 import {STATUS} from "@/app/_lib/statusCodes";
 import {errorResponse} from "@/app/_lib/apiErrors";
-import {requireAdmin} from "@/app/_lib/service/auth/requireUser";
+import {requireCan} from "@/app/_lib/service/auth/requireUser";
 import {TeamIdValidation} from "@/app/_interfaces/tournament";
 import {adminAddTeam} from "@/app/_lib/service/tournament/entries";
 import {getAdminTournament} from "@/app/_lib/service/tournament/tournaments";
@@ -9,7 +9,7 @@ import {refuseIfFinished, tournamentIdOf, tournamentNotFound} from "@/app/_lib/s
 
 // Dodaj ekipu (admin): in while there is room, else on the waiting list
 export async function POST(request: NextRequest, {params}: {params: {id: string}}) {
-  const auth = await requireAdmin(request);
+  const auth = await requireCan(request, "tournament.manage.own");
   if (auth.response) return auth.response;
   const id = tournamentIdOf(params.id);
   if (id == null) return tournamentNotFound();
