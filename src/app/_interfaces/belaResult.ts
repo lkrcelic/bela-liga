@@ -17,10 +17,15 @@ export const BelaResultCreateRequestValidation = z.object({
     pass: z.boolean(),
     complete_victory: z.boolean(),
     announcements: z.array(BelaPlayerAnnouncementRequestValidation).optional().nullable(),
+    // How many hands the match held when this entry was opened. Several phones follow the same match, so a hand saved
+    // on another one in the meantime means this one may be the same hand twice: the save is held back (409) and the
+    // phone asks. Left out (an admin's hand, or a re-send the player confirmed) means "save it whatever happened".
+    expected_hands: z.number().int().nonnegative().optional().nullable(),
 });
 
 export const BelaResultResponseValidation = BelaResultCreateRequestValidation.omit({
-    announcements: true
+    announcements: true,
+    expected_hands: true
 }).extend({
     trump_caller_team: TeamSideValidation.nullable(),
     result_id: z.number().int().nullable(),

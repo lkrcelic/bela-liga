@@ -214,7 +214,8 @@ export default function ScoreBoardPage() {
   };
 
   const newHand = () => {
-    startNewHand(matchId);
+    // the hands the board shows: a hand saved from another phone after this makes the server ask before saving
+    startNewHand(matchId, rows.length);
     markWizardOpened(matchId);
     router.push(`${pathname}/ongoing-result/new/trump-caller`);
   };

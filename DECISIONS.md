@@ -1859,3 +1859,29 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
       number is what a bot would harvest. Name and rating are as public as a tournament's teams, the number isn't.
     - Not done here: `GET /api/burza` still lists every open ad without pagination (the same issue's second note; a
       separate performance ticket covers the query).
+
+91. **Ista igra s dva mobitela: the save asks instead of counting it twice** (issue #57, found by the phone UX patrol:
+    two phones at one table each entered the same hand and the match held it twice, 120 : 42 becoming 240 : 84).
+    - **What changed**: the wizard remembers how many hands the board showed when it opened (`expected_hands` in the
+      create request, kept in the result store, so a reload mid-entry keeps it). `createBelaResult` counts the hands
+      inside the transaction that already locks the match row, and a count that doesn't match throws
+      `HandsChangedWarning` → 409 with code `hands_changed`, exactly like the admin's `no_winner` warning (#87). The
+      score step then asks "Je li ovo nova igra?" with what the other phone entered, in this phone's left/right order
+      (it reads the match again to name the hand): **Odustani** drops this copy and goes to the board, **Upiši i ovu**
+      sends the same hand again without `expected_hands`, which saves it.
+    - **Why a question and not a refusal**: two identical hands in a row are possible (the same caller, the same 120 :
+      42), so the app can't decide on its own. Comparing the hand's points instead of the count was the alternative;
+      reason: the count is what tells "another phone saved while you were entering", whatever the points were.
+    - **Who is not asked**: a hand with no `expected_hands` — the admin's scorepad (it has the whole table in front of
+      it and corrects hands as it likes) and the desktop entry panel (the board is next to it and refreshes on every
+      save). An edit of a saved hand goes to its own route and is untouched.
+    - **Back out of the sheet**: a sheet has a history entry of its own (`overlayHistory`), so the wizard's "three
+      entries back to the board" no longer holds while it is open; a save or a drop made from the sheet opens the board
+      by address (`router.replace`, the same fallback the wizard already uses after a reload mid-entry). Closing the
+      sheet with ✕ or the scrim counts as Odustani — the safer side, since the hand is already on the board.
+    - **Checked**: a db test (the second phone's save held back, the confirmation saving it, an up-to-date board and
+      the admin's hands never held back) and the whole thing clicked through on two phone-sized browsers against a copy
+      of the production database: phone A saves 120 : 42, phone B's identical hand is held back with the question,
+      Odustani leaves one hand on the board, a genuinely new hand from B saves without a question, and Upiši i ovu adds
+      the same hand on purpose. npm test, lint, tsc and next build clean.
+

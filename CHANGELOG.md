@@ -25,6 +25,18 @@ Not deployed yet.
 ### Admin
 - **iPhone više ne zumira stranicu** kad staneš u polje: "Traži ekipu" (Novo kolo · Promijeni, Skica kola), "Dodaj ekipu · ime ekipe", "Dodaj igrača", "Dodaj u ligu", "Dodaj u ekipu", "Traži ekipu ili igrača" u Upravljanju turnirom i **Bilješke lige** sad su 16 px umjesto 15, pa se više ne moraš odzumirati usred večeri lige. Na računalu su polja ista kao prije.
 
+## 09.11.2026 · Ista igra s dva mobitela
+
+Not deployed yet (DECISIONS #91).
+
+### Players
+- **Ista igra upisana s dva mobitela više se ne broji dvaput.** Ako je netko za stolom upisao igru dok si ti bio u
+  upisu, **Spremi** prvo pita: *"Je li ovo nova igra?"* uz ono što je drugi mobitel upisao ("S drugog mobitela je
+  upisana igra 1 (42 : 120)").
+- **Odustani** odbaci tvoj upis i vrati te na semafor (igra je već tamo), **Upiši i ovu** upiše i tvoju — za slučaj da
+  su se stvarno odigrale dvije iste igre.
+- Ako u međuvremenu nitko nije ništa upisao, Spremi radi kao i dosad, bez pitanja.
+
 ## 07.11.2026 · Brži upit za nedolazak i Otključaj partiju
 
 Not deployed yet (DECISIONS #89). Needs a migration on the database.
