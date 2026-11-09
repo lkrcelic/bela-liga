@@ -2,6 +2,14 @@
 
 What the commits changed for the people using the app, newest first. The reasons and details are in DECISIONS.md.
 
+## 09.11.2026 · Kolo preko cijelog ekrana i Otvori u popisu turnira
+
+Na developmentu.
+
+### Admin
+- **Kolo preko cijelog ekrana (računalo).** Objavljeno kolo ima u redu statusa novo dugme uz *Uredi stolove*: otvara kolo preko cijelog ekrana, sa stolovima na dvije trećine i **poretkom turnira** na trećini — za ekran u klubu. Zaglavlje kaže koje je kolo, koliko je stolova uživo i koliko je gotovo; **Zatvori** (ili Esc) vraća natrag. Prikaz se sam osvježava dok se igra, a ništa se u njemu ne uređuje.
+- **Otvori u popisu turnira (računalo).** Svaki redak u *Turniri* ima dugme **Otvori** koje vodi u upravljanje turnirom; dvoklik na redak radi kao i dosad.
+
 ## 09.11.2026 · Broj iz oglasa vide samo prijavljeni igrači
 
 Not deployed yet (DECISIONS #90).
