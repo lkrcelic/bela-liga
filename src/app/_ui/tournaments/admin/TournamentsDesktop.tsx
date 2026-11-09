@@ -92,7 +92,7 @@ export default function TournamentsDesktop() {
         <Card component="section" aria-label="Popis turnira" sx={{minHeight: 0, display: "flex", flexDirection: "column", overflow: "hidden", borderRadius: "24px"}}>
           <Box
             aria-hidden
-            sx={{flex: "none", height: 40, display: "grid", gridTemplateColumns: cols, gap: "14px", alignItems: "center", pl: "20px", pr: "116px", background: color.paper2, borderBottom: `1px solid ${tint.navy[10]}`, fontSize: 12, fontWeight: 600, letterSpacing: ".08em", textTransform: "uppercase", color: color.muted}}
+            sx={{flex: "none", height: 40, display: "grid", gridTemplateColumns: cols, gap: "14px", alignItems: "center", pl: "20px", pr: "128px", background: color.paper2, borderBottom: `1px solid ${tint.navy[10]}`, fontSize: 12, fontWeight: 600, letterSpacing: ".08em", textTransform: "uppercase", color: color.muted}}
           >
             <span>Turnir</span>
             <span>Mjesto</span>
@@ -134,7 +134,7 @@ export default function TournamentsDesktop() {
                         alignItems: "center",
                         pl: "20px",
                         // room for Otvori, which sits on top of the row (a button cannot hold another one)
-                        pr: "116px",
+                        pr: "128px",
                         py: "8px",
                         textAlign: "left",
                         borderBottom: `1px solid ${color.divider}`,
