@@ -1885,3 +1885,34 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
       Odustani leaves one hand on the board, a genuinely new hand from B saves without a question, and Upiši i ovu adds
       the same hand on purpose. npm test, lint, tsc and next build clean.
 
+
+92. **Google se ne veže na račun otvoren lozinkom bez dokaza** (issue #59, found by the code scan: a password sign-up
+    takes any email without confirming it, and `allowDangerousEmailAccountLinking: true` then hands the real owner's
+    Google login to whoever registered with that email first — classic account pre-hijacking, and the squatter keeps
+    the password and a live session in the account with the owner's name, rating, team, Burza ads and phone number).
+    - **What changed**: the `signIn` callback decides which link is made (`_lib/auth/googleLink.ts`, a pure function
+      over three facts). A Google account that was linked before opens its own player, whatever its email. An email
+      nobody has makes a new player, and a row **without** a password (made by an earlier Google login, by the seed or
+      by an admin) is linked by email as before — there is no password there to abuse. A row **with** a password is
+      linked only to someone who can already log in to it: the player logged in with that password in this browser
+      (the Lucia session cookie of the same request). Otherwise Prijava says "Račun s tim emailom je otvoren s
+      korisničkim imenom i lozinkom. Prijavi se lozinkom, pa onda pritisni Prijava s Googleom…"
+      (`PASSWORD_ACCOUNT_CODE`, next to the deactivated account's code).
+    - **Why not just end the squatter's sessions** (the issue's smallest suggestion): the squatter still knows the
+      password, so they would be back in the owner's account on the next login. The link is what has to not happen.
+    - **Why not a new account for the owner instead**: `Player.email` is unique, so there can be no second row with
+      that email.
+    - **Who notices**: nobody who logs in with Google today — 310 of the 411 players have no password at all and the
+      4 with both already carry the `Account` row. A player who signed up with a password and has never used Google
+      has one extra step the first time: log in with the password, then press Prijava s Googleom.
+    - **emailVerified**: set on the player when a Google account is linked (Google reports a verified email); the
+      email typed at a password sign-up stays unverified, which is exactly what the rule above rests on.
+    - **Edge runtime**: `googleAuth.ts` is imported by `middleware.ts`, so it must not pull in `luciaAuth` — building
+      the Lucia instance reaches into the Prisma client and the middleware then dies with "PrismaClient is not
+      configured to run in Edge Runtime" (seen in the dev run). The session row is read with a plain Prisma query
+      instead, inside the function.
+    - **Checked**: unit tests of the rule, and 13 scenarios driven against a copy of the production database through
+      a temporary probe route (password account turned away, the same email in another case, a Google-made row, an
+      unknown email, an already-linked account, the owner's own password session, another player's session, a forged
+      cookie, a deactivated account) — all as expected; Prijava's three messages and the password login itself
+      clicked through on a 390 px phone and on a desktop screen. npm test, lint, tsc and next build clean.

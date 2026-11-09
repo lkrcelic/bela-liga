@@ -2,6 +2,14 @@
 
 What the commits changed for the people using the app, newest first. The reasons and details are in DECISIONS.md.
 
+## 10.11.2026 · Google se više ne veže na tuđi račun s lozinkom
+
+Na developmentu (DECISIONS #92).
+
+### Players
+- **Prijava s Googleom i račun otvoren s lozinkom.** Email koji se upiše pri registraciji nitko ne provjerava, pa je dosad onaj tko se prvi registrirao s tuđim emailom pokupio Googleovu prijavu pravog vlasnika — ušao bi u taj isti račun, sa svojim imenom, rejtingom, ekipom i brojem. Sad se Google veže na račun s lozinkom tek kad se na tom mobitelu prvo prijaviš **lozinkom**; inače Prijava kaže „Račun s tim emailom je otvoren s korisničkim imenom i lozinkom…“.
+- Tko se prijavljuje Googleom kao i dosad (račun otvoren Googleom, ili Google već povezan) ne primjećuje ništa.
+
 ## 09.11.2026 · Kolo preko cijelog ekrana i Otvori u popisu turnira
 
 Na developmentu.
