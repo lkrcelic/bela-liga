@@ -644,7 +644,8 @@ export function KoloFullscreen({t, kolo, rows, live, done, onClose}: {t: AdminTo
             <EmptyState>Poredak će biti ovdje kad počne prvo kolo.</EmptyState>
           ) : (
             <Box sx={{flex: 1, minHeight: 0, overflowY: "auto"}}>
-              <StandingsGrid rows={standings} dense caption={`Poredak turnira ${t.name}`} />
+              {/* a third of the screen is narrow for the names, so NER goes out while nobody has a draw */}
+              <StandingsGrid rows={standings} dense columns={standings.some((r) => r.draws > 0) ? ["wins", "draws", "losses"] : ["wins", "losses"]} caption={`Poredak turnira ${t.name}`} />
             </Box>
           )}
         </Card>
