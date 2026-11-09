@@ -16,6 +16,7 @@ import EventUpcomingRoundedIcon from "@mui/icons-material/EventRounded";
 import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
 import GroupsRoundedIcon from "@mui/icons-material/GroupsRounded";
 import InfoRoundedIcon from "@mui/icons-material/InfoRounded";
+import ArrowForwardRoundedIcon from "@mui/icons-material/ArrowForwardRounded";
 import LeaderboardRoundedIcon from "@mui/icons-material/LeaderboardRounded";
 import OpenInNewRoundedIcon from "@mui/icons-material/OpenInNewRounded";
 import PlayCircleRoundedIcon from "@mui/icons-material/PlayCircleRounded";
@@ -91,7 +92,7 @@ export default function TournamentsDesktop() {
         <Card component="section" aria-label="Popis turnira" sx={{minHeight: 0, display: "flex", flexDirection: "column", overflow: "hidden", borderRadius: "24px"}}>
           <Box
             aria-hidden
-            sx={{flex: "none", height: 40, display: "grid", gridTemplateColumns: cols, gap: "14px", alignItems: "center", px: "20px", background: color.paper2, borderBottom: `1px solid ${tint.navy[10]}`, fontSize: 12, fontWeight: 600, letterSpacing: ".08em", textTransform: "uppercase", color: color.muted}}
+            sx={{flex: "none", height: 40, display: "grid", gridTemplateColumns: cols, gap: "14px", alignItems: "center", pl: "20px", pr: "116px", background: color.paper2, borderBottom: `1px solid ${tint.navy[10]}`, fontSize: 12, fontWeight: 600, letterSpacing: ".08em", textTransform: "uppercase", color: color.muted}}
           >
             <span>Turnir</span>
             <span>Mjesto</span>
@@ -115,7 +116,7 @@ export default function TournamentsDesktop() {
               {list.map((t) => {
                 const on = current?.id === t.id;
                 return (
-                  <Box component="li" key={t.id}>
+                  <Box component="li" key={t.id} sx={{position: "relative"}}>
                     <Box
                       component="button"
                       type="button"
@@ -131,7 +132,9 @@ export default function TournamentsDesktop() {
                         gridTemplateColumns: cols,
                         gap: "14px",
                         alignItems: "center",
-                        px: "20px",
+                        pl: "20px",
+                        // room for Otvori, which sits on top of the row (a button cannot hold another one)
+                        pr: "116px",
                         py: "8px",
                         textAlign: "left",
                         borderBottom: `1px solid ${color.divider}`,
@@ -161,6 +164,35 @@ export default function TournamentsDesktop() {
                         <StatusChip status={statusOf(t)} sx={{alignSelf: "center"}} />
                       </Box>
                     </Box>
+                    <Box
+                      component="button"
+                      type="button"
+                      onClick={() => router.push(`/turniri/${t.id}/upravljanje`)}
+                      aria-label={`Otvori ${t.name}`}
+                      sx={{
+                        ...buttonBase,
+                        position: "absolute",
+                        right: "20px",
+                        top: "50%",
+                        transform: "translateY(-50%)",
+                        height: 36,
+                        px: "12px",
+                        borderRadius: "12px",
+                        border: `1.5px solid ${tint.navy[25]}`,
+                        background: color.white,
+                        color: color.navy,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "6px",
+                        fontSize: 13.5,
+                        fontWeight: 700,
+                        "&:hover": {background: color.paper2},
+                        "& svg": {fontSize: 18},
+                      }}
+                    >
+                      Otvori
+                      <ArrowForwardRoundedIcon aria-hidden />
+                    </Box>
                   </Box>
                 );
               })}
@@ -169,7 +201,7 @@ export default function TournamentsDesktop() {
         </Card>
         <Box sx={{minHeight: 0, overflowY: "auto", display: "flex", flexDirection: "column", gap: "16px"}}>
           {current && <PickedCard key={current.id} t={current} onChanged={reload} />}
-          <InfoNote icon={<InfoRoundedIcon />}>Dvoklik na turnir otvara upravljanje. Uredi, Kopiraj, Otkaži i Obriši su u turniru, u tabu Podaci; obrisati se može samo prije početka.</InfoNote>
+          <InfoNote icon={<InfoRoundedIcon />}>Otvori ili dvoklik na turnir otvara upravljanje. Uredi, Kopiraj, Otkaži i Obriši su u turniru, u tabu Podaci; obrisati se može samo prije početka.</InfoNote>
         </Box>
       </Box>
     </DesktopShell>
