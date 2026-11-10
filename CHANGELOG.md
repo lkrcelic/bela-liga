@@ -2,6 +2,14 @@
 
 What the commits changed for the people using the app, newest first. The reasons and details are in DECISIONS.md.
 
+## 10.11.2026 · Poslije ponoći večer lige je i dalje „Večeras“
+
+Na developmentu.
+
+### Players
+- **Raspored, Početna i Burza poslije ponoći.** Večer lige traje do 06:00, ali su igračevi ekrani „danas“ računali po kalendaru, pa je u 00:30 večer koja se još igra pisala **Odigrano**, a kartica je skakala na **Sljedeća večer** sljedećeg tjedna. Sad do 06:00 ta večer ostaje **Večeras**: u Rasporedu (kartica i oznaka), na kartici Početne i u *Tu smo*.
+- **Zamjena za večeras se može tražiti i poslije ponoći.** U *Trebam zamjenu* je pod **Večer** prva ponuda bila sljedeći tjedan, a oglas za večeras je od 00:00 vrijedio kao prošao i gubio se s Burze. Sad oglas za večerašnju večer stoji dok se večer igra, i u *Moji oglasi* još nije istekao — tko mora otići u 00:30 može naći zamjenu za zadnje kolo.
+
 ## 10.11.2026 · Google se više ne veže na tuđi račun s lozinkom
 
 Na developmentu (DECISIONS #92).
