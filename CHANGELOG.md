@@ -20,7 +20,7 @@ Na developmentu.
 
 ## 09.11.2026 · Broj iz oglasa vide samo prijavljeni igrači
 
-Not deployed yet (DECISIONS #90).
+Live since 09.11. (1baa10f, DECISIONS #90).
 
 ### Players
 - **Broj telefona iz Burze više nije javan.** Oglasi se i dalje vide bez prijave (i dalje se mogu dijeliti), ali na oglasu bez prijave stoji „Broj vide igrači s računom.“ i dugme **Prijavi se da vidiš broj**, koje nakon prijave vrati na taj isti oglas. Prijavljeni igrači vide broj, Nazovi i WhatsApp kao i dosad, a svoj oglas i dalje vidiš cijeli.
@@ -28,7 +28,7 @@ Not deployed yet (DECISIONS #90).
 
 ## 08.11.2026 · Poziv za instalaciju ne vraća se svaki put
 
-Not deployed yet.
+Live since 09.11. (1baa10f).
 
 ### Players
 - **„Nastavi u pregledniku“ se pamti.** Poziv „Belatronika radi bolje kao aplikacija“ više ne skače preko Početne na svakom povratku — kad ga odbiješ (ili ga odmakneš), miran je **tjedan dana** na tom telefonu. Na večeri lige se nakon svakog kola vraćaš na Početnu i dosad ti je svaki put prekrio **Započni igru**.
@@ -36,7 +36,7 @@ Not deployed yet.
 
 ## 08.11.2026 · Polja na telefonu više ne zumiraju stranicu
 
-Not deployed yet.
+Live since 09.11. (1baa10f).
 
 ### Admin
 - **iPhone više ne zumira stranicu** kad staneš u polje: "Traži ekipu" (Novo kolo · Promijeni, Skica kola), "Dodaj ekipu · ime ekipe", "Dodaj igrača", "Dodaj u ligu", "Dodaj u ekipu", "Traži ekipu ili igrača" u Upravljanju turnirom i **Bilješke lige** sad su 16 px umjesto 15, pa se više ne moraš odzumirati usred večeri lige. Na računalu su polja ista kao prije.
@@ -55,7 +55,7 @@ Not deployed yet (DECISIONS #91).
 
 ## 07.11.2026 · Brži upit za nedolazak i Otključaj partiju
 
-Not deployed yet (DECISIONS #89). Needs a migration on the database.
+Live since 09.11. (1baa10f, DECISIONS #89).
 
 ### Players
 - **Upit "Jesu li … za stolom?" dolazi brže**: pojavi se **3 minute** nakon što kolo izađe (prije 5), odgovor radi **od 5. minute** (prije od 8.), a stol se preskače u **8. minuti** (prije u 10.). Ukupno čekanje je kraće za dvije minute, a pitanje stigne dok je mobitel još u ruci.
@@ -71,7 +71,7 @@ Not deployed yet (DECISIONS #89). Needs a migration on the database.
 
 ## 07.11.2026 · Korisničko ime vidljivo svima
 
-Not deployed yet (DECISIONS #88).
+Live since 09.11. (1baa10f, DECISIONS #88).
 
 ### Players
 - **Korisničko ime je javno.** Na tuđem profilu u **Osobni podaci** sad piše i **Korisničko ime** (@handle), pored imena i prezimena.
@@ -88,7 +88,7 @@ Not deployed yet (DECISIONS #88).
 
 ## 07.11.2026 · Otvoreni turnir: prijave cijelo vrijeme
 
-Not deployed yet (DECISIONS #88). Needs a migration on the database.
+Live since 09.11. (1baa10f, DECISIONS #88).
 
 ### Admin
 - U **Podacima** turnira je novi izbor **Prijave · Do početka / Cijeli turnir**, pored **Iduća kola**. Svi postojeći turniri su **Do početka**, dakle rade kao i dosad.
@@ -104,7 +104,7 @@ Not deployed yet (DECISIONS #88). Needs a migration on the database.
 
 ## 07.11.2026 · Brisanje bilo kojeg kola turnira
 
-Not deployed yet (DECISIONS #87).
+Live since 09.11. (1baa10f, DECISIONS #87).
 
 ### Admin
 - **Kola** na turniru: kanta je sad pored **svakog** kola, u bilo kojem statusu — Čeka, Skica, Objavljeno, Uživo ili Odigrano.
@@ -117,7 +117,7 @@ Not deployed yet (DECISIONS #87).
 
 ## 07.11.2026 · Organizator: nova rola
 
-Not deployed yet (DECISIONS #86). Needs a migration on the database.
+Live since 09.11. (1baa10f, DECISIONS #86).
 
 ### Players
 - Beside your name on **Moj profil** there is now a label saying what you are: **Admin** or **Organizator**. A player has none. The same label is on a player's page, on the phone and on the computer, so everyone sees who runs the league and who runs tournaments.
