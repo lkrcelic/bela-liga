@@ -511,3 +511,26 @@ test("Otvorene prijave: who counts as present, and what switching the setting of
   // before the start the sign-ups are the admin's own business, whatever the setting says
   assert.equal(signUpsCloseWithSwitch({started: false, registrationsOpen: true, openSignupsAfter: false}), false);
 });
+
+test("the card on top: a tournament being played is shown to those not in it too (issue #22)", async () => {
+  const {mainTournament} = await import("@/app/_lib/tournaments");
+  type T = {id: number; phase: "upcoming" | "active" | "finished" | "cancelled"; date: string; me: {status: "REGISTERED" | "WAITING"} | null};
+  const today = "2026-11-11";
+  const live: T = {id: 1, phase: "active", date: today, me: null};
+  const next: T = {id: 2, phase: "upcoming", date: "2026-11-18", me: null};
+  // a visitor, or a player whose team isn't in it, sees the tournament being played, not "Nema nadolazećih turnira"
+  assert.equal(mainTournament([live], today)?.id, 1);
+  assert.equal(mainTournament([next, live], today)?.id, 1);
+  // a team on the waiting list gets that tournament (its card says the place on the list)
+  const waiting: T = {...live, id: 3, me: {status: "WAITING"}};
+  assert.equal(mainTournament([live, waiting], today)?.id, 3);
+  // the viewer's own table comes first
+  const playing: T = {...live, id: 4, me: {status: "REGISTERED"}};
+  assert.equal(mainTournament([waiting, playing, next], today)?.id, 4);
+  // the viewer's own tournament starting today (Tu smo) outranks someone else's being played
+  const mineToday: T = {id: 5, phase: "upcoming", date: today, me: {status: "REGISTERED"}};
+  assert.equal(mainTournament([live, mineToday], today)?.id, 5);
+  // nothing played: the soonest coming up, as before; finished or passed ones never
+  assert.equal(mainTournament([next, {id: 6, phase: "finished", date: "2026-11-01", me: null}], today)?.id, 2);
+  assert.equal(mainTournament([{id: 7, phase: "upcoming", date: "2026-11-10", me: null}], today), null);
+});

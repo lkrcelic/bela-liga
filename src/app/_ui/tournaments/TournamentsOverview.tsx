@@ -7,7 +7,7 @@ import useStartGame from "@/app/_hooks/useStartGame";
 import {useTournaments} from "@/app/_hooks/useTournaments";
 import {TournamentCard} from "@/app/_interfaces/tournament";
 import {leagueDateString} from "@/app/_lib/dates";
-import {isComingUp} from "@/app/_lib/tournaments";
+import {isComingUp, mainTournament as pickMainTournament} from "@/app/_lib/tournaments";
 import {color} from "@/app/_styles/tokens";
 import {BurzaHomeCard, NextNightPlaceholder} from "@/app/_ui/home/HomeCards";
 import {StartCard} from "@/app/_ui/home/StartCard";
@@ -21,13 +21,9 @@ import {FinishedRow, NextTournamentCard, NoTournamentCard, ResultsButton, TodayC
 // on the day, else the next tournament: the one they signed up for when two are on the same day), Burza igrača,
 // Nadolazeći turniri with Prijavi se, and Završeni turniri.
 
-// The tournament the card on top shows: one being played that the viewer is in, else the soonest coming up (the
-// viewer's first on the same day; one whose day passed without starting is left out, isComingUp)
+// The tournament the card on top shows (_lib/tournaments: also a tournament being played that the viewer isn't in)
 export function mainTournament(list: TournamentCard[], today: string = leagueDateString()): TournamentCard | null {
-  const live = list.filter((t) => t.phase === "active" && t.me?.status === "REGISTERED");
-  if (live.length) return live[0];
-  const coming = list.filter((t) => isComingUp(t, today)).sort((a, b) => a.date.localeCompare(b.date) || Number(!!b.me) - Number(!!a.me));
-  return coming[0] ?? null;
+  return pickMainTournament(list, today);
 }
 
 // a tournament is live and the viewer plays in it (the red dot on Početna's Turniri tab)

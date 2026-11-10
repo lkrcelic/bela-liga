@@ -2,6 +2,13 @@
 
 What the commits changed for the people using the app, newest first. The reasons and details are in DECISIONS.md.
 
+## 11.11.2026 · Turnir koji se igra vide i oni koji ga ne igraju
+
+Na developmentu.
+
+### Players
+- **Početna · Turniri i /turniri dok se turnir igra.** Tko nije u turniru (gost, igrač čija ekipa ne igra, ekipa na listi čekanja) vidio je „Nema nadolazećih turnira“ i nigdje taj turnir. Sad gore stoji kartica **Turnir danas** s kolom koje se igra i **Poredak i rezultati** ispod nje, a ekipa na listi čekanja vidi svoje mjesto na listi.
+
 ## 10.11.2026 · Poslije ponoći večer lige je i dalje „Večeras“
 
 Na developmentu.
