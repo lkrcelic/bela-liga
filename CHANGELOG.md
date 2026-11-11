@@ -2,6 +2,13 @@
 
 What the commits changed for the people using the app, newest first. The reasons and details are in DECISIONS.md.
 
+## 12.11.2026 · Novo kolo kaže da večer već ima objavljena kola
+
+Na developmentu.
+
+### Admin
+- **Novo kolo kad su večerašnja kola već objavljena.** Ekran je izgledao isto kao prije prvog kola (*Broj kola večeras* 3, *Kreiraj 3 kola*), pa je Kreiraj tiho dodavao Kolo 4–6 na već odigranu večer. Sad gore piše **Večeras su već objavljena 3 kola (1 u tijeku)** i od kojeg kola nova nastavljaju, izbor se zove **Još kola večeras** i počinje od 1, a gumb kaže što stvara (**Kreiraj Kolo 15 · 10 stolova**). Isto na računalu.
+
 ## 11.11.2026 · Turnir sa skrivenim brojem prijava
 
 Na developmentu (DECISIONS #93).

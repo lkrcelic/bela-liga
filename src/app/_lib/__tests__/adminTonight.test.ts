@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import {test} from "node:test";
-import {draftNight, tonightEyebrow, tonightState, waitingLabel} from "../ui/adminTonight";
+import {draftNight, newRoundsLabel, publishedLabel, publishedTonight, tonightEyebrow, tonightState, waitingLabel} from "../ui/adminTonight";
 
 const r = (date: string, status: "draft" | "approved" | "played" | "live" | "new") => ({date, status});
 
@@ -37,4 +37,20 @@ test("a round where only the bye is settled hasn't started", () => {
   const state = tonightState([t(2, true, true, true), t(2, false), t(1, true)], 2);
   assert.deepEqual(state, {kind: "playing", round: 2, rounds: 2, done: 1, tables: 2, started: false});
   assert.equal(tonightEyebrow(state as Extract<typeof state, {kind: "playing"}>), "Kolo 2 od 2 · nije počelo");
+});
+
+const n = (date: string, roundNumber: number, status: "draft" | "approved" | "played" | "live" | "new") => ({date, roundNumber, status});
+
+test("Novo kolo counts tonight's published rounds and numbers the new ones after them", () => {
+  const rounds = [n("2026-11-10", 1, "played"), n("2026-11-10", 2, "played"), n("2026-11-10", 3, "live"), n("2026-11-10", 0, "draft"), n("2026-11-03", 5, "played")];
+  assert.deepEqual(publishedTonight(rounds, "2026-11-10"), {published: 3, live: 1, next: 4});
+  // only Skica tonight, or nothing: Novo kolo starts the night
+  assert.equal(publishedTonight([n("2026-11-10", 0, "draft"), n("2026-11-10", 0, "approved")], "2026-11-10"), null);
+  assert.equal(publishedTonight(rounds, "2026-11-17"), null);
+  assert.equal(publishedTonight(null, "2026-11-10"), null);
+  assert.equal(publishedLabel({published: 3, live: 1, next: 4}), "Večeras su već objavljena 3 kola (1 u tijeku)");
+  assert.equal(publishedLabel({published: 1, live: 0, next: 2}), "Večeras je već objavljeno 1 kolo");
+  assert.equal(publishedLabel({published: 5, live: 0, next: 6}), "Večeras je već objavljeno 5 kola");
+  assert.equal(newRoundsLabel(4, 1), "Kolo 4");
+  assert.equal(newRoundsLabel(4, 3), "Kolo 4–6");
 });
