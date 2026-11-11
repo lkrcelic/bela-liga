@@ -11,10 +11,19 @@ import useResultStore from "@/app/_store/bela/resultStore";
 // Hand entry shared by the phone wizard and the desktop entry panel. The entered hand lives in the result and
 // announcement stores (persisted, so a reload mid-entry keeps it).
 
-export function startNewHand(matchId: number) {
+// `hands`: how many hands the board showed when the entry was opened. It rides along to the server, which holds the
+// save back (HandsChangedError) when another phone at the table saved a hand meanwhile, so the same hand can't be
+// counted twice without the player's word. Left out: no check (the desktop panel, which has the board next to it).
+export function startNewHand(matchId: number, hands?: number) {
   useResultStore.getState().resetResult();
   useAnnouncementStore.getState().resetAnnouncements();
   useResultStore.getState().setMatchId(matchId);
+  useResultStore.getState().setExpectedHands(hands ?? null);
+}
+
+// the hand count this entry started from (null: no check), e.g. to name the hand another phone added
+export function handsAtOpen(): number | null {
+  return useResultStore.getState().resultData.expected_hands ?? null;
 }
 
 // Loads a saved hand into the stores for editing
@@ -47,12 +56,15 @@ export function discardHand() {
 }
 
 // Saves the entered hand (new, or an update of `resultId`). Throws with the server's message when it is refused.
-export async function saveHand(matchId: number, resultId?: number | string | null) {
+// `force`: the player answered "Upiši i ovu" to a hand saved from another phone, so the hand count is left out and
+// the hand is saved as it is.
+export async function saveHand(matchId: number, resultId?: number | string | null, {force = false}: {force?: boolean} = {}) {
   const result = useResultStore.getState();
   // the announcements entered on the zvanja step, so the saved hand always matches them
   result.updateAnnouncementPoints(useAnnouncementStore.getState().teamsAnnouncements);
   result.setTotalPoints();
-  const data = {...useResultStore.getState().resultData, match_id: matchId};
+  const entry = useResultStore.getState().resultData;
+  const data = {...entry, match_id: matchId, expected_hands: force ? null : entry.expected_hands ?? null};
 
   const saved = resultId
     ? await updateOngoingBelaResultAPI({resultId: String(resultId), result: data})

@@ -1859,3 +1859,60 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
       number is what a bot would harvest. Name and rating are as public as a tournament's teams, the number isn't.
     - Not done here: `GET /api/burza` still lists every open ad without pagination (the same issue's second note; a
       separate performance ticket covers the query).
+
+91. **Ista igra s dva mobitela: the save asks instead of counting it twice** (issue #57, found by the phone UX patrol:
+    two phones at one table each entered the same hand and the match held it twice, 120 : 42 becoming 240 : 84).
+    - **What changed**: the wizard remembers how many hands the board showed when it opened (`expected_hands` in the
+      create request, kept in the result store, so a reload mid-entry keeps it). `createBelaResult` counts the hands
+      inside the transaction that already locks the match row, and a count that doesn't match throws
+      `HandsChangedWarning` → 409 with code `hands_changed`, exactly like the admin's `no_winner` warning (#87). The
+      score step then asks "Je li ovo nova igra?" with what the other phone entered, in this phone's left/right order
+      (it reads the match again to name the hand): **Odustani** drops this copy and goes to the board, **Upiši i ovu**
+      sends the same hand again without `expected_hands`, which saves it.
+    - **Why a question and not a refusal**: two identical hands in a row are possible (the same caller, the same 120 :
+      42), so the app can't decide on its own. Comparing the hand's points instead of the count was the alternative;
+      reason: the count is what tells "another phone saved while you were entering", whatever the points were.
+    - **Who is not asked**: a hand with no `expected_hands` — the admin's scorepad (it has the whole table in front of
+      it and corrects hands as it likes) and the desktop entry panel (the board is next to it and refreshes on every
+      save). An edit of a saved hand goes to its own route and is untouched.
+    - **Back out of the sheet**: a sheet has a history entry of its own (`overlayHistory`), so the wizard's "three
+      entries back to the board" no longer holds while it is open; a save or a drop made from the sheet opens the board
+      by address (`router.replace`, the same fallback the wizard already uses after a reload mid-entry). Closing the
+      sheet with ✕ or the scrim counts as Odustani — the safer side, since the hand is already on the board.
+    - **Checked**: a db test (the second phone's save held back, the confirmation saving it, an up-to-date board and
+      the admin's hands never held back) and the whole thing clicked through on two phone-sized browsers against a copy
+      of the production database: phone A saves 120 : 42, phone B's identical hand is held back with the question,
+      Odustani leaves one hand on the board, a genuinely new hand from B saves without a question, and Upiši i ovu adds
+      the same hand on purpose. npm test, lint, tsc and next build clean.
+
+
+92. **Google se ne veže na račun otvoren lozinkom bez dokaza** (issue #59, found by the code scan: a password sign-up
+    takes any email without confirming it, and `allowDangerousEmailAccountLinking: true` then hands the real owner's
+    Google login to whoever registered with that email first — classic account pre-hijacking, and the squatter keeps
+    the password and a live session in the account with the owner's name, rating, team, Burza ads and phone number).
+    - **What changed**: the `signIn` callback decides which link is made (`_lib/auth/googleLink.ts`, a pure function
+      over three facts). A Google account that was linked before opens its own player, whatever its email. An email
+      nobody has makes a new player, and a row **without** a password (made by an earlier Google login, by the seed or
+      by an admin) is linked by email as before — there is no password there to abuse. A row **with** a password is
+      linked only to someone who can already log in to it: the player logged in with that password in this browser
+      (the Lucia session cookie of the same request). Otherwise Prijava says "Račun s tim emailom je otvoren s
+      korisničkim imenom i lozinkom. Prijavi se lozinkom, pa onda pritisni Prijava s Googleom…"
+      (`PASSWORD_ACCOUNT_CODE`, next to the deactivated account's code).
+    - **Why not just end the squatter's sessions** (the issue's smallest suggestion): the squatter still knows the
+      password, so they would be back in the owner's account on the next login. The link is what has to not happen.
+    - **Why not a new account for the owner instead**: `Player.email` is unique, so there can be no second row with
+      that email.
+    - **Who notices**: nobody who logs in with Google today — 310 of the 411 players have no password at all and the
+      4 with both already carry the `Account` row. A player who signed up with a password and has never used Google
+      has one extra step the first time: log in with the password, then press Prijava s Googleom.
+    - **emailVerified**: set on the player when a Google account is linked (Google reports a verified email); the
+      email typed at a password sign-up stays unverified, which is exactly what the rule above rests on.
+    - **Edge runtime**: `googleAuth.ts` is imported by `middleware.ts`, so it must not pull in `luciaAuth` — building
+      the Lucia instance reaches into the Prisma client and the middleware then dies with "PrismaClient is not
+      configured to run in Edge Runtime" (seen in the dev run). The session row is read with a plain Prisma query
+      instead, inside the function.
+    - **Checked**: unit tests of the rule, and 13 scenarios driven against a copy of the production database through
+      a temporary probe route (password account turned away, the same email in another case, a Google-made row, an
+      unknown email, an already-linked account, the owner's own password session, another player's session, a forged
+      cookie, a deactivated account) — all as expected; Prijava's three messages and the password login itself
+      clicked through on a 390 px phone and on a desktop screen. npm test, lint, tsc and next build clean.

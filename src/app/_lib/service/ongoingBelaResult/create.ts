@@ -1,7 +1,7 @@
 import {BelaResultCreateRequest} from "@/app/_interfaces/belaResult";
 import {prisma} from "@/app/_lib/prisma";
 import {transformBelaResult} from "@/app/_lib/helpers/databaseHelpers";
-import {declarationsError, InvalidResultError, normalizeBelaResult} from "@/app/_lib/validation/validateResult";
+import {declarationsError, HANDS_CHANGED, HandsChangedWarning, InvalidResultError, normalizeBelaResult} from "@/app/_lib/validation/validateResult";
 import {matchWinner} from "@/app/_lib/bela/scoring";
 import {closesAfterHand, handTiming} from "@/app/_lib/gameTime";
 import {closeByTime} from "@/app/_lib/service/match/timeLimit";
@@ -13,6 +13,9 @@ export const TIME_UP = "Vrijeme partije je isteklo. Partija se zatvara s upisani
 // Vrijeme partije: after the deadline a player's hand is taken only when the score is level (one more hand); the match
 // is then closed by time unless the score is still level. An admin's hands don't depend on the time. Answers whether
 // the hand closed the match.
+// `expected_hands`: how many hands the phone's board held when the entry was opened. Several phones follow the same
+// match, so if another one saved a hand meanwhile the two may be the same hand entered twice — the save is held back
+// (HandsChangedWarning) and the phone asks the player. Counted inside the lock, so two saves at once can't both pass.
 export async function createBelaResult(
     resultData: BelaResultCreateRequest,
     normalize: (r: BelaResultCreateRequest) => BelaResultCreateRequest = normalizeBelaResult,
@@ -31,6 +34,10 @@ export async function createBelaResult(
         }
         if (matchWinner(match.player_pair1_score, match.player_pair2_score, match.score_threshold ?? 1001) !== null) {
             throw new InvalidResultError("Meč je gotov – završi ga umjesto da dodaješ igru.");
+        }
+        if (result.expected_hands != null) {
+            const hands = await tx.ongoingBelaResult.count({where: {match_id: result.match_id}});
+            if (hands !== result.expected_hands) throw new HandsChangedWarning(HANDS_CHANGED, hands);
         }
         const zvanja = declarationsError(match.declarations ?? true, result.announcements);
         if (zvanja) throw new InvalidResultError(zvanja);

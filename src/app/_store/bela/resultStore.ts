@@ -11,6 +11,9 @@ export const CALLER_MISSING = "Prvo odaberi tko je zvao.";
 
 type BelaResultTypeExtended = BelaResultResponse & {
   activeTeam: "team1" | "team2";
+  // how many hands the match held when this entry was opened (see expected_hands in _interfaces/belaResult); it is
+  // persisted with the entry, so a reload mid-entry keeps the check
+  expected_hands?: number | null;
 }
 
 export type ResultState = {
@@ -24,6 +27,7 @@ export type ResultState = {
   resetScore: () => void;
   setCompleteVictory: () => void;
   setMatchId: (id: number) => void;
+  setExpectedHands: (hands: number | null) => void;
   updateAnnouncementPoints: (teamsAnnouncements: TeamsAnnouncements) => void;
   resetResult: () => void;
   setResultData: (data: BelaResultResponse) => void;
@@ -57,8 +61,9 @@ const useResultStore = create<ResultState>()(persist<ResultState>((set) => ({
     ...initialState,
     startNewNumber: false,
 
+    // a saved hand opened for editing: it is sent to its own route, so no hand count rides along
     setResultData: (data: BelaResultResponse) => set((state) => ({
-      resultData: {...state.resultData, ...data},
+      resultData: {...state.resultData, ...data, expected_hands: null},
       startNewNumber: true,
     })),
 
@@ -75,6 +80,10 @@ const useResultStore = create<ResultState>()(persist<ResultState>((set) => ({
 
     setMatchId: (id) => set((state) => ({
       resultData: {...state.resultData, match_id: id}
+    })),
+
+    setExpectedHands: (hands) => set((state) => ({
+      resultData: {...state.resultData, expected_hands: hands}
     })),
 
     setGamePoints: (digit: number) => set((state) => {
