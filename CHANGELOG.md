@@ -2,6 +2,17 @@
 
 What the commits changed for the people using the app, newest first. The reasons and details are in DECISIONS.md.
 
+## 11.11.2026 · Turnir sa skrivenim brojem prijava
+
+Na developmentu (DECISIONS #93).
+
+### Players
+- **Turnir sa skrivenim brojem prijava.** Do 1. kola igrači ne vide koliko je ekipa prijavljeno ni popis ekipa. Na tom mjestu piše **Broj mjesta je ograničen** (ili **Mjesta ima za sve**), a gumb je uvijek **Prijavi se**, i kad je turnir pun.
+- **Na listi čekanja ste.** Kad se ekipa prijavi na pun turnir, odmah se otvori prozor s njenim mjestom na listi čekanja (1., 2.…), objašnjenjem što dalje i gumbom **Makni se s liste čekanja**. Prozor se otvara na svakom turniru, ne samo na onom sa skrivenim brojem.
+
+### Admin
+- **Broj prijava · Vidljiv / Skriven** u formi turnira, pod *Format i prijave*. Ti i organizator i dalje vidite sve prijave i listu čekanja.
+
 ## 11.11.2026 · Turnir koji se igra vide i oni koji ga ne igraju
 
 Na developmentu.

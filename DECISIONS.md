@@ -1916,3 +1916,33 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
       unknown email, an already-linked account, the owner's own password session, another player's session, a forged
       cookie, a deactivated account) — all as expected; Prijava's three messages and the password login itself
       clicked through on a 390 px phone and on a desktop screen. npm test, lint, tsc and next build clean.
+
+93. **Sakrij broj prijava: igrači ne vide koliko je ekipa prijavljeno, a lista čekanja se javlja tek pri prijavi** (the
+    user's request of 11.11., designed first on the canvas "Skriveni broj prijava", then built).
+    - **Setting**: `Tournament.hide_entries` (default false, migration 20261111120000_hide_entries). The form's
+      *Format i prijave* gets **Broj prijava · Vidljiv / Skriven** under *Prijave*. The canvas drew it as a switch;
+      the form has no switches and its other two settings (*Iduća kola*, *Prijave*) are the same two-choice track, so
+      it is that track (see the design-league-patterns rule).
+    - **Who and when** (`entriesHidden` in `_lib/tournaments`): only players and guests, never whoever runs the
+      tournament (admin, its organizer), and only while the phase is `upcoming`. From Kolo 1 Poredak i rezultati
+      lists every team anyway, so hiding the count after that would hide nothing.
+    - **Hidden on the server, not only on the screen**: for such a viewer `cardView` answers `teams`, `waiting`,
+      `players` 0 and `avatars` empty, and `entriesList` an empty list, with `entries_hidden: true` so the screens
+      know why. A full tournament then looks open to the client as well (no "lista čekanja" pill, no "Turnir je pun",
+      the button stays Prijavi se). `max_teams` stays in the answer: the limit alone says nothing about how full it is,
+      and it decides the wording below.
+    - **What stands where the count was**: on the navy cards (tournament page, Početna's Sljedeći turnir) a box
+      **Broj mjesta je ograničen** · "Prijave idu redom. Ako je turnir pun, odmah ti javimo koji ste na listi
+      čekanja." (without a limit: **Mjesta ima za sve**); on a card's light band **Mjesta ograničena** / **Mjesta za
+      sve**; the computer's strip **Prijave otvorene · mjesta ograničena**. Prijavljene ekipe is left out of the page
+      and /turniri/[id]/ekipe says the list shows from Kolo 1.
+    - **The waiting-list sheet** (`WaitingSheet`, beside JoinedSheet): opens after any sign-up the server answers
+      WAITING, also for a tournament whose count shows, since it is the same news. The team's place (1., 2.…), its
+      players with the viewer first "(ti)", two steps (all places are taken; you come in by yourselves when a team
+      signs off, without a notice), U redu and Makni se s liste čekanja (the page's own ConfirmSheet). The place on
+      the list is shown; it doesn't tell how many teams are in.
+    - **Checked**: unit test of the rule and of the request field; on a copy of production (11.11. 10:21 dump) a full
+      tournament as a guest, a player out of it and a player on the waiting list on a 375 px phone (page, Početna,
+      Nadolazeći card, the sheet, Makni se and signing up again), the computer's strip, the API answers of the player
+      (0 / empty) and of the admin (2 in, 1 waiting), the admin form and its PATCH both ways. npm test, lint, tsc and
+      next build clean.
