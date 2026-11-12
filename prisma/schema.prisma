@@ -313,6 +313,9 @@ model LeagueNight {
   start_time String?  @db.VarChar(5)
   // this night's own Okupljanje, when it differs from the league's gathering_time (null: the league's)
   gathering_time String? @db.VarChar(5)
+  // this night's own Broj kola, when it differs from the league's rounds_per_night (null: the league's). When that many
+  // rounds of the night are finished, the night is over for Potvrda dolaska (CHECK 1..6 in the migration script)
+  rounds_per_night Int?
   // this night's own location when it is played somewhere else (null location_name: the league's; address and link
   // are then null too)
   location_name    String? @db.VarChar(100)

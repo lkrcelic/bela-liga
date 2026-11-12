@@ -302,12 +302,13 @@ test("Dodaj večer adds a night with its own time and place, or the league's", a
   const {db, created} = fakeDb(0, []);
   await withDb(db, async () => {
     const {addLeagueNight} = await import("../service/league/nights");
-    await addLeagueNight(1, {date: "2026-11-05", start_time: "20:00", gathering_time: "19:30", location: {name: " Klub Adut ", address: "Vlaška 5", url: null}});
+    await addLeagueNight(1, {date: "2026-11-05", start_time: "20:00", gathering_time: "19:30", rounds_per_night: 4, location: {name: " Klub Adut ", address: "Vlaška 5", url: null}});
     assert.deepEqual(created[0], {
       league_id: 1,
       night: new Date("2026-11-05T00:00:00.000Z"),
       start_time: "20:00",
       gathering_time: "19:30",
+      rounds_per_night: 4,
       location_name: "Klub Adut",
       location_address: "Vlaška 5",
       location_url: null,
@@ -318,11 +319,19 @@ test("Dodaj večer adds a night with its own time and place, or the league's", a
       night: new Date("2026-11-12T00:00:00.000Z"),
       start_time: null,
       gathering_time: null,
+      rounds_per_night: null,
       location_name: null,
       location_address: null,
       location_url: null,
     });
   });
+});
+
+test("a night's own Broj kola is 1 to 6, and null goes back to the league's Kola po večeri", () => {
+  assert.equal(LeagueNightUpdateRequestValidation.parse({rounds_per_night: 4}).rounds_per_night, 4);
+  assert.equal(LeagueNightUpdateRequestValidation.parse({rounds_per_night: null}).rounds_per_night, null);
+  assert.equal(LeagueNightUpdateRequestValidation.safeParse({rounds_per_night: 0}).success, false);
+  assert.equal(LeagueNightUpdateRequestValidation.safeParse({rounds_per_night: 7}).success, false);
 });
 
 test("Dodaj večer starts on the league's play day after its last night, today at the earliest", () => {

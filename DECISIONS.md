@@ -1946,3 +1946,23 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
       Nadolazeći card, the sheet, Makni se and signing up again), the computer's strip, the API answers of the player
       (0 / empty) and of the admin (2 in, 1 waiting), the admin form and its PATCH both ways. npm test, lint, tsc and
       next build clean.
+
+94. **Broj kola po večeri: večer je za Potvrdu dolaska gotova kad se odigra toliko kola** (the user's request of
+    12.11., after a team showed "Otišla · 0:26" long after the night had ended).
+    - **Setting**: `LeagueNight.rounds_per_night` (null: the league's Kola po večeri; CHECK 1..6, migration
+      20261112120000_night_rounds). Uredi večer / Dodaj večer get **Broj kola** (− n +) under Okupljanje and Početak,
+      starting on the league's number; a number equal to the league's is saved as none of its own, so the night
+      follows a later change in Podaci, as the times do. Vrati na zadano takes it away with the times and the place.
+      A night with rounds or one that has passed stays read-only, as before.
+    - **The rule** (`nightPlayedOut` in `_lib/leagueArrival`, `nightRounds` in the arrival service): the night is over
+      once that many of its published rounds are finished, every table closed (`open = false`). Then Početna's
+      Potvrda dolaska card is gone (`myTonight` leaves the league out), and the server answers Tu smo and Odlazimo
+      with "Večer je završila.", as after 06:00. Without that, 06:00 still ends it. "Last round out" (no more Tu smo ·
+      Želimo uskočiti) now counts against the night's own Broj kola too.
+    - **Not changed**: the admin's switches in Novo kolo still work all night (an extra round with other teams must
+      stay possible), so a switch flipped after the end still writes "Otišla · hh:mm". Novo kolo's default number of
+      rounds to create is still the league's Kola po večeri.
+    - **Checked**: unit tests of the rule and the request field; on a throwaway copy with league 3's night 11.11. set
+      to 2 rounds, a player of a team that is here sees Odlazimo while round 2 has an open table, and once it closes
+      the card is gone and Odlazimo gets 400 "Večer je završila."; Broj kola saved, shown and reset on the computer
+      and on the phone. npm test and tsc clean.

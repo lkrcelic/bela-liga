@@ -2,6 +2,16 @@
 
 What the commits changed for the people using the app, newest first. The reasons and details are in DECISIONS.md.
 
+## 12.11.2026 · Broj kola po večeri i kraj večeri
+
+Na developmentu (DECISIONS #94).
+
+### Players
+- **Nakon zadnjeg kola nema više Odlazimo ni Tu smo · Želimo uskočiti.** Čim se odigraju sva kola večeri, kartica Potvrda dolaska nestaje s Početne. Dosad je ostajala do 06:00.
+
+### Admin
+- **Broj kola** u *Uredi večer* i *Dodaj večer* (Datumi), na računalu i mobitelu. Kreće od Kola po večeri iz Podataka, a pojedina večer može imati svoj broj. Kad se toliko kola odigra, večer je gotova. Ako se ne odigra, večer završava u 06:00 kao i dosad.
+
 ## 12.11.2026 · Novo kolo kaže da večer već ima objavljena kola
 
 Na developmentu.

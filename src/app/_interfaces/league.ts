@@ -96,25 +96,33 @@ const nightLocation = z
   .nullable()
   .optional();
 
+// A night's own Broj kola (null: the league's Kola po večeri)
+const nightRounds = z.number().int().min(1).max(6).nullable().optional();
+
 // Upravljanje ligom · Datumi (Dodaj večer): add a night, with its own Početak, Okupljanje and place or (left out or
 // null) the league's
 export const LeagueNightAddRequestValidation = z.object({
   date: z.string().refine(isIsoDate, DATE_FORMAT_ERROR),
   start_time: startTime.optional(),
   gathering_time: startTime.optional(),
+  rounds_per_night: nightRounds,
   location: nightLocation,
 });
 
-// Upravljanje ligom · Datumi (Uredi večer): a night's date, its own Početak, Okupljanje and place. Any can be left out
+// Upravljanje ligom · Datumi (Uredi večer): a night's date, its own Početak, Okupljanje, Broj kola and place. Any can be left out
 // (it stays as it is); null goes back to the league's.
 export const LeagueNightUpdateRequestValidation = z
   .object({
     date: z.string().refine(isIsoDate, DATE_FORMAT_ERROR).optional(),
     start_time: startTime.optional(),
     gathering_time: startTime.optional(),
+    rounds_per_night: nightRounds,
     location: nightLocation,
   })
-  .refine((b) => b.date !== undefined || b.start_time !== undefined || b.gathering_time !== undefined || b.location !== undefined, "Nema promjene.");
+  .refine(
+    (b) => b.date !== undefined || b.start_time !== undefined || b.gathering_time !== undefined || b.rounds_per_night !== undefined || b.location !== undefined,
+    "Nema promjene."
+  );
 
 export type LeagueNightUpdate = z.infer<typeof LeagueNightUpdateRequestValidation>;
 export type LeagueNightAdd = z.infer<typeof LeagueNightAddRequestValidation>;
@@ -126,8 +134,9 @@ export const MOVE_TO_PAST_ERROR = "Večer se može premjestiti samo na današnji
 
 // A league night and its published rounds (played: it has some). start_time: its own Početak (null: the league's);
 // time: when it starts, its own or the league's (null: no time). gathering_time and gathering: the same for
-// Okupljanje. location: its own place (null: the league's); place: where it is played, its own or the league's (null:
-// nowhere set).
+// Okupljanje. rounds_per_night: its own Broj kola (null: the league's); planned_rounds: how many rounds it plays, its own
+// or the league's. location: its own place (null: the league's); place: where it is played, its own or the league's
+// (null: nowhere set).
 export type LeagueNightRow = {
   date: string;
   played: boolean;
@@ -136,6 +145,8 @@ export type LeagueNightRow = {
   time: string | null;
   gathering_time: string | null;
   gathering: string | null;
+  rounds_per_night: number | null;
+  planned_rounds: number;
   location: NightLocation | null;
   place: NightLocation | null;
 };
