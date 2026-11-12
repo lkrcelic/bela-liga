@@ -6,7 +6,8 @@ import {DraftRound} from "@/app/_interfaces/round";
 import {isByeTeam} from "@/app/_lib/bye";
 import {draftCounts, publishedAtLabel, publishLabel, publishNote, roundName, RoundStatus} from "@/app/_lib/roundStatus";
 import {draftTableRows} from "@/app/_lib/ui/tables";
-import {ConfirmRemove, EditToggle, NewTableButton, PairDialog, RowActions, useTableEdits} from "@/app/league/[leagueId]/daily-standings/ui/RoundEditing";
+import {nightMeetings, repeatedTables} from "@/app/_lib/tableSeats";
+import {ConfirmRemove, EditToggle, NewTableButton, PairDialog, RepeatedPairsNote, RowActions, useTableEdits} from "@/app/league/[leagueId]/daily-standings/ui/RoundEditing";
 import {count, NOUN, weekdayDate} from "@/app/_lib/ui/text";
 import {useTransitionRouter} from "@/app/_lib/viewTransitions";
 import {color, font, shadow, tint} from "@/app/_styles/tokens";
@@ -231,6 +232,10 @@ function RoundCard({
   const edits = useTableEdits(editable ? {leagueId, date, roundNumber: round.roundNumber, onChanged: onTablesChanged} : null);
   const {teams} = useLeagueTeams(editing ? leagueId : null);
   const rows = draftTableRows(round);
+  // the pairs that already meet in the night's other rounds: the pair dialog warns of them, and a round not published
+  // yet shows its tables that repeat one
+  const met = nightMeetings(rounds, round.roundNumber);
+  const repeats = editable ? repeatedTables(rounds, round.roundNumber) : [];
   // another round (or this one published) ends the editing
   useEffect(() => {
     setEditing(false);
@@ -319,6 +324,7 @@ function RoundCard({
         )}
       </Box>
       {edits.actionError && <ErrorNote sx={{m: "0 18px 14px"}}>{edits.actionError}</ErrorNote>}
+      <RepeatedPairsNote repeats={repeats} sx={{m: "0 18px 14px"}} />
       <Box
         aria-hidden
         sx={{flex: "none", height: 36, display: "flex", alignItems: "center", px: "18px", borderTop: `1px solid ${color.line}`, borderBottom: `1px solid ${tint.navy[12]}`, fontSize: 12, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", color: color.muted}}
@@ -391,7 +397,7 @@ function RoundCard({
         </Box>
       )}
       {editing && edits.pair && (
-        <PairDialog target={edits.pair} rows={rows} teams={teams ?? []} roundLabel={name} onClose={() => edits.setPair(null)} onSave={edits.savePair} />
+        <PairDialog target={edits.pair} rows={rows} teams={teams ?? []} roundLabel={name} onClose={() => edits.setPair(null)} onSave={edits.savePair} met={met} />
       )}
     </Card>
   );

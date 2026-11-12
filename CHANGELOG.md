@@ -2,6 +2,13 @@
 
 What the commits changed for the people using the app, newest first. The reasons and details are in DECISIONS.md.
 
+## 12.11.2026 · Skica upozorava na par koji se večeras već sastao
+
+Na developmentu.
+
+### Admin
+- **Uredi par u Skici kola upozorava na ponovljeni par.** Kad izabrani par (ili par koji nastane zamjenom mjesta) večeras već igra u nekom drugom kolu ili skici, prozor kaže npr. *Asovi iz Dubrave i Trojka s Knežije već se sastaju večeras (Kolo 1, stol 9).* Spremiti se i dalje može. Skica koja ima takav par to pokazuje iznad stolova, prije Odobri i Objavi. Na računalu i mobitelu.
+
 ## 12.11.2026 · Broj kola po večeri i kraj večeri
 
 Na developmentu (DECISIONS #94).

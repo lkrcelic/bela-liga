@@ -1,4 +1,5 @@
 import {isByeTeam} from "@/app/_lib/bye";
+import {roundName} from "@/app/_lib/roundStatus";
 
 // Re-pairing a table of a round (Dnevni poredak's and Skica's Uredi stolove): who sits where afterwards. The server
 // seats the teams by it, and the pair dialog tells the admin from it what else changes. Framework free so it can be
@@ -39,4 +40,38 @@ export function newTableNumber(tables: NumberedTable[], bye: boolean): number {
   let n = 1;
   while (used.has(n)) n++;
   return n;
+}
+
+// A pair that already meets tonight, and where ("Kolo 1, stol 9", "Skica C, stol 2")
+export type NightMeeting = {teams: [number, number]; where: string};
+
+type NightRound = {roundNumber: number; letter: string | null; tables: {table: number | null; team1: {id: number}; team2: {id: number}}[]};
+
+// The pairs of the night's rounds other than `roundNumber` (Skica: the published Kola and the other skice), so a
+// re-paired table can say it repeats one, as Novo kolo keeps them apart (REPEAT_MATCHUPS). A bye table is no meeting.
+export function nightMeetings(rounds: NightRound[], roundNumber: number): NightMeeting[] {
+  return rounds
+    .filter((r) => r.roundNumber !== roundNumber)
+    .flatMap((r) =>
+      r.tables
+        .filter((t) => !isByeTeam(t.team1.id) && !isByeTeam(t.team2.id))
+        .map((t, i): NightMeeting => ({teams: [t.team1.id, t.team2.id], where: `${roundName(r)}, stol ${t.table ?? i + 1}`}))
+    );
+}
+
+// Where two teams already meet tonight (either order); undefined when they don't, or one of them is the bye
+export function meetingOf(meetings: NightMeeting[], x: number, y: number): NightMeeting | undefined {
+  if (x === y || isByeTeam(x) || isByeTeam(y)) return undefined;
+  return meetings.find(({teams: [a, b]}) => (a === x && b === y) || (a === y && b === x));
+}
+
+// The tables of a round whose pair already meets in another round of the night (Skica marks them before Objavi)
+export function repeatedTables(rounds: NightRound[], roundNumber: number): {table: number; where: string}[] {
+  const round = rounds.find((r) => r.roundNumber === roundNumber);
+  if (!round) return [];
+  const met = nightMeetings(rounds, roundNumber);
+  return round.tables.flatMap((t, i) => {
+    const m = meetingOf(met, t.team1.id, t.team2.id);
+    return m ? [{table: t.table ?? i + 1, where: m.where}] : [];
+  });
 }
