@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import {test} from "node:test";
-import {draftNight, newRoundsLabel, publishedLabel, publishedTonight, tonightEyebrow, tonightState, waitingLabel} from "../ui/adminTonight";
+import {draftNight, newRoundsLabel, nightRounds, publishedLabel, publishedTonight, tonightEyebrow, tonightRoundsDefault, tonightState, waitingLabel} from "../ui/adminTonight";
 
 const r = (date: string, status: "draft" | "approved" | "played" | "live" | "new") => ({date, status});
 
@@ -53,4 +53,21 @@ test("Novo kolo counts tonight's published rounds and numbers the new ones after
   assert.equal(publishedLabel({published: 5, live: 0, next: 6}), "Večeras je već objavljeno 5 kola");
   assert.equal(newRoundsLabel(4, 1), "Kolo 4");
   assert.equal(newRoundsLabel(4, 3), "Kolo 4–6");
+});
+
+test("Novo kolo offers tonight's Broj kola, and once some are published the ones still missing", () => {
+  const nights = [
+    {date: "2026-11-18", rounds_per_night: 3},
+    {date: "2026-11-25", rounds_per_night: null},
+  ];
+  // the night's own, else the league's
+  assert.equal(nightRounds(nights, "2026-11-18", 4), 3);
+  assert.equal(nightRounds(nights, "2026-11-25", 4), 4);
+  assert.equal(nightRounds(nights, "2026-12-02", 4), 4);
+  assert.equal(nightRounds(null, "2026-11-18", 4), 4);
+  assert.equal(tonightRoundsDefault(3, null), 3);
+  assert.equal(tonightRoundsDefault(4, {published: 1, live: 1, next: 2}), 3);
+  // after the night's last round an extra one is still offered
+  assert.equal(tonightRoundsDefault(3, {published: 3, live: 0, next: 4}), 1);
+  assert.equal(tonightRoundsDefault(undefined, {published: 2, live: 0, next: 3}), 1);
 });

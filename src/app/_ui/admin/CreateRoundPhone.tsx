@@ -1,12 +1,13 @@
 "use client";
 
+import useLeagueNights from "@/app/_hooks/useLeagueNights";
 import useLeagueRounds from "@/app/_hooks/useLeagueRounds";
 import useLeagueTeams from "@/app/_hooks/useLeagueTeams";
 import useLeagues from "@/app/_hooks/useLeagues";
 import useNavStack from "@/app/_hooks/useNavStack";
 import {MAX_ROUNDS, MAX_WINDOW} from "@/app/_lib/createRoundDraft";
 import {leagueNightString} from "@/app/_lib/dates";
-import {draftNight, newRoundsLabel, publishedTonight} from "@/app/_lib/ui/adminTonight";
+import {draftNight, newRoundsLabel, nightRounds, publishedTonight, tonightRoundsDefault} from "@/app/_lib/ui/adminTonight";
 import {nightLabel} from "@/app/_lib/nights";
 import {count, NOUN, plural} from "@/app/_lib/ui/text";
 import {useTransitionRouter} from "@/app/_lib/viewTransitions";
@@ -38,14 +39,16 @@ export default function CreateRoundPhone({leagueId}: {leagueId: number}) {
   const [sheet, setSheet] = useState(false);
   const leagueRounds = useLeagueRounds(leagueId);
   const tonightDraft = draftNight((leagueRounds.rounds ?? []).filter((r) => r.date === tonight), tonight);
-  // tonight's kola already published: the new ones are extra kola of the same night, one at a time by default
+  // tonight's kola already published: the new ones are extra kola of the same night, the ones still missing by default
   const published = publishedTonight(leagueRounds.rounds, tonight);
+  // tonight's Broj kola (Datumi), else the league's Kola po večeri
+  const {nights} = useLeagueNights(leagueId);
   const cr = useCreateRound(
     leagueId,
     teams,
     // the next page is Skica kola, in Novo kolo's place: Back from it goes to Upravljanje ligom
     (date) => router.replace(`/league/${leagueId}/manage?view=draft&date=${date}`),
-    published ? 1 : league?.roundsPerNight,
+    tonightRoundsDefault(nightRounds(nights, tonight, league?.roundsPerNight), published),
     league?.smokingTables,
     {
       waiting:

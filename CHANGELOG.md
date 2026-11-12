@@ -11,6 +11,7 @@ Na developmentu (DECISIONS #94).
 
 ### Admin
 - **Broj kola** u *Uredi večer* i *Dodaj večer* (Datumi), na računalu i mobitelu. Kreće od Kola po večeri iz Podataka, a pojedina večer može imati svoj broj. Kad se toliko kola odigra, večer je gotova. Ako se ne odigra, večer završava u 06:00 kao i dosad.
+- **Novo kolo nudi broj kola večeri.** Kao zadano nudi Broj kola te večeri, a ne Kola po večeri lige. Ako su neka kola već objavljena, nudi samo ona koja još fale (barem jedno).
 
 ## 12.11.2026 · Novo kolo kaže da večer već ima objavljena kola
 
