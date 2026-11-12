@@ -7,6 +7,7 @@ import useCountUp from "@/app/_hooks/useCountUp";
 import useIsDesktop from "@/app/_hooks/useIsDesktop";
 import useShortWindow from "@/app/_hooks/useShortWindow";
 import {matchWinner} from "@/app/_lib/bela/scoring";
+import useResultStore from "@/app/_store/bela/resultStore";
 import useRoundStore from "@/app/_store/RoundStore";
 import useOngoingMatchStore from "@/app/_store/ongoingMatchStore";
 import {color, shadow, teamColor} from "@/app/_styles/tokens";
@@ -213,11 +214,21 @@ export default function ScoreBoardPage() {
     }
   };
 
-  const newHand = () => {
+  // caller: the team card that was tapped, already picked on Izaberi tko je zvao
+  const newHand = (caller?: 0 | 1) => {
     // the hands the board shows: a hand saved from another phone after this makes the server ask before saving
     startNewHand(matchId, rows.length);
+    if (caller != null) useResultStore.getState().setTrumpCallerTeam(sides.sides[caller]);
     markWizardOpened(matchId);
     router.push(`${pathname}/ongoing-result/new/trump-caller`);
+  };
+
+  // A tap on a team's card opens the hand entry with that team as the caller: on the phone the wizard (when Upiši igru
+  // is offered), on the computer the entry panel next to the board (a new hand, not one being corrected)
+  const canEnter = winner == null && (!clock.expired || tied);
+  const pickCaller = (size: "phone" | "desktop", i: 0 | 1) => {
+    if (size === "phone") return canEnter && opening == null ? () => newHand(i) : undefined;
+    return canEnter && editingId == null ? () => useResultStore.getState().setTrumpCallerTeam(sides.sides[i]) : undefined;
   };
 
   const panels = (size: "phone" | "desktop") =>
@@ -234,6 +245,8 @@ export default function ScoreBoardPage() {
         celebrate={celebrate === i}
         popPip={popPip === i}
         size={size}
+        onPick={pickCaller(size, i)}
+        pickLabel={`Upiši igru, zvala je ekipa ${sides.names[i]}`}
       />
     ));
 
@@ -368,7 +381,7 @@ export default function ScoreBoardPage() {
         {clock.expired && !finishButton && <TimeUpNote tied={tied} />}
         {finishButton ||
           ((!clock.expired || tied) && (
-            <PrimaryButton icon={<AddCircleRoundedIcon />} onClick={newHand} loading={opening != null}>
+            <PrimaryButton icon={<AddCircleRoundedIcon />} onClick={() => newHand()} loading={opening != null}>
               Upiši igru
             </PrimaryButton>
           ))}

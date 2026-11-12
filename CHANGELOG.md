@@ -2,6 +2,14 @@
 
 What the commits changed for the people using the app, newest first. The reasons and details are in DECISIONS.md.
 
+## 12.11.2026 · Dodir na ekipu otvara upis igre
+
+Na developmentu.
+
+### Players
+- **Dodir na karticu ekipe na scorepadu** (ime i rezultat) otvara upis igre s tom ekipom već izabranom pod **Izaberi tko je zvao**, pa je dovoljno stisnuti **Dalje**. **Upiši igru** radi kao i dosad.
+- **Na računalu** klik na karticu ekipe u panelu za upis postavlja **Tko je zvao** na tu ekipu. Dok se ispravlja već upisana igra, kartice ne rade ništa.
+
 ## 12.11.2026 · Skica upozorava na par koji se večeras već sastao
 
 Na developmentu.
