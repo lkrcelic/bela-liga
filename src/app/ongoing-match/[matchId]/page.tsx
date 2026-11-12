@@ -214,8 +214,13 @@ export default function ScoreBoardPage() {
     }
   };
 
-  // caller: the team card that was tapped, already picked on Izaberi tko je zvao
+  // caller: the team card that was tapped, already picked on Izaberi tko je zvao. A second tap while the wizard is
+  // still opening (a double tap on the card, or the card and then Upiši igru) is ignored: pushing the wizard twice
+  // leaves an extra history entry, and saving would then go back to the first step instead of the board.
+  const openedAt = useRef(0);
   const newHand = (caller?: 0 | 1) => {
+    if (Date.now() - openedAt.current < 1500) return;
+    openedAt.current = Date.now();
     // the hands the board shows: a hand saved from another phone after this makes the server ask before saving
     startNewHand(matchId, rows.length);
     if (caller != null) useResultStore.getState().setTrumpCallerTeam(sides.sides[caller]);
@@ -223,13 +228,9 @@ export default function ScoreBoardPage() {
     router.push(`${pathname}/ongoing-result/new/trump-caller`);
   };
 
-  // A tap on a team's card opens the hand entry with that team as the caller: on the phone the wizard (when Upiši igru
-  // is offered), on the computer the entry panel next to the board (a new hand, not one being corrected)
-  const canEnter = winner == null && (!clock.expired || tied);
-  const pickCaller = (size: "phone" | "desktop", i: 0 | 1) => {
-    if (size === "phone") return canEnter && opening == null ? () => newHand(i) : undefined;
-    return canEnter && editingId == null ? () => useResultStore.getState().setTrumpCallerTeam(sides.sides[i]) : undefined;
-  };
+  // On the phone a tap on a team's card opens the hand entry with that team as the caller (when Upiši igru is offered).
+  // On the computer the entry panel is next to the board, so the cards don't do anything there.
+  const canEnter = winner == null && (!clock.expired || tied) && opening == null;
 
   const panels = (size: "phone" | "desktop") =>
     ([0, 1] as const).map((i) => (
@@ -245,7 +246,7 @@ export default function ScoreBoardPage() {
         celebrate={celebrate === i}
         popPip={popPip === i}
         size={size}
-        onPick={pickCaller(size, i)}
+        onPick={size === "phone" && canEnter ? () => newHand(i) : undefined}
         pickLabel={`Upiši igru, zvala je ekipa ${sides.names[i]}`}
       />
     ));

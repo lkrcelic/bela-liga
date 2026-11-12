@@ -8,7 +8,7 @@ Na developmentu.
 
 ### Players
 - **Dodir na karticu ekipe na scorepadu** (ime i rezultat) otvara upis igre s tom ekipom već izabranom pod **Izaberi tko je zvao**, pa je dovoljno stisnuti **Dalje**. **Upiši igru** radi kao i dosad.
-- **Na računalu** klik na karticu ekipe u panelu za upis postavlja **Tko je zvao** na tu ekipu. Dok se ispravlja već upisana igra, kartice ne rade ništa.
+- **Dupli dodir** na karticu ili na **Upiši igru** otvara upis samo jednom, pa **Spremi** uvijek vraća na scorepad.
 
 ## 12.11.2026 · Skica upozorava na par koji se večeras već sastao
 
