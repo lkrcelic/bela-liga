@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import {test} from "node:test";
 import {BYE_TEAM_ID} from "@/app/_lib/bye";
-import {newTableNumber, planSeats} from "@/app/_lib/tableSeats";
+import {meetingOf, newTableNumber, nightMeetings, planSeats, repeatedTables} from "@/app/_lib/tableSeats";
 
 // Re-pairing a table on the Daily screen: who sits where afterwards
 
@@ -102,4 +102,35 @@ test("a table added to a full round goes after the last one", () => {
 
 test("a table with the bye is added after all the others", () => {
   assert.equal(newTableNumber(numbered([1, 2, 1], [5, 6, 3]), true), 4);
+});
+
+// Skica: a re-paired table that repeats a pair of tonight's other rounds
+const night = [
+  {roundNumber: 1, letter: null, tables: [{table: 9, team1: {id: 1}, team2: {id: 2}}, {table: 10, team1: {id: 3}, team2: {id: BYE_TEAM_ID}}]},
+  {roundNumber: 2, letter: "A", tables: [{table: 1, team1: {id: 2}, team2: {id: 1}}, {table: 2, team1: {id: 3}, team2: {id: 4}}]},
+  {roundNumber: 3, letter: "B", tables: [{table: null, team1: {id: 4}, team2: {id: 3}}]},
+];
+
+test("nightMeetings lists the other rounds' pairs with where they sit, without bye tables", () => {
+  assert.deepEqual(nightMeetings(night, 2), [
+    {teams: [1, 2], where: "Kolo 1, stol 9"},
+    {teams: [4, 3], where: "Skica B, stol 1"},
+  ]);
+});
+
+test("meetingOf finds a pair in either order and never the bye", () => {
+  const met = nightMeetings(night, 2);
+  assert.equal(meetingOf(met, 2, 1)?.where, "Kolo 1, stol 9");
+  assert.equal(meetingOf(met, 3, 4)?.where, "Skica B, stol 1");
+  assert.equal(meetingOf(met, 1, 3), undefined);
+  assert.equal(meetingOf(met, 3, BYE_TEAM_ID), undefined);
+});
+
+test("repeatedTables marks a round's tables that repeat another round's pair", () => {
+  assert.deepEqual(repeatedTables(night, 2), [
+    {table: 1, where: "Kolo 1, stol 9"},
+    {table: 2, where: "Skica B, stol 1"},
+  ]);
+  assert.deepEqual(repeatedTables(night, 1), [{table: 9, where: "Skica A, stol 1"}]);
+  assert.deepEqual(repeatedTables(night, 7), []);
 });

@@ -2,6 +2,39 @@
 
 What the commits changed for the people using the app, newest first. The reasons and details are in DECISIONS.md.
 
+## 12.11.2026 · Dodir na ekipu otvara upis igre
+
+Na developmentu.
+
+### Players
+- **Dodir na karticu ekipe na scorepadu** (ime i rezultat) otvara upis igre s tom ekipom već izabranom pod **Izaberi tko je zvao**, pa je dovoljno stisnuti **Dalje**. **Upiši igru** radi kao i dosad.
+- **Dupli dodir** na karticu ili na **Upiši igru** otvara upis samo jednom, pa **Spremi** uvijek vraća na scorepad.
+
+## 12.11.2026 · Skica upozorava na par koji se večeras već sastao
+
+Na developmentu.
+
+### Admin
+- **Uredi par u Skici kola upozorava na ponovljeni par.** Kad izabrani par (ili par koji nastane zamjenom mjesta) večeras već igra u nekom drugom kolu ili skici, prozor kaže npr. *Asovi iz Dubrave i Trojka s Knežije već se sastaju večeras (Kolo 1, stol 9).* Spremiti se i dalje može. Skica koja ima takav par to pokazuje iznad stolova, prije Odobri i Objavi. Na računalu i mobitelu.
+
+## 12.11.2026 · Broj kola po večeri i kraj večeri
+
+Na developmentu (DECISIONS #94).
+
+### Players
+- **Nakon zadnjeg kola nema više Odlazimo ni Tu smo · Želimo uskočiti.** Čim se odigraju sva kola večeri, kartica Potvrda dolaska nestaje s Početne. Dosad je ostajala do 06:00.
+
+### Admin
+- **Broj kola** u *Uredi večer* i *Dodaj večer* (Datumi), na računalu i mobitelu. Kreće od Kola po večeri iz Podataka, a pojedina večer može imati svoj broj. Kad se toliko kola odigra, večer je gotova. Ako se ne odigra, večer završava u 06:00 kao i dosad.
+- **Novo kolo nudi broj kola večeri.** Kao zadano nudi Broj kola te večeri, a ne Kola po večeri lige. Ako su neka kola već objavljena, nudi samo ona koja još fale (barem jedno).
+
+## 12.11.2026 · Novo kolo kaže da večer već ima objavljena kola
+
+Na developmentu.
+
+### Admin
+- **Novo kolo kad su večerašnja kola već objavljena.** Ekran je izgledao isto kao prije prvog kola (*Broj kola večeras* 3, *Kreiraj 3 kola*), pa je Kreiraj tiho dodavao Kolo 4–6 na već odigranu večer. Sad gore piše **Večeras su već objavljena 3 kola (1 u tijeku)** i od kojeg kola nova nastavljaju, izbor se zove **Još kola večeras** i počinje od 1, a gumb kaže što stvara (**Kreiraj Kolo 15 · 10 stolova**). Isto na računalu.
+
 ## 11.11.2026 · Turnir sa skrivenim brojem prijava
 
 Na developmentu (DECISIONS #93).

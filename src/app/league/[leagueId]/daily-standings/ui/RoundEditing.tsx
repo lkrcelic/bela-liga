@@ -4,7 +4,7 @@ import {addTableAPI, removeTableAPI, setTablePairAPI} from "@/app/_fetchers/admi
 import {LeagueTeam} from "@/app/_hooks/useLeagueTeams";
 import {BYE_LABEL, BYE_TEAM_ID, isByeTeam} from "@/app/_lib/bye";
 import {playBanChip, playBanText} from "@/app/_lib/bans";
-import {planSeats} from "@/app/_lib/tableSeats";
+import {meetingOf, NightMeeting, planSeats} from "@/app/_lib/tableSeats";
 import {TableRow} from "@/app/_lib/ui/tables";
 import {color, font, shadow, tint} from "@/app/_styles/tokens";
 import {matchesQuery} from "@/app/_lib/ui/text";
@@ -176,8 +176,9 @@ type PairOption = {id: number; name: string; sub?: string};
 // team that sits at another table swaps it with the team it replaces; a table where something was played loses those
 // hands. A new table lists only the teams that don't play in the round. Slobodna runda (the bye) is always on the
 // list, first: a team seated with it wins the table 2:0 without playing (byeWins: 1:0 at a tournament's table of one
-// match).
-function usePairForm(target: PairTarget, rows: TableRow[], teams: LeagueTeam[], onSave: (team1Id: number, team2Id: number) => Promise<void>, byeWins = 2) {
+// match). met: the pairs that already meet tonight in the night's other rounds; a pair the save makes again is warned
+// about (the admin can still save it), as Novo kolo keeps such pairs apart.
+function usePairForm(target: PairTarget, rows: TableRow[], teams: LeagueTeam[], onSave: (team1Id: number, team2Id: number) => Promise<void>, byeWins = 2, met: NightMeeting[] = []) {
   const isNew = target.kind === "new";
   const row = target.kind === "edit" ? target.row : null;
   const [a, setA] = useState<number | "">(row ? row.teamAId : "");
@@ -213,6 +214,9 @@ function usePairForm(target: PairTarget, rows: TableRow[], teams: LeagueTeam[], 
   const bannedPicks = Array.from(new Set([a, b])).filter((id): id is number => id !== "" && id !== row?.teamAId && id !== row?.teamBId && banOf(id) != null);
   bannedPicks.forEach((id) => notes.push({kind: "error", text: `${nameOf(id)}: ${playBanText(banOf(id)!)}. Zabrana se ukida na stranici ekipe.`}));
   const picked = a !== "" && b !== "" && a !== b;
+  // the pairs the save makes: the picked one, and those a swap makes at other tables
+  const made: [number, number][] = [];
+  if (picked && (!row || a !== row.teamAId || b !== row.teamBId)) made.push([a, b]);
   // the round after saving, as the server will seat it: who moves, who is left without a table
   if (row && picked && (a !== row.teamAId || b !== row.teamBId)) {
     const before = new Map(rows.map((r) => [r.id, [r.teamAId, r.teamBId] as [number, number]]));
@@ -221,6 +225,7 @@ function usePairForm(target: PairTarget, rows: TableRow[], teams: LeagueTeam[], 
       if (r.id === row.id) return;
       const [x, y] = after.get(r.id)!;
       if (x === r.teamAId && y === r.teamBId) return;
+      made.push([x, y]);
       ([[r.teamAId, x, y], [r.teamBId, y, x]] as const).forEach(([was, now, other]) => {
         if (was === now) return;
         const text = isByeTeam(now)
@@ -239,6 +244,10 @@ function usePairForm(target: PairTarget, rows: TableRow[], teams: LeagueTeam[], 
       .forEach((id) => notes.push({kind: "info", text: `${nameOf(id)} neće igrati u ovom kolu.`}));
     if (row.started) notes.push({kind: "warn", text: `Za stolom ${row.table} već se igralo. Promjena para briše te igre i mijenja poredak.`});
   }
+  made.forEach(([x, y]) => {
+    const m = meetingOf(met, x, y);
+    if (m) notes.push({kind: "warn", text: `${nameOf(x)} i ${nameOf(y)} već se sastaju večeras (${m.where}).`});
+  });
   if (picked && (isByeTeam(a) || isByeTeam(b))) {
     notes.push({kind: "info", text: `${nameOf(isByeTeam(a) ? (b as number) : (a as number))} dobiva slobodnu rundu: stol se odmah zatvara ${byeWins} : 0.`});
   }
@@ -276,6 +285,17 @@ function PairNotes({notes}: {notes: Note[]}) {
         </Box>
       ))}
     </>
+  );
+}
+
+// Skica: the tables of a round not published yet whose pair already meets tonight in another round, so a repeat is
+// seen before Odobri and Objavi (nothing when there is none)
+export function RepeatedPairsNote({repeats, sx}: {repeats: {table: number; where: string}[]; sx?: object}) {
+  if (repeats.length === 0) return null;
+  return (
+    <Box sx={{flex: "none", display: "flex", flexDirection: "column", gap: "8px", ...sx}}>
+      <PairNotes notes={repeats.map((r) => ({kind: "warn", text: `Stol ${r.table}: taj par se već sastaje večeras (${r.where}).`}))} />
+    </Box>
   );
 }
 
@@ -406,6 +426,7 @@ export function PairDialog({
   onClose,
   onSave,
   byeWins = 2,
+  met,
 }: {
   target: PairTarget;
   rows: TableRow[];
@@ -415,8 +436,10 @@ export function PairDialog({
   onSave: (team1Id: number, team2Id: number) => Promise<void>;
   // the bye's win at this round's tables (1 at a tournament's table of one match)
   byeWins?: number;
+  // the pairs that already meet tonight in the night's other rounds (Skica)
+  met?: NightMeeting[];
 }) {
-  const f = usePairForm(target, rows, teams, onSave, byeWins);
+  const f = usePairForm(target, rows, teams, onSave, byeWins, met);
   const titleId = useId();
   return (
     <Dialog
@@ -464,6 +487,7 @@ export function PairSheet({
   onClose,
   onSave,
   byeWins = 2,
+  met,
 }: {
   target: PairTarget;
   rows: TableRow[];
@@ -471,8 +495,9 @@ export function PairSheet({
   onClose: () => void;
   onSave: (team1Id: number, team2Id: number) => Promise<void>;
   byeWins?: number;
+  met?: NightMeeting[];
 }) {
-  const f = usePairForm(target, rows, teams, onSave, byeWins);
+  const f = usePairForm(target, rows, teams, onSave, byeWins, met);
   const [picking, setPicking] = useState<0 | 1 | null>(null);
   const [query, setQuery] = useState("");
   const title = f.isNew ? "Novi stol" : `Stol ${f.row!.table} · uredi par`;

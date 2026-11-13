@@ -5,6 +5,7 @@ import {effectiveTime, isIsoDate, NightLocation, nightLabelLong, ownTimeOf, same
 import {count, NOUN} from "@/app/_lib/ui/text";
 import {color, font} from "@/app/_styles/tokens";
 import {ErrorNote, Eyebrow, mergeSx, OutlineButton, Segmented, SolidButton, TextField, TimeField} from "@/app/_ui/sp";
+import {PhoneStepper} from "@/app/_ui/admin/AdminParts";
 import PlaceRoundedIcon from "@mui/icons-material/PlaceRounded";
 import ScheduleRoundedIcon from "@mui/icons-material/ScheduleRounded";
 import TableRestaurantRoundedIcon from "@mui/icons-material/TableRestaurantRounded";
@@ -140,8 +141,18 @@ export function timesHelp(gathering: string, start: string, leagueGathering: str
   return `${league ? `Zadano za ligu: ${league}.` : "Liga nema zadano vrijeme."}${own ? " Ova večer ima svoje vrijeme." : ""}`;
 }
 
-// The night's date, times and place being edited
-export type NightForGathering = {date: string; start_time: string | null; gathering_time: string | null; location: NightLocation | null};
+// Under a night's Broj kola: the league's number and, when the night has its own, that it does; then what it is for
+export function roundsHelp(rounds: number, leagueRounds: number): string {
+  const own = rounds !== leagueRounds ? " Ova večer ima svoj broj kola." : "";
+  return `Zadano za ligu: ${count(leagueRounds, NOUN.kolo)}.${own} Kad se toliko kola odigra, igrači više ne vide Tu smo ni Odlazimo.`;
+}
+
+// The night's date, times, Broj kola and place being edited
+export type NightForGathering = {date: string; start_time: string | null; gathering_time: string | null; rounds_per_night: number | null; location: NightLocation | null};
+
+// A night's Broj kola: 1 to 6, as the league's Kola po večeri
+const MIN_ROUNDS = 1;
+const MAX_ROUNDS = 6;
 
 // Why a night can't go on the date typed (null: it can). A new night may be a past one (one played but not added); an
 // existing one moves only to today or later.
@@ -151,7 +162,7 @@ export function nightDateError(date: string, today: string, taken: (date: string
   return taken(date) ? NIGHT_TAKEN : null;
 }
 
-// A night's date and its own Okupljanje, Početak and place (Datumi: the desktop's card on the right, a sheet on the
+// A night's date and its own Okupljanje, Početak, Broj kola and place (Datumi: the desktop's card on the right, a sheet on the
 // admin's phone). The times start as the night's (its own or the league's); the place is the league's or the night's
 // own, so a new night starts with the league's (Podaci). Uredi večer (an existing night): Spremi sends only what changed
 // (a time equal to the league's and "Zadano lige" go back to the league's), and Vrati na zadano takes the night's own
@@ -167,6 +178,7 @@ export function NightGatheringForm({
   taken,
   leagueTime,
   leagueGathering,
+  leagueRounds,
   leaguePlace,
   settingsTab,
   onSave,
@@ -189,6 +201,8 @@ export function NightGatheringForm({
   // the league's Početak and Okupljanje
   leagueTime: string | null;
   leagueGathering: string | null;
+  // the league's Kola po večeri, which a night without its own Broj kola plays
+  leagueRounds: number;
   leaguePlace: NightLocation | null;
   // where the league's own time and place are changed: "Podaci" (desktop) or "Postavke" (phone)
   settingsTab: string;
@@ -206,6 +220,7 @@ export function NightGatheringForm({
   const [date, setDate] = useState(night.date);
   const [time, setTime] = useState(effectiveTime(night.start_time, leagueTime) ?? "");
   const [gathering, setGathering] = useState(effectiveTime(night.gathering_time, leagueGathering) ?? "");
+  const [rounds, setRounds] = useState(night.rounds_per_night ?? leagueRounds);
   const [mode, setMode] = useState<Mode>(night.location ? "own" : "league");
   const [place, setPlace] = useState<PlaceDraft>(placeDraftOf(night.location));
   const [saved, setSaved] = useState(savedAtStart);
@@ -219,11 +234,14 @@ export function NightGatheringForm({
   const timeError = timesError(gathering || leagueGathering, time || leagueTime);
   const wantedPlace = mode === "own" ? placeOfDraft(place) : null;
   const timeChanged = ownTime !== (night.start_time ?? null) || ownGathering !== (night.gathering_time ?? null);
+  // the league's number is none of its own, so the night follows a later change in Podaci
+  const ownRounds = rounds === leagueRounds ? null : rounds;
+  const roundsChanged = ownRounds !== (night.rounds_per_night ?? null);
   const placeChanged = mode === "own" ? !place.name.trim() || !sameLocation(wantedPlace, night.location) : night.location != null;
-  const dirty = dateChanged || timeChanged || placeChanged;
+  const dirty = dateChanged || timeChanged || roundsChanged || placeChanged;
   // a place of its own needs a name
   const canSave = dirty && isIsoDate(date) && !dateError && !timeError && (mode === "league" || !!place.name.trim()) && !saving;
-  const hasOwn = night.start_time != null || night.gathering_time != null || night.location != null;
+  const hasOwn = night.start_time != null || night.gathering_time != null || night.rounds_per_night != null || night.location != null;
 
   const changed = <T,>(set: (v: T) => void) => (v: T) => {
     set(v);
@@ -233,13 +251,14 @@ export function NightGatheringForm({
   const save = async () => {
     if (!canSave) return;
     if (isNew) {
-      await onSave({date, start_time: ownTime, gathering_time: ownGathering, location: wantedPlace});
+      await onSave({date, start_time: ownTime, gathering_time: ownGathering, rounds_per_night: ownRounds, location: wantedPlace});
       return;
     }
     const change: LeagueNightUpdate = {};
     if (dateChanged) change.date = date;
     if (ownTime !== (night.start_time ?? null)) change.start_time = ownTime;
     if (ownGathering !== (night.gathering_time ?? null)) change.gathering_time = ownGathering;
+    if (roundsChanged) change.rounds_per_night = ownRounds;
     if (placeChanged) change.location = wantedPlace;
     if (await onSave(change)) setSaved(true);
   };
@@ -247,10 +266,11 @@ export function NightGatheringForm({
   const reset = async () => {
     setTime(leagueTime ?? "");
     setGathering(leagueGathering ?? "");
+    setRounds(leagueRounds);
     setMode("league");
     setPlace(EMPTY_PLACE);
     setSaved(false);
-    if (hasOwn && (await onSave({start_time: null, gathering_time: null, location: null}))) setSaved(true);
+    if (hasOwn && (await onSave({start_time: null, gathering_time: null, rounds_per_night: null, location: null}))) setSaved(true);
   };
 
   return (
@@ -284,6 +304,17 @@ export function NightGatheringForm({
         <Box sx={{display: "flex", flexDirection: "column", gap: "6px"}}>
           <TimesFields gathering={gathering} start={time} onGathering={changed(setGathering)} onStart={changed(setTime)} error={timeError} inputSx={inputSx} />
           <Box sx={{fontSize: 13, lineHeight: 1.4, color: color.muted, pl: "4px"}}>{timesHelp(gathering, time, leagueGathering, leagueTime)}</Box>
+        </Box>
+        <Box sx={{display: "flex", flexDirection: "column", gap: "6px"}}>
+          <Box sx={{display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px"}}>
+            <Box id={`rounds-${night.date}`} sx={{fontSize: 14, fontWeight: 600, color: color.ink2, pl: "4px"}}>
+              Broj kola
+            </Box>
+            <Box sx={{width: 180, flex: "none"}}>
+              <PhoneStepper label="Broj kola" value={rounds} onChange={changed(setRounds)} min={MIN_ROUNDS} max={MAX_ROUNDS} less="Manje kola" more="Više kola" />
+            </Box>
+          </Box>
+          <Box sx={{fontSize: 13, lineHeight: 1.4, color: color.muted, pl: "4px"}}>{roundsHelp(rounds, leagueRounds)}</Box>
         </Box>
         <Box role="group" aria-labelledby={`place-${night.date}`} sx={{display: "flex", flexDirection: "column", gap: "8px"}}>
           <Box id={`place-${night.date}`} sx={{fontSize: 14, fontWeight: 600, color: color.ink2, pl: "4px"}}>

@@ -8,13 +8,14 @@ import {DraftRound} from "@/app/_interfaces/round";
 import {nightLabel} from "@/app/_lib/nights";
 import {draftCounts, publishedTimeLabel, publishLabel, publishNote, roundName, RoundStatus} from "@/app/_lib/roundStatus";
 import {draftTableRows, TableRow} from "@/app/_lib/ui/tables";
+import {nightMeetings, repeatedTables} from "@/app/_lib/tableSeats";
 import {isByeTeam} from "@/app/_lib/bye";
 import {count, NOUN} from "@/app/_lib/ui/text";
 import {useTransitionRouter} from "@/app/_lib/viewTransitions";
 import {color, shadow, tint} from "@/app/_styles/tokens";
 import {SmokingMark} from "@/app/_ui/smoking/SmokingParts";
 import {PhoneRoundTables} from "@/app/league/[leagueId]/daily-standings/ui/RoundTables";
-import {PairSheet, useTableEdits} from "@/app/league/[leagueId]/daily-standings/ui/RoundEditing";
+import {PairSheet, RepeatedPairsNote, useTableEdits} from "@/app/league/[leagueId]/daily-standings/ui/RoundEditing";
 import {buttonBase, ConfirmSheet, ErrorNote, IconCircleButton, LoadingRows, PrimaryButton, Screen, ScrollArea, tabular, TopBar} from "@/app/_ui/sp";
 import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
 import CheckCircleOutlineRoundedIcon from "@mui/icons-material/CheckCircleOutlineRounded";
@@ -66,6 +67,10 @@ export default function DraftPhone({leagueId, date}: {leagueId: number; date: st
   const edits = useTableEdits(editable && round ? {leagueId, date, roundNumber: round.roundNumber, onChanged: d.reload} : null);
   const {teams} = useLeagueTeams(editing ? leagueId : null);
   const rows = round ? draftTableRows(round) : [];
+  // the pairs that already meet in the night's other rounds: the pair sheet warns of them, and a round not published
+  // yet shows its tables that repeat one
+  const met = round ? nightMeetings(rounds, round.roundNumber) : [];
+  const repeats = editable && round ? repeatedTables(rounds, round.roundNumber) : [];
   const removeRow = rows.find((r) => r.id === edits.confirmId) ?? null;
   useEffect(() => {
     setEditing(false);
@@ -143,6 +148,7 @@ export default function DraftPhone({leagueId, date}: {leagueId: number; date: st
                 </Box>
               </Box>
             )}
+            <RepeatedPairsNote repeats={repeats} />
             {editing ? (
               <>
                 {edits.actionError && <ErrorNote>{edits.actionError}</ErrorNote>}
@@ -210,7 +216,7 @@ export default function DraftPhone({leagueId, date}: {leagueId: number; date: st
       )}
 
       {editing && edits.pair && (
-        <PairSheet target={edits.pair} rows={rows} teams={teams ?? []} onClose={() => edits.setPair(null)} onSave={edits.savePair} />
+        <PairSheet target={edits.pair} rows={rows} teams={teams ?? []} onClose={() => edits.setPair(null)} onSave={edits.savePair} met={met} />
       )}
       <ConfirmSheet
         open={editing && removeRow != null}

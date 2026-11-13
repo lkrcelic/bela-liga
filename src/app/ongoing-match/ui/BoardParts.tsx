@@ -2,7 +2,7 @@
 
 import {runningHands} from "@/app/_lib/ui/handRows";
 import {count, NOUN} from "@/app/_lib/ui/text";
-import {color, ease, font, shadow, teamColor, teamTint, teamTrack} from "@/app/_styles/tokens";
+import {color, ease, font, shadow, teamColor, teamTint, teamTrack, tint} from "@/app/_styles/tokens";
 import {buttonBase, Card, ellipsis, EmptyState, rowFocus, Segmented, tabular, visuallyHidden} from "@/app/_ui/sp";
 import {TransitionLink} from "@/app/_lib/viewTransitions";
 import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
@@ -11,6 +11,7 @@ import React from "react";
 
 // One team's running total: name, round-win pips, big score and progress towards the threshold.
 // href: the name opens the team (Pregled stola); mine: the viewer's own team, cream with a navy ring.
+// onPick: the whole card is a button (the scoreboard: opens the hand entry with this team as the caller).
 export function ScorePanel({
   index,
   name,
@@ -24,6 +25,8 @@ export function ScorePanel({
   href,
   mine = false,
   of = 2,
+  onPick,
+  pickLabel,
 }: {
   index: 0 | 1;
   name: string;
@@ -39,6 +42,9 @@ export function ScorePanel({
   mine?: boolean;
   // the matches the table plays: a win pip each (2 in a league, a tournament's table can play 1)
   of?: number;
+  onPick?: () => void;
+  // the button's name for screen readers
+  pickLabel?: string;
 }) {
   const c = teamColor[index];
   const desk = size === "desktop";
@@ -134,6 +140,23 @@ export function ScorePanel({
       <Box aria-hidden sx={{position: "relative", height: desk ? 5 : 4, borderRadius: "3px", background: teamTrack[index], overflow: "hidden"}}>
         <Box sx={{height: "100%", width: `${pct}%`, background: c, borderRadius: "3px", transition: `width 600ms ${ease}`}} />
       </Box>
+      {onPick && (
+        // laid over the card, so the card's heading stays a heading (a button can't hold one)
+        <Box
+          component="button"
+          type="button"
+          onClick={onPick}
+          aria-label={pickLabel ?? name}
+          sx={{
+            ...buttonBase,
+            position: "absolute",
+            inset: 0,
+            borderRadius: "inherit",
+            "&:active": {background: tint.navy[4]},
+            "&:focus-visible": {outline: `3px solid ${color.navy}`, outlineOffset: "-3px"},
+          }}
+        />
+      )}
     </Card>
   );
 }

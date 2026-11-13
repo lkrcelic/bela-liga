@@ -1,17 +1,18 @@
 "use client";
 
+import useLeagueNights from "@/app/_hooks/useLeagueNights";
 import useLeagueRounds from "@/app/_hooks/useLeagueRounds";
 import useLeagueTeams from "@/app/_hooks/useLeagueTeams";
 import useLeagues from "@/app/_hooks/useLeagues";
 import useNavStack from "@/app/_hooks/useNavStack";
 import {MAX_ROUNDS, MAX_WINDOW} from "@/app/_lib/createRoundDraft";
 import {leagueNightString} from "@/app/_lib/dates";
-import {draftNight} from "@/app/_lib/ui/adminTonight";
+import {draftNight, newRoundsLabel, nightRounds, publishedTonight, tonightRoundsDefault} from "@/app/_lib/ui/adminTonight";
 import {nightLabel} from "@/app/_lib/nights";
 import {count, NOUN, plural} from "@/app/_lib/ui/text";
 import {useTransitionRouter} from "@/app/_lib/viewTransitions";
 import {color, font, tint} from "@/app/_styles/tokens";
-import {DraftWaitingNote, OUT_LABEL, TeamChipBadge, useCreateRound} from "@/app/_ui/round/CreateRound";
+import {DraftWaitingNote, OUT_LABEL, PublishedNote, TeamChipBadge, useCreateRound} from "@/app/_ui/round/CreateRound";
 import LeagueNotes from "@/app/_ui/round/LeagueNotes";
 import {SmokingTablesCard} from "@/app/_ui/round/SmokingTables";
 import {adminCardSx, adminLabelSx, PhoneStepper} from "./AdminParts";
@@ -38,12 +39,16 @@ export default function CreateRoundPhone({leagueId}: {leagueId: number}) {
   const [sheet, setSheet] = useState(false);
   const leagueRounds = useLeagueRounds(leagueId);
   const tonightDraft = draftNight((leagueRounds.rounds ?? []).filter((r) => r.date === tonight), tonight);
+  // tonight's kola already published: the new ones are extra kola of the same night, the ones still missing by default
+  const published = publishedTonight(leagueRounds.rounds, tonight);
+  // tonight's Broj kola (Datumi), else the league's Kola po večeri
+  const {nights} = useLeagueNights(leagueId);
   const cr = useCreateRound(
     leagueId,
     teams,
     // the next page is Skica kola, in Novo kolo's place: Back from it goes to Upravljanje ligom
     (date) => router.replace(`/league/${leagueId}/manage?view=draft&date=${date}`),
-    league?.roundsPerNight,
+    tonightRoundsDefault(nightRounds(nights, tonight, league?.roundsPerNight), published),
     league?.smokingTables,
     {
       waiting:
@@ -51,6 +56,7 @@ export default function CreateRoundPhone({leagueId}: {leagueId: number}) {
           ? {waiting: tonightDraft.waiting, approved: tonightDraft.approved, onOpen: () => router.push(`/league/${leagueId}/manage?view=draft&date=${tonight}`)}
           : null,
       onDraftWaiting: leagueRounds.reload,
+      published,
     }
   );
 
@@ -65,15 +71,16 @@ export default function CreateRoundPhone({leagueId}: {leagueId: number}) {
       ) : (
         <>
           <ScrollArea bleed sx={{gap: "12px"}}>
+            {published && <PublishedNote published={published} />}
             <Box component="section" aria-label="Kola i prozor" sx={cardSx}>
               <Box component="span" id="cr-rounds" sx={labelSx}>
-                Broj kola večeras
+                {published ? "Još kola večeras" : "Broj kola večeras"}
               </Box>
               <Segmented<number>
                 items={Array.from({length: MAX_ROUNDS}, (_, i) => ({key: i + 1, label: String(i + 1)}))}
                 value={cr.rounds}
                 onChange={cr.setRounds}
-                label="Broj kola večeras"
+                label={published ? "Još kola večeras" : "Broj kola večeras"}
                 variant="track"
                 asTabs={false}
               />
@@ -191,7 +198,7 @@ export default function CreateRoundPhone({leagueId}: {leagueId: number}) {
               <DraftWaitingNote waiting={cr.waiting} />
             ) : (
               <PrimaryButton icon={<AddCircleRoundedIcon />} onClick={cr.create} disabled={cr.playing < 2} loading={cr.creating}>
-                {cr.creating ? "Kreiram kola…" : `Kreiraj ${count(cr.rounds, NOUN.kolo)} · ${count(cr.tableCount, NOUN.stol)}`}
+                {cr.creating ? "Kreiram kola…" : `Kreiraj ${published ? newRoundsLabel(published.next, cr.rounds) : count(cr.rounds, NOUN.kolo)} · ${count(cr.tableCount, NOUN.stol)}`}
               </PrimaryButton>
             )}
           </Box>

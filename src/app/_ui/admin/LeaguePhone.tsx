@@ -582,16 +582,17 @@ function DatesTab({leagueId, defaults}: {leagueId: number; defaults: GatheringDe
           <NightGatheringForm
             key="new"
             isNew
-            night={{date: ld.suggestedDate, start_time: null, gathering_time: null, location: null}}
+            night={{date: ld.suggestedDate, start_time: null, gathering_time: null, rounds_per_night: null, location: null}}
             onCancel={() => setCreating(false)}
             today={ld.today}
             taken={ld.taken}
             leagueTime={defaults.time}
             leagueGathering={defaults.gathering ?? null}
+            leagueRounds={defaults.rounds ?? 3}
             leaguePlace={defaults.location}
             settingsTab="Postavke"
             onSave={async (night) => {
-              const added = await ld.add({date: night.date!, start_time: night.start_time, gathering_time: night.gathering_time, location: night.location});
+              const added = await ld.add({date: night.date!, start_time: night.start_time, gathering_time: night.gathering_time, rounds_per_night: night.rounds_per_night, location: night.location});
               if (added) setCreating(false);
               return added;
             }}
@@ -619,6 +620,7 @@ function DatesTab({leagueId, defaults}: {leagueId: number; defaults: GatheringDe
             taken={ld.taken}
             leagueTime={defaults.time}
             leagueGathering={defaults.gathering ?? null}
+            leagueRounds={defaults.rounds ?? 3}
             leaguePlace={defaults.location}
             settingsTab="Postavke"
             onSave={async (change) => {

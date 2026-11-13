@@ -44,7 +44,7 @@ import DatesView, {gatheringDefaults} from "./DatesView";
 import RoundsView from "./RoundsView";
 import useLeagueRounds from "@/app/_hooks/useLeagueRounds";
 import DraftView from "./DraftView";
-import {draftNight, DraftNightTab} from "@/app/_lib/ui/adminTonight";
+import {draftNight, nightRounds, publishedTonight, DraftNightTab} from "@/app/_lib/ui/adminTonight";
 import {isIsoDate} from "@/app/_lib/nights";
 import {leagueNightString} from "@/app/_lib/dates";
 import EditCalendarRoundedIcon from "@mui/icons-material/EditCalendarRounded";
@@ -123,6 +123,7 @@ function ManageLeagueDesktop() {
   // tonight's rounds still in Skica: Novo kolo creates new ones once they are published or discarded
   const tonight = leagueNightString();
   const tonightDraft = draftNight((leagueRounds.rounds ?? []).filter((r) => r.date === tonight), tonight);
+  const tonightPublished = publishedTonight(leagueRounds.rounds, tonight);
   const leagueNights = useLeagueNights(leagueId);
   // the count on the Sponzori tab
   const leagueSponsors = useLeagueSponsors(leagueId);
@@ -346,8 +347,10 @@ function ManageLeagueDesktop() {
             setShownNight(date);
             setView("draft");
           }}
-          defaultRounds={leagues.find((l) => l.id === leagueId)?.roundsPerNight}
+          // tonight's Broj kola (Datumi), else the league's Kola po večeri
+          defaultRounds={nightRounds(leagueNights.nights, tonight, leagues.find((l) => l.id === leagueId)?.roundsPerNight)}
           defaultSmokingTables={leagues.find((l) => l.id === leagueId)?.smokingTables}
+          published={tonightPublished}
           waiting={
             tonightDraft && tonightDraft.waiting > 0
               ? {
