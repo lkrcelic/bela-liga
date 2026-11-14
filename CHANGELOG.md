@@ -2,6 +2,21 @@
 
 What the commits changed for the people using the app, newest first. The reasons and details are in DECISIONS.md.
 
+## 14.11.2026 · Iz Trešete: Vrati stol, Uredi ishod, vrijeme kola, Nedolazak 4 / 6 / 10
+
+On development (83f310a..2ede4ab, DECISIONS #97).
+
+### Players
+- **Nedolazak za stol 4, 6, 10.** Pitanje *Jesu li … za stolom?* dolazi 4 minute nakon što kolo izađe i **Da, tu su** radi odmah. **Ne, nisu došli** može tek od 6. minute (napomena ispod gumba to kaže), a bez igre i odgovora stol se preskače u 10. minuti (dosad 3, 5, 8).
+
+### Admin
+- **Vrati stol** na preskočenom stolu i stolu s nedolaskom (Statusi stolova, računalo i mobitel): stol je opet u igri kao da su rekli *Da, tu su*, ekipe se vraćaju u turnir, a zabrana iz Kola 1 se ukida.
+- **Uredi ishod** na istim stolovima: pobjeda jedne ekipe (1001 : 700 po partiji, druga isključena) ili **Nitko · preskočen**. Stol tada piše **Dodijeljena pobjeda** / *Odluka admina*.
+- **Vrijeme kola**: koliko kolo traje od objave (**Vrijeme kola 24:32 · od 18:54**), a kad je odigrano **Kolo je trajalo 52 min**. Na računalu u bočnoj kartici i na kolu preko cijelog ekrana, na mobitelu na navy kartici, ekranu kola i u popisu kola.
+
+### Changed
+- **Ispravljeni meč se vraća u igru** (liga i turniri): kad adminov ispravak igre ostavi završeni meč bez ikoga na 1001, meč se ponovo igra za istim stolom s vremenom koje mu je ostalo, ako je stol od večeras i iza njega još ništa nije krenulo. Inače upozorenje kaže zašto ne može i admin dopisuje igre.
+
 ## 12.11.2026 · Dodir na ekipu otvara upis igre
 
 Live since 13.11. (21b86c9).

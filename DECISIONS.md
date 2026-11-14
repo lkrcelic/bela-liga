@@ -1987,3 +1987,29 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
     - **Decision**: Bela doesn't get them and has none of their code (no `Conference` table, no `conferenceId`, no
       dots). Bela's team chip stays `TeamChipBadge`. In Treseta they stay a difference from Bela (`BELA_SYNC.md`,
       Conferences), and they are never on the list of Treseta work to bring here, like Liga na dvije lokacije (#95).
+
+97. **Pet promjena iz Trešete u Beli** (the user's message of 14.11.: "idemo sa implementacijom 1-5", from the list of
+    Treseta work Bela didn't have; #95 and #96 say what stays Treseta's).
+    - **Vrati stol** (Treseta `3ad6bb9`), **Uredi ishod stola** (`5183b95`), **Vrijeme kola** (`61aa6b7`), **ispravljeni
+      meč se vraća u igru** (`467ea59`) and **Nedolazak za stol 4, 6, 10** (`86e5154`), one Bela commit each.
+    - **Bela's game kept**: Treseta gives a no-show 5 : 0 per match (a Slobodna runda's score, with a stored
+      `winner_side`); Bela keeps 1001 : 700 and no `winner_side` (Bela has none), so Uredi ishod's "Dodijeljena
+      pobjeda", its sheet and the tests read 1001 : 700. Treseta's reopened match copies its hands with zvanja 3/4;
+      Bela's copies the bela hands with their announcements, as Otključaj partiju already did (`unlock.ts`).
+    - **Ispravljeni meč**: Bela already gave a match closed by Vrijeme partije to the team with more points
+      (`finishedMatchWinner`), so only the reopening came over. A match closed by Završi meč that an admin's change
+      leaves under 1001 for both teams goes back in play at its table with the time it had left (Vrijeme partije
+      minus the time it was played), when the table is tonight's and nothing came after it (no later match with a
+      hand, no next Kolo or draft of its league or tournament). Otherwise the warning names why and the admin adds
+      the hands. It is for the league too, not only tournaments.
+    - **Vrati stol and Otključaj partiju (#89) both stay**: Vrati stol is the one-tap way from Statusi stolova for a
+      skipped or no-show table (the teams back, bans lifted, the next Kolo's draft dropped, overflow back to the
+      waiting list); Otključaj partiju stays on the admin scorepad for any locked table, with its own Vrijeme partije.
+    - **Nedolazak 4 / 6 / 10 replaces #89's 3 / 5 / 8**: the question at 4 minutes and Da, tu su works at once, Ne,
+      nisu došli from 6, the skip at 10.
+    - **Checked**: unit tests (582) and db tests (41, new attendance, tableOutcome, restoreOverflow and the reopen
+      cases in finishedMatchEdit) on a throwaway Postgres; on a copy of production with a seeded tournament day, on the
+      computer and the phone: Vrijeme kola on the side card, the navy card and the Kolo list; Uredi ishod giving a
+      skipped table to a team (Dodijeljena pobjeda, 2 : 0, 1001 : 700); Vrati stol on a no-show table (live again,
+      0 : 0); the player's question at 4 minutes with Da, tu su open and Ne, nisu došli locked until 6; deleting the
+      deciding hand of a finished match reopened it at 600 : 400 with 20 of its 35 minutes left.
