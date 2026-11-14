@@ -7,7 +7,8 @@ import {matchWinner} from "@/app/_lib/bela/scoring";
 import {declarationsError, InvalidResultError, NoWinnerWarning, normalizeBelaResult} from "@/app/_lib/validation/validateResult";
 import {transformBelaResult} from "@/app/_lib/helpers/databaseHelpers";
 import {createBelaResult} from "@/app/_lib/service/ongoingBelaResult/create";
-import {timeWinner} from "@/app/_lib/gameTime";
+import {matchDeadline, timeWinner} from "@/app/_lib/gameTime";
+import {leagueNight} from "@/app/_lib/dates";
 import {gameMinutesOf} from "@/app/_lib/service/match/timeLimit";
 import {lockKind} from "@/app/_lib/tableLock";
 import {updateOngoingBelaResult} from "@/app/_lib/service/ongoingBelaResult/update";
@@ -197,29 +198,192 @@ export function noWinnerWarning(before: FinishedScore, after: FinishedScore): st
   return `Nakon ove promjene meč je ${why}, pa se ne broji nijednoj ekipi. Rezultat stola, poredak i rejting ponovno se računaju.`;
 }
 
+// The warning when a finished match can't go back in play (reopenCheck says why): it stays without a winner until the
+// admin adds the hands that were played
+export function noWinnerAddHandsWarning(after: FinishedScore, why: string): string {
+  const score = `${after.player_pair1_score}:${after.player_pair2_score}`;
+  return `Nakon ove promjene meč je ${score} i nitko nema ${after.score_threshold ?? DEFAULT_THRESHOLD}. ${why}, pa se ne može ponovno otvoriti igračima: ostaje bez pobjednika dok ne dopišeš igre koje su odigrane. Rezultat stola, poredak i rejting ponovno se računaju.`;
+}
+
 // Options of a change of a finished match: allowNoWinner, the admin confirmed the "Meč ostaje bez pobjednika" warning
 export type HandEditOptions = {allowNoWinner?: boolean};
 
-// After a finished match's hands changed: its score, the round's wins, and for a finished round the standings
-// (and the ratings when the round's outcome changed). A match left without a winner needs the admin's confirmation.
-async function recountFinishedMatch(tx: Tx, matchId: number, allowNoWinner: boolean) {
+// What a change of a finished match did: reopened, the match is back in play at its table (reopenMatch)
+export type HandEditOutcome = {reopened: boolean};
+
+const finishedMatchSelect = {
+  id: true,
+  round_id: true,
+  player_pair1_score: true,
+  player_pair2_score: true,
+  score_threshold: true,
+  time_expired: true,
+  match_date: true,
+  start_time: true,
+  end_time: true,
+  belaResults: {
+    orderBy: {result_id: "asc"},
+    select: {
+      player_pair1_game_points: true,
+      player_pair2_game_points: true,
+      player_pair1_announcement_points: true,
+      player_pair2_announcement_points: true,
+      player_pair1_total_points: true,
+      player_pair2_total_points: true,
+      trump_caller_team: true,
+      pass: true,
+      complete_victory: true,
+      belaPlayerAnnouncements: {select: {team: true, announcement_type: true}},
+    },
+  },
+} as const;
+
+type FinishedMatchRow = Prisma.MatchGetPayload<{select: typeof finishedMatchSelect}>;
+
+// The table's won matches per team: a match without a winner counts for neither team
+function roundWins(matches: FinishedScore[]) {
+  const winners = matches.map(finishedMatchWinner);
+  return {team1_wins: winners.filter((w) => w === 1).length, team2_wins: winners.filter((w) => w === 2).length};
+}
+
+// The clock of a match going back in play: its start moved on by the time it stood closed, so it has the time it had
+// left when it was closed
+type ReopenClock = {startedAt: Date; endsAt: Date};
+
+/**
+ * Whether a finished match left without a winner can go back in play: the reason it can't, or its clock. The players
+ * go on with it only at a table of tonight (a league night, a tournament day) while nothing came after it: no later
+ * match at the table (one already opened is fine while it has no hand), and no next Kolo of its league or tournament
+ * made yet, not even a draft. A match without a time it had left (no start or end stored, or none left when it was
+ * closed) isn't reopened either. Otherwise only the admin adds its hands (or unlocks a tournament table, Otključaj
+ * partiju).
+ *
+ * The table's open match is locked first, so a player's hand saved into it at the same moment is either counted here
+ * or waits until this change is done (and then finds its match gone).
+ */
+async function reopenCheck(tx: Tx, match: FinishedMatchRow): Promise<{why: string} | ReopenClock> {
+  if (match.round_id == null) return {why: "Meč nije ni za jednim stolom"};
+  const round = await tx.round.findUnique({
+    where: {id: match.round_id},
+    select: {
+      round_number: true,
+      round_date: true,
+      status: true,
+      attendance: true,
+      leagueRounds: {select: {league_id: true}},
+      tournamentRounds: {select: {tournament_id: true}},
+    },
+  });
+  if (!round || round.status !== "PUBLISHED") return {why: "Stol nije objavljen"};
+  if (round.attendance === "NO_SHOW" || round.attendance === "SKIPPED") return {why: "Stol nije odigran"};
+  if (round.round_date?.getTime() !== leagueNight().getTime()) return {why: "Stol nije od večeras"};
+  if ((await tx.match.count({where: {round_id: match.round_id, id: {gt: match.id}}})) > 0) return {why: "Za stolom je već odigran sljedeći meč"};
+  await tx.$queryRaw`SELECT id FROM "OngoingMatch" WHERE round_id = ${match.round_id} FOR UPDATE`;
+  if ((await tx.ongoingBelaResult.count({where: {match: {round_id: match.round_id}}})) > 0) return {why: "Za stolom se već igra sljedeći meč"};
+  const leagues = round.leagueRounds.map((l) => l.league_id);
+  const tournaments = round.tournamentRounds.map((t) => t.tournament_id);
+  const nextKolo = await tx.round.count({
+    where: {
+      round_number: {gt: round.round_number ?? 0},
+      OR: [{leagueRounds: {some: {league_id: {in: leagues}}}}, {tournamentRounds: {some: {tournament_id: {in: tournaments}}}}],
+    },
+  });
+  if (nextKolo > 0) return {why: "Sljedeće kolo je već složeno"};
+
+  if (!match.start_time || !match.end_time) return {why: "Meč nema zapisano vrijeme"};
+  const startedAt = new Date(Date.now() - (match.end_time.getTime() - match.start_time.getTime()));
+  const endsAt = matchDeadline(startedAt, await gameMinutesOf(tx, match.round_id));
+  if (endsAt.getTime() <= Date.now()) return {why: "Meču je vrijeme već isteklo"};
+  return {startedAt, endsAt};
+}
+
+/**
+ * Puts a finished match back in play at its table (reopenCheck allowed it): it is the table's match being played
+ * again, with its hands (and their zvanja) and the time it had left. The empty match its closing opened is dropped, and
+ * a closed table opens again: it no longer counts in the standings and the ratings until it closes.
+ */
+async function reopenMatch(tx: Tx, match: FinishedMatchRow, score: {player_pair1_score: number; player_pair2_score: number}, clock: ReopenClock) {
+  const roundId = match.round_id!;
+  await tx.ongoingMatch.deleteMany({where: {round_id: roundId}});
+  await tx.ongoingMatch.create({
+    data: {
+      round_id: roundId,
+      ...score,
+      score_threshold: match.score_threshold,
+      match_date: match.match_date ?? clock.startedAt,
+      start_time: clock.startedAt,
+      started_at: clock.startedAt,
+      ends_at: clock.endsAt,
+      belaResults: {
+        create: match.belaResults.map((r) => ({
+          player_pair1_game_points: r.player_pair1_game_points,
+          player_pair2_game_points: r.player_pair2_game_points,
+          player_pair1_announcement_points: r.player_pair1_announcement_points,
+          player_pair2_announcement_points: r.player_pair2_announcement_points,
+          player_pair1_total_points: r.player_pair1_total_points,
+          player_pair2_total_points: r.player_pair2_total_points,
+          trump_caller_team: r.trump_caller_team,
+          pass: r.pass,
+          complete_victory: r.complete_victory,
+          belaPlayerAnnouncements: {create: r.belaPlayerAnnouncements.map((a) => ({team: a.team, announcement_type: a.announcement_type}))},
+        })),
+      },
+    },
+  });
+  await tx.match.delete({where: {id: match.id}});
+
+  const round = await tx.round.findUniqueOrThrow({
+    where: {id: roundId},
+    select: {
+      open: true,
+      team1_id: true,
+      team2_id: true,
+      attendance: true,
+      leagueRounds: {select: {league_id: true}},
+      matches: {select: {player_pair1_score: true, player_pair2_score: true, score_threshold: true, time_expired: true}},
+    },
+  });
+  await tx.round.update({where: {id: roundId}, data: {open: true, active: true, ...roundWins(round.matches)}});
+  if (round.open) return;
+  for (const {league_id} of round.leagueRounds) {
+    await recalcTeamScores(tx, league_id, [round.team1_id, round.team2_id]);
+  }
+  if (isRatedRound(round)) await replayRatings(tx);
+}
+
+/**
+ * After a finished match's hands changed: its score, the round's wins, and for a finished round the standings (and
+ * the ratings when the round's outcome changed).
+ *
+ * A match closed by Vrijeme partije goes to the team with more points, as it did when the time ran out; a level score
+ * leaves it without a winner. A match closed with time left that no team has won any more (nobody over 1001) goes back
+ * in play (reopenMatch) when nothing came after it; otherwise it is left without a winner until the admin adds its
+ * hands. A match left without a winner that had one needs the admin's confirmation.
+ */
+async function recountFinishedMatch(tx: Tx, matchId: number, allowNoWinner: boolean): Promise<HandEditOutcome> {
   const sums = await tx.belaResult.aggregate({
     where: {match_id: matchId},
     _sum: {player_pair1_total_points: true, player_pair2_total_points: true},
   });
-  const before = await tx.match.findUniqueOrThrow({
-    where: {id: matchId},
-    select: {player_pair1_score: true, player_pair2_score: true, score_threshold: true, time_expired: true},
-  });
+  const before = await tx.match.findUniqueOrThrow({where: {id: matchId}, select: finishedMatchSelect});
   const score = {player_pair1_score: sums._sum.player_pair1_total_points ?? 0, player_pair2_score: sums._sum.player_pair2_total_points ?? 0};
-  const warning = allowNoWinner ? null : noWinnerWarning(before, {...before, ...score});
+  const after = {...before, ...score};
+  if (!before.time_expired && finishedMatchWinner(after) == null) {
+    const check = await reopenCheck(tx, before);
+    if (!("why" in check)) {
+      await reopenMatch(tx, before, score, check);
+      return {reopened: true};
+    }
+    if (!allowNoWinner && finishedMatchWinner(before) != null) throw new NoWinnerWarning(noWinnerAddHandsWarning(after, check.why));
+  }
+  const warning = allowNoWinner ? null : noWinnerWarning(before, after);
   if (warning) throw new NoWinnerWarning(warning);
   const match = await tx.match.update({
     where: {id: matchId},
     data: score,
     select: {round_id: true},
   });
-  if (match.round_id == null) return;
+  if (match.round_id == null) return {reopened: false};
 
   const round = await tx.round.findUniqueOrThrow({
     where: {id: match.round_id},
@@ -236,35 +400,34 @@ async function recountFinishedMatch(tx: Tx, matchId: number, allowNoWinner: bool
     },
   });
   // a match without a winner (the admin confirmed it) counts for neither team
-  const winners = round.matches.map(finishedMatchWinner);
-  const team1Wins = winners.filter((w) => w === 1).length;
-  const team2Wins = winners.filter((w) => w === 2).length;
-  await tx.round.update({where: {id: round.id}, data: {team1_wins: team1Wins, team2_wins: team2Wins}});
+  const wins = roundWins(round.matches);
+  await tx.round.update({where: {id: round.id}, data: wins});
 
-  if (round.open) return;
+  if (round.open) return {reopened: false};
   for (const {league_id} of round.leagueRounds) {
     await recalcTeamScores(tx, league_id, [round.team1_id, round.team2_id]);
   }
   const outcome = (a: number, b: number) => Math.sign(a - b);
-  if (isRatedRound(round) && outcome(round.team1_wins, round.team2_wins) !== outcome(team1Wins, team2Wins)) {
+  if (isRatedRound(round) && outcome(round.team1_wins, round.team2_wins) !== outcome(wins.team1_wins, wins.team2_wins)) {
     await replayRatings(tx);
   }
+  return {reopened: false};
 }
 
 // Runs a change of a finished match's hands with the round locked, then recounts
-async function changeFinishedMatch(matchId: number, change: (tx: Tx) => Promise<void>, options: HandEditOptions) {
-  await prisma.$transaction(async (tx) => {
+async function changeFinishedMatch(matchId: number, change: (tx: Tx) => Promise<void>, options: HandEditOptions): Promise<HandEditOutcome> {
+  return prisma.$transaction(async (tx) => {
     const match = await tx.match.findUnique({where: {id: matchId}, select: {round_id: true}});
     if (!match) throw new NotFoundError("Meč ne postoji.");
     if (match.round_id != null) await lockRound(tx, match.round_id);
     await change(tx);
-    await recountFinishedMatch(tx, matchId, options.allowNoWinner === true);
+    return recountFinishedMatch(tx, matchId, options.allowNoWinner === true);
   }, {timeout: 60000});
 }
 
 export type HandTarget = {kind: "ongoing"} | {kind: "finished"; matchId: number};
 
-export async function addHand(roundId: number, target: HandTarget, hand: AdminHand, options: HandEditOptions = {}): Promise<void> {
+export async function addHand(roundId: number, target: HandTarget, hand: AdminHand, options: HandEditOptions = {}): Promise<HandEditOutcome> {
   const {declarations} = await assertEditableTable(roundId);
   if (target.kind === "ongoing") {
     // a table that hasn't started gets its first match here (refused when the round is over)
@@ -273,14 +436,14 @@ export async function addHand(roundId: number, target: HandTarget, hand: AdminHa
       (await createOngoingMatch({round_id: roundId, score_threshold: DEFAULT_THRESHOLD}));
     const result = adminHandToResult(hand, ongoing.id);
     await createBelaResult(result, (r) => r, {admin: true});
-    return;
+    return {reopened: false};
   }
 
   const match = await prisma.match.findUnique({where: {id: target.matchId}, select: {round_id: true}});
   if (!match || match.round_id !== roundId) throw new NotFoundError("Taj meč nije za ovim stolom.");
   const result = adminHandToResult(hand, target.matchId);
   assertDeclarations(declarations, result);
-  await changeFinishedMatch(target.matchId, async (tx) => {
+  return changeFinishedMatch(target.matchId, async (tx) => {
     await tx.belaResult.create({data: transformBelaResult(result)});
   }, options);
 }
@@ -299,13 +462,13 @@ export async function refuseUnlessMyHand(kind: HandKind, resultId: number, viewe
   await refuseUnlessMyTable(roundId, viewer);
 }
 
-export async function updateHand(kind: HandKind, resultId: number, hand: AdminHand, options: HandEditOptions = {}): Promise<void> {
+export async function updateHand(kind: HandKind, resultId: number, hand: AdminHand, options: HandEditOptions = {}): Promise<HandEditOutcome> {
   if (kind === "ongoing") {
     const stored = await prisma.ongoingBelaResult.findUnique({where: {result_id: resultId}, select: {match_id: true}});
     if (!stored) throw new NotFoundError("Igra ne postoji.");
     const result = adminHandToResult(hand, stored.match_id);
     await updateOngoingBelaResult({result_id: resultId, resultData: result, normalize: (r) => r});
-    return;
+    return {reopened: false};
   }
 
   const stored = await prisma.belaResult.findUnique({
@@ -317,7 +480,7 @@ export async function updateHand(kind: HandKind, resultId: number, hand: AdminHa
   assertDeclarations(stored.match.round?.declarations ?? true, result);
   const {announcements, match_id: _matchId, ...data} = result;
   void _matchId;
-  await changeFinishedMatch(stored.match_id, async (tx) => {
+  return changeFinishedMatch(stored.match_id, async (tx) => {
     await tx.belaResult.update({where: {result_id: resultId}, data});
     await tx.belaPlayerAnnouncement.deleteMany({where: {result_id: resultId}});
     if (announcements?.length) {
@@ -328,7 +491,7 @@ export async function updateHand(kind: HandKind, resultId: number, hand: AdminHa
   }, options);
 }
 
-export async function deleteHand(kind: HandKind, resultId: number, options: HandEditOptions = {}): Promise<void> {
+export async function deleteHand(kind: HandKind, resultId: number, options: HandEditOptions = {}): Promise<HandEditOutcome> {
   if (kind === "ongoing") {
     await prisma.$transaction(async (tx) => {
       const [hand] = await tx.$queryRaw<{match_id: number; player_pair1_total_points: number; player_pair2_total_points: number}[]>`
@@ -345,12 +508,12 @@ export async function deleteHand(kind: HandKind, resultId: number, options: Hand
       });
       await tx.ongoingBelaResult.delete({where: {result_id: resultId}});
     });
-    return;
+    return {reopened: false};
   }
 
   const stored = await prisma.belaResult.findUnique({where: {result_id: resultId}, select: {match_id: true}});
   if (!stored) throw new NotFoundError("Igra ne postoji.");
-  await changeFinishedMatch(stored.match_id, async (tx) => {
+  return changeFinishedMatch(stored.match_id, async (tx) => {
     await tx.belaResult.delete({where: {result_id: resultId}});
   }, options);
 }
