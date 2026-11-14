@@ -1979,3 +1979,11 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
     - **For the Treseta → Bela review**: the locations commits are never on the list of Treseta work to bring here.
       In Treseta it is a difference from Bela (`BELA_SYNC.md`), Treseta only, so Bela's changes to place fields keep
       coming over there as they are mapped, not the other way round.
+
+96. **Bela nema konferencije** (the user's message of 14.11.: "makni konferencije iz bele to nam ne treba").
+    - **What it is**: Treseta's conferences (its `CONFERENCES_PLAN.md`, commits `26daef3`, `741d5df`, `49914f1`):
+      groups of a league's teams, each with a colour, a dot beside the team's name, and Novo kolo pairing only within
+      a conference.
+    - **Decision**: Bela doesn't get them and has none of their code (no `Conference` table, no `conferenceId`, no
+      dots). Bela's team chip stays `TeamChipBadge`. In Treseta they stay a difference from Bela (`BELA_SYNC.md`,
+      Conferences), and they are never on the list of Treseta work to bring here, like Liga na dvije lokacije (#95).
