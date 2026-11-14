@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import {after, before, test} from "node:test";
 import {prisma} from "@/app/_lib/prisma";
 import {createBelaResult} from "@/app/_lib/service/ongoingBelaResult/create";
+import {updateOngoingBelaResult} from "@/app/_lib/service/ongoingBelaResult/update";
 import {HANDS_CHANGED} from "@/app/_lib/validation/validateResult";
 
 // The same hand from two phones at one table: the wizard sends the hands its board held (expected_hands), so a hand
@@ -89,4 +90,17 @@ test("the hand of an admin's scorepad carries no hand count and is never held ba
   assert.deepEqual(await createBelaResult(hand(matchId), (r) => r, {admin: true}), {closed: false});
   assert.deepEqual(await createBelaResult(hand(matchId), (r) => r, {admin: true}), {closed: false});
   assert.deepEqual(await score(matchId), [240, 84, 2]);
+});
+
+// The wizard sends its whole entry to a correction of a saved hand too, expected_hands included (null, or the board's
+// count); the edit doesn't count hands and must not hand the field to the database, which has no such column
+test("a player's correction of a saved hand that carries expected_hands is saved", async () => {
+  const matchId = await table(teams[1], teams[3]);
+  await createBelaResult(hand(matchId, 0));
+  const {result_id} = await prisma.ongoingBelaResult.findFirstOrThrow({where: {match_id: matchId}});
+  const corrected = {...hand(matchId), player_pair1_game_points: 69, player_pair2_game_points: 93, player_pair1_total_points: 69, player_pair2_total_points: 93, trump_caller_team: 2 as const};
+  await updateOngoingBelaResult({result_id, resultData: {...corrected, expected_hands: null}});
+  assert.deepEqual(await score(matchId), [69, 93, 1]);
+  await updateOngoingBelaResult({result_id, resultData: {...hand(matchId), expected_hands: 1}});
+  assert.deepEqual(await score(matchId), [120, 42, 1]);
 });

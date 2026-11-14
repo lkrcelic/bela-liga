@@ -12,8 +12,11 @@ type UpdateOngoingBelaResultType = {
 // Replaces a hand and moves the match score by the difference, all in one transaction.
 // The match is taken from the stored hand, never from the request body.
 export async function updateOngoingBelaResult({result_id, resultData, normalize = normalizeBelaResult}: UpdateOngoingBelaResultType): Promise<void> {
-    const {announcements, ...nonRelationalData} = normalize(resultData);
-    delete nonRelationalData.match_id;
+    // match_id and expected_hands aren't columns of the hand: the match comes from the stored hand, and expected_hands
+    // only guards a new hand against being entered twice (createBelaResult), an edit of a saved one doesn't count hands
+    const {announcements, match_id: _matchId, expected_hands: _expectedHands, ...nonRelationalData} = normalize(resultData);
+    void _matchId;
+    void _expectedHands;
 
     await prisma.$transaction(async (tx) => {
         // Lock the hand so two edits of it at the same time can't both apply their difference to the match score
