@@ -37,7 +37,7 @@ Live since 13.11. (21b86c9).
 
 ## 11.11.2026 · Turnir sa skrivenim brojem prijava
 
-Na developmentu (DECISIONS #93).
+Live since 11.11. (07414b4, DECISIONS #93).
 
 ### Players
 - **Turnir sa skrivenim brojem prijava.** Do 1. kola igrači ne vide koliko je ekipa prijavljeno ni popis ekipa. Na tom mjestu piše **Broj mjesta je ograničen** (ili **Mjesta ima za sve**), a gumb je uvijek **Prijavi se**, i kad je turnir pun.
@@ -48,14 +48,14 @@ Na developmentu (DECISIONS #93).
 
 ## 11.11.2026 · Turnir koji se igra vide i oni koji ga ne igraju
 
-Na developmentu.
+Live since 11.11. (21c6eb7).
 
 ### Players
 - **Početna · Turniri i /turniri dok se turnir igra.** Tko nije u turniru (gost, igrač čija ekipa ne igra, ekipa na listi čekanja) vidio je „Nema nadolazećih turnira“ i nigdje taj turnir. Sad gore stoji kartica **Turnir danas** s kolom koje se igra i **Poredak i rezultati** ispod nje, a ekipa na listi čekanja vidi svoje mjesto na listi.
 
 ## 10.11.2026 · Poslije ponoći večer lige je i dalje „Večeras“
 
-Na developmentu.
+Live since 11.11. (21c6eb7).
 
 ### Players
 - **Raspored, Početna i Burza poslije ponoći.** Večer lige traje do 06:00, ali su igračevi ekrani „danas“ računali po kalendaru, pa je u 00:30 večer koja se još igra pisala **Odigrano**, a kartica je skakala na **Sljedeća večer** sljedećeg tjedna. Sad do 06:00 ta večer ostaje **Večeras**: u Rasporedu (kartica i oznaka), na kartici Početne i u *Tu smo*.
@@ -63,7 +63,7 @@ Na developmentu.
 
 ## 10.11.2026 · Google se više ne veže na tuđi račun s lozinkom
 
-Na developmentu (DECISIONS #92).
+Live since 11.11. (21c6eb7, DECISIONS #92).
 
 ### Players
 - **Prijava s Googleom i račun otvoren s lozinkom.** Email koji se upiše pri registraciji nitko ne provjerava, pa je dosad onaj tko se prvi registrirao s tuđim emailom pokupio Googleovu prijavu pravog vlasnika — ušao bi u taj isti račun, sa svojim imenom, rejtingom, ekipom i brojem. Sad se Google veže na račun s lozinkom tek kad se na tom mobitelu prvo prijaviš **lozinkom**; inače Prijava kaže „Račun s tim emailom je otvoren s korisničkim imenom i lozinkom…“.
@@ -71,7 +71,7 @@ Na developmentu (DECISIONS #92).
 
 ## 09.11.2026 · Kolo preko cijelog ekrana i Otvori u popisu turnira
 
-Na developmentu.
+Live since 11.11. (21c6eb7).
 
 ### Admin
 - **Kolo preko cijelog ekrana (računalo).** Objavljeno kolo ima u redu statusa novo dugme uz *Uredi stolove*: otvara kolo preko cijelog ekrana, sa stolovima na dvije trećine i **poretkom turnira** na trećini — za ekran u klubu. Zaglavlje kaže koje je kolo, koliko je stolova uživo i koliko je gotovo; **Zatvori** (ili Esc) vraća natrag. Prikaz se sam osvježava dok se igra, a ništa se u njemu ne uređuje.
