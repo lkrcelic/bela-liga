@@ -2,6 +2,13 @@
 
 What the commits changed for the people using the app, newest first. The reasons and details are in DECISIONS.md.
 
+## 14.11.2026 · Ispravak spremljene igre opet radi
+
+On development.
+
+### Players
+- **Ispravak spremljene igre** (dodir na igru na scorepadu, Korak 3 od 3, **Spremi**) se opet sprema. Od 09.11. je uvijek pisalo *Igra nije spremljena.* Greška je i na produkciji dok se ovo ne objavi.
+
 ## 14.11.2026 · Završi meč ne gubi sljedeću igru
 
 On development (#74).
