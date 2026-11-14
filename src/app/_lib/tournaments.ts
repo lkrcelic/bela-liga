@@ -26,18 +26,12 @@ export function isComingUp(t: {phase: TournamentPhase; date: string}, today: str
   return t.phase === "upcoming" && t.date >= today;
 }
 
-// The tournament the card on top of Početna · Turniri (and the computer's strip) shows: one being played that the viewer
-// plays in; else the viewer's own one starting today (Tu smo on its card); else one being played anyway (a visitor, a
-// team on the waiting list or not playing: its day card and Poredak i rezultati, so it isn't hidden while it is played,
-// the viewer's own first); else the soonest coming up (the viewer's first on the same day; isComingUp leaves out one
-// whose day passed without starting). today: the league's date (YYYY-MM-DD).
+// The tournament the card on top of Početna · Turniri (and the computer's strip) shows, as in Treseta: one being played
+// that the viewer plays in; else the soonest coming up (the viewer's first on the same day; isComingUp leaves out one
+// whose day passed without starting). Someone not playing follows a tournament being played from the Uživo row.
+// today: the league's date (YYYY-MM-DD).
 export function mainTournament<T extends {phase: TournamentPhase; date: string; me: {status: "REGISTERED" | "WAITING"} | null}>(list: T[], today: string): T | null {
-  const live = list.filter((t) => t.phase === "active");
-  const playing = live.find((t) => t.me?.status === "REGISTERED");
-  if (playing) return playing;
-  const coming = list.filter((t) => isComingUp(t, today)).sort((a, b) => a.date.localeCompare(b.date) || Number(!!b.me) - Number(!!a.me));
-  if (coming[0]?.me && coming[0].date === today) return coming[0];
-  return live.find((t) => t.me) ?? live[0] ?? coming[0] ?? null;
+  return list.find((t) => t.phase === "active" && t.me?.status === "REGISTERED") ?? upcomingTournaments(list, today)[0] ?? null;
 }
 
 type Listed = {phase: TournamentPhase; date: string; me: {status: "REGISTERED" | "WAITING"} | null};
