@@ -2,6 +2,14 @@
 
 What the commits changed for the people using the app, newest first. The reasons and details are in DECISIONS.md.
 
+## 14.11.2026 · Završi meč ne gubi sljedeću igru
+
+On development (#74).
+
+### Players
+- **Završi meč** ostaje na ekranu (s kružićem) dok se ne otvori sljedeći meč, pa drugi dodir više ne otvara **Upiši igru** za već završeni meč.
+- Igra koja se ne može spremiti jer je meč u međuvremenu završen (isteklo vrijeme ili ga je netko završio) više ne nestaje bez riječi: piše *Meč je već završen, pa ova igra nije spremljena.* i gumb **Na meč**.
+
 ## 14.11.2026 · Iz Trešete: Vrati stol, Uredi ishod, vrijeme kola, Nedolazak 4 / 6 / 10
 
 On development (83f310a..2ede4ab, DECISIONS #97).

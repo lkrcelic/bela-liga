@@ -175,7 +175,9 @@ export default function ScoreBoardPage() {
     setFinishError(null);
     try {
       const outcome = await createMatchAPI(matchId);
-      useOngoingMatchStore.getState().resetOngoingMatch();
+      // The board keeps the finished match (and `finishing`) until the next page is up: that page loads its own match
+      // behind a spinner. Emptying the store here turned Završi meč into Upiši igru under the finger, for the closed
+      // match, and the hand entered there was lost.
       // replace, so going back doesn't open the match that no longer exists
       if (outcome.nextOngoingMatchId) {
         pipPops.set(outcome.nextOngoingMatchId, winner);
@@ -219,7 +221,7 @@ export default function ScoreBoardPage() {
   // leaves an extra history entry, and saving would then go back to the first step instead of the board.
   const openedAt = useRef(0);
   const newHand = (caller?: 0 | 1) => {
-    if (Date.now() - openedAt.current < 1500) return;
+    if (finishing || Date.now() - openedAt.current < 1500) return;
     openedAt.current = Date.now();
     // the hands the board shows: a hand saved from another phone after this makes the server ask before saving
     startNewHand(matchId, rows.length);
@@ -230,7 +232,7 @@ export default function ScoreBoardPage() {
 
   // On the phone a tap on a team's card opens the hand entry with that team as the caller (when Upiši igru is offered).
   // On the computer the entry panel is next to the board, so the cards don't do anything there.
-  const canEnter = winner == null && (!clock.expired || tied) && opening == null;
+  const canEnter = winner == null && (!clock.expired || tied) && opening == null && !finishing;
 
   const panels = (size: "phone" | "desktop") =>
     ([0, 1] as const).map((i) => (
