@@ -1969,3 +1969,13 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
       to 2 rounds, a player of a team that is here sees Odlazimo while round 2 has an open table, and once it closes
       the card is gone and Odlazimo gets 400 "Večer je završila."; Broj kola saved, shown and reset on the computer
       and on the phone. npm test and tsc clean.
+
+95. **Liga na dvije lokacije ostaje samo u Treseti** (the user's message of 14.11.: "To nam ne treba u beli").
+    - **What it is**: Treseta's `feat/locations` (`LOCATIONS_PLAN.md` there): places become one shared list,
+      Lokacije, and a league night can be played at two places at once, the admin splitting the teams between them
+      (Podjela), each place with its own Tu smo, Kola, Skice and tables.
+    - **Decision**: Bela doesn't get it. Bela's league keeps one place per night, and its place stays the three text
+      fields on the league, the night and the tournament (`location_name`, `location_address`, `location_url`).
+    - **For the Treseta → Bela review**: the locations commits are never on the list of Treseta work to bring here.
+      In Treseta it is a difference from Bela (`BELA_SYNC.md`), Treseta only, so Bela's changes to place fields keep
+      coming over there as they are mapped, not the other way round.
