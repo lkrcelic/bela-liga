@@ -11,10 +11,12 @@ The scheduled routines of this repo work as one team. Each local scheduled task 
 | `bela-release-review` | laptop | started in the chain; fallback 02:00 and 14:00 | reviews `master..development`, tests, prepares and makes the deploy | — |
 | `bela-nightly-sync` | laptop | 05:00 | deployed Bela commits → Treseta branch `bela-sync` | — |
 | `bela-jutarnji-izvjestaj` | laptop | 06:45 | one morning message for the user | — |
-| Bela app scan | cloud | Mon and Thu 07:00 | static code review | issues `auto-scan` |
-| Bela mobile UX patrol | cloud | 03:00 | phone screens | issues `mobile-ux-scan` |
+| `bela-app-scan` | cloud | Mon and Thu 07:00 | static code review | issues `auto-scan` |
+| `bela-mobile-ux-patrol` | cloud | 03:00 | phone screens on the generated world (`npm run seed:e2e`) | issues `mobile-ux-scan` |
 
 The chain hands off with the scheduled-tasks tool `run_scheduled_task`. The fallback crons only catch a broken chain: every routine has a guard, so a fallback finds its work done and stops.
+
+**Cloud routines** (scan and UX patrol) run on claude.ai in a fresh clone: their routine's prompt only says to check out `development` and follow `rutine/<id>.md`. Of this file, only The team and Issues apply to them; the main folder, sandbox, lock and report rules are the laptop's. Their report is the issues they file.
 
 ## Places
 
