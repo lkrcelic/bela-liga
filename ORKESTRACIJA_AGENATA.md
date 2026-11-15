@@ -24,7 +24,7 @@ pogl. 3, a koji test ide uz koji commit u pogl. 5. Stanje 15.11.
 | skill `testovi` (`.claude/skills/testovi/SKILL.md`) | pravila **za agente**: koji test uz koju promjenu, kako se piše unit, db i Playwright test, red → green, kako se pokreće `test:db` | napravljen 15.11. |
 | agent `e2e-reviewer` (`.claude/agents/`) | provjeri testove u diffu prema skillu; zovu ga sesija prije commita, fixer i release review | napravljen 15.11. |
 | `.githooks/pre-commit` | `npm test` prije commita koji dira kod (~5 s) | napravljen 15.11., uključen u ovom checkoutu |
-| [`rutine/`](rutine/README.md) | `README.md` (tim, zajednička pravila, labeli, brava, izvještaji), prompt svake lokalne rutine i graf `tok-rada.svg`; lokalni zadatak samo kaže "pročitaj i slijedi" | napravljeno 15.11.; cloud rutine (scan, UX patrola) još nisu prešle |
+| [`rutine/`](rutine/README.md) | `README.md` (tim, zajednička pravila, labeli, brava, izvještaji), prompt svake rutine (lokalne i cloud) i graf `tok-rada.svg`; zadatak u aplikaciji i rutina na claude.ai samo kažu "pročitaj i slijedi" | napravljeno 15.11. |
 | `e2e/FLOWS.md` *(novi, iz E2E_PLAN pogl. 9)* | tokovi igrača, organizatora i admina, uz svaki ime testa ili "nema" | faza E5 |
 
 Planovi (`*_PLAN.md`, ovaj file) su za odluke i čitaš ih ti. Skill `testovi`, `CLAUDE.md` i `rutine/` su za agente:
@@ -181,7 +181,7 @@ flowchart LR
 
 | Faza | Što | Gotovo kad |
 | --- | --- | --- |
-| **O1 Temelj** | ~~skill `testovi`; agent `e2e-reviewer`; pravilo u `CLAUDE.md`; `pre-commit` hook; fixer i release review po skillu; promptovi lokalnih rutina u `rutine/`; novi labeli~~ (15.11.); cloud rutine u `rutine/` | sesija bez upute napiše test uz promjenu logike; rutine čitaju prompt iz repoa |
+| **O1 Temelj** | ~~skill `testovi`; agent `e2e-reviewer`; pravilo u `CLAUDE.md`; `pre-commit` hook; fixer i release review po skillu; promptovi lokalnih rutina u `rutine/`; novi labeli; cloud rutine u `rutine/`~~ (15.11.) | sesija bez upute napiše test uz promjenu logike; rutine čitaju prompt iz repoa |
 | **U1–U2** | `test:db` u noćnom pokretanju, izvještaj pokrivenosti, P1 db testovi (UNIT_PLAN) | `test:db` svaku noć zelen; P1 pokriven |
 | **E1–E4** | compose, prolaz kroz stranice, dozvole, C1–C9 (E2E_PLAN faze 1–4) | C1 (ligaška večer) zelen `--repeat-each=5` |
 | **O2 Tim** | ~~guard po SHA-u; brava; kroničar; stanja issuea; lanac fixer → (E2E) → release review~~ (15.11.); E2E noćna se uključuje s E5 | jedna noć bez tvoje intervencije, jedna jutarnja poruka |
@@ -192,7 +192,7 @@ zadnja buga. Zatim tim (O2).
 
 ## 7. Gotovo do sada (14.–15.11.)
 
-- Generator testnih podataka: `e2e/seed/`, `npm run seed:e2e` (svijet oblika produkcije za ~10 s, isti za isti
+- Generator testnih podataka (na `development` od 15.11., 9642282; UX patrola radi na njemu): `e2e/seed/`, `npm run seed:e2e` (svijet oblika produkcije za ~10 s, isti za isti
   seed) i `npm run seed:verify` (16 pravila).
 - Podman VM ima 12 GB. Testna baza je `bela-e2e-pg` (Postgres 17 kao produkcija) na 55432.
 - Odluke u E2E planu: jedna veličina podataka; kako dodajemo testove (pogl. 9).

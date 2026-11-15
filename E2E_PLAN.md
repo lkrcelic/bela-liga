@@ -215,7 +215,7 @@ zamrznutim satom preglednika.
    (`dev:reset` cilja `localhost:5432`, koji drži `support_fan-db_1`), a jedini korisnik je UX patrola u cloudu,
    koja danas podatke gradi klikanjem kroz mobitel. Patrola prelazi na `npm run seed:e2e` i čita
    `seed-manifest.json`, pa noć troši samo na gledanje ekrana, a ne na stvaranje podataka. Kad prijeđe,
-   `prisma/seed.ts` i `dev:reset` mogu otići.
+   `prisma/seed.ts` i `dev:reset` mogu otići. **15.11.:** patrola je prešla (`rutine/bela-mobile-ux-patrol.md`).
 4. **Kad E2E padne:** GitHub issue s labelom `e2e` ili samo izvještaj?
 5. **Blokira li crveni E2E deploy na produkciju?** Prijedlog: da.
 
