@@ -218,7 +218,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
     // A player who signed up with a password and later uses Google with the same email gets into the same account
     // instead of an "account not linked" error. Google verifies its emails; the email given at a password sign-up
-    // is not verified (see BACKEND_REVIEW.md, G), so the signIn callback below decides which of those links is made
+    // is not verified (see docs/arhiva/BACKEND_REVIEW.md, G), so the signIn callback below decides which of those links is made
     // (_lib/auth/googleLink.ts) — NextAuth on its own would link by email alone.
     allowDangerousEmailAccountLinking: true,
   })],

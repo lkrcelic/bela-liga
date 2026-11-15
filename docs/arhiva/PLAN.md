@@ -2,7 +2,7 @@
 
 Source: Claude Design project "Piatnik Bela Liga app refresh"
 (`Bela Liga Refresh.dc.html`, `ScorepadPhone.dc.html`, `ScorepadScreens.dc.html`, `Desktop.dc.html`).
-Branch: `feat/new-screens`. Decisions are logged in [DECISIONS.md](DECISIONS.md), blockers in [BLOCKERS.md](BLOCKERS.md).
+Branch: `feat/new-screens`. Decisions are logged in [DECISIONS.md](../../DECISIONS.md), blockers in [BLOCKERS.md](BLOCKERS.md).
 
 ## Stack (discovered)
 
