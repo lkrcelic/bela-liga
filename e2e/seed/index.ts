@@ -109,11 +109,12 @@ async function main() {
   await seedSponsors(ctx, current.league.league_id);
   await seedBurza(ctx, people, current, leagues.past2);
 
-  const outDir = join(__dirname, "out");
+  // the suite (e2e/local/app.sh) gives each section its own manifest folder
+  const outDir = process.env.E2E_SEED_OUT ?? join(__dirname, "out");
   mkdirSync(outDir, {recursive: true});
   const manifest = {seed, now: now.toISOString(), tonight: ctx.tonightString, catalog: ctx.catalog};
   writeFileSync(join(outDir, "seed-manifest.json"), JSON.stringify(manifest, null, 2));
-  ctx.log(`done in ${lap()} → e2e/seed/out/seed-manifest.json`);
+  ctx.log(`done in ${lap()} → ${join(outDir, "seed-manifest.json")}`);
   await ctx.prisma.$disconnect();
 }
 

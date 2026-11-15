@@ -21,6 +21,7 @@ pogl. 3, a koji test ide uz koji commit u pogl. 5. Stanje 15.11.
 | `ORKESTRACIJA_AGENATA.md` | ovaj plan: tko je u timu, raspored, kako surađuju, faze | nacrt, 14.11. |
 | [`E2E_PLAN.md`](E2E_PLAN.md) | Playwright testovi: compose, generirani podaci, popis testova, rutina, kako dodajemo testove (pogl. 9) | odluke od 14.11.; generator gotov |
 | [`UNIT_PLAN.md`](UNIT_PLAN.md) | unit i db testovi: pravila, rupe, backlog | nacrt, 14.11. |
+| [`E2E_SUITE_PLAN.md`](E2E_SUITE_PLAN.md) | kako agenti pišu Playwright suite: baza, pilot C1, deset sekcija paralelno, svaka sa svojim serverom i bazom; briefovi u `e2e/sekcije/` | u tijeku od 15.11. |
 | skill `testovi` (`.claude/skills/testovi/SKILL.md`) | pravila **za agente**: koji test uz koju promjenu, kako se piše unit, db i Playwright test, red → green, kako se pokreće `test:db` | napravljen 15.11. |
 | agent `e2e-reviewer` (`.claude/agents/`) | provjeri testove u diffu prema skillu; zovu ga sesija prije commita, fixer i release review | napravljen 15.11. |
 | `.githooks/pre-commit` | `npm test` prije commita koji dira kod (~5 s) | napravljen 15.11., uključen u ovom checkoutu |
