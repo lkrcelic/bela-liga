@@ -2,6 +2,13 @@
 
 What the commits changed for the people using the app, newest first. The reasons and details are in DECISIONS.md.
 
+## 15.11.2026 · Novo kolo i Skica kola pokazuju večer
+
+On development (#28).
+
+### Admin
+- **Novo kolo** i **Skica kola** na mobitelu uvijek pokazuju večer (*NED 15. 11.*) iza imena lige; dugo ime lige se skraćuje s *…*, a ne datum. Dosad se datum nije vidio, pa poslije ponoći nije bilo jasno na koju večer idu kola.
+
 ## 14.11.2026 · Ispravak spremljene igre opet radi
 
 On development.

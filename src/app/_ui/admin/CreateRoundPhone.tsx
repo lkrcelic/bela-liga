@@ -65,7 +65,7 @@ export default function CreateRoundPhone({leagueId}: {leagueId: number}) {
 
   return (
     <Screen fill gap={14}>
-      <TopBar onBack={nav.back} eyebrow={`${league?.name ?? "Liga"} · ${nightLabel(tonight)}`} title="Novo kolo" />
+      <TopBar onBack={nav.back} eyebrow={league?.name ?? "Liga"} eyebrowKeep={nightLabel(tonight)} title="Novo kolo" />
       {cr.blocked ? (
         <Box sx={{...cardSx, p: 0, overflow: "hidden"}}>{cr.blocked}</Box>
       ) : (

@@ -87,7 +87,7 @@ export default function DraftPhone({leagueId, date}: {leagueId: number; date: st
     <Screen fill gap={14}>
       <TopBar
         onBack={nav.back}
-        eyebrow={`${league?.name ?? "Liga"} · ${nightLabel(date)}`}
+        eyebrow={league?.name ?? "Liga"} eyebrowKeep={nightLabel(date)}
         title="Skica kola"
         right={
           night && counts.unpublished > 0 ? (
