@@ -2,6 +2,28 @@
 
 What the commits changed for the people using the app, newest first. The reasons and details are in DECISIONS.md.
 
+## 15.11.2026 · Iz Trešete: liga na dvije lokacije
+
+On development (DECISIONS #98).
+
+### Players
+- **Vaša lokacija** na kartici večeri: kad se večer igra na dvije lokacije, ekipa vidi svoju lokaciju (s adresom i **Karta**). Ekipa koja još nije raspoređena vidi **Javi se adminu**, a **Tu smo** je zaključan dok je admin ne rasporedi. Ekipa sa zabranom i dalje vidi zabranu.
+- Kartica stola piše koje je to kolo večeri na tvojoj lokaciji: **Stol 1 · Kolo 1/3**.
+- Nove kartice na Početnoj, svake ligaške večeri: **Sljedeći stol** (odigrali ste stol, sljedeće kolo još nije objavljeno), **Pauza** (ekipa preskače kolo), **Kraj večeri** (zadnje kolo vaše lokacije je odigrano) i **Nema zakazane večeri**.
+- **Raspored** pokazuje obje lokacije večeri, a vaša piše *Vi*.
+- **Dnevni poredak** večeri na dvije lokacije ima prekidač **Sve | lokacija | lokacija**.
+
+### Admin
+- **Lokacije** (izbornik, pokraj Sponzora): jedan popis mjesta za lige, večeri i turnire. Promjena mjesta vrijedi svugdje gdje se koristi; mjesto u upotrebi se ne može obrisati. U Podacima, Novoj ligi, Uredi večer i obrascu turnira mjesto se bira s popisa ili dodaje.
+- **Uredi večer · Druga lokacija**: večer se može igrati na dva mjesta odjednom, a druga lokacija može imati svoj **Broj kola** (inače isti kao prva).
+- **Podjela** (nova kartica iza Novog kola; na mobitelu s Večeri): ekipe se povlače ili premještaju na jednu ili drugu lokaciju, **Zamijeni lokacije**, **Kopiraj raspored**. Ekipa sa zabranom nosi oznaku **Zabrana**.
+- **Novo kolo** i **Skica** biraju lokaciju: svaka lokacija ima svoje ekipe, kola, stolove od Stola 1 i objavu, a brojevi kola večeri su zajednički (Kolo 12 i 13 na obje).
+- Večer na mobitelu ima kućicu za svaku lokaciju i broj ekipa bez lokacije.
+
+### Changed
+- U Upravljanju ligom **Kola** su prije **Ekipa**.
+- **Uredi večer** više nema **Vrati na zadano**: vrijeme, broj kola i mjesto lige vraćaju se tako da ih se postavi kao u ligi.
+
 ## 15.11.2026 · Novo kolo i Skica kola pokazuju večer
 
 On development (#28).
