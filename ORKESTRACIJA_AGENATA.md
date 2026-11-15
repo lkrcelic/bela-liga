@@ -7,65 +7,12 @@ naknadno. Ovaj file je krovni plan. Detalji su u pomoćnim planovima.
 
 ## Kako ide
 
-```mermaid
-flowchart TB
-  TI(["Ti"])
+![Tok rada rutina](rutine/tok-rada.svg)
 
-  subgraph DAN["Po danu"]
-    AUTOR["Sesija (autor)<br/>kod + test u istom commitu<br/>unit · db · Playwright"]
-  end
-
-  subgraph IZV["Izviđači: nalaze, ne popravljaju"]
-    SCAN["Scan · cloud<br/>pon. i čet. 07:00"]
-    UX["UX patrola · cloud<br/>03:00"]
-  end
-
-  HOOK{{"pre-commit hook<br/>npm test"}}
-  DEV[("development")]
-  ISSUES[("GitHub issuei<br/>red posla")]
-
-  subgraph LANAC["Lanac: noću i u podne"]
-    FIXER["Fixer · 00:00 i 12:00<br/>jedan issue: popravak + test<br/>crven prije, zelen poslije"]
-    E2E["E2E noćna (plan)<br/>npm test · test:db · Playwright<br/>kopija produkcije"]
-    REVIEW["Release review (čuvar)<br/>guard po SHA-u · test uz promjenu<br/>test:db · priprema deploy"]
-  end
-
-  SYNC["Sync · 05:00<br/>Belin master → Treseta"]
-  REP[/"reports/rutine/datum/ (plan)"/]
-  KRON["Kroničar · 06:45 (plan)<br/>jedna jutarnja poruka"]
-  MASTER[("master = produkcija")]
-
-  classDef plan stroke-dasharray: 5 5
-  class E2E,REP,KRON plan
-
-  TI -- "zadatak" --> AUTOR
-  AUTOR -- "commit" --> HOOK
-  FIXER -- "commit" --> HOOK
-  HOOK -- "zeleno" --> DEV
-  SCAN -- "issue" --> ISSUES
-  UX -- "issue" --> ISSUES
-  ISSUES -- "jedan po prolazu" --> FIXER
-  FIXER -- "pokrene" --> E2E
-  FIXER -. "danas, dok nema E2E noćne" .-> REVIEW
-  DEV -- "SHA" --> E2E
-  E2E -- "pad: issue e2e ili flaky" --> ISSUES
-  E2E -- "zeleno za SHA" --> REVIEW
-  REVIEW -- "commit bez testa: issue" --> ISSUES
-  MASTER --> SYNC
-  FIXER -.-> REP
-  E2E -.-> REP
-  REVIEW -.-> REP
-  SYNC -.-> REP
-  REP -.-> KRON
-  ISSUES -. "novo, treba-korisnika" .-> KRON
-  KRON -- "Deploy? + pitanja" --> TI
-  TI -- "odobri deploy" --> MASTER
-  TI -- "odgovori" --> ISSUES
-```
-
-Pune strelice nose posao (commit, issue, SHA), a isprekidane izvještaje. Iscrtkani okviri (plan) još ne postoje:
-dok nema E2E noćne, fixer sam pokrene release review, a release review sam klika. Satnice su u pogl. 3, a koji test
-ide uz koji commit u pogl. 5. Stanje 15.11.
+Sive strelice nose posao (commit, issue, SHA), narančaste pad testa ili commit bez testa, a isprekidana
+izvještaje. E2E noćna je iscrtkana jer je isključena dok nema Playwright suitea, pa do tada fixer sam pokrene
+release review, a release review sam klika. Promptovi rutina su u [`rutine/`](rutine/README.md), satnice u
+pogl. 3, a koji test ide uz koji commit u pogl. 5. Stanje 15.11.
 
 ## 0. Dokumenti
 
@@ -77,7 +24,7 @@ ide uz koji commit u pogl. 5. Stanje 15.11.
 | skill `testovi` (`.claude/skills/testovi/SKILL.md`) | pravila **za agente**: koji test uz koju promjenu, kako se piše unit, db i Playwright test, red → green, kako se pokreće `test:db` | napravljen 15.11. |
 | agent `e2e-reviewer` (`.claude/agents/`) | provjeri testove u diffu prema skillu; zovu ga sesija prije commita, fixer i release review | napravljen 15.11. |
 | `.githooks/pre-commit` | `npm test` prije commita koji dira kod (~5 s) | napravljen 15.11., uključen u ovom checkoutu |
-| `rutine/<id>.md` *(novi, predložen)* | promptovi svih rutina u repou (danas su izvan repoa, pa ih nitko ne pregleda ni ne verzionira) | faza O1 |
+| [`rutine/`](rutine/README.md) | `README.md` (tim, zajednička pravila, labeli, brava, izvještaji), prompt svake lokalne rutine i graf `tok-rada.svg`; lokalni zadatak samo kaže "pročitaj i slijedi" | napravljeno 15.11.; cloud rutine (scan, UX patrola) još nisu prešle |
 | `e2e/FLOWS.md` *(novi, iz E2E_PLAN pogl. 9)* | tokovi igrača, organizatora i admina, uz svaki ime testa ili "nema" | faza E5 |
 
 Planovi (`*_PLAN.md`, ovaj file) su za odluke i čitaš ih ti. Skill `testovi`, `CLAUDE.md` i `rutine/` su za agente:
@@ -234,10 +181,10 @@ flowchart LR
 
 | Faza | Što | Gotovo kad |
 | --- | --- | --- |
-| **O1 Temelj** | ~~skill `testovi`; agent `e2e-reviewer`; pravilo u `CLAUDE.md`; `pre-commit` hook; fixer i release review po skillu~~ (15.11.); promptovi rutina u `rutine/`; novi labeli | sesija bez upute napiše test uz promjenu logike; rutine čitaju prompt iz repoa |
+| **O1 Temelj** | ~~skill `testovi`; agent `e2e-reviewer`; pravilo u `CLAUDE.md`; `pre-commit` hook; fixer i release review po skillu; promptovi lokalnih rutina u `rutine/`; novi labeli~~ (15.11.); cloud rutine u `rutine/` | sesija bez upute napiše test uz promjenu logike; rutine čitaju prompt iz repoa |
 | **U1–U2** | `test:db` u noćnom pokretanju, izvještaj pokrivenosti, P1 db testovi (UNIT_PLAN) | `test:db` svaku noć zelen; P1 pokriven |
 | **E1–E4** | compose, prolaz kroz stranice, dozvole, C1–C9 (E2E_PLAN faze 1–4) | C1 (ligaška večer) zelen `--repeat-each=5` |
-| **O2 Tim** | lanac fixer → E2E → release review; guard po SHA-u; brava; kroničar; stanja issuea | jedna noć bez tvoje intervencije, jedna jutarnja poruka |
+| **O2 Tim** | ~~guard po SHA-u; brava; kroničar; stanja issuea; lanac fixer → (E2E) → release review~~ (15.11.); E2E noćna se uključuje s E5 | jedna noć bez tvoje intervencije, jedna jutarnja poruka |
 | **E5** | E2E rutina, release review čita E2E izvještaj, UX patrola na generatoru, `FLOWS.md` | release review više ne klika sam |
 
 Redoslijed: O1 prvi, jer je jeftin, a od sutra vrijedi za sve sesije. Zatim C1 iz E2E plana, jer bi uhvatio oba

@@ -8,6 +8,8 @@
 
 # testing
 /coverage
+# routine reports (rutine/README.md, Report), local only
+/reports/
 
 # next.js
 .next

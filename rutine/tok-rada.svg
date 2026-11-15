@@ -1,0 +1,95 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="680" height="860" viewBox="0 0 680 860" role="img" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif">
+<title>Tok rada rutina u Beli</title>
+<desc>Sesija ili fixer napravi commit s kodom i testom, pre-commit hook pokrene npm test, commit ide na development. E2E noćna pokrene unit, db i Playwright testove, release review provjeri da svaka promjena ima test, kroničar ujutro pošalje jednu poruku, a ti odobriš deploy na master. Sync nosi Belin master u Tresetu. Izviđači, padovi testova i commitovi bez testa otvaraju issue koje uzima fixer.</desc>
+<defs>
+<marker id="a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#888780" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker>
+<marker id="c" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#D85A30" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker>
+</defs>
+<rect width="680" height="860" rx="12" fill="#FAFAF8"/>
+
+<g font-size="14" font-weight="600" text-anchor="middle" dominant-baseline="central">
+<rect x="40" y="40" width="160" height="56" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.5"/>
+<text x="120" y="60" fill="#3C3489">Sesija</text>
+<rect x="240" y="40" width="200" height="56" rx="8" fill="#FFFFFF" stroke="#D3D1C7" stroke-width="0.5"/>
+<text x="340" y="60" fill="#2C2C2A">Commit</text>
+<rect x="480" y="40" width="160" height="56" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.5"/>
+<text x="560" y="60" fill="#3C3489">Fixer</text>
+
+<rect x="240" y="136" width="200" height="56" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.5"/>
+<text x="340" y="156" fill="#085041">Pre-commit hook</text>
+
+<rect x="240" y="232" width="200" height="56" rx="8" fill="#FFFFFF" stroke="#D3D1C7" stroke-width="0.5"/>
+<text x="340" y="252" fill="#2C2C2A">development</text>
+<rect x="480" y="232" width="160" height="56" rx="8" fill="#FFFFFF" stroke="#D3D1C7" stroke-width="0.5"/>
+<text x="560" y="252" fill="#2C2C2A">GitHub issuei</text>
+
+<rect x="240" y="328" width="200" height="56" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="1" stroke-dasharray="5 4"/>
+<text x="340" y="348" fill="#085041">E2E noćna</text>
+<rect x="480" y="328" width="160" height="56" rx="8" fill="#FFFFFF" stroke="#D3D1C7" stroke-width="0.5"/>
+<text x="560" y="348" fill="#2C2C2A">Izviđači</text>
+
+<rect x="40" y="424" width="160" height="56" rx="8" fill="#FFFFFF" stroke="#D3D1C7" stroke-width="0.5"/>
+<text x="120" y="444" fill="#2C2C2A">Izvještaji rutina</text>
+<rect x="240" y="424" width="200" height="56" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.5"/>
+<text x="340" y="444" fill="#085041">Release review</text>
+
+<rect x="240" y="520" width="200" height="56" rx="8" fill="#FFFFFF" stroke="#D3D1C7" stroke-width="0.5"/>
+<text x="340" y="540" fill="#2C2C2A">Kroničar · 06:45</text>
+
+<rect x="240" y="616" width="200" height="56" rx="8" fill="#FFFFFF" stroke="#D3D1C7" stroke-width="0.5"/>
+<text x="340" y="636" fill="#2C2C2A">Ti</text>
+<rect x="480" y="616" width="160" height="56" rx="8" fill="#FFFFFF" stroke="#D3D1C7" stroke-width="0.5"/>
+<text x="560" y="636" fill="#2C2C2A">master</text>
+
+<rect x="480" y="712" width="160" height="56" rx="8" fill="#FFFFFF" stroke="#D3D1C7" stroke-width="0.5"/>
+<text x="560" y="732" fill="#2C2C2A">Sync · 05:00</text>
+</g>
+
+<g font-size="12" text-anchor="middle" dominant-baseline="central">
+<text x="120" y="78" fill="#534AB7">zadatak od tebe</text>
+<text x="340" y="78" fill="#5F5E5A">kod + test: unit, db, E2E</text>
+<text x="560" y="78" fill="#534AB7">00:00 i 12:00</text>
+<text x="340" y="174" fill="#0F6E56">npm test mora proći</text>
+<text x="340" y="270" fill="#5F5E5A">novi SHA</text>
+<text x="560" y="270" fill="#5F5E5A">red posla</text>
+<text x="340" y="366" fill="#0F6E56">unit, db, Playwright</text>
+<text x="560" y="366" fill="#5F5E5A">scan, UX patrola</text>
+<text x="120" y="462" fill="#5F5E5A">jedan oblik za sve</text>
+<text x="340" y="462" fill="#0F6E56">ima li svaka promjena test</text>
+<text x="340" y="558" fill="#5F5E5A">jedna jutarnja poruka</text>
+<text x="340" y="654" fill="#5F5E5A">odobriš deploy</text>
+<text x="560" y="654" fill="#5F5E5A">produkcija</text>
+<text x="560" y="750" fill="#5F5E5A">Belin master → Treseta</text>
+</g>
+
+<g stroke="#888780" stroke-width="1.5" fill="none" marker-end="url(#a)">
+<line x1="200" y1="68" x2="236" y2="68"/>
+<line x1="480" y1="68" x2="444" y2="68"/>
+<line x1="340" y1="96" x2="340" y2="132"/>
+<line x1="340" y1="192" x2="340" y2="228"/>
+<line x1="340" y1="288" x2="340" y2="324"/>
+<line x1="340" y1="384" x2="340" y2="420"/>
+<line x1="340" y1="480" x2="340" y2="516"/>
+<line x1="340" y1="576" x2="340" y2="612"/>
+<line x1="440" y1="644" x2="476" y2="644"/>
+<line x1="560" y1="672" x2="560" y2="708"/>
+<line x1="560" y1="232" x2="560" y2="100"/>
+<line x1="560" y1="328" x2="560" y2="292"/>
+<path d="M120 480 L120 548 L236 548" stroke-dasharray="4 4"/>
+</g>
+<path d="M440 452 L460 452 L460 268 L476 268" fill="none" stroke="#D85A30" stroke-width="1.5" marker-end="url(#c)"/>
+<line x1="440" y1="356" x2="460" y2="356" stroke="#D85A30" stroke-width="1.5"/>
+
+<g font-size="12" fill="#5F5E5A" dominant-baseline="central">
+<rect x="40" y="800" width="14" height="14" rx="3" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.5"/>
+<text x="62" y="807">piše kod i test</text>
+<rect x="180" y="800" width="14" height="14" rx="3" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.5"/>
+<text x="202" y="807">provjera</text>
+<line x1="290" y1="807" x2="320" y2="807" stroke="#D85A30" stroke-width="1.5"/>
+<text x="328" y="807">pad ili commit bez testa</text>
+<line x1="510" y1="807" x2="540" y2="807" stroke="#888780" stroke-width="1.5" stroke-dasharray="4 4"/>
+<text x="548" y="807">izvještaj</text>
+<rect x="40" y="826" width="14" height="14" rx="3" fill="#E1F5EE" stroke="#0F6E56" stroke-width="1" stroke-dasharray="3 2"/>
+<text x="62" y="833">iscrtkano: isključeno dok nema Playwright suitea</text>
+</g>
+</svg>
