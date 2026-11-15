@@ -8,7 +8,7 @@ The scheduled routines of this repo work as one team. Each local scheduled task 
 | --- | --- | --- | --- | --- |
 | `bela-github-issue-fixer` | laptop | 00:00 and 12:00 | one issue → fix with its test → `development` | `bela-e2e-nightly` when it is enabled, otherwise `bela-release-review` |
 | `bela-e2e-nightly` | laptop | started by the fixer (disabled until the Playwright suite exists) | unit, db and Playwright tests on the head, a data check of the production copy (report only) | `bela-release-review` |
-| `bela-release-review` | laptop | started in the chain; fallback 02:00 and 14:00 | reviews `master..development`, tests, prepares and makes the deploy | — |
+| `bela-release-review` | laptop | started in the chain; fallback 02:00 and 14:00 | reviews `master..development`, tests, prepares the deploy; deploys only after the user's "deploy" | — |
 | `bela-nightly-sync` | laptop | 05:00 | deployed Bela commits → Treseta branch `bela-sync` | — |
 | `bela-jutarnji-izvjestaj` | laptop | 06:45 | one morning message for the user | — |
 | `bela-app-scan` | cloud | Mon and Thu 07:00 | static code review | issues `auto-scan` |
@@ -28,7 +28,7 @@ The chain hands off with the scheduled-tasks tool `run_scheduled_task`. The fall
 ## Shared rules
 
 - **The main folder is shared** with interactive sessions, which keep uncommitted work in it. Treat it as read-only: no edit, stash, checkout, reset or commit there. The two writable places are the gitignored `backups/` and `reports/`. Code work happens in your own worktree: `git worktree add --detach <scratchpad>/wt origin/development`, then `ln -s <main folder>/node_modules <scratchpad>/wt/node_modules` (`npm ci` there instead when its package-lock.json differs). `git worktree remove` it at the end.
-- **Production stays the user's call** unless your routine file says otherwise. Only `bela-release-review` touches `master`, and only with the commit-tree merge in its step 7. Never force-push.
+- **Production is the user's call.** Only `bela-release-review` touches `master`, only after the user approves the deploy in its session, and only with the commit-tree merge in its step 7. What the user doesn't approve waits on development for the next proposal. Never force-push.
 - **Secrets.** The production database URL is in `backups/.prod-db-url`: use it in commands, never print it, copy it or put it in a message, file or issue.
 - **Sandbox.** Network, `git fetch`/`push`, `gh`, `pg_dump`, podman and anything on localhost need the sandbox off. Use `gh api` (REST); when `GITHUB_TOKEN` gives "Bad credentials", run `env -u GITHUB_TOKEN gh api …`.
 - **Commits.** The repo's own style: a plain sentence or two saying what changed and why, `fixes #N` for an issue. No Claude attribution and no Co-Authored-By line.

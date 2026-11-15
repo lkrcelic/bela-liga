@@ -204,17 +204,18 @@ zadnja buga. Zatim tim (O2).
 
 - 15.11., na `development`: skill `testovi`, agent `e2e-reviewer`, pravilo u `CLAUDE.md`, hook `.githooks/pre-commit`
   (`core.hooksPath` uključen u ovom checkoutu), `npm run test:db:local`, `.gitignore` pušta `.claude/agents/` i `.claude/skills/testovi/` u git.
-- 15.11., rutine (izvan repoa, odmah na snazi): **fixer** piše test po skillu, crven → zelen, popravlja issue `e2e`,
+- 15.11., rutine (danas u `rutine/`): **fixer** piše test po skillu, crven → zelen, popravlja issue `e2e`,
   preskače `treba-korisnika`; **release review** ima guard po SHA-u, traži test uz svaku promjenu (bez njega issue,
   ne deploy), vrti `test:db` svaki put, čita E2E izvještaj kad postoji; **sync** čita Belin `master`.
 
-## 8. Odluke koje čekaju tebe
+## 8. Odluke
 
-1. **Deploy:** ostaje tvoje jutarnje odobrenje (danas ga ionako traži dozvola).
-2. **Stari dokumenti:** `PLAN.md`, `REFINEMENTS.md`, `BACKEND_REVIEW.md`, `BLOCKERS.md`, `TEST_REPORT.md`
-   (4.10.), `ProcessFlow.md`, `Task.md` i `.windsurfrules` su zastarjeli. Prijedlog: premjestiti ih u
-   `docs/arhiva/`, a u `README.md` (iz 2024.) dodati kratku kartu dokumenata.
-
-Riješeno 15.11.: noćni lanac fixer → (E2E) → release review, guard po SHA-u, git hook u repou, izvještaji rutina
-lokalno i gitignored, promptovi rutina u `rutine/`. **Bez labela i issuea `data-health`:** provjera podataka na
-kopiji produkcije ide samo u E2E izvještaj, a jutarnja poruka javlja kad je nešto novo.
+Sve odluke iz ovog plana su donesene (15.11.):
+- noćni lanac fixer → (E2E) → release review, guard po SHA-u, git hook u repou, izvještaji rutina lokalno i
+  gitignored, promptovi rutina u `rutine/`;
+- **deploy samo uz tvoje odobrenje:** release review pripremi deploy i čeka tvoj "deploy" u svojoj sesiji, a
+  jutarnja poruka ga traži. Što ne odobriš, ostaje na developmentu i ide u sljedeći, veći prijedlog;
+- **bez labela i issuea `data-health`:** provjera podataka na kopiji produkcije ide samo u E2E izvještaj, a jutarnja
+  poruka javlja kad je nešto novo;
+- **stari dokumenti** (`PLAN.md`, `REFINEMENTS.md`, `BACKEND_REVIEW.md`, `BLOCKERS.md`, `TEST_REPORT.md`,
+  `ProcessFlow.md`, `Task.md`, `RATING_INTEGRATION.md`) su u [`docs/arhiva/`](docs/arhiva/README.md).
