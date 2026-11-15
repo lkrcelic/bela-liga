@@ -2,7 +2,7 @@
 
 import {getLeaguesAPI} from "@/app/_fetchers/league/leagues";
 import {LeagueSummary} from "@/app/_interfaces/league";
-import {locationOf, NightLocation} from "@/app/_lib/nights";
+import {NightLocation} from "@/app/_lib/nights";
 import {count, NOUN} from "@/app/_lib/ui/text";
 import {useEffect, useState} from "react";
 
@@ -59,7 +59,7 @@ function toOption(l: LeagueSummary): LeagueOption {
     playDay: l.play_day,
     startTime: l.start_time,
     gatheringTime: l.gathering_time,
-    location: locationOf(l),
+    location: l.location,
     teamCount: l.team_count,
     meta: leagueMeta(l.team_count, l.play_day, l.active),
   };

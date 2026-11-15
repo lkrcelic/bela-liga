@@ -3,6 +3,7 @@
 import type {League, Team} from "@prisma/client";
 import {addDays, type Ctx} from "../context";
 import type {People} from "./people";
+import {PITANIK, type Place, placeId} from "./places";
 
 export type LeagueSpec = {
   key: string;
@@ -14,16 +15,10 @@ export type LeagueSpec = {
   roundsPerNight: number;
   startTime: string | null;
   gatheringTime: string | null;
-  location: {name: string; address: string; url: string} | null;
+  location: Place | null;
 };
 
 export type BuiltLeague = {spec: LeagueSpec; league: League; teams: Team[]};
-
-const PITANIK = {
-  name: "Caffe bar Pitanik",
-  address: "Ilica 1, Zagreb",
-  url: "https://maps.app.goo.gl/e2eTestPitanik",
-};
 
 export function leagueSpecs(ctx: Ctx): LeagueSpec[] {
   const weekly = (first: Date, count: number) => Array.from({length: count}, (_, i) => addDays(first, i * 7));
@@ -87,9 +82,7 @@ export async function createLeague(ctx: Ctx, spec: LeagueSpec, teams: Team[]): P
       play_day: spec.datedLeague ? playDay(first) : null,
       start_time: spec.startTime,
       gathering_time: spec.gatheringTime,
-      location_name: spec.location?.name ?? null,
-      location_address: spec.location?.address ?? null,
-      location_url: spec.location?.url ?? null,
+      location_id: spec.location ? await placeId(ctx, spec.location) : null,
       rounds_per_night: spec.roundsPerNight,
       game_minutes: 35,
       created_at: addDays(first, -10),
