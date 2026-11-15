@@ -88,7 +88,8 @@ review), a satnice su samo rezerva ako lanac pukne.
 | ~01:00 | **E2E noćna** | na SHA-u s `origin/development`: `npm test`, `test:db`, Playwright suite na generiranom svijetu, smoke i `seed:verify --report` na kopiji produkcije | release reviewu |
 | ~01:45 | release review | pregled; testovi su već prošli za taj SHA, pa ih ne ponavlja; priprema deploy | — |
 | 03:00 | UX patrola (cloud) | ekrani na generiranom svijetu (`npm run seed:e2e`) | issuei |
-| 05:00 | sync | Belin `master` → Treseta | — |
+| 05:00 | sync | Belin `master` → Treseta | Tresetinom noćnom testu |
+| ~05:30 | **Treseta noćni test** (`treseta-e2e-nightly`, prompt u Tresetinom `rutine/`) | unit, db, lint i `tsc` na Tresetinom `master`u i `bela-sync`u; javlja se kroničaru samo kad nešto ne radi | — |
 | 06:45 | **kroničar** | jedna poruka (niže) | — |
 | 07:00 pon. i čet. | scan (cloud) | statički pregled | issuei |
 | 12:00 | fixer | jedan issue (uzima i noćne nalaze) | E2E (podnevna) → release review |
