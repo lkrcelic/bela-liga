@@ -44,5 +44,10 @@ tsconfig.tsbuildinfo
 *.zip
 tmp-file.ts
 **/.idea/
-/.claude/
+# .claude stays local, except the shared test skill and agents (skill testovi, agent e2e-reviewer)
+/.claude/*
+!/.claude/agents/
+!/.claude/skills/
+/.claude/skills/*
+!/.claude/skills/testovi/
 skills-lock.json
