@@ -62,3 +62,38 @@ export function replaySeason(playerIds: number[], rounds: RatedRound[]): SeasonR
 
   return {ratings, history};
 }
+
+// RD and volatility equal up to floating point noise: the database gives a round's players in no fixed order, so the
+// same replay can sum them in another order and differ in the last digits; writing that would rewrite every row again
+const sameFloat = (a: number, b: number) => Math.abs(a - b) <= 1e-9 * Math.max(1, Math.abs(a), Math.abs(b));
+
+// A player's rating as the Player row stores it (the rating rounded)
+export type StoredRating = {id: number; rating: number; rd: number; vol: number};
+
+// The Player rows a replay has to write: only the players whose stored rating, RD or volatility differs from the
+// replay's, so a round close doesn't rewrite every player
+export function changedRatings(stored: StoredRating[], ratings: ReadonlyMap<number, PlayerRating>): StoredRating[] {
+  const byId = new Map(stored.map((s) => [s.id, s]));
+  const changed: StoredRating[] = [];
+  ratings.forEach((r, id) => {
+    const now = {id, rating: Math.round(r.rating), rd: r.rd, vol: r.vol};
+    const was = byId.get(id);
+    if (!was || was.rating !== now.rating || !sameFloat(was.rd, now.rd) || !sameFloat(was.vol, now.vol)) changed.push(now);
+  });
+  return changed;
+}
+
+// What turns the stored history into the replay's: the rows to remove (a night the player no longer has) and the
+// rows to write (new or different). Earlier nights come out of the replay the same, so a round close only writes
+// tonight's rows instead of deleting and inserting the whole history.
+export function historyChanges(stored: NightRating[], computed: NightRating[]): {remove: NightRating[]; write: NightRating[]} {
+  const key = (h: NightRating) => `${h.playerId}|${h.night}`;
+  const was = new Map(stored.map((h) => [key(h), h]));
+  const write: NightRating[] = [];
+  for (const h of computed) {
+    const old = was.get(key(h));
+    was.delete(key(h));
+    if (!old || old.rating !== h.rating || !sameFloat(old.rd, h.rd) || old.change !== h.change || old.rounds !== h.rounds) write.push(h);
+  }
+  return {remove: Array.from(was.values()), write};
+}

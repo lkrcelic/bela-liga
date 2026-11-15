@@ -1,7 +1,7 @@
 import {test} from "node:test";
 import assert from "node:assert/strict";
 import {Game, initialRating, PHI0, PlayerRating, ratePeriod} from "@/app/_lib/rating/glicko2";
-import {RatedRound, replaySeason, roundGames} from "@/app/_lib/rating/season";
+import {changedRatings, historyChanges, RatedRound, replaySeason, roundGames} from "@/app/_lib/rating/season";
 
 const near = (actual: number, expected: number, tolerance: number, what: string) =>
   assert.ok(Math.abs(actual - expected) <= tolerance, `${what}: ${actual} instead of ${expected}`);
@@ -130,4 +130,47 @@ test("the history has a row per player per night played, with the change and rou
 test("players that no longer exist are left out of a round", () => {
   const {history} = replaySeason([1, 3], [round("2026-01-08", [1, 99], [3], [[1001, 0]])]);
   assert.deepEqual(history.map((h) => h.playerId).sort(), [1, 3]);
+});
+
+test("a round close writes only tonight: the earlier nights' history and untouched players stay as stored", () => {
+  const earlier = [round("2026-01-08", [1, 2], [3, 4], [[1001, 500], [1001, 600]])];
+  const before = replaySeason([1, 2, 3, 4, 5, 6], earlier);
+  const stored = Array.from(before.ratings, ([id, r]) => ({id, rating: Math.round(r.rating), rd: r.rd, vol: r.vol}));
+
+  // tonight 1+2 play 5+6; 3 and 4 don't play
+  const after = replaySeason([1, 2, 3, 4, 5, 6], [...earlier, round("2026-01-15", [1, 2], [5, 6], [[1001, 900], [800, 1001]])]);
+  const {remove, write} = historyChanges(before.history, after.history);
+  assert.deepEqual(remove, []);
+  assert.deepEqual(write.map((h) => h.night), Array(4).fill("2026-01-15"));
+  assert.deepEqual(write.map((h) => h.playerId).sort(), [1, 2, 5, 6]);
+
+  // tonight's players get a new rating; 7 has never played and keeps the stored defaults, so isn't written
+  const changed = changedRatings([...stored, {id: 7, rating: 1500, rd: PHI0, vol: 0.06}], new Map(Array.from(after.ratings).concat([[7, initialRating()]])));
+  for (const id of [1, 2, 5, 6]) assert.ok(changed.some((c) => c.id === id), `player ${id}`);
+  assert.ok(!changed.some((c) => c.id === 7));
+
+  // the same replay again writes nothing
+  assert.deepEqual(historyChanges(after.history, after.history), {remove: [], write: []});
+  const now = Array.from(after.ratings, ([id, r]) => ({id, rating: Math.round(r.rating), rd: r.rd, vol: r.vol}));
+  assert.deepEqual(changedRatings(now, after.ratings), []);
+});
+
+test("a removed round takes its night's history rows away and changes the ones after it", () => {
+  const a = round("2026-01-08", [1], [2], [[1001, 0]]);
+  const b = round("2026-01-15", [1], [3], [[1001, 0]]);
+  const full = replaySeason([1, 2, 3], [a, b]);
+  const edited = replaySeason([1, 2, 3], [b]);
+  const {remove, write} = historyChanges(full.history, edited.history);
+  assert.deepEqual(remove.map((h) => [h.playerId, h.night]).sort(), [[1, "2026-01-08"], [2, "2026-01-08"]]);
+  assert.deepEqual(write.map((h) => [h.playerId, h.night]).sort(), [[1, "2026-01-15"], [3, "2026-01-15"]]);
+});
+
+test("floating point noise in RD or volatility isn't a change", () => {
+  const r = {rating: 1612.4, rd: 75.18010252555683, vol: 0.06004267213388337};
+  const stored = [{id: 1, rating: 1612, rd: r.rd * (1 + 1e-15), vol: r.vol - 1e-18}];
+  assert.deepEqual(changedRatings(stored, new Map([[1, r]])), []);
+  assert.equal(changedRatings(stored, new Map([[1, {...r, rd: r.rd + 0.001}]])).length, 1);
+  const h = {playerId: 1, night: "2026-01-08", rating: 1612, rd: r.rd, change: 12, rounds: 3};
+  assert.deepEqual(historyChanges([{...h, rd: h.rd * (1 - 1e-15)}], [h]), {remove: [], write: []});
+  assert.equal(historyChanges([{...h, rounds: 2}], [h]).write.length, 1);
 });
