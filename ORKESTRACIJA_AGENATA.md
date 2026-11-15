@@ -69,7 +69,7 @@ kratki, zapovjedni, bez obrazloženja.
 | Uloga | Tko | Što radi | Što nikad ne radi |
 | --- | --- | --- | --- |
 | **Autor** | interaktivne sesije | piše kod i **testove za njega** u istom commitu (unit, db ili Playwright, pogl. 5), jer zna namjeru | ne commita s crvenim `npm test` |
-| **Izviđači** | scan (cloud), UX patrola (cloud), **E2E noćna** (laptop, nova), **zdravlje podataka** (`seed:verify --report` nad kopijom produkcije) | nalaze probleme i otvaraju issue s izvorom, koracima i SHA-om | ne mijenjaju kod ni testove |
+| **Izviđači** | scan (cloud), UX patrola (cloud), **E2E noćna** (laptop, nova), **zdravlje podataka** (`seed:verify --report` nad kopijom produkcije, samo u izvještaj) | nalaze probleme i otvaraju issue s izvorom, koracima i SHA-om | ne mijenjaju kod ni testove |
 | **Popravljač** | `bela-github-issue-fixer` | jedan issue po prolazu, s testom koji je bez popravka crven | ne mijenja `expect` samo da test prođe |
 | **Čuvar** | `bela-release-review` | pregleda kod i testove, čita E2E izvještaj za isti SHA, priprema deploy | ne pušta promjenu logike bez testa; ne deploya sam |
 | **Sinkronizator** | `bela-nightly-sync` | samo deployani Belin kod (`master`) → Treseta | ne dira `master` ni Belu |
@@ -112,7 +112,7 @@ review), a satnice su samo rezerva ako lanac pukne.
 
 **a) GitHub issuei su red posla.** Labeli koji postoje (`type:`, `priority:`, `effort:`, `area:`) ostaju, a
 dodaju se:
-- **izvor:** `auto-scan`, `mobile-ux-scan` (postoje); `e2e`, `flaky`, `data-health` (novi); `user` (ti, ručno);
+- **izvor:** `auto-scan`, `mobile-ux-scan` (postoje); `e2e`, `flaky` (novi); `user` (ti, ručno);
 - **stanje:** `fixer-radi` (fixer ga uzeo, pa ga nitko drugi ne dira), `na-developmentu` (popravljeno, čeka
   deploy; zatvara ga release review kad deploya, preko "Fixes #N" u commitu), `treba-korisnika` (pitanje za
   tebe; fixer ga preskače dok ne odgovoriš).
@@ -200,7 +200,7 @@ zadnja buga. Zatim tim (O2).
   Playwright (pogl. 5).
 - `seed:verify --report` na kopiji produkcije: 53 igre sa zvanjima koja ne odgovaraju bodovima, 3 meča čiji
   rezultat nije zbroj igara, 166 mečeva bez igara koji nisu ni bye ni nedolazak, 10 zatvorenih stolova s krivim
-  brojem mečeva. Ništa nije diran; materijal za issue `data-health`.
+  brojem mečeva. Ništa nije diran; zapisano samo ovdje, bez issuea (pogl. 8).
 
 - 15.11., na `development`: skill `testovi`, agent `e2e-reviewer`, pravilo u `CLAUDE.md`, hook `.githooks/pre-commit`
   (`core.hooksPath` uključen u ovom checkoutu), `npm run test:db:local`, `.gitignore` pušta `.claude/agents/` i `.claude/skills/testovi/` u git.
@@ -210,13 +210,11 @@ zadnja buga. Zatim tim (O2).
 
 ## 8. Odluke koje čekaju tebe
 
-1. **Raspored iz pogl. 3:** noćni lanac fixer → E2E → release review i podnevni ciklus.
-2. **Guard release reviewa po SHA-u** umjesto po datumu.
-3. **Hook:** git hook u repou (prijedlog) ili hook u postavkama Claudea.
-4. **Izvještaji rutina:** lokalno i gitignored (prijedlog) ili commitani.
-5. **Promptovi rutina u repou** (`rutine/`) kao izvor istine.
-6. **Deploy:** ostaje tvoje jutarnje odobrenje (danas ga ionako traži dozvola).
-7. **Stari dokumenti:** `PLAN.md`, `REFINEMENTS.md`, `BACKEND_REVIEW.md`, `BLOCKERS.md`, `TEST_REPORT.md`
+1. **Deploy:** ostaje tvoje jutarnje odobrenje (danas ga ionako traži dozvola).
+2. **Stari dokumenti:** `PLAN.md`, `REFINEMENTS.md`, `BACKEND_REVIEW.md`, `BLOCKERS.md`, `TEST_REPORT.md`
    (4.10.), `ProcessFlow.md`, `Task.md` i `.windsurfrules` su zastarjeli. Prijedlog: premjestiti ih u
    `docs/arhiva/`, a u `README.md` (iz 2024.) dodati kratku kartu dokumenata.
-8. **Issuei `data-health`** za nalaze iz pogl. 7: otvoriti ih ili samo zapisati?
+
+Riješeno 15.11.: noćni lanac fixer → (E2E) → release review, guard po SHA-u, git hook u repou, izvještaji rutina
+lokalno i gitignored, promptovi rutina u `rutine/`. **Bez labela i issuea `data-health`:** provjera podataka na
+kopiji produkcije ide samo u E2E izvještaj, a jutarnja poruka javlja kad je nešto novo.

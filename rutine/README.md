@@ -7,7 +7,7 @@ The scheduled routines of this repo work as one team. Each local scheduled task 
 | Routine | Where | When (Zagreb) | Job | Hands off to |
 | --- | --- | --- | --- | --- |
 | `bela-github-issue-fixer` | laptop | 00:00 and 12:00 | one issue → fix with its test → `development` | `bela-e2e-nightly` when it is enabled, otherwise `bela-release-review` |
-| `bela-e2e-nightly` | laptop | started by the fixer (disabled until the Playwright suite exists) | unit, db and Playwright tests on the head, data health | `bela-release-review` |
+| `bela-e2e-nightly` | laptop | started by the fixer (disabled until the Playwright suite exists) | unit, db and Playwright tests on the head, a data check of the production copy (report only) | `bela-release-review` |
 | `bela-release-review` | laptop | started in the chain; fallback 02:00 and 14:00 | reviews `master..development`, tests, prepares and makes the deploy | — |
 | `bela-nightly-sync` | laptop | 05:00 | deployed Bela commits → Treseta branch `bela-sync` | — |
 | `bela-jutarnji-izvjestaj` | laptop | 06:45 | one morning message for the user | — |
@@ -37,7 +37,7 @@ The chain hands off with the scheduled-tasks tool `run_scheduled_task`. The fall
 ## Issues
 
 GitHub issues are the team's work queue. Labels:
-- **source:** `auto-scan` (scan), `mobile-ux-scan` (UX patrol), `e2e` (a red Playwright test), `flaky` (passed only on retry), `data-health` (production data breaks an invariant), `user` (filed by the user);
+- **source:** `auto-scan` (scan), `mobile-ux-scan` (UX patrol), `e2e` (a red Playwright test), `flaky` (passed only on retry), `user` (filed by the user);
 - **state:** `fixer-radi` (the fixer is on it, nobody else touches it), `na-developmentu` (fixed on development, waiting for the deploy that closes it through `fixes #N`), `treba-korisnika` (a question for the user; the fixer skips it until the user answers);
 - and the existing `type: …`, `priority: …`, `effort: …`, `area: …`.
 

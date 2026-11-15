@@ -22,7 +22,7 @@ In the worktree: `npm test`, `npm run lint`, `npx tsc --noEmit`, `npm run test:d
 ## 5. Production copy
 The newest `backups/bela-prod-*.dump`, if it is under 2 days old (otherwise "prod copy: skipped – no fresh dump"; the release review makes one each run):
 - `e2e/run.sh --sha <HEAD> --data prod-copy --suite smoke`, when run.sh exists;
-- data health, when package.json has `seed:verify`: the copy restored into a fresh database (in `bela-e2e-pg`, as `scripts/test-db-local.sh` makes one), migrations applied, `npm run seed:verify -- --report` against it, the database dropped. Compare with the data-health lines of the previous `reports/e2e/` report: a new kind of violation, or a count that grew, is a `data-health` issue (search first). The same numbers as before are only a line in the report.
+- data health, when package.json has `seed:verify`: the copy restored into a fresh database (in `bela-e2e-pg`, as `scripts/test-db-local.sh` makes one), migrations applied, `npm run seed:verify -- --report` against it, the database dropped. Compare with the data-health lines of the previous `reports/e2e/` report and write both into this one: a new kind of violation, or a count that grew, is marked **new**. Data health never opens an issue: the morning report shows what is new, and the user decides.
 
 ## 6. Report
 Write `reports/e2e/<YYYY-MM-DD>-<SHORT>.md`; the release review finds it by the short sha:
@@ -40,6 +40,6 @@ Then your routine report (README, Report). Clean up: worktree removed, stack dow
 <✅ GREEN <SHORT> | ❌ RED <SHORT> | ⏸ <reason> | — ALREADY TESTED <SHORT>>
 Unit · db · lint · tsc: <✓ | ✗ what>
 Playwright: <n passed, m failed (#issues), k flaky (#issues) | no suite yet>
-Prod copy: <smoke ✓/✗ · data health same | new: what (#issue) | skipped – why>
+Prod copy: <smoke ✓/✗ · data health same | new: what | skipped – why>
 Next: <review started | not started – reason>
 ```

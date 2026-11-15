@@ -10,8 +10,9 @@ SINCE = the ISO time in `backups/.jutarnji-last`, or 24 hours ago when the file 
 ## 2. Gather
 - **Routine reports:** every `reports/rutine/*/*.md` changed after SINCE (`find reports/rutine -name '*.md' -newer backups/.jutarnji-last`, or the last two days' folders when the file is missing). Read them all.
 - **Missing reports:** with the scheduled-tasks tools, `list_scheduled_tasks`. A routine whose `lastRunAt` is after SINCE but has no report, or one that should have run (fixer 00:00, sync 05:00) and didn't, is "nije se javila".
-- **GitHub** (`gh api`, REST): issues opened after SINCE, counted by source label (`auto-scan`, `mobile-ux-scan`, `e2e`, `flaky`, `data-health`, `user`); issues closed after SINCE; every open `treba-korisnika` issue with its question (the last comment by a routine) in one line.
+- **GitHub** (`gh api`, REST): issues opened after SINCE, counted by source label (`auto-scan`, `mobile-ux-scan`, `e2e`, `flaky`, `user`); issues closed after SINCE; every open `treba-korisnika` issue with its question (the last comment by a routine) in one line.
 - **Deploy:** `git fetch origin`; `git rev-list --count origin/master..origin/development`, and the release review's latest report: ✅ LIVE, ⏸ with its questions, ❌ with why, or nothing new.
+- **Production data:** the data-health line of the newest `reports/e2e/` report, only when it says new.
 - **Treseta:** `git -C /Users/lovro/projects/github/Treseta-tournamnet-app log --oneline master..bela-sync | wc -l` (commits waiting for the user's merge), and the sync report's "Needs you".
 
 ## 3. Message
@@ -24,7 +25,8 @@ Noćas:
 - Release review: <LIVE <sha> | čeka tebe | ❌ zašto | ništa novo>
 - Testovi: <zeleno | crveno: što (#issue) | flaky: #n | E2E još ne radi>
 - Sync: <n commitova spremno na bela-sync | ništa novo | stao: zašto>
-Novo: <n issuea: scan a, UX b, e2e c, podaci d | nema>
+- Podaci: <što je novo u produkcijskim podacima>   (samo kad ima novog)
+Novo: <n issuea: scan a, UX b, e2e c | nema>
 ```
 Put each item under the one heading where it belongs; a line with nothing to say is left out, except the "Čeka tebe" heading.
 
