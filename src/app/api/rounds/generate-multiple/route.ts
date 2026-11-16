@@ -24,8 +24,11 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const parsed = RoundCreateRequestValidation.parse(body);
     const {league_id, present_teams} = parsed;
-    // tonight's rounds still waiting in Skica are published or discarded first (checked again when they are saved)
-    if ((await tonightDraftTables(league_id)) > 0) throw new DraftWaitingError();
+    // the place of a two-place night they are for (null: one place); its teams are checked when they are saved
+    const slot = parsed.location_slot ?? null;
+    // tonight's rounds still waiting in Skica (at that place) are published or discarded first (checked again when
+    // they are saved)
+    if ((await tonightDraftTables(league_id, undefined, slot)) > 0) throw new DraftWaitingError();
     // a banned team doesn't play the league's nights (Novo kolo shows its switch off)
     await assertMayPlay(present_teams);
     const numberOfRounds = parsed.numberOfRounds ?? 3;
@@ -61,7 +64,7 @@ export async function POST(request: NextRequest) {
     const seated = seatRounds(plan.rounds, setup);
 
     // drafts until an admin publishes them (Upravljanje ligom · Skica)
-    const {firstRoundNumber, date} = await insertRoundBatch(seated, league_id, {smokers, tables: smokingTables});
+    const {firstRoundNumber, date} = await insertRoundBatch(seated, league_id, {smokers, tables: smokingTables}, slot);
 
     return NextResponse.json({round_number: firstRoundNumber, date}, {status: STATUS.Created});
   } catch (error) {

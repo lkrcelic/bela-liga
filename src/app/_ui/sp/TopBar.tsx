@@ -9,6 +9,7 @@ import {IconCircleButton} from "./Buttons";
 // with an optional button on the right. Without eyebrow and title it is only the way back ("Oglas je objavljen").
 export function TopBar({
   eyebrow,
+  eyebrowKeep,
   title,
   onBack,
   backLabel = "Natrag",
@@ -17,6 +18,8 @@ export function TopBar({
   sx,
 }: {
   eyebrow?: React.ReactNode;
+  // shown whole after the eyebrow (" · PON 26. 10."): a long eyebrow is cut with an ellipsis, not this
+  eyebrowKeep?: React.ReactNode;
   title?: React.ReactNode;
   onBack?: () => void;
   backLabel?: string;
@@ -33,7 +36,23 @@ export function TopBar({
         </IconCircleButton>
       )}
       <Box sx={{flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: "4px"}}>
-        {eyebrow && <Box sx={{fontSize: 12.5, fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", color: color.navy, ...ellipsis}}>{eyebrow}</Box>}
+        {eyebrow && (
+          <Box sx={{fontSize: 12.5, fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", color: color.navy, ...(eyebrowKeep ? {display: "flex", minWidth: 0} : ellipsis)}}>
+            {eyebrowKeep ? (
+              <>
+                <Box component="span" sx={{minWidth: 0, ...ellipsis}}>
+                  {eyebrow}
+                </Box>
+                <Box component="span" sx={{flex: "none", whiteSpace: "pre"}}>
+                  {" · "}
+                  {eyebrowKeep}
+                </Box>
+              </>
+            ) : (
+              eyebrow
+            )}
+          </Box>
+        )}
         {title != null && (
           <Box component="h1" sx={{m: 0, fontFamily: font.display, fontSize: 28, fontWeight: 800, lineHeight: 1, letterSpacing: "-.02em"}}>
             {title}

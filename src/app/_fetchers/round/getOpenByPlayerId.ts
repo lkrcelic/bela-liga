@@ -7,7 +7,15 @@ export type OpenScope = "league" | "tournament" | "any";
 // round is already confirmed; tournamentId: the tournament a tournament's table is in
 export async function getOpenRoundByPlayerIdAPI(
   scope: OpenScope = "any"
-): Promise<{roundId: number, ongoingMatchId: number | null, hasLineup: boolean, ongoingScore: [number, number] | null, tournamentId: number | null}> {
+): Promise<{
+  roundId: number;
+  ongoingMatchId: number | null;
+  hasLineup: boolean;
+  ongoingScore: [number, number] | null;
+  tournamentId: number | null;
+  // a league's table: which of its place's Kola tonight it is, [k, n] ("Kolo 1/3"); null for a tournament's
+  nightKolo?: [number, number] | null;
+}> {
   const response = await apiFetch(scope === "any" ? `/api/rounds/open` : `/api/rounds/open?scope=${scope}`);
 
   if (!response.ok) {

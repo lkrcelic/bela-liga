@@ -340,10 +340,16 @@ async function main() {
   const today = new Date(`${new Date().toISOString().slice(0, 10)}T00:00:00.000Z`);
   const lastTuesday = today.getTime() - ((today.getUTCDay() + 5) % 7) * DAY;
   const nights = Array.from({length: 16}, (_, i) => new Date(lastTuesday + (i - 5) * 7 * DAY));
+  // Lokacije: the league plays at Kartaš; Lanterna is there for a night on two places (LOKACIJE_PLAN.md)
+  const kartas = await prisma.location.create({
+    data: {name: "Caffe bar Kartaš", address: "Ilica 128, Zagreb", url: "https://maps.app.goo.gl/kartas"},
+  });
+  const lanterna = await prisma.location.create({data: {name: "Lanterna", address: "Savska cesta 52, Zagreb"}});
   const league = await prisma.league.create({
     data: {
       league_id: 2,
       league_name: "Liga ljeta gospodnjeg 2024-2025",
+      location_id: kartas.location_id,
       start_date: nights[0],
       end_date: nights[nights.length - 1],
       play_day: 1,
@@ -404,6 +410,18 @@ async function main() {
       CALL update_team_score(${team_id}, ${league_id})
     `;
   }
+
+  // The next night (today when today is a Tuesday) is played at Kartaš and Lanterna, Lanterna with a Broj kola of its
+  // own. Podjela: four teams at Kartaš (the admin's team among them), three at Lanterna, the last one not placed yet
+  // (its players see "Javi se adminu")
+  const nextNight = nights.find((night) => night.getTime() >= today.getTime())!;
+  await prisma.leagueNight.update({
+    where: {league_id_night: {league_id: league.league_id, night: nextNight}},
+    data: {second_location_id: lanterna.location_id, second_rounds_per_night: 2},
+  });
+  await prisma.leagueNightTeam.createMany({
+    data: teams.slice(0, 7).map((t, i) => ({league_id: league.league_id, night: nextNight, team_id: t.team_id, slot: i < 4 ? 1 : 2})),
+  });
 
   await prisma.account.create({
     data: {

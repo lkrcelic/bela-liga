@@ -12,6 +12,7 @@ import {
   feeLabel,
   formatLabel,
   koloSteps,
+  koloTimes,
   liveKolo,
   opponentsOf,
   prizeSummary,
@@ -482,7 +483,7 @@ test("Otvorene prijave: a closed tournament takes teams until it starts, an open
 test("the tournament form's switch reaches the server: open_signups survives the request's validation", () => {
   const body = {
     name: "Kafić", date: "2026-12-01", gathering_time: null, start_time: null,
-    location_name: null, location_address: null, location_url: null,
+    location_id: null,
     rounds: 3, matches_per_round: 2, declarations: true, max_teams: null, entry_fee: 0,
     rules_url: null, prizes: [], game_minutes: 35, auto_publish: false, organizer_phone: "0931234567",
   };
@@ -503,7 +504,7 @@ test("Sakrij broj prijava: hidden from players only before Kolo 1, never from wh
   assert.equal(entriesHidden({hideEntries: false, phase: "upcoming", manager: false}), false);
   const body = {
     name: "Kafić", date: "2026-12-01", gathering_time: null, start_time: null,
-    location_name: null, location_address: null, location_url: null,
+    location_id: null,
     rounds: 3, matches_per_round: 2, declarations: true, max_teams: 16, entry_fee: 0,
     rules_url: null, prizes: [], game_minutes: 35, auto_publish: false, open_signups: false, organizer_phone: "0931234567",
   };
@@ -583,4 +584,36 @@ test("Uživo and Nadolazeći: the lists behind Početna's rows and their pages",
   assert.equal(liveDayLabel("2026-11-08", today), "08.11.2026");
   assert.equal(monthLabel("2026-11-22", today), "Studeni");
   assert.equal(monthLabel("2027-01-09", today), "Siječanj 2027");
+});
+
+// Vrijeme kola: from the Kolo's publishing to its last table's close
+
+const at = (hhmm: string) => new Date(`2026-11-13T${hhmm}:00Z`);
+
+test("a Kolo's timer starts when it is published and runs while a table is open", () => {
+  const times = koloTimes([
+    {published_at: at("19:00"), open: false, closed_at: at("19:40")},
+    {published_at: at("19:00"), open: true, closed_at: null},
+  ]);
+  assert.equal(times.started_at?.toISOString(), at("19:00").toISOString());
+  assert.equal(times.ended_at, null);
+});
+
+test("a played Kolo ends with its last table's close; the bye and a draft have no time", () => {
+  const times = koloTimes([
+    {published_at: at("19:00"), open: false, closed_at: at("19:52")},
+    {published_at: at("19:00"), open: false, closed_at: at("20:07")},
+    // the bye's table: closed from the start, its matches without an end
+    {published_at: at("19:00"), open: false, closed_at: null},
+  ]);
+  assert.equal(times.started_at?.toISOString(), at("19:00").toISOString());
+  assert.equal(times.ended_at?.toISOString(), at("20:07").toISOString());
+  assert.deepEqual(koloTimes([{published_at: null, open: true, closed_at: null}]), {started_at: null, ended_at: null});
+  assert.deepEqual(koloTimes([]), {started_at: null, ended_at: null});
+});
+
+test("a played Kolo whose tables don't say when they closed shows no timer", () => {
+  // e.g. rounds from before, or only a close from before its publishing (a draft's bye)
+  assert.deepEqual(koloTimes([{published_at: at("19:00"), open: false, closed_at: null}]), {started_at: null, ended_at: null});
+  assert.deepEqual(koloTimes([{published_at: at("19:00"), open: false, closed_at: at("18:30")}]), {started_at: null, ended_at: null});
 });

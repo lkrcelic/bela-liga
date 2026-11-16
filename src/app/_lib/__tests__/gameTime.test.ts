@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import {test} from "node:test";
-import {clockLabel, closesAfterHand, closesByTime, handTiming, matchDeadline, timeWinner} from "@/app/_lib/gameTime";
+import {clockLabel, closesAfterHand, closesByTime, durationLabel, elapsedLabel, handTiming, matchDeadline, timeWinner} from "@/app/_lib/gameTime";
 
 // Vrijeme partije: the deadline, the hands after it, and closing a match by time
 
@@ -46,4 +46,15 @@ test("the scorepad's clock", () => {
   assert.equal(clockLabel(5 * 60_000), "5:00");
   assert.equal(clockLabel(6_500), "0:07");
   assert.equal(clockLabel(-3000), "0:00");
+});
+
+test("the Kolo timer reads m:ss, then h:mm:ss after an hour; a played Kolo's time is in minutes", () => {
+  assert.equal(elapsedLabel(7_000), "0:07");
+  assert.equal(elapsedLabel((23 * 60 + 41) * 1000 + 999), "23:41");
+  assert.equal(elapsedLabel((65 * 60 + 12) * 1000), "1:05:12");
+  assert.equal(elapsedLabel(-5_000), "0:00");
+  assert.equal(durationLabel(52 * 60_000 + 10_000), "52 min");
+  assert.equal(durationLabel(67 * 60_000), "1 h 7 min");
+  assert.equal(durationLabel(120 * 60_000), "2 h");
+  assert.equal(durationLabel(20_000), "0 min");
 });

@@ -1,5 +1,6 @@
 import {Prisma, Tournament, TournamentPrize} from "@prisma/client";
 import {prisma} from "@/app/_lib/prisma";
+import {LOCATION_SELECT, LocationRow} from "@/app/_lib/nights";
 import {isByeTeam} from "@/app/_lib/bye";
 import {visibleRounds} from "@/app/_lib/roundStatus";
 import {Viewer} from "@/app/_lib/players/privacy";
@@ -56,6 +57,8 @@ export type LoadedTable = {
   diff: number;
   // its matches played, in order: the points, and whether the time closed it (Vrijeme partije)
   matches: {score1: number; score2: number; time_expired: boolean}[];
+  // when it was closed: the latest end of its matches or of its no-show or skip (null: none says so, or still open)
+  closed_at: Date | null;
   // the running match's points and its time
   ongoing: {player_pair1_score: number; player_pair2_score: number; started_at: Date | null; ends_at: Date | null} | null;
   // the players who played it (Tko igra)
@@ -67,10 +70,12 @@ export type LoadedTable = {
   attendance: "PRESENT" | "NO_SHOW" | "SKIPPED" | null;
   attendance_team_id: number | null;
   attendance_at: Date | null;
+  // the result is the admin's (Uredi ishod), not the players' answer or the clock's skip
+  attendance_by_admin: boolean;
 };
 
 export type Snapshot = {
-  tournament: Tournament & {prizes: TournamentPrize[]; canceller: {first_name: string; last_name: string} | null};
+  tournament: Tournament & {prizes: TournamentPrize[]; canceller: {first_name: string; last_name: string} | null; location: LocationRow | null};
   entries: LoadedEntry[];
   tables: LoadedTable[];
   // names and photos of the teams at the tables (the bye's too), whether they are entered or not
@@ -99,6 +104,9 @@ const playerSelect = {
 // A table counts as being played once a match is running at it or was played
 export const tableStarted = (t: Pick<LoadedTable, "active" | "played" | "ongoing" | "open">) => !t.open || t.active || t.played > 0 || t.ongoing != null;
 
+// the latest of these moments (null: none)
+const latest = (moments: (Date | null)[]): Date | null => moments.reduce<Date | null>((a, m) => (m != null && (a == null || m > a) ? m : a), null);
+
 // The snapshots of these tournaments (unknown ids are left out), in the order of ids
 export async function loadSnapshots(ids: number[], viewer: Viewer | null, db: Db = prisma): Promise<Snapshot[]> {
   if (ids.length === 0) return [];
@@ -108,7 +116,7 @@ export async function loadSnapshots(ids: number[], viewer: Viewer | null, db: Db
   const [tournaments, entries, rounds] = await Promise.all([
     db.tournament.findMany({
       where: {tournament_id: {in: ids}},
-      include: {prizes: {orderBy: {place: "asc"}}, canceller: {select: {first_name: true, last_name: true}}},
+      include: {prizes: {orderBy: {place: "asc"}}, canceller: {select: {first_name: true, last_name: true}}, location: LOCATION_SELECT},
     }),
     db.tournamentTeam.findMany({
       where: {tournament_id: {in: ids}},
@@ -146,9 +154,10 @@ export async function loadSnapshots(ids: number[], viewer: Viewer | null, db: Db
         game_minutes: true,
         attendance: true,
         attendance_team_id: true,
+        attendance_by: true,
         attendance_at: true,
         tournamentRounds: {select: {tournament_id: true}},
-        matches: {select: {player_pair1_score: true, player_pair2_score: true, time_expired: true}, orderBy: {id: "asc"}},
+        matches: {select: {player_pair1_score: true, player_pair2_score: true, time_expired: true, end_time: true}, orderBy: {id: "asc"}},
         ongoingMatches: {select: {player_pair1_score: true, player_pair2_score: true, started_at: true, ends_at: true}, orderBy: {id: "desc"}, take: 1},
         roundPlayers: {select: {player_id: true, team_id: true}},
         team1: {select: {team_id: true, team_name: true, photo_updated_at: true, photo_visibility: true}},
@@ -194,6 +203,14 @@ export async function loadSnapshots(ids: number[], viewer: Viewer | null, db: Db
       const ownRounds = rounds.filter(
         (r) => r.tournamentRounds.some((tr) => tr.tournament_id === tournament.tournament_id) && (admin || r.status === "PUBLISHED")
       );
+      // a skip is the clock's and a no-show a player's of the answering team; anyone else who closed it is the admin
+      const byAdmin = (r: {attendance: string | null; attendance_by: number | null; attendance_team_id: number | null}) => {
+        if (r.attendance_by == null) return false;
+        if (r.attendance === "SKIPPED") return true;
+        if (r.attendance !== "NO_SHOW") return false;
+        const team = own.find((e) => e.team_id === r.attendance_team_id);
+        return !team?.team.teamPlayers.some((tp) => tp.player.id === r.attendance_by);
+      };
       const tables: LoadedTable[] = ownRounds.map((r) => ({
         id: r.id,
         kolo: r.round_number ?? 0,
@@ -210,6 +227,7 @@ export async function loadSnapshots(ids: number[], viewer: Viewer | null, db: Db
         played: r.matches.length,
         diff: r.matches.reduce((sum, m) => sum + m.player_pair1_score - m.player_pair2_score, 0),
         matches: r.matches.map((m) => ({score1: m.player_pair1_score, score2: m.player_pair2_score, time_expired: m.time_expired})),
+        closed_at: r.open ? null : latest([...r.matches.map((m) => m.end_time), r.attendance === "NO_SHOW" || r.attendance === "SKIPPED" ? r.attendance_at : null]),
         ongoing: r.ongoingMatches[0] ?? null,
         lineup: r.roundPlayers,
         matches_per_round: r.matches_per_round,
@@ -217,6 +235,7 @@ export async function loadSnapshots(ids: number[], viewer: Viewer | null, db: Db
         attendance: r.attendance,
         attendance_team_id: r.attendance_team_id,
         attendance_at: r.attendance_at,
+        attendance_by_admin: byAdmin(r),
       }));
 
       const teams = new Map<number, {name: string; photo_url: string | null}>();

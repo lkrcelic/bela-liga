@@ -1,0 +1,82 @@
+# bela-nightly-sync
+
+Nightly sync of the Treseta app with the Bela app. Bela is primary: design, features and fixes are built there once, and you bring every new Bela commit into Treseta, keeping only the differences Treseta has on purpose. Only Bela commits that reached Bela's `master` (production, after Bela's release review and deploy) come over; what is only on Bela's `development` waits for the next Bela deploy. Nobody is watching this run, so don't ask questions: when BELA_SYNC.md doesn't settle a decision, stop at that commit and say so in the report.
+
+This routine works in the Treseta repo R, directly on its branch `bela-sync`, so `rutine/README.md`'s worktree and main-folder rules don't apply to it: its own rules are below. From README it follows the sandbox, commit, lock and report rules. Its two writes in the Bela repo are the lock (`backups/.rutina.lock`) and its report (`reports/rutine/<date>/bela-nightly-sync.md`), both gitignored.
+
+## Places
+- R: the Treseta repo, /Users/lovro/projects/github/Treseta-tournamnet-app (Next.js 14, Prisma, Postgres). This run works directly in it, on the branch `bela-sync`; no worktrees. Its git remote `bela` is the local Bela repo.
+- Bela repo: /Users/lovro/projects/github/Bela-Treseta-Tournamnet-app. Read only.
+- BELA_SYNC.md (in R, on bela-sync after step 1): the last synced Bela commit, the sync log, the decisions for Bela work waiting to come over, and the Differences section, which lists what stays Treseta's in four kinds (Own version, Small edit, Not copied, Treseta only) with the rule for each kind. It decides how every Bela change is handled.
+
+## Never
+- Create or use a git worktree.
+- Touch uncommitted work in R: no stash, reset, checkout of files or clean. If R isn't clean, stop (step 1).
+- Commit to, merge into, reset or rebase `master`. Push anything anywhere.
+- Change the Bela repo in any way (only `git fetch bela`, plus the lock and the report above), or copy files from its working tree: only Bela commits count.
+- Bring over a Bela commit that isn't an ancestor of `bela/master`.
+- Connect to a database, or read `.env`, `backups/` or Vercel settings. Run `npm run dev`, `npm run build`, `npm run dev:reset`, `prisma migrate deploy|dev|reset` or `prisma db …`. Prefix every prisma and next command with `DATABASE_URL=postgresql://none@127.0.0.1:1/none DATABASE_URL_UNPOOLED=postgresql://none@127.0.0.1:1/none`. The one exception is step 8: there, and only there, the commands it lists connect to the throwaway database `bela_sync_check` on the local Postgres (`localhost:5433`), with both variables set to it; never to any other database.
+- Replace Treseta's game rules, branding, conferences or migrations with Bela's. Conferences stay exactly as they are (BELA_SYNC.md, Conferences).
+- Work around a sandbox or permission refusal: note it in the report instead.
+
+## Steps
+1. bela-sync on top of master, in R:
+   - Check that this session's folder is R itself (`git rev-parse --show-toplevel` is R and `git rev-parse --git-dir` is `.git`). If the app started the run in a worktree or elsewhere, stop and report it: the task must be set to start in R.
+   - If R has changes to tracked files (`git status --porcelain`, every line that isn't `??`) or a cherry-pick, merge or rebase in progress, stop and report it, touching nothing. Untracked files (a plan or a note left in the folder) don't stop a run: leave them where they are, and stop only if a commit you bring over needs that path.
+   - Note the branch R is on now as O (`git branch --show-current`); step 9 returns to it.
+   - If the branch `bela-sync` exists: `git switch bela-sync`, then `git rebase master`. If the rebase stops on a conflict: `git rebase --abort`, `git switch O`, and stop; report the commit that conflicted. Commits from an earlier run that weren't merged stay on bela-sync and the sync continues after them.
+   - If it doesn't exist: `git switch -c bela-sync master`.
+
+2. What's new: `git fetch bela`. B = the last deployed Bela development commit: the newest commit on `git rev-list --first-parent bela/development` that is an ancestor of `bela/master` (`git merge-base --is-ancestor <commit> bela/master`). Bela deploys by merging development into master, so its commits stay one by one on development, and B is where the last deploy took development. A commit made directly on Bela's master (a hotfix) is not brought over from master: the same fix is on development and comes with the deploy that merges it. If no commit among the newest 500 on development is an ancestor of bela/master, stop and report it. Count W = `git rev-list --count --first-parent B..bela/development` (Bela commits waiting for Bela's deploy) for the report.
+   L = "Last synced Bela commit" in BELA_SYNC.md on bela-sync. Bela's shas and history don't matter, only its changes: Bela's history can be rewritten (rebased or filtered), and that is no reason to stop. Find the commit in B that L stands for:
+   - If L is an ancestor of B, it is L.
+   - If L is an ancestor of bela/development but not of B (synced from development before this run only took deployed commits, and Bela's deploy hasn't reached it yet): there is nothing new. Keep L, do only steps 6, 8 (when bela-sync is ahead of master) and 9, and report "Waiting for Bela's deploy to reach <short L>".
+   - Otherwise the commit on `git rev-list --first-parent B` with the same tree as L (`git rev-parse L^{tree}`), or else with the same subject and author date as L. If that match is found only on bela/development after B, treat it as in the case above.
+   - Otherwise (L is gone or nothing matches) the newest commit on `git rev-list --first-parent B` whose subject and author date match a commit on master (cherry-picks keep both).
+   Use the commit found as L from here on, and say in the report and the Sync log row that Bela's history was rewritten and which commit L now is. Stop only if none of these finds a commit. The new commits: `git rev-list --reverse --first-parent L..B`. If there are none, do only steps 6, 7 (when L changed), 8 (when bela-sync is ahead of master) and 9, and report.
+
+3. Baseline: `npx prisma generate`, then note the errors of `npx tsc --noEmit` (file and code).
+
+4. For each new commit C, oldest first:
+   - `git cherry-pick -x --empty=drop C` (add `-m 1` when C is a merge commit).
+   - Shared files that merged cleanly stay as Bela made them, except that Bela's game in shared code becomes Treseta's: `1001` → `MATCH_THRESHOLD`, the bye's `301` points → `BYE_MATCH_POINTS`, a no-show's `1001 : 700` → `NO_SHOW_SCORE`, Vrijeme partije's `35` minutes → `GAME_MINUTES_DEFAULT` (45, and five more per raised target), zvanja left out (`declarations`, the Zvanja field, "bez zvanja"; BELA_SYNC.md, Turniri), imports from `_lib/bela/`, `_store/bela/`, `belaResult`, `belaPlayerAnnouncement` or `ongoingBelaResult` → their Treseta counterparts under Game rules, the field `belaResults` → `results`; and Bela's name ("Bela Liga", "Piatnik Bela Liga", "Piatnik", "BL") → `BRAND`. Add every file changed this way to the Small edit or Branding table.
+   - Files in the Differences section, merged cleanly or not: make the result follow the file's kind, and the decisions in "Bela's work waiting to come over" where they cover C. A Bela change to a file that doesn't exist here (modify/delete conflict): `git rm` it, and carry the change into its Treseta counterpart unless it belongs to Bela's game.
+   - Files Bela added: keep them unless Not copied lists them.
+   - Bela's test and routine flow is shared on purpose (the user wants the same in Treseta), and Treseta has had it since 15 Nov 2026, brought by hand before Bela deployed it. BELA_SYNC.md ("Bela's work waiting to come over", Repository files, Small edit, Not copied) says what each of those commits and files becomes: later Bela changes to the skill `testovi`, `.claude/agents/`, `.githooks/pre-commit`, `scripts/test-db-local.sh` and CLAUDE.md's Tests section come over by their kind there; `rutine/`, `docs/arhiva/` and the E2E generator `e2e/seed/` are Not copied, and Treseta's `ORKESTRACIJA_AGENATA.md`, `E2E_PLAN.md` and `UNIT_PLAN.md` are its own versions.
+   - A Bela migration: `git rm` it, make sure prisma/schema.prisma has the schema change (merged around Treseta's own parts), and add `prisma/migrations/<timestamp>_<Bela's name>/migration.sql` with Bela's SQL adapted to this schema, named as BELA_SYNC.md says or with a timestamp later than every migration here (Bela's names can collide with Treseta's). Check that Bela's data steps make sense on Treseta's data. Compare the DDL with `npx prisma migrate diff --from-schema-datamodel <the schema before C, saved with git show> --to-schema-datamodel prisma/schema.prisma --script`.
+   - A package-lock.json conflict: take Bela's version and set its two `name` fields back to `treseta-tournament-app`.
+   - Then `GIT_EDITOR=true git cherry-pick --continue`. If you kept or carried over anything, amend the message with a paragraph starting "Treseta:" that says what. If nothing is left to commit (all Not copied, or already here), `git cherry-pick --skip`.
+   - If you can't bring C over with confidence (its intent is unclear, it would change Treseta's game rules or conferences, a migration you can't adapt safely): `git cherry-pick --abort` and stop. The commits before C stay, and the report says why. A commit that touches the tournaments is not one of these: they are shared code since 10 Nov 2026, and what stays Treseta's in them is listed (BELA_SYNC.md, Turniri), so bring it over like any other.
+
+5. Checks, if any commit came over. Take the lock (README) first and keep it through step 8; held by another routine: skip steps 5 and 8, which makes them failing checks for the report. If package.json or package-lock.json changed, run `npm ci` first (say so in the report: R's node_modules then match bela-sync, not master).
+   - `npm test`
+   - `npx eslint --no-eslintrc -c .eslintrc.json --ext .js,.jsx,.ts,.tsx src`
+   - `npx tsc --noEmit`: no errors beyond the baseline, except in shared files exactly as Bela has them (name those)
+   - `NEXT_TELEMETRY_DISABLED=1 npx next build --no-lint`
+   Fix what the sync broke, in further commits on bela-sync, as BELA_SYNC.md says where it covers it. A check that still fails stays, and goes first in the report.
+
+6. Drift: `git diff --no-renames --name-status S HEAD`, where S is the last Bela commit now fully handled (L if none). Every path must be covered by the Differences section. Add rows for the differences this sync made; report the others (path, what differs) without changing them.
+
+7. If S differs from the commit BELA_SYNC.md names, or the sync stopped: in BELA_SYNC.md set "Last synced Bela commit" to S with its date, add a Sync log row (date, Bela range, result in a few words; no new row when it stopped at the same commit as the last row), update the Differences rows changed in step 4, drop the decisions in "Bela's work waiting to come over" for the commits now synced, and commit on bela-sync: "Sync with Bela up to <short S>".
+
+8. Local database and app check. A must: run it whenever bela-sync has commits that aren't on master (also when nothing new came tonight), still on bela-sync, after step 7. Skipping it, or any part of it failing, is a failing check and goes first in the report. Set `CHECK=postgresql://postgres@localhost:5433/bela_sync_check` and `ADMIN=postgresql://postgres@localhost:5433/postgres`, and prefix every prisma and next command of this step with `DATABASE_URL=$CHECK DATABASE_URL_UNPOOLED=$CHECK`.
+   - Start the local Postgres, which runs in podman: `podman machine start` (an "already running" answer is fine), then `podman start bela-sync-pg` (the container: `docker.io/library/postgres:17`, port 5433, trust auth), and wait up to a minute for `pg_isready -h localhost -p 5433`. The podman commands and every command of this step that connects to localhost (:5433, and the app on :3100) run outside the sandbox, which blocks localhost; that is part of this step, not a workaround. If podman or the container won't start, report why.
+   - Reach the local Postgres: `echo 'SELECT 1' | npx prisma db execute --url $ADMIN --stdin`. If it doesn't answer, the check fails: report "local Postgres on :5433 not running" and go to step 9.
+   - A fresh database: `echo 'DROP DATABASE IF EXISTS bela_sync_check' | npx prisma db execute --url $ADMIN --stdin`, then the same with `CREATE DATABASE bela_sync_check`.
+   - Migrations: `npx prisma migrate deploy` (every migration, in order, must apply), then `npx prisma migrate diff --from-url $CHECK --to-schema-datamodel prisma/schema.prisma --exit-code` (no drift between the migrations and the schema).
+   - Seed: `npx prisma db seed` must finish without errors.
+   - The app: run the build from step 5 with `NEXT_TELEMETRY_DISABLED=1 npx next start -p 3100` in the background (rebuild first if step 5 didn't build), and wait until it answers.
+   - Smoke test in the browser preview (the `bela-sync-check` entry in .claude/launch.json, or the built-in browser at http://localhost:3100): log in as the seed's `admin` (password in prisma/seed.ts's first comment) and open Početna, Dnevni poredak, Ukupni poredak (also with a conference picked), Raspored, Burza, Rejting, a Team and a Player page, and on the desktop Upravljanje ligom (Novo kolo, Skica, Ekipe, Datumi, Podaci). Create a round for tonight with "Samo unutar konferencija" on, approve and publish it in Skica, then log in as `player` on a phone-sized window, start the game and save one normal and one Custom hand. Then the tournaments, on the seed's tournament of today: as `player`, Početna's Turniri tab and the tournament's page (Prijavi se, then Odjavi se); as `admin`, Turniri → the tournament (Prijave, Kola, Poredak) and Novi turnir's form, then make a Kolo (Dodaj kolo, closing Potvrda dolaska first if the day's screen asks), publish it and open its table, saving one hand there too. Every page must render without an error page, and the browser console and the server log must have no errors. If browser tools aren't available, `curl` each page and the APIs they call (`/api/leagues`, `/api/leagues/<id>/standings`, `/api/schedule`, `/api/burza`, `/api/tournaments`, `/api/tournaments/<id>`) and require 200s and a clean server log, and say in the report that the click-through wasn't done.
+   - Clean up whatever happened: stop the server, then `DROP DATABASE IF EXISTS bela_sync_check`.
+   Fix what this finds in further commits on bela-sync, then run step 5's checks and this step again. What still fails stays, and goes first in the report.
+
+9. Last, whatever happened after step 1 switched branches: make sure no cherry-pick or rebase is left in progress, R is clean, the step 8 server is stopped, and `git switch O`, so R is back on the branch it was on. bela-sync stays as a branch for you to merge. Release the lock if you hold it. Then start Treseta's nightly test run, `run_scheduled_task treseta-e2e-nightly`, whatever happened in this run (it also tests `master`, and skips what it already tested), and write your report (README, Report).
+
+## Report (your final message, short)
+- First line: "Nothing new in Bela's master", "Waiting for Bela's deploy to reach <short L>", "<n> Bela commits ready on bela-sync" or "Stopped at <sha>: <reason>", and whether the checks and the local database and app check (step 8) pass.
+- One line: Bela synced up to <short B> (last deployed); W commits on Bela's development wait for Bela's next deploy.
+- One line per Bela commit: short sha, subject, and "adapted: …" or "skipped: …" where that applies.
+- Local check: migrations on a fresh database, drift, seed, and what the click-through covered or found.
+- Needs you: migrations (tested on a fresh local database in step 8, not on production data; test them on a copy of production as BELA_SYNC.md describes before they reach master), failing checks, drift, earlier unmerged bela-sync commits that were rebased, Bela history rewrites, anything refused or left undone.
+- To take it, on master: `git log --oneline master..bela-sync`, then `git merge --ff-only bela-sync`.
+- Next: `treseta-e2e-nightly started` or `not started – <reason>`.

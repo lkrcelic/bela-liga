@@ -2,6 +2,72 @@
 
 What the commits changed for the people using the app, newest first. The reasons and details are in DECISIONS.md.
 
+## 16.11.2026 · Dodaj ekipu na turnir potvrđuje dodavanje
+
+On development (#30).
+
+### Admin
+- **Dodaj ekipu** (Upravljanje turnirom, mobitel i računalo): dodana ekipa ostaje u popisu s oznakom **Dodano**, a na punom turniru **Na čekanju · N.** (mjesto na listi čekanja), umjesto da nestane i ostavi "Nema takvih ekipa izvan turnira.".
+
+## 15.11.2026 · Iz Trešete: liga na dvije lokacije
+
+On development (DECISIONS #98).
+
+### Players
+- **Vaša lokacija** na kartici večeri: kad se večer igra na dvije lokacije, ekipa vidi svoju lokaciju (s adresom i **Karta**). Ekipa koja još nije raspoređena vidi **Javi se adminu**, a **Tu smo** je zaključan dok je admin ne rasporedi. Ekipa sa zabranom i dalje vidi zabranu.
+- Kartica stola piše koje je to kolo večeri na tvojoj lokaciji: **Stol 1 · Kolo 1/3**.
+- Nove kartice na Početnoj, svake ligaške večeri: **Sljedeći stol** (odigrali ste stol, sljedeće kolo još nije objavljeno), **Pauza** (ekipa preskače kolo), **Kraj večeri** (zadnje kolo vaše lokacije je odigrano) i **Nema zakazane večeri**.
+- **Raspored** pokazuje obje lokacije večeri, a vaša piše *Vi*.
+- **Dnevni poredak** večeri na dvije lokacije ima prekidač **Sve | lokacija | lokacija**.
+
+### Admin
+- **Lokacije** (izbornik, pokraj Sponzora): jedan popis mjesta za lige, večeri i turnire. Promjena mjesta vrijedi svugdje gdje se koristi; mjesto u upotrebi se ne može obrisati. U Podacima, Novoj ligi, Uredi večer i obrascu turnira mjesto se bira s popisa ili dodaje.
+- **Uredi večer · Druga lokacija**: večer se može igrati na dva mjesta odjednom, a druga lokacija može imati svoj **Broj kola** (inače isti kao prva).
+- **Podjela** (nova kartica iza Novog kola; na mobitelu s Večeri): ekipe se povlače ili premještaju na jednu ili drugu lokaciju, **Zamijeni lokacije**, **Kopiraj raspored**. Ekipa sa zabranom nosi oznaku **Zabrana**.
+- **Novo kolo** i **Skica** biraju lokaciju: svaka lokacija ima svoje ekipe, kola, stolove od Stola 1 i objavu, a brojevi kola večeri su zajednički (Kolo 12 i 13 na obje).
+- Večer na mobitelu ima kućicu za svaku lokaciju i broj ekipa bez lokacije.
+
+### Changed
+- U Upravljanju ligom **Kola** su prije **Ekipa**.
+- **Uredi večer** više nema **Vrati na zadano**: vrijeme, broj kola i mjesto lige vraćaju se tako da ih se postavi kao u ligi.
+
+## 15.11.2026 · Novo kolo i Skica kola pokazuju večer
+
+On development (#28).
+
+### Admin
+- **Novo kolo** i **Skica kola** na mobitelu uvijek pokazuju večer (*NED 15. 11.*) iza imena lige; dugo ime lige se skraćuje s *…*, a ne datum. Dosad se datum nije vidio, pa poslije ponoći nije bilo jasno na koju večer idu kola.
+
+## 14.11.2026 · Ispravak spremljene igre opet radi
+
+On development.
+
+### Players
+- **Ispravak spremljene igre** (dodir na igru na scorepadu, Korak 3 od 3, **Spremi**) se opet sprema. Od 09.11. je uvijek pisalo *Igra nije spremljena.* Greška je i na produkciji dok se ovo ne objavi.
+
+## 14.11.2026 · Završi meč ne gubi sljedeću igru
+
+On development (#74).
+
+### Players
+- **Završi meč** ostaje na ekranu (s kružićem) dok se ne otvori sljedeći meč, pa drugi dodir više ne otvara **Upiši igru** za već završeni meč.
+- Igra koja se ne može spremiti jer je meč u međuvremenu završen (isteklo vrijeme ili ga je netko završio) više ne nestaje bez riječi: piše *Meč je već završen, pa ova igra nije spremljena.* i gumb **Na meč**.
+
+## 14.11.2026 · Iz Trešete: Vrati stol, Uredi ishod, vrijeme kola, Nedolazak 4 / 6 / 10
+
+On development (83f310a..2ede4ab, DECISIONS #97).
+
+### Players
+- **Nedolazak za stol 4, 6, 10.** Pitanje *Jesu li … za stolom?* dolazi 4 minute nakon što kolo izađe i **Da, tu su** radi odmah. **Ne, nisu došli** može tek od 6. minute (napomena ispod gumba to kaže), a bez igre i odgovora stol se preskače u 10. minuti (dosad 3, 5, 8).
+
+### Admin
+- **Vrati stol** na preskočenom stolu i stolu s nedolaskom (Statusi stolova, računalo i mobitel): stol je opet u igri kao da su rekli *Da, tu su*, ekipe se vraćaju u turnir, a zabrana iz Kola 1 se ukida.
+- **Uredi ishod** na istim stolovima: pobjeda jedne ekipe (1001 : 700 po partiji, druga isključena) ili **Nitko · preskočen**. Stol tada piše **Dodijeljena pobjeda** / *Odluka admina*.
+- **Vrijeme kola**: koliko kolo traje od objave (**Vrijeme kola 24:32 · od 18:54**), a kad je odigrano **Kolo je trajalo 52 min**. Na računalu u bočnoj kartici i na kolu preko cijelog ekrana, na mobitelu na navy kartici, ekranu kola i u popisu kola.
+
+### Changed
+- **Ispravljeni meč se vraća u igru** (liga i turniri): kad adminov ispravak igre ostavi završeni meč bez ikoga na 1001, meč se ponovo igra za istim stolom s vremenom koje mu je ostalo, ako je stol od večeras i iza njega još ništa nije krenulo. Inače upozorenje kaže zašto ne može i admin dopisuje igre.
+
 ## 12.11.2026 · Dodir na ekipu otvara upis igre
 
 Live since 13.11. (21b86c9).

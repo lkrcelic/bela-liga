@@ -18,7 +18,7 @@ import {
   TournamentWinner,
 } from "@/app/_interfaces/tournament";
 import {waitingList} from "@/app/_lib/tournamentEntries";
-import {draftIsStale, entriesHidden, lastKoloMade, signUpsOpenNow} from "@/app/_lib/tournaments";
+import {draftIsStale, entriesHidden, koloTimes, lastKoloMade, signUpsOpenNow} from "@/app/_lib/tournaments";
 import {leagueClock} from "@/app/_lib/dates";
 import {displayName} from "@/app/_lib/players/names";
 import {arrivalPhase, DayEntry, isTournamentDay, startSwitch} from "@/app/_lib/tournamentDay";
@@ -154,7 +154,7 @@ export function cardView(s: Snapshot, viewer: Viewer | null): TournamentCard {
     date: isoDay(t.date),
     gathering_time: t.gathering_time,
     start_time: t.start_time,
-    location: {name: t.location_name, address: t.location_address, url: t.location_url},
+    location: {id: t.location?.location_id ?? null, name: t.location?.name ?? null, address: t.location?.address || null, url: t.location?.url || null},
     rounds: t.rounds,
     matches_per_round: t.matches_per_round,
     declarations: t.declarations,
@@ -239,6 +239,7 @@ function koloTable(s: Snapshot, t: LoadedTable, now: Date): KoloTable {
       started: tableStarted(t),
       attendance: t.attendance,
       attendance_at: t.attendance_at,
+      attendance_by_admin: t.attendance_by_admin,
       answered_by: name(t.attendance_team_id),
       other: name(other),
       matches: t.matches,
@@ -294,11 +295,17 @@ export function resultsView(s: Snapshot, viewer: Viewer | null): TournamentResul
     })(),
   }));
   const now = new Date();
-  const kolos: KoloView[] = s.kolos.map((k) => ({
-    number: k.number,
-    published: k.published,
-    tables: s.tables.filter((x) => x.kolo === k.number).map((x) => koloTable(s, x, now)),
-  }));
+  const kolos: KoloView[] = s.kolos.map((k) => {
+    const tables = s.tables.filter((x) => x.kolo === k.number);
+    const times = koloTimes(k.published ? tables : []);
+    return {
+      number: k.number,
+      published: k.published,
+      tables: tables.map((x) => koloTable(s, x, now)),
+      started_at: times.started_at?.toISOString() ?? null,
+      ended_at: times.ended_at?.toISOString() ?? null,
+    };
+  });
   return {
     id: t.tournament_id,
     name: t.tournament_name,

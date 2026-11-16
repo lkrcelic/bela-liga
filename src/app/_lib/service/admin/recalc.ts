@@ -1,6 +1,6 @@
 import {Prisma} from "@prisma/client";
 import {BYE_TEAM_ID, isByeTeam} from "@/app/_lib/bye";
-import {RatedRound, replaySeason} from "@/app/_lib/rating/season";
+import {changedRatings, historyChanges, RatedRound, replaySeason} from "@/app/_lib/rating/season";
 import {ratedPlayerIds} from "@/app/_lib/lineup";
 import {PUBLISHED_ROUND} from "@/app/_lib/roundStatus";
 
@@ -30,12 +30,12 @@ export async function recalcTeamScores(tx: Prisma.TransactionClient, leagueId: n
 // (closed, published, no bye, since RATINGS_FROM) is replayed, one rating period per league night, each match a game.
 // A round counts for its lineup: the players picked on Start Game or, for an older round, the team's roster saved
 // before it changed (team/freezeLineups.ts). A round without one counts for today's roster, which is then still the
-// roster it was rated with. Also rewrites the per-night history the ratings page shows.
+// roster it was rated with. Also brings the per-night history the ratings page shows up to date.
 // Runs whenever a round closes or a counted result changes, so tonight's rounds always form one period.
 export async function replayRatings(tx: Prisma.TransactionClient) {
   await lockRatings(tx);
 
-  const players = await tx.player.findMany({select: {id: true}});
+  const players = await tx.player.findMany({select: {id: true, rating: true, rating_deviation: true, volatility: true}});
   const rounds = await tx.round.findMany({
     where: {
       open: false,
@@ -69,8 +69,11 @@ export async function replayRatings(tx: Prisma.TransactionClient) {
   }));
   const {ratings, history} = replaySeason(players.map((p) => p.id), rated);
 
-  if (ratings.size > 0) {
-    const rows = Array.from(ratings, ([id, r]) => Prisma.sql`(${id}::int, ${Math.round(r.rating)}::int, ${r.rd}::float8, ${r.vol}::float8)`);
+  // only what differs from the stored ratings and history is written: a round close changes tonight's rows, the
+  // earlier nights come out the same (the whole history used to be deleted and inserted again on every close)
+  const update = changedRatings(players.map((p) => ({id: p.id, rating: p.rating, rd: p.rating_deviation, vol: p.volatility})), ratings);
+  for (let i = 0; i < update.length; i += 1000) {
+    const rows = update.slice(i, i + 1000).map((r) => Prisma.sql`(${r.id}::int, ${r.rating}::int, ${r.rd}::float8, ${r.vol}::float8)`);
     await tx.$executeRaw`
         UPDATE "Player" AS p
         SET rating = v.rating, rating_deviation = v.rd, volatility = v.vol
@@ -78,18 +81,35 @@ export async function replayRatings(tx: Prisma.TransactionClient) {
         WHERE p.id = v.id`;
   }
 
-  await tx.playerRatingHistory.deleteMany({});
-  for (let i = 0; i < history.length; i += 1000) {
-    await tx.playerRatingHistory.createMany({
-      data: history.slice(i, i + 1000).map((h) => ({
-        player_id: h.playerId,
-        night: new Date(`${h.night}T00:00:00Z`),
-        rating: h.rating,
-        rating_deviation: h.rd,
-        change: h.change,
-        rounds: h.rounds,
-      })),
-    });
+  const stored = await tx.playerRatingHistory.findMany();
+  const {remove, write} = historyChanges(
+    stored.map((h) => ({
+      playerId: h.player_id,
+      night: h.night.toISOString().slice(0, 10),
+      rating: h.rating,
+      rd: h.rating_deviation,
+      change: h.change,
+      rounds: h.rounds,
+    })),
+    history
+  );
+  for (let i = 0; i < remove.length; i += 1000) {
+    const keys = remove.slice(i, i + 1000).map((h) => Prisma.sql`(${h.playerId}::int, ${h.night}::date)`);
+    await tx.$executeRaw`
+        DELETE FROM "PlayerRatingHistory" AS h
+        USING (VALUES ${Prisma.join(keys)}) AS v(player_id, night)
+        WHERE h.player_id = v.player_id AND h.night = v.night`;
+  }
+  for (let i = 0; i < write.length; i += 1000) {
+    const rows = write.slice(i, i + 1000).map((h) =>
+      Prisma.sql`(${h.playerId}::int, ${h.night}::date, ${h.rating}::int, ${h.rd}::float8, ${h.change}::int, ${h.rounds}::int)`
+    );
+    await tx.$executeRaw`
+        INSERT INTO "PlayerRatingHistory" (player_id, night, rating, rating_deviation, change, rounds)
+        VALUES ${Prisma.join(rows)}
+        ON CONFLICT (player_id, night) DO UPDATE
+        SET rating = EXCLUDED.rating, rating_deviation = EXCLUDED.rating_deviation, change = EXCLUDED.change,
+            rounds = EXCLUDED.rounds`;
   }
 }
 

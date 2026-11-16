@@ -5,12 +5,15 @@ import {AdminTournament, CandidateTeam, TournamentEntryView} from "@/app/_interf
 import {publishedTimeLabel} from "@/app/_lib/roundStatus";
 import {dayMonth} from "@/app/_lib/ui/burza";
 import {matchesQuery} from "@/app/_lib/ui/text";
+import {Added, addedLabel, CandidateHit, markAdded} from "@/app/_lib/ui/tournamentAdd";
 import {useTransitionRouter} from "@/app/_lib/viewTransitions";
 import {color, font, tint} from "@/app/_styles/tokens";
 import {buttonBase, Card, ellipsis, EmptyState, ErrorNote, IconCircleButton, InfoNote, NARROW_DESKTOP, OutlineButton, PlayerChip, SearchInput, Spinner} from "@/app/_ui/sp";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
+import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
 import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
 import GroupAddRoundedIcon from "@mui/icons-material/GroupAddRounded";
+import HourglassTopRoundedIcon from "@mui/icons-material/HourglassTopRounded";
 import InfoRoundedIcon from "@mui/icons-material/InfoRounded";
 import LoginRoundedIcon from "@mui/icons-material/LoginRounded";
 import WarningRoundedIcon from "@mui/icons-material/WarningRounded";
@@ -229,10 +232,11 @@ function EntryRow({
 }
 
 // Dodaj ekipu's search, on the computer's card and the phone's sheet: teams not signed up yet by name or a player's
-// name or username (from 2 letters), each with why it can't be added; add() signs one up and drops it from the hits
+// name or username (from 2 letters), each with why it can't be added; add() signs one up and keeps it in the hits
+// marked with where it went (Dodano, or its place on the waiting list), so the add is confirmed in place (#30)
 export function useCandidateSearch(t: AdminTournament, onAdded: (t: AdminTournament) => void) {
   const [query, setQuery] = useState("");
-  const [hits, setHits] = useState<CandidateTeam[] | null>(null);
+  const [hits, setHits] = useState<CandidateHit[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [adding, setAdding] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -267,14 +271,30 @@ export function useCandidateSearch(t: AdminTournament, onAdded: (t: AdminTournam
     setAdding(team.team_id);
     setError(null);
     try {
-      onAdded(await addTournamentTeamAPI(t.id, team.team_id));
-      setHits((h) => h?.filter((x) => x.team_id !== team.team_id) ?? h);
+      const after = await addTournamentTeamAPI(t.id, team.team_id);
+      onAdded(after);
+      setHits((h) => markAdded(h, team.team_id, after));
     } catch (e) {
       setError(e instanceof Error ? e.message : "Ekipa nije dodana.");
     }
     setAdding(null);
   };
   return {query, setQuery, hits, loading, adding, error, add};
+}
+
+// where a team just added went, in place of its Dodaj: green Dodano, or gold Na čekanju · N. on a full tournament
+export function AddedMark({added}: {added: Added}) {
+  const waiting = added.position != null;
+  return (
+    <Box
+      component="span"
+      role="status"
+      sx={{flex: "none", display: "inline-flex", alignItems: "center", gap: "4px", height: 32, px: "10px", borderRadius: "10px", background: waiting ? tint.gold[16] : tint.green[12], color: waiting ? color.ink : color.green, fontSize: 13, fontWeight: 700, whiteSpace: "nowrap", "& svg": {fontSize: 17}}}
+    >
+      {waiting ? <HourglassTopRoundedIcon aria-hidden /> : <CheckRoundedIcon aria-hidden />}
+      {addedLabel(added)}
+    </Box>
+  );
 }
 
 // Dodaj ekipu on the computer; Nova ekipa goes to the league's Nova ekipa
@@ -311,15 +331,19 @@ function AddTeamCard({t, onAdded}: {t: AdminTournament; onAdded: (t: AdminTourna
                     {h.reason ?? (h.players.map((p) => p.username ?? p.name).join(" · ") || "—")}
                   </Box>
                 </Box>
-                <IconCircleButton
-                  label={`Dodaj ${h.team_name} na turnir`}
-                  size={44}
-                  disabled={adding != null || h.reason != null}
-                  onClick={() => add(h)}
-                  sx={{borderRadius: "12px", background: h.reason ? color.lineFill : color.navy, color: h.reason ? color.faint : color.white, boxShadow: "none", "& svg": {fontSize: 24}}}
-                >
-                  {adding === h.team_id ? <Spinner size={20} tone="white" /> : <AddRoundedIcon />}
-                </IconCircleButton>
+                {h.added ? (
+                  <AddedMark added={h.added} />
+                ) : (
+                  <IconCircleButton
+                    label={`Dodaj ${h.team_name} na turnir`}
+                    size={44}
+                    disabled={adding != null || h.reason != null}
+                    onClick={() => add(h)}
+                    sx={{borderRadius: "12px", background: h.reason ? color.lineFill : color.navy, color: h.reason ? color.faint : color.white, boxShadow: "none", "& svg": {fontSize: 24}}}
+                  >
+                    {adding === h.team_id ? <Spinner size={20} tone="white" /> : <AddRoundedIcon />}
+                  </IconCircleButton>
+                )}
               </Box>
             ))
           )}

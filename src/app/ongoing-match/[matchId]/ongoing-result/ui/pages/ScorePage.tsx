@@ -3,7 +3,7 @@
 import {HandsChangedError} from "@/app/_fetchers/ongoingBelaResult/create";
 import {getOngoingMatchAPI} from "@/app/_fetchers/ongoingMatch/getOne";
 import useResultStore from "@/app/_store/bela/resultStore";
-import {ActionPair, ConfirmSheet, ErrorNote} from "@/app/_ui/sp";
+import {ActionPair, ConfirmSheet, ErrorNote, PrimaryButton} from "@/app/_ui/sp";
 import {discardHand, handsAtOpen, matchClosed, saveHand, takeWizardOrigin} from "@/app/ongoing-match/ui/handFlow";
 import useMatchSides from "@/app/ongoing-match/ui/useMatchSides";
 import {PointsKeypad} from "@/app/ongoing-match/ui/WizardParts";
@@ -14,6 +14,7 @@ import {useState} from "react";
 import {ActionProps} from "./TrumpCallerPage";
 
 export const SAME_HAND_TITLE = "Je li ovo nova igra?";
+export const MATCH_CLOSED_TEXT = "Meč je već završen, pa ova igra nije spremljena.";
 
 // Step 3: game points for the selected team; the other team gets the rest of 162
 export default function ScorePage({actionType}: ActionProps) {
@@ -26,6 +27,9 @@ export default function ScorePage({actionType}: ActionProps) {
   const [error, setError] = useState<string | null>(null);
   // a hand was saved from another phone at the table while this one was entering its own: ask before saving
   const [sameHand, setSameHand] = useState<string | null>(null);
+  // the match was closed before the hand was saved: the player is told (the hand stays in view until they leave), and
+  // the next button drops it and leads to the board
+  const [closed, setClosed] = useState<{fromSheet: boolean} | null>(null);
 
   const empty = !result.player_pair1_game_points && !result.player_pair2_game_points;
   const keysOff = !!result.complete_victory;
@@ -72,11 +76,12 @@ export default function ScorePage({actionType}: ActionProps) {
         setSaving(false);
         return;
       }
-      // the time ran out while the hand was entered (or a teammate finished the match): the hand doesn't count, and
-      // the board follows the match to the next one or the table's result
+      // the time ran out while the hand was entered (or the match was finished): the hand doesn't count. The player is
+      // told so before the board follows the match to the next one or the table's result.
       if (await matchClosed(Number(params.matchId))) {
-        discardHand();
-        toBoard(fromSheet);
+        setSameHand(null);
+        setClosed({fromSheet});
+        setSaving(false);
         return;
       }
       setError(e instanceof Error ? e.message : "Spremanje nije uspjelo.");
@@ -94,8 +99,20 @@ export default function ScorePage({actionType}: ActionProps) {
   return (
     <>
       <PointsKeypad onDigit={setGamePoints} onStiglja={setCompleteVictory} stiglja={keysOff} onClear={resetScore} keysOff={keysOff} />
+      {closed && <ErrorNote sx={{mb: "10px"}}>{MATCH_CLOSED_TEXT}</ErrorNote>}
       {error && <ErrorNote sx={{mb: "10px"}}>{error}</ErrorNote>}
-      <ActionPair onBack={() => router.back()} nextLabel="Spremi" onNext={() => save()} nextDisabled={empty} nextLoading={saving} />
+      {closed ? (
+        <PrimaryButton
+          onClick={() => {
+            discardHand();
+            toBoard(closed.fromSheet);
+          }}
+        >
+          Na meč
+        </PrimaryButton>
+      ) : (
+        <ActionPair onBack={() => router.back()} nextLabel="Spremi" onNext={() => save()} nextDisabled={empty} nextLoading={saving} />
+      )}
       <ConfirmSheet
         open={sameHand != null}
         onClose={dropSameHand}
