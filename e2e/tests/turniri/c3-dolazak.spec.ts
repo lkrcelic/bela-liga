@@ -3,7 +3,7 @@
 // didn't confirm becomes inactive (still signed up) and the confirmed team of the waiting list comes in, while the
 // unconfirmed waiting team keeps waiting. As tournaments.arrival, on a tournament of the test's own: today, Okupljanje
 // 00:00 and Početak 23:59, so the window is open whenever the test runs; the start time comes by moving it to 00:00.
-import {addTeams, clock, day, escape, expect, markArrived, pickTeams, test} from "../../helpers/c3";
+import {addTeams, clock, day, escape, expect, markArrived, pickTeams, removeTournament, test} from "../../helpers/c3";
 
 test("Tu smo, the admin's arrival screen and the start time: the unconfirmed team is inactive and the confirmed waiting team comes in", async ({
   as,
@@ -95,16 +95,59 @@ test("Tu smo, the admin's arrival screen and the start time: the unconfirmed tea
   await healthy(lateOne);
 });
 
-// BUG: a tournament without Početak (as tournaments.ready) gives a team the admin marked here "Prvo kolo počinje u ."
-// on its card: the start time the sentence quotes is empty
-test.fail("a team marked here at a tournament without a start time is not told that the first Kolo starts at an empty time", async ({as, db, admin, tournaments}) => {
-  const teams = await pickTeams(db, 2, {phones: 1});
-  const t = await tournaments.make({name: "Turnir spreman za start", date: day(), rounds: 3, max_teams: 8});
-  await addTeams(admin, t.id, teams);
-  await markArrived(admin, t.id, teams);
-  const page = await as(teams[0].phone!);
-  await page.goto(`/turniri/${t.id}`);
-  const card = page.getByRole("region", {name: "Tu ste"});
-  await expect(card).toContainText(`Organizator je označio dolazak u `);
-  expect(await card.innerText()).not.toMatch(/počinje u\s*\./);
+// Every tournament has Okupljanje and Početak, the gathering first (the user, 16.11.2026), so every tournament has
+// Potvrda dolaska and no team is told "Prvo kolo počinje u ." of a tournament without a start
+test("Novi turnir asks for Okupljanje and Početak, the gathering before the start, and the server refuses a tournament without them", async ({as, db, admin, tournaments}) => {
+  // the fixture removes a "C3 · " tournament a run that died here left behind
+  void tournaments;
+  const name = "C3 · Turnir s vremenima";
+  const page = await as("admin");
+  await page.goto("/turniri/novi");
+  await page.getByRole("textbox", {name: "Naziv turnira"}).fill(name);
+  await page.getByRole("textbox", {name: "Datum"}).fill(day(20));
+  await page.getByRole("textbox", {name: "Telefon organizatora *"}).fill("+385 91 000 0001");
+  const gathering = page.getByLabel("Okupljanje", {exact: true});
+  const start = page.getByLabel("Početak", {exact: true});
+  const create = page.getByRole("button", {name: "Kreiraj turnir"});
+
+  // the form starts at 09:30 and 10:00: both taken away
+  await page.getByRole("button", {name: "Ukloni vrijeme okupljanja"}).click();
+  await page.getByRole("button", {name: "Ukloni početak"}).click();
+  await expect(gathering).toHaveValue("");
+  await expect(start).toHaveValue("");
+  await create.click();
+  await expect(page.getByText("Upiši vrijeme okupljanja.").first()).toBeVisible();
+  await expect(gathering).toHaveAccessibleDescription("Upiši vrijeme okupljanja.");
+  await expect(start).toHaveAccessibleDescription("Upiši vrijeme početka.");
+  await start.fill("18:00");
+  await gathering.fill("18:30");
+  await expect(gathering).toHaveAccessibleDescription("Okupljanje mora biti prije početka.");
+  await create.click();
+  await expect(page).toHaveURL(/\/turniri\/novi$/);
+  expect(await db.tournament.count({where: {tournament_name: name}})).toBe(0);
+
+  await gathering.fill("17:30");
+  await expect(gathering).not.toHaveAttribute("aria-invalid", "true");
+  await create.click();
+  await expect(page).toHaveURL(/\/turniri\/\d+\/upravljanje\?view=prijave$/);
+  const id = Number(new URL(page.url()).pathname.split("/")[2]);
+  try {
+    const t = await db.tournament.findUniqueOrThrow({where: {tournament_id: id}});
+    expect([t.tournament_name, t.gathering_time, t.start_time]).toEqual([name, "17:30", "18:00"]);
+
+    // the same request without a start, as an old form or a script would send it
+    const body = {
+      name, date: day(21), gathering_time: "17:30", start_time: null, location_id: null, rounds: 3, matches_per_round: 1,
+      declarations: true, max_teams: 16, entry_fee: 0, rules_url: null, prizes: [], organizer_phone: "+385 91 000 0001",
+    };
+    const refused = await admin.post("/api/admin/tournaments", {data: body});
+    expect(refused.status()).toBe(400);
+    expect(await refused.text()).toContain("Upiši vrijeme početka.");
+    const changed = await admin.patch(`/api/admin/tournaments/${id}`, {data: {...body, date: t.date.toISOString().slice(0, 10), gathering_time: null, start_time: "18:00"}});
+    expect(changed.status()).toBe(400);
+    expect(await changed.text()).toContain("Upiši vrijeme okupljanja.");
+    expect(await db.tournament.count({where: {tournament_name: name}})).toBe(1);
+  } finally {
+    await removeTournament(admin, db, id);
+  }
 });

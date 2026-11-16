@@ -53,7 +53,7 @@ test("on the day the organizer marks the teams that came with Označi dolazak an
 });
 
 test("the organizer closes sign-ups, makes Kolo 1 with Složi Kolo 1 and publishes it", async ({as, own, db, healthy}) => {
-  // no start time: the sign-ups close with the switch, and Kolo 1 is made after that
+  // Potvrda dolaska not open yet (Okupljanje 23:58): the sign-ups close with the switch, and Kolo 1 is made after that
   const t = await own({teams: 4});
   const page = await as("organizer");
   await page.goto(`/turniri/${t.id}/upravljanje?view=prijave`);

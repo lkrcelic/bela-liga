@@ -1,5 +1,6 @@
 "use client";
 
+import useCan from "@/app/_hooks/useCan";
 import {restoreTournamentAPI, setRegistrationsOpenAPI} from "@/app/_fetchers/tournament";
 import {useAdminTournament} from "@/app/_hooks/useTournaments";
 import {AdminTournament} from "@/app/_interfaces/tournament";
@@ -45,6 +46,8 @@ export default function ManageTournamentDesktop({id}: {id: number}) {
   const [live, setLive] = useState(false);
   const {tournament: t, setTournament, error, notFound, reload} = useAdminTournament(id, live ? 15_000 : undefined);
   const [switching, setSwitching] = useState(false);
+  // Vrati turnir is the admin's, like Otkaži
+  const mayRestore = useCan("tournament.cancel");
   const [switchError, setSwitchError] = useState<string | null>(null);
   if (t && live !== (t.phase === "active")) setLive(t.phase === "active");
 
@@ -128,9 +131,11 @@ export default function ManageTournamentDesktop({id}: {id: number}) {
                 </Box>
               </Box>
               {/* Vrati turnir: back among the upcoming ones, with the sign-ups open */}
-              <PrimaryButton icon={<RestoreRoundedIcon />} height={46} loading={switching} onClick={restore} sx={{flex: "none", width: "auto", px: "18px", fontSize: 15}}>
-                Vrati turnir
-              </PrimaryButton>
+              {mayRestore && (
+                <PrimaryButton icon={<RestoreRoundedIcon />} height={46} loading={switching} onClick={restore} sx={{flex: "none", width: "auto", px: "18px", fontSize: 15}}>
+                  Vrati turnir
+                </PrimaryButton>
+              )}
             </Box>
           )}
           <ViewTabs<ManageView>

@@ -5,6 +5,26 @@
 // works at once and Ne, nisu došli from 6 minutes, and at 10 minutes the match is skipped. All times are the server's. Framework free so it can be unit
 // tested.
 import {leagueDateString, leagueMoment, leagueNightString} from "@/app/_lib/dates";
+import {isStartTime} from "@/app/_lib/nights";
+
+export const TIME_ERROR = "Vrijeme mora biti od 00:00 do 23:59.";
+export const GATHERING_REQUIRED = "Upiši vrijeme okupljanja.";
+export const START_REQUIRED = "Upiši vrijeme početka.";
+export const GATHERING_AFTER_START = "Okupljanje mora biti prije početka.";
+
+// Every tournament has an Okupljanje and a Početak ("HH:MM"), the gathering before the start (the user, 16.11.2026),
+// so every tournament has Potvrda dolaska. The form and the server say the same, field by field; {} when both are fine
+export function tournamentTimesErrors(gathering: string | null | undefined, start: string | null | undefined): {gathering?: string; start?: string} {
+  const e: {gathering?: string; start?: string} = {};
+  const g = gathering?.trim() ?? "";
+  const s = start?.trim() ?? "";
+  if (!g) e.gathering = GATHERING_REQUIRED;
+  else if (!isStartTime(g)) e.gathering = TIME_ERROR;
+  if (!s) e.start = START_REQUIRED;
+  else if (!isStartTime(s)) e.start = TIME_ERROR;
+  if (!e.gathering && !e.start && g >= s) e.gathering = GATHERING_AFTER_START;
+  return e;
+}
 
 // The days a tournament can be played on now (as stored, UTC midnight): the calendar day, and until 06:00 also the
 // league night before, so a tournament that runs past midnight keeps its clock
@@ -19,7 +39,7 @@ export const ARRIVAL_DEFAULT_MS = 30 * 60_000;
 
 export type ArrivalWindow = {opens: Date; closes: Date};
 
-// When Tu smo can be pressed; null for a tournament without a start time (it has no confirmation)
+// When Tu smo can be pressed; null for a tournament without a start time (one made before 16.11.2026: no confirmation)
 export function arrivalWindow(t: {date: string; gathering_time: string | null; start_time: string | null}): ArrivalWindow | null {
   if (!t.start_time) return null;
   const closes = leagueMoment(t.date, t.start_time);

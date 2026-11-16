@@ -55,11 +55,9 @@ test("a player's overview sends the organizer the phone number and nothing else 
   for (const key of ["email", "birth_date", "smoker"]) expect(seen[key] ?? null, key).toBeNull();
 });
 
+// the organizer calls the teams of their tournament (DECISIONS #86; the user, 16.11.2026: "Organizator vidi brojeve
+// mobitela"), and the note under the rows no longer calls the phone private
 test("a player's page shows the organizer the player's phone number", async ({as, db}) => {
-  // BUG: the server sends the organizer the phone (privacy.ts, player.contact: "they call the teams of their
-  // tournament"), but Osobni podaci (personalRows in _lib/ui/profiles.ts) shows Mobitel only with full access, so the
-  // organizer sees Ime, Prezime and Korisničko ime and the note that the phone is for the player and admins alone
-  test.fail();
   const player = await fullPlayer(db);
   const page = await as("organizer");
   await page.goto(`/players/${player.id}`);
@@ -67,6 +65,7 @@ test("a player's page shows the organizer the player's phone number", async ({as
   await expect(data.getByRole("term").first()).toHaveText("Ime");
   await expect(data.getByRole("term")).toHaveText(["Ime", "Prezime", "Korisničko ime", "Mobitel"]);
   await expect(data.getByRole("definition").last()).toHaveText(player.phone!);
+  await expect(data).toContainText("Email, datum rođenja i Pušač vidljivi su samo igraču i administratorima.");
 });
 
 // ---------- the routes ----------

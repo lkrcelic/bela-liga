@@ -94,7 +94,7 @@ komentarom `// BUG:`: test opisuje kako bi trebalo biti, a prolazi dok greška p
 | Prijave zatvorene i otkazan turnir odbijaju ekipu | igrač | `turniri/c3-prijave.spec.ts` › sign-ups closed and a cancelled tournament refuse a team… |
 | Sakrij broj prijava (gost, igrač, organizator, admin; DECISIONS #93) | sve | `turniri/c3-prijave.spec.ts` › Sakrij broj prijava: whoever runs the tournament sees…; › …on the organizer's own tournament… |
 | Tu smo, adminov dolazak, zatvaranje dolaska | igrač, admin | `turniri/c3-dolazak.spec.ts` › Tu smo, the admin's arrival screen and the start time… |
-| Turnir bez početka: ekipa označena kao stigla | igrač | `turniri/c3-dolazak.spec.ts` › a team marked here at a tournament without a start time… (bug) |
+| Novi turnir traži Okupljanje i Početak (okupljanje prije početka), poslužitelj odbija turnir bez njih | admin | `turniri/c3-dolazak.spec.ts` › Novi turnir asks for Okupljanje and Početak… |
 | Složi i objavi Kolo 1 | admin | `turniri/c3-nedolazak.spec.ts` › the admin makes Kolo 1 of a ready tournament with Složi Kolo 1… |
 | Nedolazak za stol 4 / 6 (1001 : 700, zabrana) | igrač | `turniri/c3-nedolazak.spec.ts` › Nedolazak za stol: no question before 4 minutes… |
 | Nedolazak za stol 10 (preskok) | sustav, igrač | `turniri/c3-nedolazak.spec.ts` › a table with neither a game nor an answer is skipped at 10 minutes… |
@@ -113,8 +113,10 @@ komentarom `// BUG:`: test opisuje kako bi trebalo biti, a prolazi dok greška p
 | Podaci · Spremi promjene (svoj turnir) | organizator | `turniri/c7-svoj-turnir.spec.ts` › the organizer changes their tournament in Podaci… |
 | Prijave otvorene / zatvorene, Dodaj ekipu | organizator | `turniri/c7-svoj-turnir.spec.ts` › the organizer closes and reopens their sign-ups and adds a team… |
 | Makni ekipu (svoj turnir) | organizator | `turniri/c7-svoj-turnir.spec.ts` › Makni takes a team off the organizer's own tournament (bug #84) |
-| Otkaži i Vrati turnir | organizator | `turniri/c7-svoj-turnir.spec.ts` › the organizer cancels their tournament with Otkaži turnir… |
-| Obriši turnir samo admin | organizator | `turniri/c7-svoj-turnir.spec.ts` › the server refuses the organizer's Obriši turnir…; › Podaci gives the organizer Otkaži turnir but not Obriši turnir… (bug) |
+| Otkaži i Vrati turnir samo admin (organizator ih nema, poslužitelj ih odbija) | organizator | `turniri/c7-svoj-turnir.spec.ts` › the organizer can neither cancel their tournament nor bring it back…; `turniri/c7-tudi-turnir.spec.ts` › on the admin's tournament (open/live) the organizer's Otkaži turnir / Vrati turnir is refused… |
+| Admin otkaže turnir (Otkaži turnir) i vrati ga (Vrati turnir), prijave opet otvorene, ekipe iste | admin | `turniri/c7-svoj-turnir.spec.ts` › the admin cancels the organizer's tournament with Otkaži turnir… |
+| Na računalu organizator nema Otkaži, Obriši ni Vrati turnir, admin ih ima | organizator, admin | `turniri/c7-svoj-turnir.racunalo.spec.ts` › Podaci on the computer gives the organizer neither…; › a tournament the admin cancelled shows the organizer… |
+| Obriši turnir samo admin | organizator | `turniri/c7-svoj-turnir.spec.ts` › the server refuses the organizer's Obriši turnir…; › Podaci gives the organizer neither Otkaži turnir nor Obriši turnir… |
 | Dodaj kolo / Obriši kolo na završenom turniru | organizator | `turniri/c7-svoj-turnir.spec.ts` › on their finished tournament the organizer adds a Kolo… |
 | Potvrda dolaska: Označi dolazak, Aktivna | organizator | `turniri/c7-dan-turnira.spec.ts` › on the day the organizer marks the teams that came… |
 | Prijave zatvorene → Složi Kolo 1 → Objavi | organizator | `turniri/c7-dan-turnira.spec.ts` › the organizer closes sign-ups, makes Kolo 1… |
@@ -124,7 +126,7 @@ komentarom `// BUG:`: test opisuje kako bi trebalo biti, a prolazi dok greška p
 | Semafor svog stola (Tko igra, Upiši igru) | organizator | `turniri/c7-dan-turnira.spec.ts` › the organizer opens a table of their Kolo 1… (bug #83); › the scorepad's routes take the organizer's hands… |
 | Tuđi turnir skriven na ekranu | organizator | `turniri/c7-tudi-turnir.spec.ts` › the admin's tournament (open/live) is not in the organizer's Turniri…; › a table of the admin's live tournament shows the organizer no scorepad…; › …tells the organizer it isn't theirs… (bug #86) |
 | Tuđi turnir: 403 na svakoj ruti | organizator | `turniri/c7-tudi-turnir.spec.ts` › on the admin's tournament (open/live) the organizer's … is refused with 403 and changes nothing |
-| Adminove stranice na mobitelu (liga, Sponzori, igrač) | organizator | `turniri/c7-admin-stranice.spec.ts` › on the phone the league's management…; › a player's page shows the organizer none of the admin's controls…; › …the player's phone number (bug) |
+| Adminove stranice na mobitelu (liga, Sponzori, igrač) | organizator | `turniri/c7-admin-stranice.spec.ts` › on the phone the league's management…; › a player's page shows the organizer none of the admin's controls…; › …the player's phone number |
 | Liga i igrači: 403 | organizator | `turniri/c7-admin-stranice.spec.ts` › the organizer's … is refused with 403 and changes nothing |
 | Izbornik i adminove stranice na računalu | organizator | `turniri/c7-admin-stranice.racunalo.spec.ts` › the organizer's menu on the computer…; › Upravljanje ligom / Nova liga by its address refuses the organizer… (bug #87) |
 

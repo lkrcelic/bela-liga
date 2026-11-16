@@ -147,7 +147,8 @@ test("Obriši igru on the deciding hand of tonight's last match puts it back in 
   await player.goto("/");
   await expect(player.getByRole("link", {name: `Rejting ${ratingsOpen[phoneId].rating}`})).toBeVisible();
   await player
-    .getByRole("button", {name: new RegExp(`^STOL ${table}\\s*${without[0]} : ${without[1]}\\s*${escape(names[0])}\\s*${escape(names[1])}\\s*Nastavi igru$`)})
+    // the card names the Kolo of the place's night before the score (Kolo 2/3, DECISIONS #98)
+    .getByRole("button", {name: new RegExp(`^STOL ${table}\\s*Kolo \\d+/\\d+ · ${without[0]} : ${without[1]}\\s*${escape(names[0])}\\s*${escape(names[1])}\\s*Nastavi igru$`)})
     .click();
   await expect(player).toHaveURL(new RegExp(`/ongoing-match/${reopened.id}$`));
   await expect(player.getByText("Meč 2 od 2")).toBeVisible();

@@ -1,7 +1,8 @@
 "use client";
 
 import {AdminTournament, TournamentRequest} from "@/app/_interfaces/tournament";
-import {isIsoDate, isSafeUrl, isStartTime} from "@/app/_lib/nights";
+import {isIsoDate, isSafeUrl} from "@/app/_lib/nights";
+import {tournamentTimesErrors} from "@/app/_lib/tournamentDay";
 import {GAME_MINUTES_ERROR, GAME_MINUTES_MAX, GAME_MINUTES_MIN} from "@/app/_lib/gameTime";
 import {isValidPhone, phoneInput, PHONE_ERROR} from "@/app/_lib/phone";
 import useAuthStore from "@/app/_store/authStore";
@@ -130,8 +131,9 @@ export function draftErrors(d: TournamentDraft): FormErrors {
   if (!d.name.trim()) e.name = "Upiši naziv turnira.";
   if (!d.date) e.date = "Odaberi datum turnira.";
   else if (!isIsoDate(d.date)) e.date = "Datum nije ispravan.";
-  if (d.gathering && !isStartTime(d.gathering)) e.gathering = "Vrijeme mora biti od 00:00 do 23:59.";
-  if (d.start && !isStartTime(d.start)) e.start = "Vrijeme mora biti od 00:00 do 23:59.";
+  const times = tournamentTimesErrors(d.gathering, d.start);
+  if (times.gathering) e.gathering = times.gathering;
+  if (times.start) e.start = times.start;
   if (!wholeNumber(d.rounds) || Number(d.rounds) < 1 || Number(d.rounds) > 20) e.rounds = "Turnir ima od 1 do 20 kola.";
   if (d.maxTeams.trim() && (!wholeNumber(d.maxTeams) || Number(d.maxTeams) < 2)) e.maxTeams = "Najmanje dvije ekipe, ili ostavi prazno.";
   if (!wholeNumber(d.fee || "0") || Number(d.fee || "0") > 999) e.fee = "Kotizacija je od 0 do 999 €.";
@@ -304,8 +306,8 @@ export function TournamentFields({form, locks, compact = false, sx}: {form: Tour
         <Field label="Datum" error={form.touched ? errors.date : started ? dateLocked : undefined} errorSx={started ? {color: color.muted} : undefined}>
           {(a11y) => <TextInput {...a11y} type="date" soft value={d.date} disabled={started} onChange={(e) => set("date", e.target.value)} sx={input} />}
         </Field>
-        <TimeField label="Okupljanje" value={d.gathering} onChange={(v) => set("gathering", v)} clearLabel="Ukloni vrijeme okupljanja" soft inputSx={input} error={errors.gathering} />
-        <TimeField label="Početak" value={d.start} onChange={(v) => set("start", v)} clearLabel="Ukloni početak" soft inputSx={input} error={errors.start} />
+        <TimeField label="Okupljanje" value={d.gathering} onChange={(v) => set("gathering", v)} clearLabel="Ukloni vrijeme okupljanja" soft inputSx={input} error={form.touched ? errors.gathering : undefined} />
+        <TimeField label="Početak" value={d.start} onChange={(v) => set("start", v)} clearLabel="Ukloni početak" soft inputSx={input} error={form.touched ? errors.start : undefined} />
       </Box>
 
       <Box component="hr" sx={rule} />

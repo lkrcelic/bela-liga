@@ -104,14 +104,15 @@ export async function pickTeams(db: Db, n: number, {phones = 0, notIn = []}: {ph
 
 export type Spec = Partial<TournamentRequest> & {name: string; date: string};
 
-// Novi turnir as the seed's tournaments are made (e2e/seed/scenarios/tournaments.ts)
+// Novi turnir as the seed's tournaments are made (e2e/seed/scenarios/tournaments.ts). Every tournament has Okupljanje
+// and Početak: 23:58 and 23:59 unless the test says otherwise, so a tournament of today keeps Potvrda dolaska shut and
+// its start time doesn't come while the test runs
 function request(spec: Spec): TournamentRequest {
   return {
-    gathering_time: null,
-    start_time: null,
-    location_name: "Caffe bar Pitanik",
-    location_address: "Ilica 1, Zagreb",
-    location_url: null,
+    gathering_time: "23:58",
+    start_time: "23:59",
+    // no place from Lokacije (DECISIONS #98): nothing here reads it
+    location_id: null,
     rounds: 3,
     matches_per_round: 1,
     declarations: true,
@@ -153,7 +154,7 @@ export async function setSignUps(a: Admin, id: number, open: boolean) {
   await ok(await a.patch(`${admin(id)}/registrations`, {data: {open}}), "Prijave");
 }
 
-// As tournaments.ready: today, no start time, every team signed up and here, sign-ups closed, nothing drafted
+// As tournaments.ready: today, every team signed up and here, sign-ups closed, nothing drafted
 export async function makeReady(make: Fixtures["tournaments"]["make"], a: Admin, teams: Entry[], spec: Partial<Spec> = {}) {
   const t = await make({name: "Turnir spreman za start", date: day(), rounds: 3, max_teams: 8, ...spec});
   await addTeams(a, t.id, teams);
@@ -267,6 +268,10 @@ export const test = base.extend<Fixtures>({
     const made: number[] = [];
     await use({
       make: async (spec, by = a) => {
+        // a tournament of today opens Potvrda dolaska at 23:58 and starts at 23:59 (request()), and from then until
+        // 06:00 its clock makes every team not marked here inactive: too late to begin a test on one
+        const now = new Intl.DateTimeFormat("en-GB", {timeZone: "Europe/Zagreb", hour: "2-digit", minute: "2-digit", hourCycle: "h23"}).format(new Date());
+        base.info().skip(spec.date === day() && now >= "23:50", "after 23:50 a tournament of today reaches its start while the test runs");
         const body = request(spec);
         const res = await ok(await by.post("/api/admin/tournaments", {data: body}), "Novi turnir");
         const {id} = (await res.json()) as {id: number};

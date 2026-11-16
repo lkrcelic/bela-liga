@@ -20,7 +20,7 @@ export type Own = {
 
 export type OwnOptions = {
   // Okupljanje 00:00 and Početak 23:59 on today's date: Potvrda dolaska is open all day (DECISIONS #86's "dolasci"); without
-  // it the tournament has no start time, so no arrival window, and its sign-ups close with the switch
+  // it Okupljanje is 23:58, so the window isn't open yet while the test runs, and its sign-ups close with the switch
   arrival?: boolean;
   teams?: number;
   rounds?: number;
@@ -45,7 +45,13 @@ export const test = base.extend<C7>({
   },
   own: async ({organizer, db}, use) => {
     await removeOwnTournaments(db);
-    await use((options) => makeOwnTournament(organizer, db, options));
+    await use((options) => {
+      // the tournament is today's and starts at 23:59 (Potvrda dolaska from 23:58, or all day with arrival), and from
+      // then until 06:00 its clock makes every team not marked here inactive: too late to begin a test on one
+      const now = new Intl.DateTimeFormat("en-GB", {timeZone: "Europe/Zagreb", hour: "2-digit", minute: "2-digit", hourCycle: "h23"}).format(new Date());
+      base.info().skip(now >= "23:50", "after 23:50 a tournament of today reaches its start while the test runs");
+      return makeOwnTournament(organizer, db, options);
+    });
     await removeOwnTournaments(db);
   },
 });
@@ -112,11 +118,11 @@ export async function makeOwnTournament(organizer: APIRequestContext, db: Db, {a
     data: {
       name,
       date: todayInZagreb(),
-      gathering_time: arrival ? "00:00" : null,
-      start_time: arrival ? "23:59" : null,
-      location_name: "Caffe bar Pitanik",
-      location_address: "Ilica 1, Zagreb",
-      location_url: null,
+      // arrival: Potvrda dolaska open all day; else it opens at 23:58, so the start doesn't come while the test runs
+      gathering_time: arrival ? "00:00" : "23:58",
+      start_time: "23:59",
+      // no place from Lokacije (DECISIONS #98): nothing here reads it
+      location_id: null,
       rounds,
       matches_per_round: 1,
       declarations: true,
@@ -178,9 +184,7 @@ export async function tournamentRequest(db: Db, id: number) {
     date: t.date.toISOString().slice(0, 10),
     gathering_time: t.gathering_time,
     start_time: t.start_time,
-    location_name: t.location_name,
-    location_address: t.location_address,
-    location_url: t.location_url,
+    location_id: t.location_id,
     rounds: t.rounds,
     matches_per_round: t.matches_per_round,
     declarations: t.declarations,

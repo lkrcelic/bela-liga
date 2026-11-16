@@ -112,8 +112,9 @@ const ACTIONS: Action[] = [
   {name: "Upravljanje turnirom (read)", method: "get", path: T},
   {name: "Podaci · Spremi promjene", method: "patch", path: T, data: (c) => ({...c.body, name: `${c.body.name} (organizator)`, entry_fee: c.body.entry_fee + 1})},
   {name: "Obriši turnir", method: "delete", path: T, error: FORBIDDEN},
-  {name: "Otkaži turnir", method: "post", path: (c) => `${T(c)}/cancel`},
-  {name: "Vrati turnir", method: "delete", path: (c) => `${T(c)}/cancel`},
+  // the admin's alone, like Obriši (16.11.2026): refused before whose tournament it is
+  {name: "Otkaži turnir", method: "post", path: (c) => `${T(c)}/cancel`, error: FORBIDDEN},
+  {name: "Vrati turnir", method: "delete", path: (c) => `${T(c)}/cancel`, error: FORBIDDEN},
   {name: "Prijave otvorene / zatvorene", method: "patch", path: (c) => `${T(c)}/registrations`, data: () => ({open: false})},
   {name: "Dodaj ekipu · search", method: "get", path: (c) => `${T(c)}/candidates?q=Br`},
   {name: "Dodaj ekipu", method: "post", path: (c) => `${T(c)}/teams`, data: (c) => ({team_id: c.free})},

@@ -10,8 +10,9 @@ import {Role, rolesOf} from "./roles";
 export type Capability =
   // tournaments
   | "tournament.create" // Novi turnir
-  | "tournament.manage.own" // uredi, vodi, otkaži svoj turnir (+ ownership.ts)
+  | "tournament.manage.own" // uredi i vodi svoj turnir (+ ownership.ts)
   | "tournament.manage.all" // bilo čiji turnir
+  | "tournament.cancel" // Otkaži turnir i Vrati turnir (16.11.2026: ne organizator)
   | "tournament.delete" // Obriši turnir (nosi rezultate i rejting)
   // teams
   | "team.create"
@@ -40,6 +41,7 @@ const ALL_CAPABILITIES: readonly Capability[] = [
   "tournament.create",
   "tournament.manage.own",
   "tournament.manage.all",
+  "tournament.cancel",
   "tournament.delete",
   "team.create",
   "team.edit",
@@ -63,6 +65,7 @@ const ALL_CAPABILITIES: readonly Capability[] = [
 // A new role is one line here. The list is what that role may do, nothing more.
 const BY_ROLE: Record<Role, readonly Capability[]> = {
   ADMIN: ALL_CAPABILITIES,
+  // everything with their own tournament except Otkaži, Vrati and Obriši turnir (the user, 16.11.2026)
   ORGANIZER: [
     "tournament.create",
     "tournament.manage.own",

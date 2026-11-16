@@ -41,6 +41,8 @@ import {
 } from "../../helpers/b";
 
 const MANAGE: Row["guard"] = {can: "tournament.manage.own"};
+// Otkaži and Vrati turnir: the admin's, an organizer is refused on their own tournament too (the user, 16.11.2026)
+const CANCEL: Row["guard"] = {can: "tournament.cancel"};
 
 // a hand as a phone sends it, for the rows where canPlayRound has to refuse a valid one
 const hand = (matchId: number) => ({
@@ -125,6 +127,12 @@ const ROWS: Row[] = [
   {method: "GET", route: "/api/admin/leagues/[leagueId]/rounds", params: (i) => ({leagueId: i.league}), guard: "admin", allowed: status(200)},
   {method: "DELETE", route: "/api/admin/leagues/[leagueId]/rounds", note: "no Kolo named", params: (i) => ({leagueId: i.league}), guard: "admin", allowed: status(400)},
   {method: "POST", route: "/api/admin/leagues/[leagueId]/tables", params: (i) => ({leagueId: i.league}), body: INVALID, guard: "admin", allowed: status(400)},
+  // Lokacije (DECISIONS #98): the tournament form picks and adds a place (the organizer too); changing and deleting one is
+  // the admin's
+  {method: "GET", route: "/api/locations", guard: {can: "location.create"}, allowed: status(200)},
+  {method: "POST", route: "/api/locations", body: INVALID, guard: {can: "location.create"}, allowed: status(400)},
+  {method: "PATCH", route: "/api/locations/[id]", note: "not a place's id", params: () => ({id: "not-an-id"}), body: INVALID, guard: {can: "location.manage"}, allowed: status(404)},
+  {method: "DELETE", route: "/api/locations/[id]", note: "not a place's id", params: () => ({id: "not-an-id"}), guard: {can: "location.manage"}, allowed: status(404)},
   {method: "GET", route: "/api/leagues", guard: "public", allowed: status(200)},
   {method: "POST", route: "/api/leagues", body: INVALID, guard: "admin", allowed: status(400)},
   {method: "PATCH", route: "/api/leagues/[id]", params: (i) => ({id: i.league}), body: INVALID, guard: "admin", allowed: status(400)},
@@ -140,6 +148,9 @@ const ROWS: Row[] = [
   {method: "GET", route: "/api/leagues/[id]/nights/[date]/draft", note: "tonight's Skica", params: (i) => ({id: i.league, date: i.night}), guard: "admin", allowed: status(200)},
   {method: "DELETE", route: "/api/leagues/[id]/nights/[date]/draft", note: "not a date", params: (i) => ({id: i.league, date: "not-a-date"}), guard: "admin", allowed: status(400)},
   {method: "POST", route: "/api/leagues/[id]/nights/[date]/publish", note: "not a date", params: (i) => ({id: i.league, date: "not-a-date"}), guard: "admin", allowed: status(400)},
+  // Podjela of a night on two places (DECISIONS #98): the admin's
+  {method: "GET", route: "/api/leagues/[id]/nights/[date]/split", note: "tonight's", params: (i) => ({id: i.league, date: i.night}), guard: "admin", allowed: status(200)},
+  {method: "PUT", route: "/api/leagues/[id]/nights/[date]/split", note: "not a date", params: (i) => ({id: i.league, date: "not-a-date"}), body: INVALID, guard: "admin", allowed: status(400)},
   {method: "GET", route: "/api/leagues/[id]/notes", params: (i) => ({id: i.league}), guard: "admin", allowed: status(200)},
   {method: "PUT", route: "/api/leagues/[id]/notes", params: (i) => ({id: i.league}), body: INVALID, guard: "admin", allowed: status(400)},
   {method: "GET", route: "/api/leagues/[id]/smoking", params: (i) => ({id: i.league}), guard: "admin", allowed: status(200)},
@@ -236,12 +247,14 @@ const ROWS: Row[] = [
   {method: "POST", route: "/api/admin/tournaments", body: INVALID, guard: {can: "tournament.create"}, allowed: status(400)},
   ...ownership({method: "GET", route: "/api/admin/tournaments/[id]", guard: MANAGE, allowed: status(200)}, (t) => ({id: t.id})),
   ...ownership({method: "PATCH", route: "/api/admin/tournaments/[id]", body: INVALID, guard: MANAGE, allowed: status(400)}, (t) => ({id: t.id})),
-  // Obriši turnir is the admin's alone, the organizer's own tournament too (they have Otkaži); a started one can't go
+  // Obriši turnir is the admin's alone, the organizer's own tournament too (as Otkaži); a started one can't go
   {method: "DELETE", route: "/api/admin/tournaments/[id]", note: "the admin's tournament, started", params: (i) => ({id: i.adminTournament.id}), guard: "admin", allowed: status(400)},
   {method: "DELETE", route: "/api/admin/tournaments/[id]", note: "the organizer's own tournament, started", params: (i) => ({id: i.ownTournament.id}), guard: "admin", allowed: status(400)},
   // Otkaži a started tournament: refused; Vrati turnir one that isn't cancelled: nothing to do
-  ...ownership({method: "POST", route: "/api/admin/tournaments/[id]/cancel", guard: MANAGE, allowed: refused(400, "Turnir je već počeo i ne može se otkazati.")}, (t) => ({id: t.id})),
-  ...ownership({method: "DELETE", route: "/api/admin/tournaments/[id]/cancel", guard: MANAGE, allowed: status(200)}, (t) => ({id: t.id})),
+  {method: "POST", route: "/api/admin/tournaments/[id]/cancel", note: "the admin's tournament", params: (i) => ({id: i.adminTournament.id}), guard: CANCEL, allowed: refused(400, "Turnir je već počeo i ne može se otkazati.")},
+  {method: "POST", route: "/api/admin/tournaments/[id]/cancel", note: "the organizer's own tournament", params: (i) => ({id: i.ownTournament.id}), guard: CANCEL, allowed: refused(400, "Turnir je već počeo i ne može se otkazati.")},
+  {method: "DELETE", route: "/api/admin/tournaments/[id]/cancel", note: "the admin's tournament", params: (i) => ({id: i.adminTournament.id}), guard: CANCEL, allowed: status(200)},
+  {method: "DELETE", route: "/api/admin/tournaments/[id]/cancel", note: "the organizer's own tournament", params: (i) => ({id: i.ownTournament.id}), guard: CANCEL, allowed: status(200)},
   ...ownership({method: "GET", route: "/api/admin/tournaments/[id]/candidates", guard: MANAGE, allowed: status(200)}, (t) => ({id: t.id})),
   ...ownership({method: "POST", route: "/api/admin/tournaments/[id]/kola", body: INVALID, guard: MANAGE, allowed: status(400)}, (t) => ({id: t.id})),
   // Kolo 99: Dodaj kolo refuses it (not the next one), Obriši kolo finds nothing, Objavi kolo has no Skica of it

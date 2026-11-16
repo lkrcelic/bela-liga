@@ -1,12 +1,25 @@
 import assert from "node:assert/strict";
 import {test} from "node:test";
 import {leagueClock, leagueMoment} from "@/app/_lib/dates";
-import {admittedFromWaiting, arrivalPhase, arrivalWindow, DayEntry, hasRoom, noShowStep, noShowTimes, startSwitch} from "@/app/_lib/tournamentDay";
+import {admittedFromWaiting, arrivalPhase, arrivalWindow, DayEntry, hasRoom, noShowStep, noShowTimes, startSwitch, tournamentTimesErrors} from "@/app/_lib/tournamentDay";
 import {addToDay, banActive, banDay, banDaysLeft, banUntil, untilLabel} from "@/app/_lib/bans";
 import {tableState, StateTable} from "@/app/_lib/tableState";
 
 // A tournament's day: the arrival window and the start time's switch, the no-show clock, the bans and the admin's
 // table statuses
+
+test("a tournament has both Okupljanje and Početak, the gathering before the start", () => {
+  assert.deepEqual(tournamentTimesErrors("17:30", "18:00"), {});
+  assert.deepEqual(tournamentTimesErrors("00:00", "23:59"), {});
+  assert.deepEqual(tournamentTimesErrors(null, null), {gathering: "Upiši vrijeme okupljanja.", start: "Upiši vrijeme početka."});
+  // the form's empty fields
+  assert.deepEqual(tournamentTimesErrors("", " "), {gathering: "Upiši vrijeme okupljanja.", start: "Upiši vrijeme početka."});
+  assert.deepEqual(tournamentTimesErrors("17:30", null), {start: "Upiši vrijeme početka."});
+  assert.deepEqual(tournamentTimesErrors(undefined, "18:00"), {gathering: "Upiši vrijeme okupljanja."});
+  assert.deepEqual(tournamentTimesErrors("18:00", "18:00"), {gathering: "Okupljanje mora biti prije početka."});
+  assert.deepEqual(tournamentTimesErrors("19:00", "18:00"), {gathering: "Okupljanje mora biti prije početka."});
+  assert.deepEqual(tournamentTimesErrors("7:30", "18:00"), {gathering: "Vrijeme mora biti od 00:00 do 23:59."});
+});
 
 test("league time: a wall clock in Zagreb in winter and in summer", () => {
   assert.equal(leagueMoment("2026-10-31", "10:00").toISOString(), "2026-10-31T09:00:00.000Z");
