@@ -483,7 +483,7 @@ test("Otvorene prijave: a closed tournament takes teams until it starts, an open
 test("the tournament form's switch reaches the server: open_signups survives the request's validation", () => {
   const body = {
     name: "Kafić", date: "2026-12-01", gathering_time: null, start_time: null,
-    location_name: null, location_address: null, location_url: null,
+    location_id: null,
     rounds: 3, matches_per_round: 2, declarations: true, max_teams: null, entry_fee: 0,
     rules_url: null, prizes: [], game_minutes: 35, auto_publish: false, organizer_phone: "0931234567",
   };
@@ -504,7 +504,7 @@ test("Sakrij broj prijava: hidden from players only before Kolo 1, never from wh
   assert.equal(entriesHidden({hideEntries: false, phase: "upcoming", manager: false}), false);
   const body = {
     name: "Kafić", date: "2026-12-01", gathering_time: null, start_time: null,
-    location_name: null, location_address: null, location_url: null,
+    location_id: null,
     rounds: 3, matches_per_round: 2, declarations: true, max_teams: 16, entry_fee: 0,
     rules_url: null, prizes: [], game_minutes: 35, auto_publish: false, open_signups: false, organizer_phone: "0931234567",
   };

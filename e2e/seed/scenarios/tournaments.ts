@@ -8,6 +8,7 @@ import {cancelTournament, createTournament} from "@/app/_lib/service/tournament/
 import {setRegistrationsOpen} from "@/app/_lib/service/tournament/entries";
 import {addDays, isoDay, type Ctx} from "../context";
 import type {People} from "./people";
+import {atPitanik} from "./places";
 
 export type TeamPool = {
   // teams that may enter any tournament: at least two active players, not banned
@@ -16,17 +17,12 @@ export type TeamPool = {
   activeRosters: Map<number, number[]>; // who may press Prijavi ekipu for the team
 };
 
-const PITANIK = {
-  location_name: "Caffe bar Pitanik",
-  location_address: "Ilica 1, Zagreb",
-  location_url: "https://maps.app.goo.gl/e2eTestPitanik",
-};
-
 export function tournamentRequest(over: Partial<TournamentRequest> & {name: string; date: string}): TournamentRequest {
   return {
     gathering_time: "17:30",
     start_time: "18:00",
-    ...PITANIK,
+    // atPitanik fills it in when the tournament is made
+    location_id: null,
     rounds: 5,
     matches_per_round: 1,
     declarations: true,
@@ -97,7 +93,7 @@ export async function seedUpcomingTournaments(ctx: Ctx, people: People, pool: Te
   const keep = new Set([people.playerTeam.team_id]);
   const made: [string, string, number][] = [];
   const create = async (key: string, state: string, request: TournamentRequest, by = people.admin.id) => {
-    const id = await createTournament(request, by);
+    const id = await createTournament(await atPitanik(ctx, request), by);
     ctx.catalog.tournaments[key] = {id, name: request.name, state};
     made.push([key, state, id]);
     return id;

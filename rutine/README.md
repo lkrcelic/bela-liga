@@ -9,7 +9,8 @@ The scheduled routines of this repo work as one team. Each local scheduled task 
 | `bela-github-issue-fixer` | laptop | 00:00 and 12:00 | one issue → fix with its test → `development` | `bela-e2e-nightly` when it is enabled, otherwise `bela-release-review` |
 | `bela-e2e-nightly` | laptop | started by the fixer (disabled until the Playwright suite exists) | unit, db and Playwright tests on the head, a data check of the production copy (report only) | `bela-release-review` |
 | `bela-release-review` | laptop | started in the chain; fallback 02:00 and 14:00 | reviews `master..development`, tests, prepares the deploy; deploys only after the user's "deploy" | — |
-| `bela-nightly-sync` | laptop | 05:00 | deployed Bela commits → Treseta branch `bela-sync` | — |
+| `bela-nightly-sync` | laptop | 05:00 | deployed Bela commits → Treseta branch `bela-sync` | `treseta-e2e-nightly` |
+| `treseta-e2e-nightly` | laptop | started by the sync; fallback 06:15 | Treseta's unit, db, lint and tsc (Playwright later) on its `master` and `bela-sync`; prompt in Treseta's `rutine/` | its report, read by the morning report |
 | `bela-jutarnji-izvjestaj` | laptop | 06:45 | one morning message for the user | — |
 | `bela-app-scan` | cloud | Mon and Thu 07:00 | static code review | issues `auto-scan` |
 | `bela-mobile-ux-patrol` | cloud | 03:00 | phone screens on the generated world (`npm run seed:e2e`) | issues `mobile-ux-scan` |
@@ -21,7 +22,7 @@ The chain hands off with the scheduled-tasks tool `run_scheduled_task`. The fall
 ## Places
 
 - Bela repo (the main folder): `/Users/lovro/projects/github/Bela-Treseta-Tournamnet-app`, GitHub `lkrcelic/bela-liga`. `development` is the working branch, `master` is live production (Vercel builds it and runs its migrations).
-- Treseta repo: `/Users/lovro/projects/github/Treseta-tournamnet-app` (only the sync works there).
+- Treseta repo: `/Users/lovro/projects/github/Treseta-tournamnet-app` (the sync and `treseta-e2e-nightly` work there). Treseta's own routine reads its prompt from Treseta's `rutine/` on Treseta's `master`, and writes its report here, in this repo's `reports/rutine/`, and takes this repo's lock.
 - Memory: read `/Users/lovro/.claude/projects/-Users-lovro-projects-github-Bela-Treseta-Tournamnet-app/memory/MEMORY.md` and the files your routine names. Follow them.
 - Your scratchpad: the scratchpad directory of your session. Worktrees, screenshots and throwaway databases go there.
 

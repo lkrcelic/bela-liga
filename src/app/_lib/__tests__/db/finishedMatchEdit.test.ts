@@ -211,3 +211,36 @@ test("a match closed by Vrijeme partije goes to the team with more points, and a
   assert.deepEqual([after.player_pair1_score, after.player_pair2_score, after.round!.team1_wins, after.round!.team2_wins], [450, 450, 0, 0]);
   assert.equal(await prisma.ongoingMatch.count({where: {round_id: round.id}}), 0);
 });
+
+// last in the file: its rounds are tonight's highest Kola, at a place
+test("at a place of a two-place night only that place's next Kolo keeps a finished match closed (DECISIONS #98)", async () => {
+  const atPlace = (number: number, slot: number, status: "PUBLISHED" | "DRAFT") =>
+    prisma.round.create({
+      data: {
+        round_number: number,
+        round_date: leagueNight(),
+        location_slot: slot,
+        team1_id: teams[0],
+        team2_id: teams[1],
+        status,
+        ...(status === "PUBLISHED" ? {published_at: new Date()} : {draft_order: 1}),
+        leagueRounds: {create: {league_id: leagueId}},
+      },
+    });
+  // Kartaš's table; Lanterna has already made its next Kolo, which doesn't count for Kartaš
+  const kartas = await atPlace(950, 1, "PUBLISHED");
+  await playMatch(kartas.id, [[600, 400], [450, 0]]);
+  const [m1] = await finished(kartas.id);
+  await playedFor(m1.id, 10);
+  await atPlace(951, 2, "DRAFT");
+  assert.deepEqual(await deleteHand("finished", m1.belaResults[1].result_id), {reopened: true});
+
+  // Kartaš's own next Kolo does
+  const later = await atPlace(960, 1, "PUBLISHED");
+  await playMatch(later.id, [[600, 400], [450, 0]]);
+  const [m2] = await finished(later.id);
+  await playedFor(m2.id, 10);
+  await atPlace(961, 1, "DRAFT");
+  await assert.rejects(deleteHand("finished", m2.belaResults[1].result_id), (e: Error) => e.name === "NoWinnerWarning" && /Sljedeće kolo je već složeno/.test(e.message));
+});
+

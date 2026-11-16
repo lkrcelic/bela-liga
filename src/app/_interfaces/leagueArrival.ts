@@ -1,3 +1,4 @@
+import {Slot} from "@/app/_lib/locations";
 import {z} from "zod";
 
 // Potvrda dolaska in the league (DECISIONS #73), as the screens get it
@@ -25,12 +26,18 @@ export type MyLeagueArrival = LeagueArrivalTimes & {
   night: string;
   arrival: LeagueArrivalView | null;
   ban: {until: string | null; player: string | null; me: boolean} | null;
-  // the night's last round (Kola po večeri) is published: a team that isn't here can't come any more (no Tu smo)
+  // the night's last round (Kola po večeri) is published at the team's place: a team that isn't here can't come any
+  // more (no Tu smo)
   last_round: boolean;
+  // the night is played at two places (Liga na dvije lokacije), and the team's place there (1 or 2; null: not
+  // assigned yet, so it sees Javi se adminu instead of Tu smo). A one-place night: false and null.
+  two_places: boolean;
+  slot: Slot | null;
 };
 
 // The admin's Novo kolo: tonight's night, its window (null: no Potvrda dolaska tonight, so Novo kolo pairs the active
-// teams as before) and the arrival of every team that came
+// teams as before) and the arrival of every team that came (on a two-place night asked for one place: the teams at
+// that place)
 export type LeagueArrivals = {
   night: string;
   window: LeagueArrivalTimes | null;
@@ -47,4 +54,6 @@ export const LeagueArrivalRequestValidation = z.object({
 export const LeagueArrivalsRequestValidation = z.object({
   team_ids: z.array(z.number().int().positive()).min(1).max(500),
   here: z.boolean(),
+  // the place of a two-place night whose Novo kolo this is: the answer lists its teams
+  slot: z.union([z.literal(1), z.literal(2)]).optional(),
 });

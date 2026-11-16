@@ -2013,3 +2013,44 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
       skipped table to a team (Dodijeljena pobjeda, 2 : 0, 1001 : 700); Vrati stol on a no-show table (live again,
       0 : 0); the player's question at 4 minutes with Da, tu su open and Ne, nisu došli locked until 6; deleting the
       deciding hand of a finished match reopened it at 600 : 400 with 20 of its 35 minutes left.
+
+98. **Liga na dvije lokacije dolazi u Belu** (the user's message of 15.11.: "pogledaj zadnjih par commitova na trešetu
+    vezano za igru na dvije lokacije, želim da to preuzmemo"). Replaces #95; #96 (no conferences) stays.
+    - **What**: Treseta's `feat/locations` (`0d30eb90`, `7ae6a7a9`), one Bela commit each, as in #97. Places are one
+      list, Lokacije (`/lokacije`, admin; an organizer may pick or add one in the tournament form), which a league, a
+      night and a tournament pick (`location_id`). A night can have a second place; Podjela puts the teams at one
+      place or the other; each place has its own Tu smo, Novo kolo, Skica and Objavi on the night's shared Kolo
+      numbers, its own tables from Stol 1 and its own view of Dnevni poredak. Početna gets Vaša lokacija, "Kolo 1/3"
+      and the cards Sljedeći stol, Pauza, Kraj večeri and Nema zakazane večeri on every league night, one place too.
+      Kola comes before Ekipe. A one-place night works as before. Plan and checks: `LOKACIJE_PLAN.md`.
+    - **Migrations**: Treseta's `20261114120000_locations` and `20261114140000_locations_daily_standings` unchanged
+      (the standings function's body is Bela's; the two were the same but for a comment), so the nightly sync sees the
+      same migrations. Bela's own `20261114130000_night_second_rounds`. `20261115120000_locations_drop_text` comes in
+      a separate commit and goes to production one deploy later.
+    - **No conferences** (#96): no Podijeli po konferencijama, no dots in Podjela; Dnevni poredak's place switch shows
+      only on a two-place night and a one-place night has no filter, as before.
+    - **A banned team** (#73; the user: "može, ali na ekipi mora biti znak zabrane"): Podjela shows its Zabrana chip
+      (`TeamChipBadge`, as Novo kolo) and the admin can still place it. Its Tu smo is refused for the ban first, also
+      when it isn't placed.
+    - **Broj kola per place** (#94; the user: "svaka lokacija može zasebno, ali generalno će imati isto"): the night's
+      `rounds_per_night` is the first place's and the default for both; `LeagueNight.second_rounds_per_night` (null:
+      the same) is the second place's, set under Druga lokacija in Uredi večer and cleared with the second place.
+      `placeRounds` reads it for the last Kolo (no Tu smo / Želimo uskočiti), "Večer je završila.", Kraj večeri and
+      Novo kolo's default and Kolo label at that place. A second Broj kola without a second place is refused with "Broj kola druge
+      lokacije ide samo uz drugu lokaciju." (Dodaj večer and Uredi večer), not left to the database's CHECK.
+    - **Checked**: unit tests (612) and db tests (70) on a throwaway Postgres: Treseta's, plus a banned unplaced team,
+      the night ending at each place on its own Broj kola (Tu smo, Kraj večeri), the ban in Podjela, Lokacije's
+      service, a finished match reopening when only the other place has its next Kolo, and Treseta's per-place table
+      and numbering tests made to fail without the slot (from the `e2e-reviewer`'s review); `tsc`, ESLint,
+      `next build`, and `seed:e2e` + `seed:verify` (16/16) with the generator writing a Location. On a copy of production (dump of
+      15.11. 18:47): the migrations apply, every league, night and tournament reads the same name, address and link
+      (27 rows, 4 places made), all 728 rows of every played night's Dnevni poredak are the same with two arguments
+      and with a NULL place, and `migrate diff` is empty. In the browser on that copy with league 3 tonight at Buffet
+      HAŠK and Lanterna: a placed player's Vaša lokacija and Tu smo, an unplaced one's Javi se adminu (Tu smo refused
+      400), Podjela with a banned team, Uredi večer's Broj kola · Lanterna, Novo kolo at Lanterna (2 Kola, 24 teams,
+      the banned one out), Skica A–B published as Kolo 12–13, "Stol 1 · Kolo 1/2", Dnevni poredak's Sve / Buffet HAŠK
+      / Lanterna, Raspored and Lokacije.
+    - **Not covered by a test** (checked by hand or left as Treseta built it): the migration's data step (the
+      production copy above), how Početna feeds its evening to `homeCard`, Raspored hiding the places from a guest,
+      the smoking tables and Novo kolo's saved choice per place, and Novo kolo refusing a place on a one-place night.
+

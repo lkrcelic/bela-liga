@@ -1,6 +1,7 @@
 import {GAME_MINUTES_DEFAULT, GAME_MINUTES_ERROR, GAME_MINUTES_MAX, GAME_MINUTES_MIN} from "@/app/_lib/gameTime";
 import {PlayBan} from "@/app/_lib/bans";
-import {isIsoDate, isSafeUrl, isStartTime, MAX_NIGHTS, NightLocation} from "@/app/_lib/nights";
+import {locationIdField} from "@/app/_interfaces/location";
+import {isIsoDate, isStartTime, MAX_NIGHTS, NightLocation} from "@/app/_lib/nights";
 import {count, NOUN} from "@/app/_lib/ui/text";
 import {z} from "zod";
 
@@ -15,18 +16,8 @@ export const START_TIME_ERROR = "Početak večeri mora biti vrijeme od 00:00 do 
 // "HH:MM"; null: no time
 const startTime = z.string({invalid_type_error: START_TIME_ERROR}).refine(isStartTime, START_TIME_ERROR).nullable();
 
-// Where the nights are played (Okupljanje): a place's name, its address and a link to Google Maps. The link isn't
-// checked to be a Google Maps one; it only has to be http(s), so it can't run a script when clicked. An empty string
-// is saved as null.
-const locName = z.string().trim().max(100, "Ime mjesta može imati najviše 100 znakova.");
-const locAddress = z.string().trim().max(200, "Adresa može imati najviše 200 znakova.");
-export const LOCATION_URL_ERROR = "Link mora počinjati s https://.";
-const locUrl = z
-  .string()
-  .trim()
-  .max(500, "Link može imati najviše 500 znakova.")
-  .refine((v) => v === "" || isSafeUrl(v), LOCATION_URL_ERROR);
-export const LOCATION_NAME_REQUIRED = "Ime mjesta je obavezno.";
+// Where the nights are played (Okupljanje): a place from Lokacije (_interfaces/location.ts), by its id
+export {LOCATION_NAME_REQUIRED, LOCATION_URL_ERROR} from "@/app/_interfaces/location";
 
 export const END_DATE_ERROR = "Kraj mora biti nakon početka.";
 // Two leagues can't share a name (any case): it is shown on standings and the league pickers
@@ -54,10 +45,8 @@ export const LeagueCreateRequestValidation = z
     // when the nights start (Početak) and start gathering (Okupljanje); both optional
     start_time: startTime.optional(),
     gathering_time: startTime.optional(),
-    // where the nights are played; optional
-    location_name: locName.nullable().optional(),
-    location_address: locAddress.nullable().optional(),
-    location_url: locUrl.nullable().optional(),
+    // where the nights are played, from Lokacije; optional
+    location_id: locationIdField.optional(),
     rounds_per_night: z.number().int().min(1).max(6).default(3),
     // Vrijeme partije in minutes
     game_minutes: gameMinutes.default(GAME_MINUTES_DEFAULT),
@@ -79,9 +68,8 @@ export const LeagueUpdateRequestValidation = z.object({
   play_day: z.number().int().min(0).max(6).nullable().optional(),
   start_time: startTime.optional(),
   gathering_time: startTime.optional(),
-  location_name: locName.nullable().optional(),
-  location_address: locAddress.nullable().optional(),
-  location_url: locUrl.nullable().optional(),
+  // the league's place from Lokacije (null: none)
+  location_id: locationIdField.optional(),
   rounds_per_night: z.number().int().min(1).max(6).optional(),
   game_minutes: gameMinutes.optional(),
 });
@@ -90,37 +78,66 @@ export const LeagueNotesRequestValidation = z.object({
   notes: z.string().max(5000, "Bilješke mogu imati najviše 5000 znakova."),
 });
 
-// A night's own place: it needs a name; null goes back to the league's
-const nightLocation = z
-  .object({name: locName.min(1, LOCATION_NAME_REQUIRED), address: locAddress.nullable().optional(), url: locUrl.nullable().optional()})
-  .nullable()
-  .optional();
+// A night's own place from Lokacije; null goes back to the league's, left out stays as it is
+const nightLocation = locationIdField.optional();
+// A night's second place from Lokacije (Druga lokacija), played at the same time; null: a one-place night, left out
+// stays as it is
+const secondLocation = locationIdField.optional();
+
+// A second place needs a first one (the night's own or the league's), and can't be that same place
+export const SECOND_PLACE_NO_FIRST = "Druga lokacija treba prvu: odaberi mjesto večeri.";
+export const SECOND_PLACE_SAME = "Druga lokacija ne može biti isto mjesto kao prva.";
+// Why a night can't have these places (null: it can): first is where the night is played (its own place or the
+// league's), second its Druga lokacija
+export function secondPlaceError(first: number | null | undefined, second: number | null | undefined): string | null {
+  if (second == null) return null;
+  if (first == null) return SECOND_PLACE_NO_FIRST;
+  return first === second ? SECOND_PLACE_SAME : null;
+}
+
+// The second place's own Broj kola (Bela, DECISIONS #98) needs a second place: a one-place night has none
+export const SECOND_ROUNDS_NO_PLACE = "Broj kola druge lokacije ide samo uz drugu lokaciju.";
+export function secondRoundsError(second: number | null | undefined, secondRounds: number | null | undefined): string | null {
+  return secondRounds != null && second == null ? SECOND_ROUNDS_NO_PLACE : null;
+}
 
 // A night's own Broj kola (null: the league's Kola po večeri)
 const nightRounds = z.number().int().min(1).max(6).nullable().optional();
 
 // Upravljanje ligom · Datumi (Dodaj večer): add a night, with its own Početak, Okupljanje and place or (left out or
-// null) the league's
+// null) the league's, and a second place or none
 export const LeagueNightAddRequestValidation = z.object({
   date: z.string().refine(isIsoDate, DATE_FORMAT_ERROR),
   start_time: startTime.optional(),
   gathering_time: startTime.optional(),
   rounds_per_night: nightRounds,
-  location: nightLocation,
+  second_rounds_per_night: nightRounds,
+  location_id: nightLocation,
+  second_location_id: secondLocation,
 });
 
-// Upravljanje ligom · Datumi (Uredi večer): a night's date, its own Početak, Okupljanje, Broj kola and place. Any can be left out
-// (it stays as it is); null goes back to the league's.
+// Upravljanje ligom · Datumi (Uredi večer): a night's date, its own Početak, Okupljanje, Broj kola and place, and its
+// second place with that place's own Broj kola. Any can be left out (it stays as it is); null goes back to the league's
+// (a null second place: one place; a null second Broj kola: the same as the first place's).
 export const LeagueNightUpdateRequestValidation = z
   .object({
     date: z.string().refine(isIsoDate, DATE_FORMAT_ERROR).optional(),
     start_time: startTime.optional(),
     gathering_time: startTime.optional(),
     rounds_per_night: nightRounds,
-    location: nightLocation,
+    second_rounds_per_night: nightRounds,
+    location_id: nightLocation,
+    second_location_id: secondLocation,
   })
   .refine(
-    (b) => b.date !== undefined || b.start_time !== undefined || b.gathering_time !== undefined || b.rounds_per_night !== undefined || b.location !== undefined,
+    (b) =>
+      b.date !== undefined ||
+      b.start_time !== undefined ||
+      b.gathering_time !== undefined ||
+      b.rounds_per_night !== undefined ||
+      b.second_rounds_per_night !== undefined ||
+      b.location_id !== undefined ||
+      b.second_location_id !== undefined,
     "Nema promjene."
   );
 
@@ -135,8 +152,9 @@ export const MOVE_TO_PAST_ERROR = "Večer se može premjestiti samo na današnji
 // A league night and its published rounds (played: it has some). start_time: its own Početak (null: the league's);
 // time: when it starts, its own or the league's (null: no time). gathering_time and gathering: the same for
 // Okupljanje. rounds_per_night: its own Broj kola (null: the league's); planned_rounds: how many rounds it plays, its own
-// or the league's. location: its own place (null: the league's); place: where it is played, its own or the league's
-// (null: nowhere set).
+// or the league's (at the first place). location: its own place (null: the league's); place: where it is played, its
+// own or the league's (null: nowhere set). second_location: its Druga lokacija, played at the same time (null: a
+// one-place night); second_rounds_per_night: that place's own Broj kola (null: the same as the first place's).
 export type LeagueNightRow = {
   date: string;
   played: boolean;
@@ -149,6 +167,8 @@ export type LeagueNightRow = {
   planned_rounds: number;
   location: NightLocation | null;
   place: NightLocation | null;
+  second_location: NightLocation | null;
+  second_rounds_per_night: number | null;
 };
 
 export const LeagueTeamAddRequestValidation = z.object({
@@ -172,10 +192,8 @@ export type LeagueSummary = {
   play_day: number | null;
   start_time: string | null; // "HH:MM", when the nights start (Početak) unless a night has its own
   gathering_time: string | null; // "HH:MM", when the nights start gathering (Okupljanje) unless a night has its own
-  // where the nights are played unless a night has its own place (null name: no place)
-  location_name: string | null;
-  location_address: string | null;
-  location_url: string | null;
+  // where the nights are played unless a night has its own place (null: no place), from Lokacije
+  location: NightLocation | null;
   rounds_per_night: number;
   // Vrijeme partije: a match's time limit in minutes
   game_minutes: number;

@@ -17,6 +17,7 @@ import {edgeOf, lineups, playMatch, strengths, TableWriter} from "../play";
 import {swissRound} from "./history";
 import type {People} from "./people";
 import {disjointTeams, enter, tournamentRequest, type TeamPool} from "./tournaments";
+import {atPitanik, placeId} from "./places";
 
 type FinishedSpec = {
   key: string;
@@ -57,6 +58,7 @@ async function finishedTournament(ctx: Ctx, people: People, pool: TeamPool, writ
   const t = await prisma.tournament.create({
     data: {
       ...tournamentFields(spec, day),
+      location_id: await placeId(ctx),
       started_at: start,
       arrival_closed_at: start,
       registrations_open: false,
@@ -210,8 +212,6 @@ function tournamentFields(spec: FinishedSpec, day: Date) {
     date: day,
     gathering_time: "17:30",
     start_time: "18:00",
-    location_name: "Caffe bar Pitanik",
-    location_address: "Ilica 1, Zagreb",
     rounds: spec.kolos,
     matches_per_round: spec.matchesPerRound,
     declarations: spec.declarations,
@@ -256,7 +256,7 @@ export async function seedTodayTournaments(ctx: Ctx, people: People, pool: TeamP
   // all the same (Kolo 1 needs them closed)
   const startedAt = zagrebTime(ctx, new Date(ctx.now.getTime() - 70 * 60_000)) ?? "00:00";
   const live = await createTournament(
-    tournamentRequest({
+    await atPitanik(ctx, tournamentRequest({
       name: "Subotnji turnir uživo",
       date: today,
       gathering_time: null,
@@ -265,7 +265,7 @@ export async function seedTodayTournaments(ctx: Ctx, people: People, pool: TeamP
       rounds: 4,
       matches_per_round: 1,
       auto_publish: false,
-    }),
+    })),
     admin,
   );
   const liveTeams: Team[] = [adminTeam, ...pick(9, "live")];
@@ -323,13 +323,13 @@ export async function seedTodayTournaments(ctx: Ctx, people: People, pool: TeamP
   const arrivalOpen = gathering != null && startsAt != null;
   const arrivalDate = arrivalOpen ? today : isoDay(addDays(ctx.today, 1));
   const arrival = await createTournament(
-    tournamentRequest({
+    await atPitanik(ctx, tournamentRequest({
       name: "Večernji turnir",
       date: arrivalDate,
       gathering_time: arrivalOpen ? gathering : "17:30",
       start_time: arrivalOpen ? startsAt : "18:00",
       max_teams: 10,
-    }),
+    })),
     admin,
   );
   await enter(ctx, pool, arrival, [people.playerTeam]);
@@ -346,7 +346,7 @@ export async function seedTodayTournaments(ctx: Ctx, people: People, pool: TeamP
 
   // --- ready: everyone here, sign-ups closed, nothing drafted; the admin's test makes and publishes Kolo 1
   const ready = await createTournament(
-    tournamentRequest({name: "Turnir spreman za start", date: today, gathering_time: null, start_time: null, max_teams: 8, rounds: 3}),
+    await atPitanik(ctx, tournamentRequest({name: "Turnir spreman za start", date: today, gathering_time: null, start_time: null, max_teams: 8, rounds: 3})),
     admin,
   );
   const readyTeams = pick(6, "ready");
