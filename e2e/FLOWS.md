@@ -151,7 +151,7 @@ komentarom `// BUG:`: test opisuje kako bi trebalo biti, a prolazi dok greška p
 | --- | --- | --- |
 | Dodaj sliku, izrez (zum) i Spremi; slika na Moj profil, u Moje ekipe i na stranici ekipe | igrač | `profil/c9-slika.spec.ts` › Dodaj sliku: the picked photo goes through the crop and Spremi… |
 | Odustani u izrezu; igrač sam miče sliku | igrač | `profil/c9-slika.spec.ts` › Odustani in Pomakni i zumiraj keeps the photo… |
-| Nova slika u Moje ekipe odmah | igrač | `profil/c9-slika.spec.ts` › a new photo shows in Moje ekipe at once… (bug) |
+| Nova slika u Moje ekipe odmah | igrač | `profil/c9-slika.spec.ts` › a new photo shows in Moje ekipe at once… (bug #80) |
 | Tko vidi sliku · Svi / Ja i suigrači / Samo ja | igrač, suigrač, drugi igrač, gost | `profil/c9-privatnost.spec.ts` › Tko vidi sliku · Svi…; › · Ja i suigrači…; › · Samo ja… |
 | Moj profil: Mobitel | igrač | `profil/c9-podaci.spec.ts` › Mobitel: a number too short can't be saved… |
 | Moj profil: Datum rođenja | igrač | `profil/c9-podaci.spec.ts` › Datum rođenja: a day in the future or before 1900 can't be saved… |

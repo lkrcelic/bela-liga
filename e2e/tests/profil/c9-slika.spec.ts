@@ -135,7 +135,7 @@ test("Odustani in Pomakni i zumiraj keeps the photo; Makni sliku in the player's
 });
 
 test("a new photo shows in Moje ekipe at once, as on the avatar above it", async ({as, me}) => {
-  // BUG: Moje ekipe keeps the player's old avatar (here the initials) until the page is loaded again
+  // BUG #80: Moje ekipe keeps the player's old avatar (here the initials) until the page is loaded again
   test.fail();
   await me.removePhoto();
   const page = await as(me.username);
