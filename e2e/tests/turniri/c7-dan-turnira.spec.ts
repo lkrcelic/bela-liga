@@ -188,10 +188,10 @@ test("Vrati stol puts the organizer's skipped table back in play, with both team
 });
 
 test("the organizer opens a table of their Kolo 1, confirms Tko igra and enters a hand on the scorepad", async ({as, own, db, healthy}) => {
-  // BUG: Tko igra (GET /api/rounds/<id>/lineup) answers the organizer "Ne igraš u ovoj rundi." on their own tournament's
+  // BUG #83: Tko igra (GET /api/rounds/<id>/lineup) answers the organizer "Ne igraš u ovoj rundi." on their own tournament's
   // table (canPlayRound lets only the table's players and an admin in), and the scorepad sends everyone to Tko igra
-  // first, so the organizer can't reach the scorepad of a table of their own tournament being played. DECISIONS is
-  // silent on an organizer saving a lineup: the lead takes that question to the user.
+  // first, so the organizer can't reach the scorepad of a table of their own tournament being played. The user
+  // confirmed on 16.11. that the organizer may do anything with their own tournament but delete or cancel it.
   test.fail();
   const t = await own({teams: 4, kolo1: true});
   const [table] = await koloTables(db, t.id, 1);

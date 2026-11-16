@@ -139,7 +139,7 @@ test("the organizer closes and reopens their sign-ups and adds a team with Dodaj
 });
 
 test("Makni takes a team off the organizer's own tournament", async ({as, organizer, admin, db, world, healthy}) => {
-  // BUG: signOff lets only an admin remove a team they don't play in, so the organizer's Makni ekipu is refused with
+  // BUG #84: signOff lets only an admin remove a team they don't play in, so the organizer's Makni ekipu is refused with
   // "Možeš odjaviti samo ekipu u kojoj igraš." (entries.ts uses isAdminRole, not the tournament's owner)
   test.fail();
   const id = world.tournaments.organizer.id;

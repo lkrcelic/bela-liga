@@ -15,7 +15,7 @@ komentarom `// BUG:`: test opisuje kako bi trebalo biti, a prolazi dok greška p
 | Gost dobije obrazac za prijavu; baza odgovara manifestu | gost | `smoke/baza.spec.ts` › a guest gets the login form; › the database holds the world of the manifest |
 | Svaka stranica kao gost: javne se otvore, ostale vode na Prijavu s ?next= | gost | `smoke/a-stranice.spec.ts`, `a-stranice.racunalo.spec.ts` › guest · <stranica> … |
 | Svaka stranica kao igrač: svoje stranice, svoja igra, Početna ili odbijanje za tuđe i adminove | igrač | `smoke/a-stranice*.spec.ts` › player · <stranica> … |
-| Svaka stranica kao organizator: svoj turnir, Ekipe i Igrači, "Ovo nije tvoj turnir." na tuđem, ništa od lige | organizator | `smoke/a-stranice*.spec.ts` › organizer · <stranica> … (bug: /league/new i /turniri/novi na računalu, tuđi stol na mobitelu, tuđi semafor) |
+| Svaka stranica kao organizator: svoj turnir, Ekipe i Igrači, "Ovo nije tvoj turnir." na tuđem, ništa od lige | organizator | `smoke/a-stranice*.spec.ts` › organizer · <stranica> … (bug: /league/new i /turniri/novi na računalu #87, tuđi stol na mobitelu #86, tuđi semafor #88) |
 | Svaka stranica kao admin: adminovi ekrani na mobitelu i računalu, stol vodi na Tko igra | admin | `smoke/a-stranice*.spec.ts` › admin · <stranica> … |
 | Zdravlje stranice: 5xx, konzola, vodoravni scroll, undefined/NaN, ekran greške, dio koji se nije učitao | sve | `helpers/health.ts` (svaki `healthy(page)`) |
 | Vrijeme do stranice, 10 najsporijih (samo podatak) | sve | `smoke/a-stranice*.spec.ts` › afterAll (`results/a-slowest-<projekt>.txt`) |
@@ -27,8 +27,8 @@ komentarom `// BUG:`: test opisuje kako bi trebalo biti, a prolazi dok greška p
 | Sve API rute × gost, igrač, organizator, admin | sve | `dozvole/b-dozvole.spec.ts` › jedan test po retku ("METHOD /route · guard · note") |
 | Server kaže svakoj roli što smije, kao mapa rola | sve | `dozvole/b-dozvole.spec.ts` › /api/auth/me tells each role what the capability map lets it do |
 | Svaki API handler ima redak u tablici dozvola | — | `dozvole/b-dozvole.spec.ts` › every handler of src/app/api has a row in the table, and every row a handler |
-| Organizator: Tko igra na stolu svog turnira | organizator | `dozvole/b-dozvole.spec.ts` › GET/PUT /api/rounds/[id]/lineup · … · organizer (bug) |
-| Organizator: Makni ekipu na svom turniru | organizator | `dozvole/b-dozvole.spec.ts` › DELETE /api/admin/tournaments/[id]/teams/[teamId] · … · organizer (bug) |
+| Organizator: Tko igra na stolu svog turnira | organizator | `dozvole/b-dozvole.spec.ts` › GET/PUT /api/rounds/[id]/lineup · … · organizer (bug #83) |
+| Organizator: Makni ekipu na svom turniru | organizator | `dozvole/b-dozvole.spec.ts` › DELETE /api/admin/tournaments/[id]/teams/[teamId] · … · organizer (bug #84) |
 
 ## Prijava i registracija
 
@@ -98,7 +98,7 @@ komentarom `// BUG:`: test opisuje kako bi trebalo biti, a prolazi dok greška p
 | Složi i objavi Kolo 1 | admin | `turniri/c3-nedolazak.spec.ts` › the admin makes Kolo 1 of a ready tournament with Složi Kolo 1… |
 | Nedolazak za stol 4 / 6 (1001 : 700, zabrana) | igrač | `turniri/c3-nedolazak.spec.ts` › Nedolazak za stol: no question before 4 minutes… |
 | Nedolazak za stol 10 (preskok) | sustav, igrač | `turniri/c3-nedolazak.spec.ts` › a table with neither a game nor an answer is skipped at 10 minutes… |
-| Stranica turnira nakon Ne, nisu došli | igrač | `turniri/c3-nedolazak.spec.ts` › after Ne, nisu došli on the tournament's page… (bug) |
+| Stranica turnira nakon Ne, nisu došli | igrač | `turniri/c3-nedolazak.spec.ts` › after Ne, nisu došli on the tournament's page… (bug #85) |
 | Vrati stol | admin | `turniri/c3-popravci.spec.ts` › Vrati stol brings a no-show table back into play… |
 | Uredi ishod | admin | `turniri/c3-popravci.spec.ts` › Uredi ishod gives a skipped table to one team… |
 | Kolo 2 (švicarski), poredak i kraj turnira | admin, igrač | `turniri/c3-kolo2.spec.ts` › Kolo 2 pairs the neighbours of the standings… |
@@ -112,7 +112,7 @@ komentarom `// BUG:`: test opisuje kako bi trebalo biti, a prolazi dok greška p
 | Novi turnir | organizator | `turniri/c7-svoj-turnir.spec.ts` › the organizer makes a tournament with Novi turnir, and it is theirs |
 | Podaci · Spremi promjene (svoj turnir) | organizator | `turniri/c7-svoj-turnir.spec.ts` › the organizer changes their tournament in Podaci… |
 | Prijave otvorene / zatvorene, Dodaj ekipu | organizator | `turniri/c7-svoj-turnir.spec.ts` › the organizer closes and reopens their sign-ups and adds a team… |
-| Makni ekipu (svoj turnir) | organizator | `turniri/c7-svoj-turnir.spec.ts` › Makni takes a team off the organizer's own tournament (bug) |
+| Makni ekipu (svoj turnir) | organizator | `turniri/c7-svoj-turnir.spec.ts` › Makni takes a team off the organizer's own tournament (bug #84) |
 | Otkaži i Vrati turnir | organizator | `turniri/c7-svoj-turnir.spec.ts` › the organizer cancels their tournament with Otkaži turnir… |
 | Obriši turnir samo admin | organizator | `turniri/c7-svoj-turnir.spec.ts` › the server refuses the organizer's Obriši turnir…; › Podaci gives the organizer Otkaži turnir but not Obriši turnir… (bug) |
 | Dodaj kolo / Obriši kolo na završenom turniru | organizator | `turniri/c7-svoj-turnir.spec.ts` › on their finished tournament the organizer adds a Kolo… |
@@ -121,12 +121,12 @@ komentarom `// BUG:`: test opisuje kako bi trebalo biti, a prolazi dok greška p
 | Isključi ekipu / Vrati | organizator | `turniri/c7-dan-turnira.spec.ts` › once their tournament has started the organizer takes a team out… |
 | Uredi ishod preskočenog stola | organizator | `turniri/c7-dan-turnira.spec.ts` › a table skipped at 10 minutes gets the organizer's Uredi ishod… |
 | Vrati stol | organizator | `turniri/c7-dan-turnira.spec.ts` › Vrati stol puts the organizer's skipped table back in play… |
-| Semafor svog stola (Tko igra, Upiši igru) | organizator | `turniri/c7-dan-turnira.spec.ts` › the organizer opens a table of their Kolo 1… (bug); › the scorepad's routes take the organizer's hands… |
-| Tuđi turnir skriven na ekranu | organizator | `turniri/c7-tudi-turnir.spec.ts` › the admin's tournament (open/live) is not in the organizer's Turniri…; › a table of the admin's live tournament shows the organizer no scorepad…; › …tells the organizer it isn't theirs… (bug) |
+| Semafor svog stola (Tko igra, Upiši igru) | organizator | `turniri/c7-dan-turnira.spec.ts` › the organizer opens a table of their Kolo 1… (bug #83); › the scorepad's routes take the organizer's hands… |
+| Tuđi turnir skriven na ekranu | organizator | `turniri/c7-tudi-turnir.spec.ts` › the admin's tournament (open/live) is not in the organizer's Turniri…; › a table of the admin's live tournament shows the organizer no scorepad…; › …tells the organizer it isn't theirs… (bug #86) |
 | Tuđi turnir: 403 na svakoj ruti | organizator | `turniri/c7-tudi-turnir.spec.ts` › on the admin's tournament (open/live) the organizer's … is refused with 403 and changes nothing |
 | Adminove stranice na mobitelu (liga, Sponzori, igrač) | organizator | `turniri/c7-admin-stranice.spec.ts` › on the phone the league's management…; › a player's page shows the organizer none of the admin's controls…; › …the player's phone number (bug) |
 | Liga i igrači: 403 | organizator | `turniri/c7-admin-stranice.spec.ts` › the organizer's … is refused with 403 and changes nothing |
-| Izbornik i adminove stranice na računalu | organizator | `turniri/c7-admin-stranice.racunalo.spec.ts` › the organizer's menu on the computer…; › Upravljanje ligom / Nova liga by its address refuses the organizer… (bug) |
+| Izbornik i adminove stranice na računalu | organizator | `turniri/c7-admin-stranice.racunalo.spec.ts` › the organizer's menu on the computer…; › Upravljanje ligom / Nova liga by its address refuses the organizer… (bug #87) |
 
 ## Burza
 

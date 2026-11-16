@@ -180,7 +180,7 @@ const ROWS: Row[] = [
   // Tko igra: the players of the table and the admin
   {method: "GET", route: "/api/rounds/[id]/lineup", note: "the player's table", params: (i) => ({id: i.playerTable.round}), guard: "user", allowed: status(200), as: {organizer: NOT_MY_ROUND}},
   {method: "GET", route: "/api/rounds/[id]/lineup", note: "someone else's table", params: (i) => ({id: i.otherTable.round}), guard: "user", allowed: status(200), as: {player: NOT_MY_ROUND, organizer: NOT_MY_ROUND}},
-  // BUG: the organizer's scorepad on their own tournament opens on Tko igra (needsLineup), and Tko igra is refused them.
+  // BUG #83: the organizer's scorepad on their own tournament opens on Tko igra (needsLineup), and Tko igra is refused them.
   // A finished table (the world's only one of the organizer's) also passes lineupVisible and saveLineup's admin flag,
   // which let an admin past a finished round: the organizer runs their own tournament's tables as the admin does (#86).
   {
@@ -193,12 +193,12 @@ const ROWS: Row[] = [
     as: {player: NOT_MY_ROUND},
     bug: {
       role: "organizer",
-      text: "Tko igra treats the organizer as a stranger at their own tournament's table: canPlayRound (403 Ne igraš u ovoj rundi.), then lineupVisible (403 Ova runda je već završena. on a finished table) let only the ADMIN role through",
+      text: "#83: Tko igra treats the organizer as a stranger at their own tournament's table: canPlayRound (403 Ne igraš u ovoj rundi.), then lineupVisible (403 Ova runda je već završena. on a finished table) let only the ADMIN role through",
     },
   },
   {method: "PUT", route: "/api/rounds/[id]/lineup", note: "the player's table", params: (i) => ({id: i.playerTable.round}), body: INVALID, guard: "user", allowed: status(400), as: {organizer: NOT_MY_ROUND}},
   {method: "PUT", route: "/api/rounds/[id]/lineup", note: "someone else's table", params: (i) => ({id: i.otherTable.round}), body: INVALID, guard: "user", allowed: status(400), as: {player: NOT_MY_ROUND, organizer: NOT_MY_ROUND}},
-  // BUG: as above, Potvrdi i počni. INVALID fails before saveLineup, so this row sees canPlayRound alone; saveLineup's
+  // BUG #83: as above, Potvrdi i počni. INVALID fails before saveLineup, so this row sees canPlayRound alone; saveLineup's
   // own admin flag (Ova runda je već završena. on a finished table) is the same bug's third check
   {
     method: "PUT",
@@ -211,7 +211,7 @@ const ROWS: Row[] = [
     as: {player: NOT_MY_ROUND},
     bug: {
       role: "organizer",
-      text: "Potvrdi i počni treats the organizer as a stranger at their own tournament's table: canPlayRound (403 Ne igraš u ovoj rundi.), then saveLineup's admin flag on a finished table let only the ADMIN role through",
+      text: "#83: Potvrdi i počni treats the organizer as a stranger at their own tournament's table: canPlayRound (403 Ne igraš u ovoj rundi.), then saveLineup's admin flag on a finished table let only the ADMIN role through",
     },
   },
   {method: "POST", route: "/api/rounds/[id]/attendance", params: (i) => ({id: i.playerTable.round}), body: INVALID, guard: "user", allowed: status(400)},
@@ -256,7 +256,7 @@ const ROWS: Row[] = [
   ...ownership({method: "POST", route: "/api/admin/tournaments/[id]/teams", body: INVALID, guard: MANAGE, allowed: refused(400, "Turnir je završen: prijave i lista čekanja se više ne mijenjaju.")}, (t) => ({id: t.id})),
   ...ownership({method: "PATCH", route: "/api/admin/tournaments/[id]/teams/[teamId]", body: INVALID, guard: MANAGE, allowed: refused(400, "Turnir je završen: prijave i lista čekanja se više ne mijenjaju.")}, (t) => ({id: t.id, teamId: t.team})),
   ...ownership({method: "DELETE", route: "/api/admin/tournaments/[id]/teams/[teamId]", guard: MANAGE, allowed: refused(400, "Turnir je završen: prijave i lista čekanja se više ne mijenjaju.")}, (t) => ({id: t.id, teamId: t.team})),
-  // BUG: Makni ekipu on the organizer's own tournament before its start, which DECISIONS #86 gives them (sign-ups)
+  // BUG #84: Makni ekipu on the organizer's own tournament before its start, which DECISIONS #86 gives them (sign-ups)
   {
     method: "DELETE",
     route: "/api/admin/tournaments/[id]/teams/[teamId]",
@@ -268,7 +268,7 @@ const ROWS: Row[] = [
     as: {admin: SKIP},
     bug: {
       role: "organizer",
-      text: "signOff lets only the ADMIN role remove a team they don't play in, so the organizer's Makni ekipu on their own tournament is 400 Možeš odjaviti samo ekipu u kojoj igraš.",
+      text: "#84: signOff lets only the ADMIN role remove a team they don't play in, so the organizer's Makni ekipu on their own tournament is 400 Možeš odjaviti samo ekipu u kojoj igraš.",
     },
     // once it works the team is out: back in, as it was
     keep: async (db, i) => {
@@ -422,7 +422,7 @@ for (const row of ROWS) {
     const bug = row.bug;
     test(bugTitle(row), async ({api, db, ids}) => {
       const {want, got, url} = await answers(row, [bug.role], {api, db, ids});
-      // BUG: the row's `bug` line (in the report; the lead opens the issue)
+      // BUG: the row's `bug` line, which starts with its issue (#N)
       test.fail(true, bug.text);
       expect(got, `${row.method} ${url}: what the ${bug.role} got`).toEqual(want);
     });

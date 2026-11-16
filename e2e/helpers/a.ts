@@ -331,10 +331,10 @@ function slowestOf(testInfo: TestInfo): string | null {
 
 // ---------- the table: every page and what each role sees there ----------
 
-// BUG: a signed-in player who doesn't play at a table (the organizer, not at the player's table) gets its board and
+// BUG #88: a signed-in player who doesn't play at a table (the organizer, not at the player's table) gets its board and
 // the hand steps, and only Spremi tells them "Ne igraš u ovoj rundi." (403; Tko igra of such a table says it at once)
 const NOT_AT_TABLE = bug(
-  `a player who doesn't play at the table gets its scorepad and hand steps as if they did; only Spremi answers "${NOT_YOUR_ROUND}"`,
+  `#88: a player who doesn't play at the table gets its scorepad and hand steps as if they did; only Spremi answers "${NOT_YOUR_ROUND}"`,
   REFUSED,
 );
 
@@ -423,10 +423,10 @@ export const PAGES: Row[] = [
   {
     route: "/league/new",
     path: () => "/league/new",
-    // BUG: on the computer a player and an organizer get the admin's Nova liga form (with every team and its players)
+    // BUG #87: on the computer a player and an organizer get the admin's Nova liga form (with every team and its players)
     all: per(
       desktopOnly,
-      bug("on the computer /league/new shows the admin's Nova liga form to a player and an organizer instead of refusing them", REFUSED),
+      bug("#87: on the computer /league/new shows the admin's Nova liga form to a player and an organizer instead of refusing them", REFUSED),
     ),
     admin: h("Nova liga"),
   },
@@ -477,8 +477,8 @@ export const PAGES: Row[] = [
     route: "/turniri/[id]/stol/[roundId]",
     path: (ids) => `/turniri/${ids.tournaments.live.id}/stol/${ids.tournamentTable.roundId}`,
     player: h((ids) => `Stol ${ids.tournamentTable.number}`),
-    // BUG: the organizer's phone hides the server's answer behind "Stol se nije učitao. Provjeri vezu …"
-    organizer: per(bug(`on the phone an organizer on another's tournament table reads "Stol se nije učitao. Provjeri vezu i pokušaj ponovno." instead of "${NOT_YOURS}"`, says(NOT_YOURS)), says(NOT_YOURS)),
+    // BUG #86: the organizer's phone hides the server's answer behind "Stol se nije učitao. Provjeri vezu …"
+    organizer: per(bug(`#86: on the phone an organizer on another's tournament table reads "Stol se nije učitao. Provjeri vezu i pokušaj ponovno." instead of "${NOT_YOURS}"`, says(NOT_YOURS)), says(NOT_YOURS)),
     admin: at("Tko igra", (ids) => new RegExp(`^/round/lineup/${ids.tournamentTable.roundId}\\?turnir=${ids.tournaments.live.id}$`), h("Tko igra ovu rundu?")),
   },
   // running a tournament: the admin any, an organizer their own (DECISIONS #86); a player's phone says it is done on
@@ -500,8 +500,8 @@ export const PAGES: Row[] = [
   {
     route: "/turniri/novi",
     path: () => "/turniri/novi",
-    // BUG: on the computer a player gets the Novi turnir form
-    player: per(desktopOnly, bug("on the computer /turniri/novi shows the Novi turnir form to a player instead of refusing them", REFUSED)),
+    // BUG #87: on the computer a player gets the Novi turnir form
+    player: per(desktopOnly, bug("#87: on the computer /turniri/novi shows the Novi turnir form to a player instead of refusing them", REFUSED)),
     all: h("Novi turnir"),
   },
 ];

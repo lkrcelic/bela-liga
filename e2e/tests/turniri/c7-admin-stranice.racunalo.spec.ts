@@ -24,7 +24,7 @@ test("Sponzori by its address sends the organizer to Početna", async ({as}) => 
 });
 
 test("Upravljanje ligom by its address refuses the organizer on the computer", async ({as, world}) => {
-  // BUG: on the computer /league/<id>/manage renders the league's management for an organizer (tabs Novo kolo, Ekipe,
+  // BUG #87: on the computer /league/<id>/manage renders the league's management for an organizer (tabs Novo kolo, Ekipe,
   // Kola, Datumi with Dodaj večer and Obriši večer, Podaci with Spremi promjene, Sponzori); only the reads fail with
   // "Nemaš ovlasti za ovu radnju." The phone shows "Ovo se uređuje na računalu.", Sponzori sends them to Početna
   test.fail();
@@ -36,7 +36,7 @@ test("Upravljanje ligom by its address refuses the organizer on the computer", a
 });
 
 test("Nova liga by its address refuses the organizer on the computer", async ({as}) => {
-  // BUG: on the computer /league/new renders the whole Nova liga form for an organizer, with Kreiraj ligu (the route
+  // BUG #87: on the computer /league/new renders the whole Nova liga form for an organizer, with Kreiraj ligu (the route
   // answers 403 once it is sent)
   test.fail();
   const page = await as("organizer");

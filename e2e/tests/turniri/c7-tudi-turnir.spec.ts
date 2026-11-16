@@ -66,7 +66,7 @@ test("a table of the admin's live tournament shows the organizer no scorepad, an
 });
 
 test("a table of the admin's live tournament tells the organizer it isn't theirs, not to check their connection", async ({as, db, world}) => {
-  // BUG: the phone scorepad (TablePhone) drops the server's 403 "Ovo nije tvoj turnir." and shows "Stol se nije učitao ·
+  // BUG #86: the phone scorepad (TablePhone) drops the server's 403 "Ovo nije tvoj turnir." and shows "Stol se nije učitao ·
   // Provjeri vezu i pokušaj ponovno.", as if the connection had failed; Upravljanje turnirom says "Ovo nije tvoj turnir."
   test.fail();
   const {id} = world.tournaments.live;
