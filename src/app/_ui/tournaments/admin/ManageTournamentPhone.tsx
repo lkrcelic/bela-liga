@@ -87,7 +87,7 @@ import BlockRoundedIcon from "@mui/icons-material/BlockRounded";
 import React, {useEffect, useState} from "react";
 import {draftOf, draftPayload, TournamentFields, useTournamentForm} from "../TournamentForm";
 import {FillBar} from "../TournamentParts";
-import {useCandidateSearch} from "./EntriesDesktop";
+import {AddedMark, useCandidateSearch} from "./EntriesDesktop";
 import {canAddKolo, koloRemoval, koloRemovalAction, koloRemovalText, koloRemovalTitle, koloRows, STEP_LOOK, tableTeams} from "./KolaDesktop";
 import {defaultView, MANAGE_VIEWS, ManageView} from "./ManageTournamentDesktop";
 
@@ -550,7 +550,9 @@ function AddTeamSheet({t, onClose, onAdded}: {t: AdminTournament; onClose: () =>
                         Zabrana
                       </Box>
                     )}
-                    {!h.reason && (
+                    {h.added ? (
+                      <AddedMark added={h.added} />
+                    ) : !h.reason && (
                       <Box
                         component="button"
                         type="button"

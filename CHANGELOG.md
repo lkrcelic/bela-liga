@@ -2,6 +2,13 @@
 
 What the commits changed for the people using the app, newest first. The reasons and details are in DECISIONS.md.
 
+## 16.11.2026 · Dodaj ekipu na turnir potvrđuje dodavanje
+
+On development (#30).
+
+### Admin
+- **Dodaj ekipu** (Upravljanje turnirom, mobitel i računalo): dodana ekipa ostaje u popisu s oznakom **Dodano**, a na punom turniru **Na čekanju · N.** (mjesto na listi čekanja), umjesto da nestane i ostavi "Nema takvih ekipa izvan turnira.".
+
 ## 15.11.2026 · Iz Trešete: liga na dvije lokacije
 
 On development (DECISIONS #98).
