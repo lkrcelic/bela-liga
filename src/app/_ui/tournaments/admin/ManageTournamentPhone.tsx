@@ -1,5 +1,6 @@
 "use client";
 
+import useCan from "@/app/_hooks/useCan";
 import {
   addKoloAPI,
   addKoloTableAPI,
@@ -230,6 +231,8 @@ function CardText({title, sub}: {title: string; sub: string}) {
 // the Kolo being played (or its draft) with its tables done, opening that Kolo; once it is over the winners.
 function StatusCard({t, onChanged, onOpen}: {t: AdminTournament; onChanged: (t: AdminTournament) => void; onOpen: (v: ManageView, kolo: number | null) => void}) {
   const [switching, setSwitching] = useState(false);
+  // Vrati turnir is the admin's, like Otkaži
+  const mayRestore = useCan("tournament.cancel");
   const [error, setError] = useState<string | null>(null);
 
   if (dayOn(t)) {
@@ -300,9 +303,11 @@ function StatusCard({t, onChanged, onOpen}: {t: AdminTournament; onChanged: (t: 
             </Box>
           </Box>
         </Box>
-        <PrimaryButton icon={<RestoreRoundedIcon />} loading={switching} onClick={restore} sx={{flex: "none"}}>
-          Vrati turnir
-        </PrimaryButton>
+        {mayRestore && (
+          <PrimaryButton icon={<RestoreRoundedIcon />} loading={switching} onClick={restore} sx={{flex: "none"}}>
+            Vrati turnir
+          </PrimaryButton>
+        )}
         {error && <ErrorNote>{error}</ErrorNote>}
       </>
     );
@@ -938,6 +943,9 @@ function DetailsTab({t, onChanged}: {t: AdminTournament; onChanged: (t: AdminTou
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [asking, setAsking] = useState<"cancel" | "delete" | null>(null);
+  // Otkaži and Obriši are the admin's: an organizer may do everything with their tournament but these (16.11.2026)
+  const mayCancel = useCan("tournament.cancel");
+  const mayDelete = useCan("tournament.delete");
   const [busy, setBusy] = useState(false);
   const started = t.started_at != null;
   const cancelled = t.cancelled_at != null;
@@ -1023,14 +1031,18 @@ function DetailsTab({t, onChanged}: {t: AdminTournament; onChanged: (t: AdminTou
         </OutlineButton>
         {!started && !cancelled && (
           <>
-            <OutlineButton tone={color.red} onClick={() => setAsking("cancel")} sx={action}>
-              <EventBusyRoundedIcon sx={{fontSize: 20}} />
-              Otkaži turnir
-            </OutlineButton>
-            <OutlineButton tone={color.red} onClick={() => setAsking("delete")} sx={action}>
-              <DeleteRoundedIcon sx={{fontSize: 20}} />
-              Obriši turnir
-            </OutlineButton>
+            {mayCancel && (
+              <OutlineButton tone={color.red} onClick={() => setAsking("cancel")} sx={action}>
+                <EventBusyRoundedIcon sx={{fontSize: 20}} />
+                Otkaži turnir
+              </OutlineButton>
+            )}
+            {mayDelete && (
+              <OutlineButton tone={color.red} onClick={() => setAsking("delete")} sx={action}>
+                <DeleteRoundedIcon sx={{fontSize: 20}} />
+                Obriši turnir
+              </OutlineButton>
+            )}
           </>
         )}
       </Box>

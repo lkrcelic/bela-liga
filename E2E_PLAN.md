@@ -1,6 +1,7 @@
 # E2E testovi lokalno — plan
 
-Dio [`ORKESTRACIJA_AGENATA.md`](ORKESTRACIJA_AGENATA.md). Unit i db testovi su u [`UNIT_PLAN.md`](UNIT_PLAN.md).
+Dio [`ORKESTRACIJA_AGENATA.md`](ORKESTRACIJA_AGENATA.md). Unit i db testovi su u [`UNIT_PLAN.md`](UNIT_PLAN.md), a kako agenti pišu
+suite (sekcije A, B, C1–C9) u [`E2E_SUITE_PLAN.md`](E2E_SUITE_PLAN.md).
 
 Cilj: jednom naredbom, na laptopu, podići cijelu aplikaciju s bazom punom generiranih podataka i proći kroz nju
 kao igrač, organizator, admin i gost, na mobitelu (portrait) i računalu. Isto pokreće noćna rutina na laptopu i

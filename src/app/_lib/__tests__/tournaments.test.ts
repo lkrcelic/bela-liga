@@ -482,7 +482,7 @@ test("Otvorene prijave: a closed tournament takes teams until it starts, an open
 
 test("the tournament form's switch reaches the server: open_signups survives the request's validation", () => {
   const body = {
-    name: "Kafić", date: "2026-12-01", gathering_time: null, start_time: null,
+    name: "Kafić", date: "2026-12-01", gathering_time: "17:30", start_time: "18:00",
     location_id: null,
     rounds: 3, matches_per_round: 2, declarations: true, max_teams: null, entry_fee: 0,
     rules_url: null, prizes: [], game_minutes: 35, auto_publish: false, organizer_phone: "0931234567",
@@ -494,6 +494,27 @@ test("the tournament form's switch reaches the server: open_signups survives the
   assert.equal(TournamentRequestValidation.parse(body).open_signups, false);
 });
 
+test("Novi turnir and Podaci: the server refuses a tournament without Okupljanje or Početak, or gathering after the start", () => {
+  const body = {
+    name: "Kafić", date: "2026-12-01", gathering_time: "17:30", start_time: "18:00",
+    location_id: null,
+    rounds: 3, matches_per_round: 2, declarations: true, max_teams: 16, entry_fee: 0,
+    rules_url: null, prizes: [], game_minutes: 35, auto_publish: false, organizer_phone: "0931234567",
+  };
+  const refusal = (patch: object) => {
+    const r = TournamentRequestValidation.safeParse({...body, ...patch});
+    return r.success ? null : r.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`);
+  };
+  assert.equal(refusal({}), null);
+  assert.deepEqual(refusal({start_time: null}), ["start_time: Upiši vrijeme početka."]);
+  assert.deepEqual(refusal({gathering_time: null}), ["gathering_time: Upiši vrijeme okupljanja."]);
+  // what the form sends for two empty fields
+  assert.deepEqual(refusal({gathering_time: null, start_time: null}), ["gathering_time: Upiši vrijeme okupljanja.", "start_time: Upiši vrijeme početka."]);
+  assert.deepEqual(refusal({gathering_time: "18:00"}), ["gathering_time: Okupljanje mora biti prije početka."]);
+  assert.deepEqual(refusal({gathering_time: "18:30"}), ["gathering_time: Okupljanje mora biti prije početka."]);
+  assert.deepEqual(refusal({start_time: "25:00"}), ["start_time: Vrijeme mora biti od 00:00 do 23:59."]);
+});
+
 test("Sakrij broj prijava: hidden from players only before Kolo 1, never from whoever runs it, and it reaches the server", () => {
   assert.equal(entriesHidden({hideEntries: true, phase: "upcoming", manager: false}), true);
   // the admin and the organizer see every sign-up and the waiting list
@@ -503,7 +524,7 @@ test("Sakrij broj prijava: hidden from players only before Kolo 1, never from wh
   assert.equal(entriesHidden({hideEntries: true, phase: "finished", manager: false}), false);
   assert.equal(entriesHidden({hideEntries: false, phase: "upcoming", manager: false}), false);
   const body = {
-    name: "Kafić", date: "2026-12-01", gathering_time: null, start_time: null,
+    name: "Kafić", date: "2026-12-01", gathering_time: "17:30", start_time: "18:00",
     location_id: null,
     rounds: 3, matches_per_round: 2, declarations: true, max_teams: 16, entry_fee: 0,
     rules_url: null, prizes: [], game_minutes: 35, auto_publish: false, open_signups: false, organizer_phone: "0931234567",

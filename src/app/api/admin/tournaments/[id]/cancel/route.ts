@@ -5,9 +5,9 @@ import {requireCan} from "@/app/_lib/service/auth/requireUser";
 import {cancelTournament, getAdminTournament, restoreTournament} from "@/app/_lib/service/tournament/tournaments";
 import {refuseUnlessMine, tournamentIdOf, tournamentNotFound} from "@/app/_lib/service/tournament/routes";
 
-// Otkaži turnir (admin or the organizer whose it is): it stays in the lists as Otkazan, before it starts
+// Otkaži turnir (the admin's, not the organizer's: 16.11.2026): it stays in the lists as Otkazan, before it starts
 export async function POST(request: NextRequest, {params}: {params: {id: string}}) {
-  const auth = await requireCan(request, "tournament.manage.own");
+  const auth = await requireCan(request, "tournament.cancel");
   if (auth.response) return auth.response;
   const id = tournamentIdOf(params.id);
   if (id == null) return tournamentNotFound();
@@ -20,9 +20,9 @@ export async function POST(request: NextRequest, {params}: {params: {id: string}
   }
 }
 
-// Vrati turnir (admin or the organizer whose it is): a cancelled tournament is back, with its sign-ups open
+// Vrati turnir (the admin's, like Otkaži): a cancelled tournament is back, with its sign-ups open
 export async function DELETE(request: NextRequest, {params}: {params: {id: string}}) {
-  const auth = await requireCan(request, "tournament.manage.own");
+  const auth = await requireCan(request, "tournament.cancel");
   if (auth.response) return auth.response;
   const id = tournamentIdOf(params.id);
   if (id == null) return tournamentNotFound();

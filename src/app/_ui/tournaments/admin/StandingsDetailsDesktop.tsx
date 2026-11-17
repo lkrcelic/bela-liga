@@ -1,5 +1,6 @@
 "use client";
 
+import useCan from "@/app/_hooks/useCan";
 import {cancelTournamentAPI, deleteTournamentAPI, updateTournamentAPI} from "@/app/_fetchers/tournament";
 import {AdminTournament} from "@/app/_interfaces/tournament";
 import {standingsOrderLabel} from "@/app/_lib/tournaments";
@@ -75,6 +76,9 @@ export function DetailsDesktop({t, onChanged}: {t: AdminTournament; onChanged: (
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [asking, setAsking] = useState<"cancel" | "delete" | null>(null);
+  // Otkaži and Obriši are the admin's: an organizer may do everything with their tournament but these (16.11.2026)
+  const mayCancel = useCan("tournament.cancel");
+  const mayDelete = useCan("tournament.delete");
   const [busy, setBusy] = useState(false);
   const started = t.started_at != null;
   const cancelled = t.cancelled_at != null;
@@ -128,14 +132,18 @@ export function DetailsDesktop({t, onChanged}: {t: AdminTournament; onChanged: (
           </OutlineButton>
           {!started && !cancelled && asking == null && (
             <>
-              <OutlineButton tone={color.red} onClick={() => setAsking("cancel")} sx={action}>
-                <EventBusyRoundedIcon sx={{fontSize: 20}} />
-                Otkaži turnir
-              </OutlineButton>
-              <OutlineButton tone={color.red} onClick={() => setAsking("delete")} sx={action}>
-                <DeleteRoundedIcon sx={{fontSize: 20}} />
-                Obriši turnir
-              </OutlineButton>
+              {mayCancel && (
+                <OutlineButton tone={color.red} onClick={() => setAsking("cancel")} sx={action}>
+                  <EventBusyRoundedIcon sx={{fontSize: 20}} />
+                  Otkaži turnir
+                </OutlineButton>
+              )}
+              {mayDelete && (
+                <OutlineButton tone={color.red} onClick={() => setAsking("delete")} sx={action}>
+                  <DeleteRoundedIcon sx={{fontSize: 20}} />
+                  Obriši turnir
+                </OutlineButton>
+              )}
             </>
           )}
           {asking && (

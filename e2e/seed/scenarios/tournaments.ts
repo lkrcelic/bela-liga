@@ -125,10 +125,10 @@ export async function seedUpcomingTournaments(ctx: Ctx, people: People, pool: Te
   await signUp(hidden, {id: people.player.id, player_role: "PLAYER"}, {team_id: people.playerTeam.team_id});
   await enter(ctx, pool, hidden, disjointTeams(ctx, pool, 5, "hidden", new Set(Array.from(keep).concat(Array.from(exclusive(pool, people.playerTeam))))));
 
-  // bez zvanja, 2 partije po kolu, no limit, no start time (so no arrival window), free
+  // bez zvanja, 2 partije po kolu, no limit, free; a later start than the others (every tournament has both times)
   const noLimit = await create(
     "noLimitNoDeclarations",
-    "Bez limita, bez zvanja, 2 partije po kolu, bez vremena početka",
+    "Bez limita, bez zvanja, 2 partije po kolu, okupljanje 19:00, početak 19:30",
     tournamentRequest({
       name: "Bez stresa open",
       date: day(15),
@@ -136,8 +136,8 @@ export async function seedUpcomingTournaments(ctx: Ctx, people: People, pool: Te
       declarations: false,
       matches_per_round: 2,
       entry_fee: 0,
-      gathering_time: null,
-      start_time: null,
+      gathering_time: "19:00",
+      start_time: "19:30",
       prizes: [],
       rules_url: null,
       auto_publish: false,

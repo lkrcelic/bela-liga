@@ -41,7 +41,7 @@ export async function PATCH(request: NextRequest, {params}: Params) {
   }
 }
 
-// Obriši turnir: the admin's only (an organizer has Otkaži), and only before it starts — a tournament carries results
+// Obriši turnir: the admin's only (an organizer may neither cancel nor delete), and only before it starts — a tournament carries results
 // and ratings
 export async function DELETE(request: NextRequest, {params}: Params) {
   const auth = await requireAdmin(request);

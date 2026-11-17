@@ -1,5 +1,6 @@
 "use client";
 
+import useCan from "@/app/_hooks/useCan";
 import {restoreTournamentAPI} from "@/app/_fetchers/tournament";
 import {useAdminTournament, useAdminTournaments} from "@/app/_hooks/useTournaments";
 import {AdminTournament, TournamentCard} from "@/app/_interfaces/tournament";
@@ -213,6 +214,8 @@ export default function TournamentsDesktop() {
 // - Završeni: the top three, Poredak and Stranica; a cancelled one has Vrati turnir (back with its sign-ups open)
 // Kopiraj, Otkaži, Obriši and the sign-ups switch are in Upravljanje turnirom (Podaci, the header).
 function PickedCard({t, onChanged}: {t: TournamentCard; onChanged: () => void}) {
+  // Vrati turnir is the admin's, like Otkaži
+  const mayRestore = useCan("tournament.cancel");
   const router = useTransitionRouter();
   const {tournament: full, error: loadError} = useAdminTournament(t.id);
   const [busy, setBusy] = useState(false);
@@ -266,17 +269,21 @@ function PickedCard({t, onChanged}: {t: TournamentCard; onChanged: () => void}) 
         <Box component="span" sx={{fontSize: 14, color: color.ink2}}>
           {cancelledLine(t)}
         </Box>
-        <Box component="span" sx={{fontSize: 13.5, lineHeight: 1.45, color: color.muted}}>
-          Otkazan greškom ili odgođen? Vrati ga: ide među nadolazeće s istim ekipama, a prijave se ponovo otvaraju.
-        </Box>
+        {mayRestore && (
+          <Box component="span" sx={{fontSize: 13.5, lineHeight: 1.45, color: color.muted}}>
+            Otkazan greškom ili odgođen? Vrati ga: ide među nadolazeće s istim ekipama, a prijave se ponovo otvaraju.
+          </Box>
+        )}
       </Box>
     );
     actions = (
       <>
-        <Box component="button" type="button" onClick={restore} disabled={busy} aria-busy={busy || undefined} sx={primary}>
-          {busy ? <Spinner size={20} /> : <RestoreRoundedIcon aria-hidden />}
-          Vrati turnir
-        </Box>
+        {mayRestore && (
+          <Box component="button" type="button" onClick={restore} disabled={busy} aria-busy={busy || undefined} sx={primary}>
+            {busy ? <Spinner size={20} /> : <RestoreRoundedIcon aria-hidden />}
+            Vrati turnir
+          </Box>
+        )}
         {stranica}
       </>
     );

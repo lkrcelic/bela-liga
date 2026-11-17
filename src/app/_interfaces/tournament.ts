@@ -8,13 +8,14 @@ import type {TableState} from "@/app/_lib/tableState";
 import type {StandingsItem} from "@/app/_lib/ui/standings";
 import {GAME_MINUTES_ERROR, GAME_MINUTES_MAX, GAME_MINUTES_MIN} from "@/app/_lib/gameTime";
 import {isValidPhone, PHONE_ERROR} from "@/app/_lib/phone";
+import {TIME_ERROR, tournamentTimesErrors} from "@/app/_lib/tournamentDay";
 
 // Turniri: what the admin sends to create or change a tournament, what a player sends to sign a team up, and what the
 // tournament API answers with.
 
 export const TOURNAMENT_NAME_REQUIRED = "Upiši naziv turnira.";
 export const TOURNAMENT_DATE_REQUIRED = "Odaberi datum turnira.";
-export const TIME_ERROR = "Vrijeme mora biti od 00:00 do 23:59.";
+export {TIME_ERROR};
 export const MAX_TEAMS_ERROR = "Najmanje dvije ekipe, ili ostavi prazno.";
 export const ROUNDS_ERROR = "Turnir ima od 1 do 20 kola.";
 export const FEE_ERROR = "Kotizacija je od 0 do 999 €.";
@@ -32,8 +33,10 @@ const PrizeValidation = z.object({
   description: z.string().trim().max(200, "Opis nagrade može imati najviše 200 znakova.").default(""),
 });
 
-// Novi turnir and Podaci send the whole form; an empty text field is null
-export const TournamentRequestValidation = z.object({
+// Novi turnir and Podaci send the whole form; an empty text field is null. Okupljanje and Početak are required, the
+// gathering before the start (tournamentTimesErrors)
+export const TournamentRequestValidation = z
+  .object({
   name: z.string({required_error: TOURNAMENT_NAME_REQUIRED}).trim().min(1, TOURNAMENT_NAME_REQUIRED).max(100, "Naziv turnira može imati najviše 100 znakova."),
   date: z.string({required_error: TOURNAMENT_DATE_REQUIRED}).refine(isIsoDate, DATE_FORMAT_ERROR),
   gathering_time: time,
@@ -57,7 +60,15 @@ export const TournamentRequestValidation = z.object({
   hide_entries: z.boolean().default(false),
   // Telefon organizatora: required for a new tournament (checked by the service); an old one may stay without
   organizer_phone: z.string().trim().max(30).refine((v) => v === "" || isValidPhone(v), PHONE_ERROR).nullable().default(null),
-});
+  })
+  .superRefine((b, ctx) => {
+    // a time in the wrong format is already refused by its field
+    const e = tournamentTimesErrors(b.gathering_time, b.start_time);
+    if (e.gathering === TIME_ERROR) delete e.gathering;
+    if (e.start === TIME_ERROR) delete e.start;
+    if (e.gathering) ctx.addIssue({code: z.ZodIssueCode.custom, path: ["gathering_time"], message: e.gathering});
+    if (e.start) ctx.addIssue({code: z.ZodIssueCode.custom, path: ["start_time"], message: e.start});
+  });
 
 // written out by hand: with strict off, z.infer would make every field optional
 export type TournamentRequest = {

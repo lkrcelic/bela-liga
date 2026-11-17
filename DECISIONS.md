@@ -1635,10 +1635,10 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
     - **A new role costs one line**: its entry in `BY_ROLE`. No route and no screen is touched. `rolesOf()` in
       `_lib/auth/roles.ts` is the only place in the app that reads `player_role`, so several roles per player would be
       a change to that one function.
-    - **What an organizer may do**: Novi turnir; edit, run and cancel **their own** tournament (its Kolos, Skica,
+    - **What an organizer may do**: Novi turnir; edit, run and (until #99) cancel **their own** tournament (its Kolos, Skica,
       Objavi, tables, results, sign-ups, arrivals, Isključi); make a team and edit any team; the Igrači directory
       with names, teams and phone numbers. **Not**: delete a tournament (only Otkaži — a tournament carries results
-      and ratings), touch anyone else's tournament, the league (Novo kolo, Upravljanje ligom, nights, Datumi),
+      and ratings; since #99 not Otkaži either), touch anyone else's tournament, the league (Novo kolo, Upravljanje ligom, nights, Datumi),
       delete a team, Zabrani novu sliku, usernames / emails / birth dates, editing or deleting a player, giving a
       role, Sponzori, Burza moderation, Rejting.
     - **Ownership**: `Tournament.created_by`, written once when the tournament is made and never changed. The
@@ -2054,3 +2054,32 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
       production copy above), how Početna feeds its evening to `homeCard`, Raspored hiding the places from a guest,
       the smoking tables and Novo kolo's saved choice per place, and Novo kolo refusing a place on a one-place night.
 
+99. **Turnir ima Okupljanje i Početak; organizator ne otkazuje turnir i vidi brojeve mobitela** (the user's messages of
+    16.11., answering three findings of the E2E suite: "turnir mora imati datum i vrijeme početka isto kao i vrijeme
+    okupljanja", "Organizator može sa svojim turnirom raditi što god želi, osim brisati i otkazivati ga", "za 8
+    Organizator vidi brojeve mobitela").
+    - **Okupljanje and Početak are required** in Novi turnir and Podaci, and Okupljanje must be before Početak ("Upiši
+      vrijeme okupljanja.", "Upiši vrijeme početka.", "Okupljanje mora biti prije početka.", as the league's night
+      form says). One rule, `tournamentTimesErrors` in `_lib/tournamentDay.ts`, is read by the form and by the
+      request's schema (`TournamentRequestValidation`), so the server refuses an old form or a script too. So every
+      tournament has Potvrda dolaska: a team that doesn't press Tu smo by the start becomes inactive (DECISIONS #69).
+      Before, a tournament without Početak had no confirmation, and a team the admin marked here read "Prvo kolo
+      počinje u ." with nothing after "u". The columns stay nullable: a tournament made before keeps working (the
+      copy of production of 14.11. has both times on all five), and Podaci asks for the times when it is saved.
+    - **Otkaži turnir and Vrati turnir are the admin's**, like Obriši turnir: a new capability `tournament.cancel`,
+      not given to ORGANIZER, guards `POST`/`DELETE /api/admin/tournaments/[id]/cancel` (403 "Nemaš ovlasti za ovu
+      radnju." for the organizer, their own tournament too). The organizer's Podaci (phone and computer) shows neither
+      Otkaži nor Obriši turnir (Obriši was shown and refused, the E2E suite's bug), and a tournament the admin
+      cancelled shows them "Turnir je otkazan" without Vrati turnir or its hint. This replaces #86's "Not: delete a
+      tournament (only Otkaži …)": everything else with their own tournament stays theirs (#83 Tko igra, fixed by
+      f0a8b44, and #84 Makni ekipu are bugs against that).
+    - **The organizer sees a player's Mobitel** on the player's page (Osobni podaci), as #86 promised and the server
+      already sent (`privacy.ts`, `player.contact`): `personalRows` adds the row when the server sent the phone, and
+      the lock note under it says "Email, datum rođenja i Pušač vidljivi su samo igraču i administratorima." A player
+      still sees neither the row nor the phone.
+    - **Checked**: unit tests (`tournamentDay`, `tournaments` for the schema, `permissions`, `profiles`) and the E2E
+      suite's C3, C7 and B, whose tests for these three were `test.fail` or asserted the old rule: Novi turnir asks for
+      both times and the server refuses a tournament without them (`c3-dolazak`), the organizer can't cancel or bring
+      back and Podaci has neither button (`c7-svoj-turnir`, `c7-tudi-turnir`, B's cancel rows), and the player's page
+      shows the organizer Mobitel (`c7-admin-stranice`). The suite's helpers and the generator give every tournament
+      both times (23:58/23:59 where a test's tournament of today must keep Potvrda dolaska shut).

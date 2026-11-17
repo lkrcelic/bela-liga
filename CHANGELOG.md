@@ -2,6 +2,20 @@
 
 What the commits changed for the people using the app, newest first. The reasons and details are in DECISIONS.md.
 
+## 18.11.2026 · Turnir uvijek ima vrijeme, organizator ne otkazuje turnir
+
+On development since 18.11. (with the E2E suite, DECISIONS #99).
+
+### Admin
+- **Novi turnir** i **Podaci** traže **Okupljanje** i **Početak**, a okupljanje mora biti prije početka. Zato svaki turnir ima **Potvrdu dolaska**.
+
+### Organizator
+- Nema više **Otkaži turnir** ni **Vrati turnir** (ni **Obriši turnir**, koji je dosad stajao u Podacima pa javljao grešku): turnir otkazuje i vraća admin.
+- Na stranici igrača pod **Osobni podaci** vidi **Mobitel**.
+
+### Changed
+- Igrač više ne može dobiti "Prvo kolo počinje u ." bez vremena.
+
 ## 17.11.2026 · Organizator vodi stolove svog turnira
 
 Live since 17.11. (8351661, #83).
