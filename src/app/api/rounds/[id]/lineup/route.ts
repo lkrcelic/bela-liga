@@ -1,7 +1,7 @@
 import {NextRequest, NextResponse} from "next/server";
 import {STATUS} from "@/app/_lib/statusCodes";
 import {getLineup, LineupSaveValidation, ROUND_FINISHED, saveLineup} from "@/app/_lib/service/round/lineup";
-import {canPlayRound, isAdmin, notYourRoundResponse, requireUser} from "@/app/_lib/service/auth/requireUser";
+import {lineupAccess, notYourRoundResponse, requireUser} from "@/app/_lib/service/auth/requireUser";
 import {errorResponse} from "@/app/_lib/apiErrors";
 import {isDbId} from "@/app/_lib/helpers/query/dbId";
 
@@ -9,7 +9,8 @@ import {isDbId} from "@/app/_lib/helpers/query/dbId";
 const roundNotFound = () => NextResponse.json({error: "Runda ne postoji."}, {status: STATUS.NotFound});
 
 // Who plays the round: the saved lineup, or the suggested one (last round's players, or the founders). For the players
-// of the round while it is open (it lists both teams' usernames); a finished round's for admins only.
+// of the round while it is open (it lists both teams' usernames); a finished round's only for whoever runs the table
+// (the admin, the organizer of its tournament: managesRound, #83).
 export async function GET(request: NextRequest, {params}: {params: {id: string}}) {
   const auth = await requireUser(request);
   if (auth.response) return auth.response;
@@ -17,9 +18,10 @@ export async function GET(request: NextRequest, {params}: {params: {id: string}}
   try {
     const roundId = Number(params.id);
     if (!isDbId(roundId)) return roundNotFound();
-    if (!(await canPlayRound(auth.user, roundId))) return notYourRoundResponse();
+    const {allowed, manages} = await lineupAccess(auth.user, roundId);
+    if (!allowed) return notYourRoundResponse();
 
-    const lineup = await getLineup(roundId, auth.user);
+    const lineup = await getLineup(roundId, auth.user, manages);
     if (lineup === "finished") return NextResponse.json({error: ROUND_FINISHED}, {status: STATUS.Forbidden});
     return NextResponse.json(lineup, {status: STATUS.OK});
   } catch (error) {
@@ -27,8 +29,8 @@ export async function GET(request: NextRequest, {params}: {params: {id: string}}
   }
 }
 
-// Confirms the lineup (Potvrdi i počni); a player of either team, or an admin, can set it, an admin also for a
-// finished round (Tko igra before a table's scorepad)
+// Confirms the lineup (Potvrdi i počni); a player of either team, or whoever runs the table, can set it, and whoever
+// runs it also for a finished round (Tko igra before a table's scorepad)
 export async function PUT(request: NextRequest, {params}: {params: {id: string}}) {
   const auth = await requireUser(request);
   if (auth.response) return auth.response;
@@ -36,9 +38,10 @@ export async function PUT(request: NextRequest, {params}: {params: {id: string}}
   try {
     const roundId = Number(params.id);
     if (!isDbId(roundId)) return roundNotFound();
-    if (!(await canPlayRound(auth.user, roundId))) return notYourRoundResponse();
+    const {allowed, manages} = await lineupAccess(auth.user, roundId);
+    if (!allowed) return notYourRoundResponse();
 
-    await saveLineup(roundId, LineupSaveValidation.parse(await request.json()), {admin: isAdmin(auth.user)});
+    await saveLineup(roundId, LineupSaveValidation.parse(await request.json()), {admin: manages});
     return NextResponse.json({message: "Postava je spremljena."}, {status: STATUS.OK});
   } catch (error) {
     return errorResponse(error, "Postava nije spremljena.");

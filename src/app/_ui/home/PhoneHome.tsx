@@ -3,11 +3,11 @@
 import useBurza from "@/app/_hooks/useBurza";
 import {useManages} from "@/app/_hooks/useCan";
 import useAdminViewStore from "@/app/_store/adminViewStore";
-import {useSelectedLeagueId} from "@/app/_hooks/useLeagues";
+import {useLeagueFor} from "@/app/_hooks/useLeagues";
 import useMySchedule from "@/app/_hooks/useMySchedule";
 import useOpenTable from "@/app/_hooks/useOpenTable";
 import useStartGame from "@/app/_hooks/useStartGame";
-import {currentLeagueHref} from "@/app/_lib/league";
+import {currentLeagueHref, ownLeagueId} from "@/app/_lib/league";
 import {color, shadow} from "@/app/_styles/tokens";
 import {Brand} from "@/app/_ui/auth/AuthFrame";
 import {BurzaHomeCard, HomeTile, NextNightCard, NextNightPlaceholder, nextNight} from "@/app/_ui/home/HomeCards";
@@ -169,11 +169,12 @@ function RatingChip({rating}: {rating: number}) {
 
 // Početna · Liga: the league's Home as it was before the tournaments (only a league's table on the top card)
 function LeagueHome() {
-  const leagueId = useSelectedLeagueId();
   const {table: openTable, loading: openTableLoading} = useOpenTable("league");
   const {start, starting, error} = useStartGame({scope: "league"});
   const {schedule, error: scheduleError, reload: reloadSchedule} = useMySchedule();
   const next = nextNight(schedule);
+  // Dnevni i Ukupni poredak and Sponzori lige: the picked league, else the one on the night card (#29)
+  const leagueId = useLeagueFor(ownLeagueId(schedule, scheduleError));
   const {posts} = useBurza();
   const now = useNow();
   // the team at the table tonight that is here (Tu smo): Odlazimo under Započni igru
