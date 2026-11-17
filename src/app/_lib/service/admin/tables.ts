@@ -100,6 +100,17 @@ export async function refuseUnlessMyTable(roundId: number, viewer: Viewer): Prom
   if (!tournament || !canManageTournament(viewer, tournament)) throw new ForbiddenError(NOT_YOUR_TOURNAMENT);
 }
 
+// refuseUnlessMyTable as a yes or no: false for a table that isn't the viewer's, or doesn't exist
+export async function isMyTable(roundId: number, viewer: Viewer): Promise<boolean> {
+  try {
+    await refuseUnlessMyTable(roundId, viewer);
+    return true;
+  } catch (error) {
+    if (error instanceof ForbiddenError || error instanceof NotFoundError) return false;
+    throw error;
+  }
+}
+
 // The table and the league or tournament it belongs to, with that locked for edits (same lock as round creation)
 async function loadTable(tx: Tx, roundId: number): Promise<{table: TableRound; competition: Competition}> {
   const competition = await tableCompetition(roundId, tx);

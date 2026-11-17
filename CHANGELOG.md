@@ -2,6 +2,13 @@
 
 What the commits changed for the people using the app, newest first. The reasons and details are in DECISIONS.md.
 
+## 17.11.2026 · Organizator vodi stolove svog turnira
+
+On development (#83).
+
+### Admin
+- **Organizator** na stolu svog turnira (Upravljanje turnirom → Kola → Stol) sad otvara **Tko igra**, potvrđuje **Potvrdi i počni** i upisuje igre na semaforu kao admin, i na već odigranom stolu. Dosad je dobivao "Ne igraš u ovoj rundi.". Stolovi tuđeg turnira i dalje su zatvoreni.
+
 ## 17.11.2026 · Početna otvara tvoju ligu
 
 On development (#29).

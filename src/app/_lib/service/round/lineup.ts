@@ -15,7 +15,7 @@ import {isRatedRound, replayRatings} from "@/app/_lib/service/admin/recalc";
 // their place, so it can be confirmed again. An admin confirms it again every time they open a table's scorepad, a
 // finished one too: there the saved players stay on offer (deactivated or off the team since), and a change replays
 // the ratings. The members' usernames go to the players of the round while it is open (design 7c shows them under the
-// names); a finished round's lineup only to admins (lineupVisible).
+// names); a finished round's lineup only to whoever runs the table: the admin, the organizer of its tournament (lineupVisible).
 
 export const ROUND_FINISHED = "Ova runda je već završena.";
 
@@ -63,8 +63,9 @@ const teamSelect = {
   teamPlayers: {select: {player: {select: lineupPlayerSelect}}},
 } as const;
 
-// "finished": a player asking for a round that is over (the route answers 403 with ROUND_FINISHED)
-export async function getLineup(roundId: number, viewer: Viewer): Promise<Lineup | "finished"> {
+// "finished": a player asking for a round that is over (the route answers 403 with ROUND_FINISHED). managesTable: the
+// viewer runs this table (managesRound), so a finished one's lineup is theirs to see and correct
+export async function getLineup(roundId: number, viewer: Viewer, managesTable?: boolean): Promise<Lineup | "finished"> {
   const round = await prisma.round.findUnique({
     where: {id: roundId},
     select: {
@@ -79,7 +80,7 @@ export async function getLineup(roundId: number, viewer: Viewer): Promise<Lineup
     },
   });
   if (!round) throw new NotFoundError("Runda ne postoji.");
-  if (!lineupVisible(viewer, round)) return "finished";
+  if (!lineupVisible(viewer, round, managesTable)) return "finished";
 
   const saved = round.roundPlayers.length > 0;
   const photos = await photoContext(viewer);
