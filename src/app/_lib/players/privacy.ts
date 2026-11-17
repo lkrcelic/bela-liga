@@ -86,9 +86,10 @@ export function rosterView(players: RosterPlayer[]): RosterEntry[] {
 // A round's lineup (GET /api/rounds/[id]/lineup) lists both teams with their players, for Tko igra ovu rundu?, which
 // opens while the round is still to be played: a player of the round gets it only then (the route checks that they
 // play it), an admin always. Usernames are public now (#88), so that isn't the reason any more; what keeps it is the
-// screen itself — its button confirms who played, and for a finished round only an admin may save that (saveLineup).
-export function lineupVisible(viewer: Viewer, round: {open: boolean}): boolean {
-  return round.open || isAdminRole(viewer);
+// screen itself — its button confirms who played, and for a finished round only whoever runs the table (the admin, or
+// the organizer of its tournament: managesRound) may save that (saveLineup).
+export function lineupVisible(viewer: Viewer, round: {open: boolean}, managesTable = isAdminRole(viewer)): boolean {
+  return round.open || managesTable;
 }
 
 // ---------- profile photos ----------
