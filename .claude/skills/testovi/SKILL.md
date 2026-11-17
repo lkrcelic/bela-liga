@@ -18,7 +18,7 @@ Whoever writes the code writes its test, in the same commit. No routine writes t
 
 - **Often two.** A flow change that also changes a rule carries a unit test for the rule and a Playwright test for the flow.
 - **Logic inside a component** moves into a pure function in `src/app/_lib/` and is tested there (`ui/lineupPass.ts`, `smokingUi`, `ratingsUi`). There is no jsdom.
-- **Until the Playwright suite exists** (`e2e/playwright.config.ts`), a flow change carries a unit or db test, and the commit message says "no E2E yet".
+- **Playwright runs locally**, on a production build of your checkout (`npx prisma generate && npx next build`): `e2e/local/app.sh start <id>` outside the sandbox (podman Postgres, a fresh generated world, `next start` on the id's port; ids `smoke`, `a`, `b`, `c1`…`c9`), then `E2E_ID=<id> npx playwright test -c e2e <spec files>`. Fixtures and helpers: `e2e/sekcije/README.md`; each flow and its test: `e2e/FLOWS.md`.
 
 ## 2. Bug fix: red first
 

@@ -1,8 +1,8 @@
 #!/bin/sh
 # e2e/local/app.sh start|restart|stop|status <id>
-# One app server and one database per suite section (E2E_SUITE_PLAN.md), so sections run side by side without
-# touching each other's data: a fresh database bela_e2e_<id> in the podman Postgres bela-e2e-pg with the generated
-# world, and `next start` of the shared production build (the e2e-suite worktree) on the section's port.
+# One app server and one database per id (E2E_SUITE_PLAN.md), so runs go side by side without touching each other's
+# data: a fresh database bela_e2e_<id> in the podman Postgres bela-e2e-pg with the generated world, and `next start` of
+# the production build of this checkout (E2E_APP_DIR=<folder> serves another one's) on the id's port.
 # Its run folder (e2e/local/run/<id>/ in the caller's worktree) holds app.json, the manifest and the logs.
 # `restart` starts the server again on the database as it is (no new world), e.g. to pick up a change to this script.
 # Run it outside the Claude sandbox: it starts podman and talks to localhost.
@@ -20,8 +20,7 @@ case "$ID" in
 esac
 
 HERE=$(git rev-parse --show-toplevel)
-REPO=$(cd "$(git rev-parse --git-common-dir)/.." && pwd)
-APP_DIR=${E2E_APP_DIR:-$REPO/.claude/worktrees/e2e-suite}
+APP_DIR=${E2E_APP_DIR:-$HERE}
 RUN=$HERE/e2e/local/run/$ID
 CONTAINER=bela-e2e-pg
 DB=bela_e2e_$ID
@@ -87,7 +86,7 @@ case "$CMD" in
     ;;
 
   start)
-    [ -f "$APP_DIR/.next/BUILD_ID" ] || { echo "app.sh: no production build in $APP_DIR (the lead builds it once: npx prisma generate && npx next build there)" >&2; exit 1; }
+    [ -f "$APP_DIR/.next/BUILD_ID" ] || { echo "app.sh: no production build in $APP_DIR: run npx prisma generate && npx next build there first" >&2; exit 1; }
     stop
 
     podman machine start >/dev/null 2>&1 || true

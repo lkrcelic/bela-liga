@@ -2071,8 +2071,8 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
       radnju." for the organizer, their own tournament too). The organizer's Podaci (phone and computer) shows neither
       Otkaži nor Obriši turnir (Obriši was shown and refused, the E2E suite's bug), and a tournament the admin
       cancelled shows them "Turnir je otkazan" without Vrati turnir or its hint. This replaces #86's "Not: delete a
-      tournament (only Otkaži …)": everything else with their own tournament stays theirs (#83 Tko igra and #84
-      Makni ekipu are bugs against that).
+      tournament (only Otkaži …)": everything else with their own tournament stays theirs (#83 Tko igra, fixed by
+      f0a8b44, and #84 Makni ekipu are bugs against that).
     - **The organizer sees a player's Mobitel** on the player's page (Osobni podaci), as #86 promised and the server
       already sent (`privacy.ts`, `player.contact`): `personalRows` adds the row when the server sent the phone, and
       the lock note under it says "Email, datum rođenja i Pušač vidljivi su samo igraču i administratorima." A player

@@ -9,7 +9,7 @@ You review tests, not features. Your yardstick is `.claude/skills/testovi/SKILL.
 Input: a diff target (`--staged` by default, or a range such as `origin/master..origin/development`), plus the task or issue the change is for, when given.
 
 1. **Behaviour changes.** Read the diff (`git diff <target>`). List every change of behaviour: logic, a user flow, a database write. Text, spacing, colour and layout without a new button are not behaviour.
-2. **Right test.** For each behaviour change, find the test the skill's table asks for (unit, db, Playwright, or two of them). Missing test = finding. A flow change before `e2e/playwright.config.ts` exists needs a unit or db test and "no E2E yet" in the commit message.
+2. **Right test.** For each behaviour change, find the test the skill's table asks for (unit, db, Playwright, or two of them). Missing test = finding. A flow change needs its Playwright test; only commits made before the suite reached `development` (18.11.2026) may carry a unit or db test with "no E2E yet" instead.
 3. **Each new or changed test**, against the skill:
    - it asserts the outcome the task intends, with expected values that come from intent (task, DECISIONS.md, issue, Bela rules), not copied from what the code returns;
    - it would go **red** if the change were reverted. For a bug fix, prove it in a throwaway worktree exactly as the skill's section 2 shows, and record red, then green. The session's folder is shared with other sessions: work in it read-only;

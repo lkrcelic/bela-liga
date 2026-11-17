@@ -27,7 +27,7 @@ komentarom `// BUG:`: test opisuje kako bi trebalo biti, a prolazi dok greška p
 | Sve API rute × gost, igrač, organizator, admin | sve | `dozvole/b-dozvole.spec.ts` › jedan test po retku ("METHOD /route · guard · note") |
 | Server kaže svakoj roli što smije, kao mapa rola | sve | `dozvole/b-dozvole.spec.ts` › /api/auth/me tells each role what the capability map lets it do |
 | Svaki API handler ima redak u tablici dozvola | — | `dozvole/b-dozvole.spec.ts` › every handler of src/app/api has a row in the table, and every row a handler |
-| Organizator: Tko igra na stolu svog turnira | organizator | `dozvole/b-dozvole.spec.ts` › GET/PUT /api/rounds/[id]/lineup · … · organizer (bug #83) |
+| Organizator: Tko igra na stolu svog turnira | organizator | `dozvole/b-dozvole.spec.ts` › GET/PUT /api/rounds/[id]/lineup · … · organizer |
 | Organizator: Makni ekipu na svom turniru | organizator | `dozvole/b-dozvole.spec.ts` › DELETE /api/admin/tournaments/[id]/teams/[teamId] · … · organizer (bug #84) |
 
 ## Prijava i registracija
@@ -123,7 +123,7 @@ komentarom `// BUG:`: test opisuje kako bi trebalo biti, a prolazi dok greška p
 | Isključi ekipu / Vrati | organizator | `turniri/c7-dan-turnira.spec.ts` › once their tournament has started the organizer takes a team out… |
 | Uredi ishod preskočenog stola | organizator | `turniri/c7-dan-turnira.spec.ts` › a table skipped at 10 minutes gets the organizer's Uredi ishod… |
 | Vrati stol | organizator | `turniri/c7-dan-turnira.spec.ts` › Vrati stol puts the organizer's skipped table back in play… |
-| Semafor svog stola (Tko igra, Upiši igru) | organizator | `turniri/c7-dan-turnira.spec.ts` › the organizer opens a table of their Kolo 1… (bug #83); › the scorepad's routes take the organizer's hands… |
+| Semafor svog stola (Tko igra, Upiši igru) | organizator | `turniri/c7-dan-turnira.spec.ts` › the organizer opens a table of their Kolo 1…; › the scorepad's routes take the organizer's hands… |
 | Tuđi turnir skriven na ekranu | organizator | `turniri/c7-tudi-turnir.spec.ts` › the admin's tournament (open/live) is not in the organizer's Turniri…; › a table of the admin's live tournament shows the organizer no scorepad…; › …tells the organizer it isn't theirs… (bug #86) |
 | Tuđi turnir: 403 na svakoj ruti | organizator | `turniri/c7-tudi-turnir.spec.ts` › on the admin's tournament (open/live) the organizer's … is refused with 403 and changes nothing |
 | Adminove stranice na mobitelu (liga, Sponzori, igrač) | organizator | `turniri/c7-admin-stranice.spec.ts` › on the phone the league's management…; › a player's page shows the organizer none of the admin's controls…; › …the player's phone number |

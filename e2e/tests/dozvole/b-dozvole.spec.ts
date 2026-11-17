@@ -191,9 +191,8 @@ const ROWS: Row[] = [
   // Tko igra: the players of the table and the admin
   {method: "GET", route: "/api/rounds/[id]/lineup", note: "the player's table", params: (i) => ({id: i.playerTable.round}), guard: "user", allowed: status(200), as: {organizer: NOT_MY_ROUND}},
   {method: "GET", route: "/api/rounds/[id]/lineup", note: "someone else's table", params: (i) => ({id: i.otherTable.round}), guard: "user", allowed: status(200), as: {player: NOT_MY_ROUND, organizer: NOT_MY_ROUND}},
-  // BUG #83: the organizer's scorepad on their own tournament opens on Tko igra (needsLineup), and Tko igra is refused them.
-  // A finished table (the world's only one of the organizer's) also passes lineupVisible and saveLineup's admin flag,
-  // which let an admin past a finished round: the organizer runs their own tournament's tables as the admin does (#86).
+  // the organizer runs their own tournament's tables as the admin does (#86; #83, fixed by f0a8b44), a finished one too
+  // (the world's only table of the organizer's): canPlayRound, lineupVisible and saveLineup let them past
   {
     method: "GET",
     route: "/api/rounds/[id]/lineup",
@@ -202,15 +201,10 @@ const ROWS: Row[] = [
     guard: "user",
     allowed: status(200),
     as: {player: NOT_MY_ROUND},
-    bug: {
-      role: "organizer",
-      text: "#83: Tko igra treats the organizer as a stranger at their own tournament's table: canPlayRound (403 Ne igraš u ovoj rundi.), then lineupVisible (403 Ova runda je već završena. on a finished table) let only the ADMIN role through",
-    },
   },
   {method: "PUT", route: "/api/rounds/[id]/lineup", note: "the player's table", params: (i) => ({id: i.playerTable.round}), body: INVALID, guard: "user", allowed: status(400), as: {organizer: NOT_MY_ROUND}},
   {method: "PUT", route: "/api/rounds/[id]/lineup", note: "someone else's table", params: (i) => ({id: i.otherTable.round}), body: INVALID, guard: "user", allowed: status(400), as: {player: NOT_MY_ROUND, organizer: NOT_MY_ROUND}},
-  // BUG #83: as above, Potvrdi i počni. INVALID fails before saveLineup, so this row sees canPlayRound alone; saveLineup's
-  // own admin flag (Ova runda je već završena. on a finished table) is the same bug's third check
+  // as above, Potvrdi i počni. INVALID fails before saveLineup, so this row sees canPlayRound alone
   {
     method: "PUT",
     route: "/api/rounds/[id]/lineup",
@@ -220,10 +214,6 @@ const ROWS: Row[] = [
     guard: "user",
     allowed: status(400),
     as: {player: NOT_MY_ROUND},
-    bug: {
-      role: "organizer",
-      text: "#83: Potvrdi i počni treats the organizer as a stranger at their own tournament's table: canPlayRound (403 Ne igraš u ovoj rundi.), then saveLineup's admin flag on a finished table let only the ADMIN role through",
-    },
   },
   {method: "POST", route: "/api/rounds/[id]/attendance", params: (i) => ({id: i.playerTable.round}), body: INVALID, guard: "user", allowed: status(400)},
   // Jesu li … za stolom? is the question of the table's players alone, the admin's neither (they have Uredi ishod):
