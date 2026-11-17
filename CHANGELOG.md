@@ -4,14 +4,14 @@ What the commits changed for the people using the app, newest first. The reasons
 
 ## 17.11.2026 · Organizator vodi stolove svog turnira
 
-On development (#83).
+Live since 17.11. (8351661, #83).
 
 ### Admin
 - **Organizator** na stolu svog turnira (Upravljanje turnirom → Kola → Stol) sad otvara **Tko igra**, potvrđuje **Potvrdi i počni** i upisuje igre na semaforu kao admin, i na već odigranom stolu. Dosad je dobivao "Ne igraš u ovoj rundi.". Stolovi tuđeg turnira i dalje su zatvoreni.
 
 ## 17.11.2026 · Početna otvara tvoju ligu
 
-On development (#29).
+Live since 17.11. (8351661, #29).
 
 ### Changed
 - Na Početnoj **Dnevni poredak**, **Ukupni poredak** i **Sponzori lige** pokazuju ligu tvoje sljedeće večeri (kao **Raspored**), a ne ligu koja se zadnja igrala. Liga izabrana u izborniku lige i dalje ima prednost.
