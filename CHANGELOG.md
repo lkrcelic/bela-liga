@@ -2,6 +2,13 @@
 
 What the commits changed for the people using the app, newest first. The reasons and details are in DECISIONS.md.
 
+## 17.11.2026 · Početna otvara tvoju ligu
+
+On development (#29).
+
+### Changed
+- Na Početnoj **Dnevni poredak**, **Ukupni poredak** i **Sponzori lige** pokazuju ligu tvoje sljedeće večeri (kao **Raspored**), a ne ligu koja se zadnja igrala. Liga izabrana u izborniku lige i dalje ima prednost.
+
 ## 16.11.2026 · Dodaj ekipu na turnir potvrđuje dodavanje
 
 Live since 16.11. (d77d5cd, #30).

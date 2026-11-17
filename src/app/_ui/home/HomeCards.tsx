@@ -1,7 +1,8 @@
 "use client";
 
-import {BurzaPost, MyLeague, MySchedule} from "@/app/_interfaces/burza";
-import {gatheringLabel, isSafeUrl, nextNightIndex, NightLocation, nightLabel, nightTimeLabel} from "@/app/_lib/nights";
+import {BurzaPost, MyLeague} from "@/app/_interfaces/burza";
+import {gatheringLabel, isSafeUrl, NightLocation, nightLabel, nightTimeLabel} from "@/app/_lib/nights";
+export {nextNight} from "@/app/_lib/league";
 import {adCount, namesAndMore, teamsAsking, teamsLooking} from "@/app/_lib/ui/burza";
 import {asksAdmin, leagueArrivalPhase} from "@/app/_lib/leagueArrival";
 import {initials} from "@/app/_lib/ui/text";
@@ -23,16 +24,6 @@ import {LeagueArrival, useNow} from "./LeagueArrival";
 
 // Početna's Burza igrača cards (Claude Design "Burza igrača · spojeno", Početna)
 
-// The player's next league night: the soonest one of a league where their team is active, else of one where it is
-// inactive (an admin can still switch an inactive team on for a night, so it keeps its league's nights)
-export function nextNight(schedule: MySchedule | null): {league: MyLeague; night: string} | null {
-  const leagues = schedule?.leagues ?? [];
-  for (const league of [...leagues.filter((l) => l.active), ...leagues.filter((l) => !l.active)]) {
-    const i = nextNightIndex(league.nights, schedule!.today);
-    if (i >= 0) return {league, night: league.nights[i]};
-  }
-  return null;
-}
 
 // Where the night gathers, on the navy card: a pin, "19:30 · Caffe bar Kartaš", the address, and Karta when the place
 // has a link (it opens Google Maps in a new tab or the Maps app)

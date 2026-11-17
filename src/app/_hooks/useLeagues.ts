@@ -2,6 +2,7 @@
 
 import {getLeaguesAPI} from "@/app/_fetchers/league/leagues";
 import {LeagueSummary} from "@/app/_interfaces/league";
+import {homeLeagueId} from "@/app/_lib/league";
 import {NightLocation} from "@/app/_lib/nights";
 import {count, NOUN} from "@/app/_lib/ui/text";
 import {useEffect, useState} from "react";
@@ -147,6 +148,12 @@ export function chooseLeague(id: number) {
 
 // The picked league, or the one being played now: undefined while loading, null when there are no leagues
 export function useSelectedLeagueId(): number | null | undefined {
+  return useLeagueFor(null);
+}
+
+// The picked league, or else own (the player's league: Početna · Liga, #29), or else the one being played now.
+// own undefined: still loading, so is the result
+export function useLeagueFor(own: number | null | undefined): number | null | undefined {
   const {leagues, error} = useLeagueList();
   const [picked, setPicked] = useState<number | null>(null);
   useEffect(() => {
@@ -156,11 +163,8 @@ export function useSelectedLeagueId(): number | null | undefined {
       chosenListeners.delete(setPicked);
     };
   }, []);
-  if (leagues) {
-    if (picked != null && leagues.some((l) => l.id === picked)) return picked;
-    return leagues.find((l) => l.active)?.id ?? null;
-  }
-  return error ? null : undefined;
+  if (!leagues && error) return null;
+  return homeLeagueId(picked, leagues ?? undefined, own);
 }
 
 // Fetches the list again after a league was created (here or elsewhere), and shows it in every mounted picker
