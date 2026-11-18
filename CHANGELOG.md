@@ -15,6 +15,7 @@ On development since 18.11. (with the E2E suite, DECISIONS #99).
 
 ### Changed
 - Igrač više ne može dobiti "Prvo kolo počinje u ." bez vremena.
+- **Večer lige** (admin) od druge večeri sezone broji večerašnja kola: "Kolo 22 · 2. od 3 · u tijeku" i "2 / 2 kola odigrano", umjesto "Kolo 22 od 22" i "8 / 8" (#89).
 
 ## 17.11.2026 · Organizator vodi stolove svog turnira
 
