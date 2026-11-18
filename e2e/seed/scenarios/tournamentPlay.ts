@@ -3,7 +3,8 @@
 //   random, the rest Swiss by the tournament standings, a bye for an odd number, and in the bigger one a Kolo 1
 //   no-show with its automatic one-month ban, exactly the rows the app leaves behind.
 // - Today's are made through the app's services: one live (Kolo 1 played, Kolo 2 with a no-show, a skipped table the
-//   admin gave to a team, a finished table and one being played), one in its arrival window, one ready for Kolo 1.
+//   admin gave to a team, a finished table and one being played; dated at the league night, so before 06:00 it is
+//   yesterday's), one in its arrival window, one ready for Kolo 1.
 import type {Team} from "@prisma/client";
 import {BYE_TEAM_ID} from "@/app/_lib/bye";
 import {leagueDateString} from "@/app/_lib/dates";
@@ -223,9 +224,9 @@ function tournamentFields(spec: FinishedSpec, day: Date) {
   };
 }
 
-// Zagreb wall-clock "HH:MM" of a moment, or null when it falls on another day than today
-function zagrebTime(ctx: Ctx, moment: Date): string | null {
-  if (leagueDateString(moment) !== isoDay(ctx.today)) return null;
+// Zagreb wall-clock "HH:MM" of a moment, or null when it falls on another day than day (YYYY-MM-DD)
+function zagrebTime(day: string, moment: Date): string | null {
+  if (leagueDateString(moment) !== day) return null;
   return new Intl.DateTimeFormat("en-GB", {timeZone: "Europe/Zagreb", hour: "2-digit", minute: "2-digit", hourCycle: "h23"}).format(moment);
 }
 
@@ -252,19 +253,17 @@ export async function seedTodayTournaments(ctx: Ctx, people: People, pool: TeamP
   reserve(adminTeam);
 
   // --- live: started an hour ago, Kolo 1 played, Kolo 2 in every table state
-  // in the first 70 minutes after midnight that hour was yesterday: then it started at midnight, so its sign-ups close
-  // all the same (Kolo 1 needs them closed)
-  // 00:01 rather than midnight, so Okupljanje (00:00) is before it (DECISIONS #99), unless the seed runs in that very
-  // first minute
-  const past = zagrebTime(ctx, new Date(ctx.now.getTime() - 70 * 60_000));
-  const startedAt = past && past !== "00:00" ? past : zagrebTime(ctx, new Date(ctx.now.getTime() - 60_000)) ? "00:01" : "00:00";
-  // half an hour before the start, or midnight when that was yesterday (every tournament has both times)
-  const half = zagrebTime(ctx, new Date(ctx.now.getTime() - 100 * 60_000));
-  const gatheredAt = half && half < startedAt ? half : "00:00";
+  // Dated at the league night, like a tournament still played after midnight: until 06:00 that is yesterday. The admin's
+  // corrections reopen a table only on that night (reopenCheck in hands.ts), and Uživo calls it Jučer. When an hour ago
+  // is already past the night's midnight, it started at 23:59, with Okupljanje half an hour before (DECISIONS #99)
+  const night = ctx.tonightString;
+  const startedAt = zagrebTime(night, new Date(ctx.now.getTime() - 70 * 60_000)) ?? "23:59";
+  const half = zagrebTime(night, new Date(ctx.now.getTime() - 100 * 60_000));
+  const gatheredAt = half && half < startedAt ? half : "23:29";
   const live = await createTournament(
     await atPitanik(ctx, tournamentRequest({
       name: "Subotnji turnir uživo",
-      date: today,
+      date: night,
       gathering_time: gatheredAt,
       start_time: startedAt,
       max_teams: 12,
@@ -324,8 +323,8 @@ export async function seedTodayTournaments(ctx: Ctx, people: People, pool: TeamP
   ctx.catalog.tournaments.live = {id: live, name: "Subotnji turnir uživo", state: "Uživo: Kolo 1 odigrano; Kolo 2 nedolazak, dodijeljena pobjeda, odigran stol i stolovi u igri"};
 
   // --- arrival window open now: gathering 15 min ago, start in an hour; the player's team hasn't said Tu smo yet
-  const gathering = zagrebTime(ctx, new Date(ctx.now.getTime() - 15 * 60_000));
-  const startsAt = zagrebTime(ctx, new Date(ctx.now.getTime() + 60 * 60_000));
+  const gathering = zagrebTime(today, new Date(ctx.now.getTime() - 15 * 60_000));
+  const startsAt = zagrebTime(today, new Date(ctx.now.getTime() + 60 * 60_000));
   const arrivalOpen = gathering != null && startsAt != null;
   const arrivalDate = arrivalOpen ? today : isoDay(addDays(ctx.today, 1));
   const arrival = await createTournament(
