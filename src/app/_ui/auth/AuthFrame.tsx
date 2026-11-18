@@ -19,12 +19,27 @@ export function Brand({size = 56, light = false, variant = "auth"}: {size?: numb
   }
   // the bell stands a little taller than the wordmark
   const bell = Math.round(size * 1.15);
+  const gap = Math.round(size * 0.2);
+  // The word never breaks (#31: "Belatronik / a" on 360 px phones). It keeps its size while it fits beside the bell, the
+  // bell gives way first (down to 30 px), and on a narrower block the word shrinks with it: "Belatronika" is about
+  // 5.2 em wide, so 5.4 em leaves a margin.
+  const fitSize = `min(${size * 0.82}px, calc((100cqi - ${30 + gap}px) / 5.4))`;
   return (
-    <Box sx={{display: "flex", alignItems: "flex-end", gap: `${Math.round(size * 0.2)}px`}}>
+    <Box sx={{display: "flex", alignItems: "flex-end", gap: `${gap}px`, containerType: "inline-size"}}>
       {/* eslint-disable-next-line @next/next/no-img-element -- a small static mark; next/image adds nothing */}
       <Box component="img" src="/bell.webp" alt="" draggable={false} sx={{width: Math.round(bell * 0.94), height: "auto", flex: "0 1 auto", minWidth: 30, display: "block"}} />
       <Box
-        sx={{flex: "0 1 auto", minWidth: 0, fontFamily: font.display, fontSize: size * 0.82, fontWeight: 800, lineHeight: 0.92, letterSpacing: "-.03em", color: light ? color.white : color.ink, overflowWrap: "anywhere"}}
+        sx={{
+          flex: "0 0 auto",
+          fontFamily: font.display,
+          fontSize: size * 0.82,
+          "@supports (width: 1cqi)": {fontSize: fitSize},
+          fontWeight: 800,
+          lineHeight: 0.92,
+          letterSpacing: "-.03em",
+          color: light ? color.white : color.ink,
+          whiteSpace: "nowrap",
+        }}
       >
         {APP_NAME}
       </Box>
