@@ -12,6 +12,7 @@ import {leagueClock} from "@/app/_lib/dates";
 import {CreateRoundDraft, isPlaying, MAX_ROUNDS, MAX_WINDOW, switchTeams} from "@/app/_lib/createRoundDraft";
 import {onBeforeLogout} from "@/app/_utils/beforeLogout";
 import {smokingSummary} from "@/app/_lib/ui/smoking";
+import {withShortTeam} from "@/app/_lib/ui/shortTeam";
 import {newRoundsLabel, publishedLabel, PublishedTonight, tonightRoundsDefault, waitingLabel} from "@/app/_lib/ui/adminTonight";
 import {count, matchesQuery, NOUN, plural} from "@/app/_lib/ui/text";
 import {color, font, shadow, tint} from "@/app/_styles/tokens";
@@ -35,7 +36,8 @@ export type OutReason = "banned" | "absent" | "inactive" | "off";
 export const OUT_LABEL: Record<OutReason, string> = {banned: "Zabrana", absent: "Nije tu", inactive: "Neaktivna", off: "Isključena"};
 
 // The chip beside a team in the list: its ban; on a night with Potvrda dolaska whether it came ("Tu · 19:42", "Otišla ·
-// 22:10", "Nije potvrdila"); otherwise Neaktivna. title: what a hover says.
+// 22:10", "Nije potvrdila"); otherwise Neaktivna; fewer than two active players adds "1 igrač" in red (#41,
+// withShortTeam). title: what a hover says.
 export type TeamChip = {label: string; tone: "green" | "muted" | "red"; title?: string};
 
 // A team's arrival after the admin's switch, before the server answers
@@ -283,7 +285,8 @@ export function useCreateRound(
     else change({sitting_out: switchTeams(teams ?? [], sittingOut, ids, !allOn)});
   };
 
-  const chipOf = (t: LeagueTeam): TeamChip | null => {
+  const chipOf = (t: LeagueTeam): TeamChip | null => withShortTeam(baseChip(t), t.activePlayers, t.ban != null);
+  const baseChip = (t: LeagueTeam): TeamChip | null => {
     if (t.ban) return {label: playBanChip(t.ban), tone: "red", title: `${playBanText(t.ban)} · ukida se na stranici ekipe`};
     if (arrivalNight) {
       const a = arrivals!.teams[t.id];

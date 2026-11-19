@@ -8,6 +8,7 @@ import AdminBadge from "@/app/_ui/admin/AdminBadge";
 import {sameLineup} from "@/app/_lib/lineup";
 import type {Lineup, LineupMember, LineupTeam} from "@/app/_lib/service/round/lineup";
 import {leaveRoundPages, passLineup} from "@/app/_lib/ui/lineupPass";
+import {shortLineupNotes} from "@/app/_lib/ui/shortTeam";
 import {useTransitionRouter} from "@/app/_lib/viewTransitions";
 import {color, font, teamColor, tint} from "@/app/_styles/tokens";
 import {buttonBase, Card, CenteredSpinner, DesktopOnlyNote, DesktopShell, ErrorNote, IconCircleButton, InitialsAvatar, PrimaryButton, Screen, ScrollArea} from "@/app/_ui/sp";
@@ -138,8 +139,17 @@ export default function LineupPage() {
   const startLabel = finished ? "Potvrdi" : starts ? "Potvrdi i počni" : "Potvrdi i nastavi";
   const title = finished ? TITLE_FINISHED : TITLE;
   const status = loadError ? <ErrorNote onRetry={load}>{loadError}</ErrorNote> : !lineup ? <CenteredSpinner /> : null;
+  // #41: a team that can't field two players is said above Potvrdi (it can still be confirmed with one)
+  const shortNotes = shortLineupNotes(teams, finished);
   const footer = (
     <Box sx={{display: "flex", flexDirection: "column", alignItems: "center", gap: "10px"}}>
+      {shortNotes.length > 0 && (
+        <Box role="status" aria-label="Ekipa bez dva igrača" sx={{alignSelf: "stretch", display: "flex", flexDirection: "column", gap: "4px", p: "10px 14px", borderRadius: "14px", background: tint.red[10], color: color.red, fontSize: isDesktop ? 14.5 : 14, fontWeight: 600, lineHeight: 1.4, textAlign: isDesktop ? "center" : "left"}}>
+          {shortNotes.map((n) => (
+            <span key={n}>{n}</span>
+          ))}
+        </Box>
+      )}
       {saveError && <ErrorNote sx={{alignSelf: "stretch"}}>{saveError}</ErrorNote>}
       {!finished && (
         <Box aria-hidden sx={{fontFamily: font.display, fontSize: isDesktop ? 15 : 14, fontWeight: 700, color: color.muted}}>

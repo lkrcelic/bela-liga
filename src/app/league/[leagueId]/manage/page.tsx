@@ -8,6 +8,7 @@ import useLeagueNights from "@/app/_hooks/useLeagueNights";
 import useLeagueTeams from "@/app/_hooks/useLeagueTeams";
 import {useLeagueStandings} from "@/app/_hooks/useStandings";
 import {count, matchesQuery, NOUN, plural} from "@/app/_lib/ui/text";
+import {shortTeamText} from "@/app/_lib/ui/shortTeam";
 import {addTeamToLeagueAPI, removeTeamFromLeagueAPI, setLeagueTeamActiveAPI} from "@/app/_fetchers/league/leagues";
 import {color, font, shadow, tint} from "@/app/_styles/tokens";
 import {
@@ -73,7 +74,7 @@ import {ReactNode, useCallback, useEffect, useMemo, useRef, useState} from "reac
 type Filter = "all" | "active" | "inactive";
 type View = "draft" | "create" | "split" | "teams" | "rounds" | "dates" | "details" | "sponsors";
 const VIEWS: View[] = ["draft", "create", "split", "teams", "rounds", "dates", "details", "sponsors"];
-type Row = {id: number; name: string; players: string[]; played: number | null; active: boolean};
+type Row = {id: number; name: string; players: string[]; played: number | null; active: boolean; activePlayers?: number};
 type Team = NonNullable<ReturnType<typeof useLeagueTeams>["teams"]>[number];
 // a team taken out of the league waits this long for Undo before the delete is sent
 type PendingRemoval = {team: Team; index: number; timer: number};
@@ -466,8 +467,16 @@ function ManageLeagueDesktop() {
                       animation: r.id === justAdded ? "spRowIn 420ms cubic-bezier(.2,.8,.2,1) both" : "none",
                     }}
                   >
-                    <Box component="span" sx={{fontSize: 16, fontWeight: 600, color: r.active ? color.ink : color.muted, ...ellipsis, [NARROW_DESKTOP]: {whiteSpace: "normal", overflowWrap: "anywhere", py: "8px"}}}>
-                      {r.name}
+                    <Box component="span" sx={{minWidth: 0, display: "flex", flexDirection: "column", [NARROW_DESKTOP]: {py: "8px"}}}>
+                      <Box component="span" sx={{fontSize: 16, fontWeight: 600, color: r.active ? color.ink : color.muted, ...ellipsis, [NARROW_DESKTOP]: {whiteSpace: "normal", overflowWrap: "anywhere"}}}>
+                        {r.name}
+                      </Box>
+                      {/* #41: it can't field two players, so it is said before the night */}
+                      {r.active && shortTeamText(r.activePlayers) && (
+                        <Box component="span" sx={{fontSize: 13, fontWeight: 600, color: color.red, ...ellipsis}}>
+                          {shortTeamText(r.activePlayers)}
+                        </Box>
+                      )}
                     </Box>
                     <Box component="span" sx={{display: "flex", gap: "6px", minWidth: 0, overflow: "hidden", opacity: r.active ? 1 : 0.55, [NARROW_DESKTOP]: {flexWrap: "wrap", py: "8px"}}}>
                       {r.players.map((p) => (

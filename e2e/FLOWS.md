@@ -53,6 +53,7 @@ komentarom `// BUG:`: test opisuje kako bi trebalo biti, a prolazi dok greška p
 | Tok | Uloga | Test |
 | --- | --- | --- |
 | Novo kolo → Tko igra večeras → Kreiraj → Skica kola → Odobri sva → Objavi → Dnevni poredak | admin | `liga/c1-novo-kolo.spec.ts` › the admin creates tonight's Kolo with Novo kolo… |
+| Ekipa s jednim aktivnim igračem: oznaka u Ekipe i Novo kolo, upozorenje na Tko igra (#41) | admin | `liga/c1-jedan-igrac.spec.ts` › a team with one active player is marked in Ekipe and Novo kolo…; › Tko igra has no warning when both teams have two players; `liga/c1-jedan-igrac.racunalo.spec.ts` › Ekipe on the computer marks a team with one active player |
 | Tko igra i upis igre (zvao → zvanja → igra → Spremi), pad i Štiglja | igrač | `liga/c1-stol.spec.ts` › Tko igra starts the table, and the hands entered on the scorepad are listed… |
 | Ispravak spremljene igre na mobitelu (1bb39ea) | igrač | `liga/c1-stol.spec.ts` › a saved hand corrected on the phone is still one hand… (1bb39ea) |
 | Završi meč (drugi dodir, #74), Meč 2, Kraj kola, Dnevni/Ukupni poredak, rejting | igrač | `liga/c1-stol.spec.ts` › Završi meč tapped twice opens Meč 2 and no new hand (#74)… |

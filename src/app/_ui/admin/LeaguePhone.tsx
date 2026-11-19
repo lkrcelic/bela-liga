@@ -15,6 +15,7 @@ import {isPlaying} from "@/app/_lib/createRoundDraft";
 import {leagueNightString} from "@/app/_lib/dates";
 import {exceptionLabel, gatheringLabel, NIGHT_STATUS_LABEL, NightStatus, nightLabel, nightsLeftLabel, nightStatus, playedNightRemovalText} from "@/app/_lib/nights";
 import {count, matchesQuery, NOUN} from "@/app/_lib/ui/text";
+import {shortTeamText} from "@/app/_lib/ui/shortTeam";
 import {inKolaRow, kolaRows} from "@/app/_lib/ui/adminTonight";
 import {bothPlacesNote, kolaRowName, placesOfNights} from "@/app/league/[leagueId]/manage/RoundsView";
 import {replaceAddress, TransitionLink, useTransitionRouter} from "@/app/_lib/viewTransitions";
@@ -274,6 +275,8 @@ function TeamsTab({leagueId, data}: {leagueId: number; data: ReturnType<typeof u
         <Box component="ul" aria-label="Ekipe lige" sx={{flex: "none", listStyle: "none", m: 0, p: 0, background: color.white, borderRadius: "22px", overflow: "hidden", boxShadow: shadow.card}}>
           {shown.map((t, i) => {
             const n = played.get(t.id);
+            // #41: it can't field two players, so it is said before the night, in red
+            const short = t.active ? shortTeamText(t.activePlayers) : null;
             return (
               <Box
                 component="li"
@@ -284,8 +287,8 @@ function TeamsTab({leagueId, data}: {leagueId: number; data: ReturnType<typeof u
                   <Box component="span" sx={{fontSize: 16, fontWeight: 600, ...ellipsis}}>
                     {t.name}
                   </Box>
-                  <Box component="span" sx={{fontSize: 13, color: color.muted, ...ellipsis}}>
-                    {!t.active ? "Neaktivna · ne ulazi u nova kola" : n != null ? count(n, NOUN.odigranoKolo) : "Još nije igrala"}
+                  <Box component="span" sx={{fontSize: 13, color: short ? color.red : color.muted, fontWeight: short ? 600 : undefined, ...ellipsis}}>
+                    {!t.active ? "Neaktivna · ne ulazi u nova kola" : short ?? (n != null ? count(n, NOUN.odigranoKolo) : "Još nije igrala")}
                   </Box>
                 </Box>
                 <Box
