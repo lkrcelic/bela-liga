@@ -6,6 +6,7 @@ import {updatePhoneAPI} from "@/app/_fetchers/player/updatePhone";
 import {updateSmokerAPI} from "@/app/_fetchers/player/updateSmoker";
 import {updateUsernameAPI} from "@/app/_fetchers/player/updateUsername";
 import useIsDesktop from "@/app/_hooks/useIsDesktop";
+import useKeyboardInset from "@/app/_hooks/useKeyboardInset";
 import useLogout from "@/app/_hooks/useLogout";
 import {useRole} from "@/app/_hooks/useCan";
 import useMyTeams from "@/app/_hooks/useMyTeams";
@@ -47,7 +48,7 @@ import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import {Box, Skeleton} from "@mui/material";
 import {useTransitionRouter} from "@/app/_lib/viewTransitions";
-import {useCallback, useEffect, useMemo, useState} from "react";
+import {useCallback, useEffect, useMemo, useRef, useState} from "react";
 
 export default function ProfilePage() {
   const router = useTransitionRouter();
@@ -88,6 +89,27 @@ export default function ProfilePage() {
   useEffect(() => {
     load();
   }, [load]);
+
+  // Phone, keyboard open (Mobitel, Korisničko ime, Datum rođenja): the field being edited and its Spremi stay in view.
+  // The keyboard either covers the bottom of the screen (iOS: only the visual viewport shrinks, `inset`) or the screen
+  // itself shrinks (Android); either way the open form is scrolled up into what is left, and Početni zaslon and Odjava
+  // step aside while the keyboard is open.
+  const keyboard = useKeyboardInset(!isDesktop);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const area = scrollRef.current;
+    if (!area) return;
+    const reveal = () => {
+      const field = document.activeElement;
+      if (field instanceof HTMLElement && field !== area && area.contains(field)) (field.closest("form") ?? field).scrollIntoView({block: "nearest"});
+    };
+    reveal();
+    // the area's own size, not the window's resize (the area takes its new height only after the window's event), and
+    // its blocks', so a hero or a list still loading above the open form doesn't push it back down
+    const watch = new ResizeObserver(reveal);
+    for (const box of [area, ...Array.from(area.children)]) watch.observe(box);
+    return () => watch.disconnect();
+  }, [keyboard.inset, isDesktop]);
 
   const name = player ? fullName(player) : "";
   const details = [
@@ -237,21 +259,26 @@ export default function ProfilePage() {
 
   return (
     <Screen fill>
-      {hero(false)}
-      {errorNote}
-      <ScrollArea bleed>
+      {/* the hero scrolls with Podaci and Moje ekipe, so an open editor has the whole screen above the buttons (#36) */}
+      <ScrollArea bleed ref={scrollRef} sx={keyboard.inset ? {pb: `${keyboard.inset}px`} : undefined}>
+        {hero(false)}
+        {errorNote}
         {detailsBlock(false)}
         {teamsBlock(false)}
       </ScrollArea>
-      <PrimaryButton icon={<HomeRoundedIcon />} onClick={() => router.push("/", "back")}>
-        Početni zaslon
-      </PrimaryButton>
-      {/* the phone's only way out (the desktop has it in the menu's user card); kept clear of Početni zaslon, so a low
-          tap on it doesn't log out */}
-      <TextButton onClick={() => logout()} disabled={loggingOut} sx={{alignSelf: "center", mt: "6px", mb: "-8px"}}>
-        <LogoutRoundedIcon />
-        Odjava
-      </TextButton>
+      {keyboard.inset === 0 && (
+        <>
+          <PrimaryButton icon={<HomeRoundedIcon />} onClick={() => router.push("/", "back")}>
+            Početni zaslon
+          </PrimaryButton>
+          {/* the phone's only way out (the desktop has it in the menu's user card); kept clear of Početni zaslon, so a
+              low tap on it doesn't log out */}
+          <TextButton onClick={() => logout()} disabled={loggingOut} sx={{alignSelf: "center", mt: "6px", mb: "-8px"}}>
+            <LogoutRoundedIcon />
+            Odjava
+          </TextButton>
+        </>
+      )}
       <PhotoSheet kind="player" photo={photo} name={name || user?.username || ""} google={google} open={photoOpen} onClose={() => setPhotoOpen(false)} />
     </Screen>
   );

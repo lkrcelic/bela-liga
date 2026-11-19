@@ -17,6 +17,7 @@ On development since 18.11. (with the E2E suite, DECISIONS #99).
 - Igrač više ne može dobiti "Prvo kolo počinje u ." bez vremena.
 - **Večer lige** (admin) od druge večeri sezone broji večerašnja kola: "Kolo 22 · 2. od 3 · u tijeku" i "2 / 2 kola odigrano", umjesto "Kolo 22 od 22" i "8 / 8" (#89).
 - **Prijava**: "Belatronika" na užim mobitelima (360 px) više se ne lomi u "Belatronik / a"; riječ ostaje u jednom retku, a zvono i slova se po potrebi malo smanje (#31).
+- **Moj profil** (mobitel): kartica s imenom i rejtingom sad se pomiče zajedno s podacima, pa kod uređivanja **Mobitela**, **Korisničkog imena** i **Datuma rođenja** polje i **Spremi** ostaju vidljivi i kad se otvori tipkovnica (#36).
 
 ## 17.11.2026 · Organizator vodi stolove svog turnira
 

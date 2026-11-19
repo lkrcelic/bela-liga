@@ -104,6 +104,47 @@ test("Datum rođenja: a day in the future or before 1900 can't be saved, a real 
   expect((await db.player.findUniqueOrThrow({where: {id: me.id}})).birth_date?.toISOString().slice(0, 10)).toBe("1990-05-17");
 });
 
+test("Mobitel, Korisničko ime, Datum rođenja: with the keyboard open the field and Spremi stay on screen, and the number is saved (#36)", async ({
+  as,
+  db,
+  me,
+  healthy,
+}) => {
+  const page = await as(me.username);
+  await page.goto("/profile");
+  const podaci = page.getByRole("region", {name: "Podaci"});
+  const spremi = podaci.getByRole("button", {name: "Spremi"});
+  const full = page.viewportSize()!;
+  // the keyboard as Android opens it: the screen itself gets shorter (iOS only shrinks the visual viewport, which
+  // headless Chromium can't do)
+  const keyboard = {width: full.width, height: 460};
+  for (const [edit, label] of [
+    ["Uredi korisničko ime", "Korisničko ime"],
+    ["Uredi datum rođenja", "Datum rođenja"],
+    ["Uredi broj mobitela", "Mobitel"],
+  ] as const) {
+    await page.setViewportSize(full);
+    await podaci.getByRole("button", {name: edit}).click();
+    const field = podaci.getByLabel(label, {exact: true});
+    await expect(field).toBeFocused();
+    await page.setViewportSize(keyboard);
+    await expect(field, label).toBeInViewport({ratio: 1});
+    await expect(spremi, label).toBeInViewport({ratio: 1});
+    if (label !== "Mobitel") {
+      await podaci.getByRole("button", {name: "Odustani"}).click();
+      await expect(field).toBeHidden();
+    }
+  }
+  // the number typed with the keyboard open is saved by a plain tap on Spremi
+  await podaci.getByLabel("Mobitel", {exact: true}).fill("091 234 5678");
+  await spremi.click();
+  await expect(podaci.getByLabel("Mobitel", {exact: true})).toBeHidden();
+  expect((await db.player.findUniqueOrThrow({where: {id: me.id}})).phone).toBe("+385 91 234 5678");
+  await page.setViewportSize(full);
+  await expect(podaci.getByRole("definition").filter({hasText: /^\+385 91 234 5678$/})).toBeVisible();
+  await healthy(page);
+});
+
 test("Pušač: the switch is saved as soon as it is flipped, as the answer to Pušiš li?, and back", async ({as, db, me, healthy}) => {
   const page = await as(me.username);
   await page.goto("/profile");

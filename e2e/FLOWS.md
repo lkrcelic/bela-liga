@@ -157,6 +157,7 @@ komentarom `// BUG:`: test opisuje kako bi trebalo biti, a prolazi dok greška p
 | Tko vidi sliku · Svi / Ja i suigrači / Samo ja | igrač, suigrač, drugi igrač, gost | `profil/c9-privatnost.spec.ts` › Tko vidi sliku · Svi…; › · Ja i suigrači…; › · Samo ja… |
 | Moj profil: Mobitel | igrač | `profil/c9-podaci.spec.ts` › Mobitel: a number too short can't be saved… |
 | Moj profil: Datum rođenja | igrač | `profil/c9-podaci.spec.ts` › Datum rođenja: a day in the future or before 1900 can't be saved… |
+| Moj profil: uređivanje s otvorenom tipkovnicom (polje i Spremi na ekranu) | igrač | `profil/c9-podaci.spec.ts` › Mobitel, Korisničko ime, Datum rođenja: with the keyboard open… (#36) |
 | Moj profil: Pušač | igrač | `profil/c9-podaci.spec.ts` › Pušač: the switch is saved as soon as it is flipped… |
 | Moj profil: Moje ekipe | igrač | `profil/c9-podaci.spec.ts` › Moje ekipe: the player's teams with their players… |
 | Odjava s profila | igrač | `profil/c9-podaci.spec.ts` › Odjava: the phone is logged out… |
@@ -171,4 +172,5 @@ komentarom `// BUG:`: test opisuje kako bi trebalo biti, a prolazi dok greška p
 | Istek zaključavanja nakon 5 pokušaja (5 min) | rok živi u memoriji servera, nema sata za pomaknuti; pokriva ga `loginLimiting.test.ts` |
 | Profilna slika na računalu (PhotoDialog, ispusti datoteku) i Koristi Google sliku | C9 je samo mobitel; Google traži pravi račun |
 | Završi meč na organizatorovu stolu | završen meč mijenja rejting, a čišćenje fixturea ga ne vraća; 403 na tuđem stolu je pokriven |
+| Moj profil s iOS tipkovnicom (smanji se samo visual viewport; Početni zaslon i Odjava se sklone) | headless Chromium ne smanjuje samo visual viewport; Android način pokriva `profil/c9-podaci.spec.ts` (#36) |
 | /api/auth/[...nextauth] (GET/POST) | pod `next start` bez AUTH_TRUST_HOST odgovara 500 UntrustedHost |
