@@ -10,7 +10,9 @@ export default function useElementHeight<T extends HTMLElement>(): [(el: T | nul
   const [height, setHeight] = useState<number | null>(null);
   const ref = useCallback((node: T | null) => {
     setEl(node);
-    if (node) setHeight(node.getBoundingClientRect().height);
+    // offsetHeight, the layout's height as the ResizeObserver gives it: getBoundingClientRect is the height on screen,
+    // smaller inside a scaled view (the Kolo over the whole screen on a TV)
+    if (node) setHeight(node.offsetHeight);
   }, []);
 
   useEffect(() => {
