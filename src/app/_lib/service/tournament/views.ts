@@ -353,6 +353,7 @@ export function adminView(s: Snapshot, viewer: Viewer): AdminTournament {
   return {
     ...cardView(s, viewer),
     rules_url: t.rules_url,
+    smoking_tables: t.smoking_tables,
     prizes: t.prizes.map((p) => ({place: p.place, prize: p.prize, description: p.description})),
     started_at: t.started_at?.toISOString() ?? null,
     cancelled_at: t.cancelled_at?.toISOString() ?? null,

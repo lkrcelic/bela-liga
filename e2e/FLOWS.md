@@ -111,6 +111,7 @@ komentarom `// BUG:`: test opisuje kako bi trebalo biti, a prolazi dok greška p
 | Početna i traka organizatora na mobitelu (52ef6b3) | organizator | `turniri/c7-svoj-turnir.spec.ts` › Početna opens the organizer's phone on their own Turniri… |
 | Novi turnir | organizator | `turniri/c7-svoj-turnir.spec.ts` › the organizer makes a tournament with Novi turnir, and it is theirs |
 | Podaci · Spremi promjene (svoj turnir) | organizator | `turniri/c7-svoj-turnir.spec.ts` › the organizer changes their tournament in Podaci… |
+| Podaci · Pušački stolovi (svoj turnir): raspon se sprema kao stolovi, stol 0 se ne sprema | organizator | `turniri/c7-svoj-turnir.spec.ts` › the organizer sets Pušački stolovi in Podaci… |
 | Prijave otvorene / zatvorene, Dodaj ekipu | organizator | `turniri/c7-svoj-turnir.spec.ts` › the organizer closes and reopens their sign-ups and adds a team… |
 | Makni ekipu (svoj turnir) | organizator | `turniri/c7-svoj-turnir.spec.ts` › Makni takes a team off the organizer's own tournament (bug #84) |
 | Otkaži i Vrati turnir samo admin (organizator ih nema, poslužitelj ih odbija) | organizator | `turniri/c7-svoj-turnir.spec.ts` › the organizer can neither cancel their tournament nor bring it back…; `turniri/c7-tudi-turnir.spec.ts` › on the admin's tournament (open/live) the organizer's Otkaži turnir / Vrati turnir is refused… |

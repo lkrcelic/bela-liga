@@ -1,6 +1,6 @@
 // C7 · the organizer (accounts.organizer) on the phone, on the tournaments they made: Početna opens on their own Turniri
 // under a bar of Turniri, Ekipe and Igrači (52ef6b3); Novi turnir; on tournaments.organizer (upcoming) Podaci · Spremi
-// promjene, Prijave otvorene / zatvorene, Dodaj ekipu, Makni, and no Otkaži, Vrati or Obriši turnir (the admin's only,
+// promjene, Pušački stolovi, Prijave otvorene / zatvorene, Dodaj ekipu, Makni, and no Otkaži, Vrati or Obriši turnir (the admin's only,
 // DECISIONS #99: the buttons are hidden and the routes refuse them); the admin's Otkaži and Vrati turnir on the same
 // tournament; on tournaments.finishedNoDeclarations Dodaj kolo and Obriši kolo.
 // What an organizer may do is DECISIONS #86 and #99: make a tournament, and edit and run the ones they made (kola,
@@ -103,6 +103,34 @@ test("the organizer changes their tournament in Podaci, and Spremi promjene save
   } finally {
     await db.tournament.update({where: {tournament_id: id}, data: {location_id: before.location_id, entry_fee: before.entry_fee}});
     await db.location.delete({where: {location_id: other.location_id}});
+  }
+});
+
+test("the organizer sets Pušački stolovi in Podaci: a range is saved as its tables, and a table 0 can't be saved", async ({as, db, world, healthy}) => {
+  // DECISIONS 100: a tournament's own smoking tables, which its Kolos are seated at
+  const id = world.tournaments.organizer.id;
+  const before = await db.tournament.findUniqueOrThrow({where: {tournament_id: id}});
+  try {
+    const page = await as("organizer");
+    await page.goto(`/turniri/${id}/upravljanje?view=podaci`);
+    const field = page.getByRole("textbox", {name: "Pušački stolovi"});
+    const save = page.getByRole("button", {name: "Spremi promjene"});
+
+    await field.fill("0, 2");
+    await expect(field).toHaveAttribute("aria-invalid", "true");
+    await expect(save).toBeDisabled();
+
+    await field.fill("4, 1-2");
+    await expect(field).not.toHaveAttribute("aria-invalid", "true");
+    await save.click();
+    await expect(page.getByRole("button", {name: "Spremljeno"})).toBeVisible();
+    expect((await db.tournament.findUniqueOrThrow({where: {tournament_id: id}})).smoking_tables).toEqual([1, 2, 4]);
+
+    await page.reload();
+    await expect(page.getByRole("textbox", {name: "Pušački stolovi"})).toHaveValue("1, 2, 4");
+    await healthy(page);
+  } finally {
+    await db.tournament.update({where: {tournament_id: id}, data: {smoking_tables: before.smoking_tables}});
   }
 });
 
