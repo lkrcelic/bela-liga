@@ -34,9 +34,23 @@ export const smokersLabel = (n: number): string => (n > 0 ? count(n, NOUN.puša�
 export const roundDotLabel = (round: string, smoking: boolean | null): string =>
   `${round}: ${smoking == null ? "nije za stolom" : smoking ? "pušački stol" : "običan stol"}`;
 
-// "Večeras 2 od 3 kola za pušačkim stolom": a rotation row's line for screen readers and the tooltip
-export const tonightTitle = (tonight: (boolean | null)[]): string =>
-  `Večeras ${tonight.filter((s) => s === true).length} od ${tonight.filter((s) => s != null).length} kola za pušačkim stolom`;
+// A rotation row's Udio: of tonight's rounds where the team had a table, how many it sat at a smoking table (a round
+// without its table doesn't count)
+export function tonightShare(tonight: readonly (boolean | null)[]): {smoking: number; rounds: number} {
+  return {smoking: tonight.filter((s) => s === true).length, rounds: tonight.filter((s) => s != null).length};
+}
+
+// The Udio cell: "2 / 3"
+export const tonightShareText = (tonight: readonly (boolean | null)[]): string => {
+  const {smoking, rounds} = tonightShare(tonight);
+  return `${smoking} / ${rounds}`;
+};
+
+// Its tooltip: "Večeras 2 od 3 kola za pušačkim stolom"
+export const tonightTitle = (tonight: readonly (boolean | null)[]): string => {
+  const {smoking, rounds} = tonightShare(tonight);
+  return `Večeras ${smoking} od ${rounds} kola za pušačkim stolom`;
+};
 
 // Pušački stolovi in a tournament's form, as typed: numbers and ranges split by commas or spaces ("1, 2, 5",
 // "1-4, 7"). Empty: no smoking tables. null: something in it isn't a table number from 1 to MAX_SMOKING_TABLES.

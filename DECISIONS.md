@@ -2116,6 +2116,6 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
       "#100" as a hex colour.
     - **Checked**: unit (`smokingTables`: the rule, the turns and a tournament's pairs of ids; `smokingUi`: tonight's
       Udio, the field's parsing), db (`db/smoking.test.ts`, red on the code before: the league seated C-D, one smoker
-      that missed last week, instead of A-B with two; the tournament's Kolo 1 had no smoking table; in Kolo 3 E, one
-      smoker without a turn, sat at Stol 2 instead of the smoking Stol 1) and Playwright (`c7-svoj-turnir`: Pušački
-      stolovi in Podaci).
+      that missed last week, instead of A-B with two; the tournament's Kolo 1 had no smoking table; in Kolo 3, of two
+      matches with one smoker each, E's (no turn yet) gets the smoking Stol 1 before C's (one turn), which is also red
+      when the tournament's turns are left out) and Playwright (`c7-svoj-turnir`: Pušački stolovi in Podaci).
