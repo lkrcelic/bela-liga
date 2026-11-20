@@ -29,10 +29,14 @@ import {DetailsDesktop, StandingsDesktop} from "./StandingsDetailsDesktop";
 
 // Upravljanje turnirom on the computer (Claude Design "Turniri admin" A3–A5, C1–C5): the tabs Prijave · Lista čekanja
 // · Kola · Poredak · Podaci over the views, Prijave otvorene in the header until the tournament starts. ?view= and
-// ?kolo= keep the tab and the Kolo in the address; while a Kolo is played the page refreshes every 15 s.
+// ?kolo= keep the tab and the Kolo in the address, ?ekran=1 the Kolo over the whole screen; while a Kolo is played the
+// page refreshes every 15 s.
 
 export type ManageView = "prijave" | "cekanje" | "kola" | "poredak" | "podaci";
 export const MANAGE_VIEWS: ManageView[] = ["prijave", "cekanje", "kola", "poredak", "podaci"];
+
+// ?ekran=1: the Kolo over the whole screen (KoloFullscreen)
+export const SCREEN_PARAM = "ekran";
 
 // before the start the sign-ups, after it the Kolos
 export const defaultView = (t: Pick<AdminTournament, "phase">): ManageView => (t.phase === "upcoming" || t.phase === "cancelled" ? "prijave" : "kola");
@@ -43,6 +47,8 @@ export default function ManageTournamentDesktop({id}: {id: number}) {
   const [view, setView] = useState<ManageView | null>(asked && MANAGE_VIEWS.includes(asked) ? asked : null);
   const askedKolo = Number(params.get("kolo"));
   const [kolo, setKolo] = useState<number | null>(Number.isInteger(askedKolo) && askedKolo > 0 ? askedKolo : null);
+  // Preko cijelog ekrana is in the address too, so the view outlives the page being built again (see the page)
+  const [screen, setScreen] = useState(params.get(SCREEN_PARAM) === "1");
   const [live, setLive] = useState(false);
   const {tournament: t, setTournament, error, notFound, reload} = useAdminTournament(id, live ? 15_000 : undefined);
   const [switching, setSwitching] = useState(false);
@@ -53,10 +59,11 @@ export default function ManageTournamentDesktop({id}: {id: number}) {
 
   const shown: ManageView = view ?? (t ? defaultView(t) : "prijave");
   const shownKolo = kolo ?? (t ? defaultKolo(t) : 1);
-  const go = (v: ManageView, k: number | null = kolo) => {
+  const go = (v: ManageView, k: number | null = kolo, full = false) => {
     setView(v);
     setKolo(k);
-    replaceAddress(`/turniri/${id}/upravljanje?view=${v}${v === "kola" && k ? `&kolo=${k}` : ""}`);
+    setScreen(full);
+    replaceAddress(`/turniri/${id}/upravljanje?view=${v}${v === "kola" && k ? `&kolo=${k}` : ""}${full ? `&${SCREEN_PARAM}=1` : ""}`);
   };
 
   const toggleRegistrations = async () => {
@@ -158,7 +165,15 @@ export default function ManageTournamentDesktop({id}: {id: number}) {
               <EntriesDesktop key={shown} t={t} waiting={shown === "cekanje"} onChanged={setTournament} />
             )
           ) : shown === "kola" ? (
-            <KolaDesktop t={t} kolo={shownKolo} onKolo={(k) => go("kola", k)} onChanged={setTournament} reload={reload} />
+            <KolaDesktop
+              t={t}
+              kolo={shownKolo}
+              onKolo={(k) => go("kola", k)}
+              full={screen}
+              onFull={(on) => go("kola", shownKolo, on)}
+              onChanged={setTournament}
+              reload={reload}
+            />
           ) : shown === "poredak" ? (
             <StandingsDesktop t={t} />
           ) : (
