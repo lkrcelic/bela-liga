@@ -3,7 +3,7 @@
 import {getSmokingPlanAPI} from "@/app/_fetchers/league/smoking";
 import {Slot} from "@/app/_lib/locations";
 import {SmokingPlan, SmokingPlanSide, SmokingPlanTeam} from "@/app/_interfaces/smoking";
-import {planHeading, roundDotLabel, smokersLabel, tonightTitle} from "@/app/_lib/ui/smoking";
+import {planHeading, roundDotLabel, smokersLabel, tonightShareText, tonightTitle} from "@/app/_lib/ui/smoking";
 import {color, font, shadow, tint} from "@/app/_styles/tokens";
 import {buttonBase, ellipsis, ErrorNote, IconTile, LoadingRows, SwitchTrack, tabular} from "@/app/_ui/sp";
 import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
@@ -303,7 +303,7 @@ function PlanRotation({plan}: {plan: SmokingPlan}) {
               <TonightDots team={t} roundNumbers={plan.roundNumbers} roundNames={plan.roundNames} />
             </Box>
             <Box component="span" role="cell" title={tonightTitle(t.tonight)} sx={{textAlign: "right", fontSize: 13.5, fontWeight: 600, color: color.ink2, ...tabular}}>
-              {t.tonight.filter((smoking) => smoking === true).length} / {t.tonight.filter((smoking) => smoking != null).length}
+              {tonightShareText(t.tonight)}
             </Box>
           </Box>
         ))}

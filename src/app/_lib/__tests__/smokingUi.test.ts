@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import {test} from "node:test";
-import {formatSmokingTables, parseSmokingTables, planHeading, roundDotLabel, smokersLabel, smokingSummary, tonightTitle} from "../ui/smoking";
+import {formatSmokingTables, parseSmokingTables, planHeading, roundDotLabel, smokersLabel, smokingSummary, tonightShareText, tonightTitle} from "../ui/smoking";
 
 test("Pušački stolovi card line: off, none picked, no smokers, and counts that agree after 'u'", () => {
   assert.equal(smokingSummary(false, [1, 2], 7, 6), "Isključeno · svi stolovi su nepušački");
@@ -39,6 +39,8 @@ test("rotation dots and tonight's share (DECISIONS 100: only tonight counts)", (
   assert.equal(roundDotLabel("Kolo 3", false), "Kolo 3: običan stol");
   assert.equal(roundDotLabel("Skica A", null), "Skica A: nije za stolom");
   // a round without the team's table doesn't count among its rounds
+  assert.equal(tonightShareText([true, null, false, true]), "2 / 3");
+  assert.equal(tonightShareText([null, null]), "0 / 0");
   assert.equal(tonightTitle([true, false, true]), "Večeras 2 od 3 kola za pušačkim stolom");
   assert.equal(tonightTitle([false, null]), "Večeras 0 od 1 kola za pušačkim stolom");
   assert.equal(tonightTitle([]), "Večeras 0 od 0 kola za pušačkim stolom");

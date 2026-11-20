@@ -22,8 +22,8 @@ let leagueId = 0;
 let locationId = 0;
 const tournaments: number[] = [];
 const players: number[] = [];
-// A has two smokers, C and E one each; B, D and F none
-const SMOKERS: Record<string, number> = {A: 2, B: 0, C: 1, D: 0, E: 1, F: 0};
+// A has two smokers, C and E one each; B, D, F and G none
+const SMOKERS: Record<string, number> = {A: 2, B: 0, C: 1, D: 0, E: 1, F: 0, G: 0};
 const id: Record<string, number> = {};
 const nameOf = (teamId: number) => Object.keys(id).find((k) => id[k] === teamId) ?? String(teamId);
 
@@ -185,8 +185,8 @@ test("a tournament seats Kolo 1's match with the most smokers at its smoking tab
 });
 
 test("in a later Kolo, of matches with as many smokers the team that sat at the smoking table fewer times goes first", async () => {
-  const t = await tournament(["A", "B", "C", "D", "E", "F"], {smoking_tables: [1], started: true});
-  // Kolo 1 and 2, played: C won both and sat at the smoking table in Kolo 2; E (one smoker too) never did
+  // C and E have one smoker each, the other four none (A, with two, stays out, so no match has more than one)
+  const t = await tournament(["B", "C", "D", "E", "F", "G"], {smoking_tables: [1], started: true});
   const kolo = async (number: number, table: ReturnType<typeof seatedTable>) =>
     prisma.round.create({
       data: {
@@ -197,25 +197,34 @@ test("in a later Kolo, of matches with as many smokers the team that sat at the 
         published_at: new Date(),
         matches_per_round: 1,
         open: false,
+        // the first team wins
         team1_wins: 1,
         team2_wins: 0,
         tournamentRounds: {create: {tournament_id: t}},
       },
     });
-  await kolo(1, seatedTable("A", "B", 1, true));
+  // Kolo 1 and 2, played: C won both and sat at the smoking table in Kolo 2; E never did. C and E have met, so Kolo 3
+  // can't put them at one table.
+  await kolo(1, seatedTable("B", "G", 1, true));
   await kolo(1, seatedTable("C", "E", 2, false));
   await kolo(1, seatedTable("D", "F", 3, false));
-  await kolo(2, seatedTable("C", "A", 1, true));
+  await kolo(2, seatedTable("C", "B", 1, true));
   await kolo(2, seatedTable("E", "D", 2, false));
-  await kolo(2, seatedTable("B", "F", 3, false));
+  await kolo(2, seatedTable("G", "F", 3, false));
 
   await makeKoloDraft(t);
   const draft = await draftOf(t);
   const tableOf = (k: string) => draft.find((r) => r.team1_id === id[k] || r.team2_id === id[k])!;
-  // C leads the standings, so its match is the pairing's first; but C and E have one smoker each and C already had a
-  // turn in this tournament, so E's match gets the smoking table
-  assert.equal(tableOf("E").table_number, 1);
+  // Kolo 3 pairs C-F (C leads, so this is the pairing's first table), B-E and D-G: C's and E's matches have one smoker
+  // each, and C already had a turn in this tournament, so E's match gets the smoking Stol 1 (without the turns, C's
+  // match would keep it)
+  assert.deepEqual(
+    draft.map((r) => [[nameOf(r.team1_id), nameOf(r.team2_id)].sort().join("-"), r.table_number, r.smoking_table]),
+    [
+      ["B-E", 1, true],
+      ["C-F", 2, false],
+      ["D-G", 3, false],
+    ]
+  );
   assert.equal(tableOf("E").smoking_table, true);
-  assert.equal(tableOf("C").smoking_table, false);
-  assert.equal(draft.filter((r) => r.smoking_table).length, 1);
 });
