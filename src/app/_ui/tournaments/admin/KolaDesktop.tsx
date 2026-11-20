@@ -41,7 +41,16 @@ import React, {useEffect, useId, useState} from "react";
 // the end. A draft (Skica) is edited as Skica lige (Uredi parove), made again (Složi ponovo) and published (Objavi
 // kolo); a published Kolo's tables are edited as on Dnevni poredak and open the admin scorepad.
 
-type Props = {t: AdminTournament; kolo: number; onKolo: (n: number) => void; onChanged: (t: AdminTournament) => void; reload: () => void};
+type Props = {
+  t: AdminTournament;
+  kolo: number;
+  onKolo: (n: number) => void;
+  // the Kolo over the whole screen; the page keeps it (in the address), so it outlives this view being built again
+  full: boolean;
+  onFull: (on: boolean) => void;
+  onChanged: (t: AdminTournament) => void;
+  reload: () => void;
+};
 
 // The Kolo the tab opens on: the draft, else the one being played, else the last one out, else Kolo 1
 export function defaultKolo(t: AdminTournament): number {
@@ -113,7 +122,7 @@ export function tableTeams(t: AdminTournament): LeagueTeam[] {
   return t.entries.map((e) => ({id: e.team_id, name: e.team_name, players: e.players.map((p) => p.username ?? p.name), active: true, smokers: 0}));
 }
 
-export default function KolaDesktop({t, kolo, onKolo, onChanged, reload}: Props) {
+export default function KolaDesktop({t, kolo, onKolo, full, onFull, onChanged, reload}: Props) {
   const router = useTransitionRouter();
   const steps = koloSteps(t.rounds, t.results.kolos.map((k) => ({number: k.number, published: k.published, tables: k.tables.length, done: k.tables.filter((x) => !x.open).length, live: 0})));
   const view = t.results.kolos.find((k) => k.number === kolo) ?? null;
@@ -168,7 +177,6 @@ export default function KolaDesktop({t, kolo, onKolo, onChanged, reload}: Props)
   const removal = koloRemoval(t, kolo);
   const addable = canAddKolo(t);
   const [askDelete, setAskDelete] = useState(false);
-  const [full, setFull] = useState(false);
   const add = () =>
     run("add", () => addKoloAPI(t.id, t.rounds + 1), (next) => {
       const draft = next.results.kolos.find((k) => !k.published);
@@ -298,7 +306,7 @@ export default function KolaDesktop({t, kolo, onKolo, onChanged, reload}: Props)
             {editing && <NewTableButton onClick={() => edits.setPair({kind: "new", tableNumber: rows.reduce((m, r) => Math.max(m, r.table), 0) + 1})} />}
             {/* the Kolo over the whole screen, for the screen at the club: the tables and the standings beside them */}
             {view.published && (
-              <IconCircleButton label="Preko cijelog ekrana" size={38} onClick={() => setFull(true)} sx={{borderRadius: "12px", boxShadow: "none", background: color.lineFill, "& svg": {fontSize: 22}}}>
+              <IconCircleButton label="Preko cijelog ekrana" size={38} onClick={() => onFull(true)} sx={{borderRadius: "12px", boxShadow: "none", background: color.lineFill, "& svg": {fontSize: 22}}}>
                 <FullscreenRoundedIcon />
               </IconCircleButton>
             )}
@@ -374,7 +382,7 @@ export default function KolaDesktop({t, kolo, onKolo, onChanged, reload}: Props)
           </Box>
         )}
         </Box>
-        {full && view && <KoloFullscreen t={t} kolo={kolo} rows={rows} live={live} done={done} onClose={() => setFull(false)} />}
+        {full && view && <KoloFullscreen t={t} kolo={kolo} rows={rows} live={live} done={done} onClose={() => onFull(false)} />}
         {askDelete && removal && (
           <DeleteKoloDialog removal={removal} busy={busy === "delete"} error={error} onClose={() => setAskDelete(false)} onConfirm={remove} />
         )}
@@ -562,10 +570,12 @@ function DeleteKoloDialog({removal, busy, error, onClose, onConfirm}: {removal: 
   );
 }
 
-// Kolo preko cijelog ekrana (the computer only): the Kolo's tables on two thirds of the screen and the tournament's
+// Kolo preko cijelog ekrana (opened on the computer): the Kolo's tables on two thirds of the screen and the tournament's
 // standings on the last third, for the screen at the club. Nothing is edited here — the same rows (DesktopTableRow)
 // and the same standings table (StandingsGrid) as the tabs Kola and Poredak, only bigger and without the shell. The
 // page under it keeps refreshing every 15 s while the tournament is played, so the view follows the games by itself.
+// A TV browser's full screen can be narrower than the computer's 1024 px (Android TV gives the page 960 px), so the
+// page stays the computer's while this is open (?ekran=1), whatever the width.
 export function KoloFullscreen({t, kolo, rows, live, done, onClose}: {t: AdminTournament; kolo: number; rows: TableRow[]; live: number; done: number; onClose: () => void}) {
   const [areaRef, areaHeight] = useElementHeight<HTMLDivElement>();
   const twoColumns = tableColumns(rows.length, areaHeight == null ? undefined : Math.floor(areaHeight / TABLE_ROW_HEIGHT)) > 1;
