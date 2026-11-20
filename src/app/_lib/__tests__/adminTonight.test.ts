@@ -28,15 +28,27 @@ test("tonight is the first round with an open table, counted with the night's un
   assert.deepEqual(tonightState([], 3), {kind: "none"});
   const tables = [t(1, true), t(1, true), t(1, false, true), t(2, false), t(2, false)];
   const state = tonightState(tables, 3);
-  assert.deepEqual(state, {kind: "playing", round: 1, rounds: 3, done: 2, tables: 3, started: true});
+  assert.deepEqual(state, {kind: "playing", round: 1, at: 1, rounds: 3, done: 2, tables: 3, started: true});
   assert.equal(tonightEyebrow(state as Extract<typeof state, {kind: "playing"}>), "Kolo 1 od 3 · u tijeku");
   assert.deepEqual(tonightState([t(1, true), t(2, true)]), {kind: "finished", rounds: 2});
 });
 
 test("a round where only the bye is settled hasn't started", () => {
   const state = tonightState([t(2, true, true, true), t(2, false), t(1, true)], 2);
-  assert.deepEqual(state, {kind: "playing", round: 2, rounds: 2, done: 1, tables: 2, started: false});
+  assert.deepEqual(state, {kind: "playing", round: 2, at: 2, rounds: 2, done: 1, tables: 2, started: false});
   assert.equal(tonightEyebrow(state as Extract<typeof state, {kind: "playing"}>), "Kolo 2 od 2 · nije počelo");
+});
+
+test("a later night of the season counts tonight's Kola, not the season's (#89)", () => {
+  // Kolo 21 played, Kolo 22 running, Kolo 23 waiting as a Skica: 3 Kola tonight
+  const state = tonightState([t(21, true), t(21, true), t(22, true), t(22, false, true)], 3);
+  assert.deepEqual(state, {kind: "playing", round: 22, at: 2, rounds: 3, done: 1, tables: 2, started: true});
+  assert.equal(tonightEyebrow(state as Extract<typeof state, {kind: "playing"}>), "Kolo 22 · 2. od 3 · u tijeku");
+  // Kolo 7 and 8 played: 2 / 2 kola odigrano
+  assert.deepEqual(tonightState([t(7, true), t(8, true)], 2), {kind: "finished", rounds: 2});
+  // Kolo 7–10 published, 9 not started yet: 3. of tonight's 4
+  const next = tonightState([t(7, true), t(8, true), t(9, false), t(10, false)], 4);
+  assert.equal(tonightEyebrow(next as Extract<typeof next, {kind: "playing"}>), "Kolo 9 · 3. od 4 · nije počelo");
 });
 
 const n = (date: string, roundNumber: number, status: "draft" | "approved" | "played" | "live" | "new") => ({date, roundNumber, status});

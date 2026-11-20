@@ -3,7 +3,8 @@
 //   random, the rest Swiss by the tournament standings, a bye for an odd number, and in the bigger one a Kolo 1
 //   no-show with its automatic one-month ban, exactly the rows the app leaves behind.
 // - Today's are made through the app's services: one live (Kolo 1 played, Kolo 2 with a no-show, a skipped table the
-//   admin gave to a team, a finished table and one being played), one in its arrival window, one ready for Kolo 1.
+//   admin gave to a team, a finished table and one being played; dated at the league night, so before 06:00 it is
+//   yesterday's), one in its arrival window, one ready for Kolo 1.
 import type {Team} from "@prisma/client";
 import {BYE_TEAM_ID} from "@/app/_lib/bye";
 import {leagueDateString} from "@/app/_lib/dates";
@@ -223,9 +224,9 @@ function tournamentFields(spec: FinishedSpec, day: Date) {
   };
 }
 
-// Zagreb wall-clock "HH:MM" of a moment, or null when it falls on another day than today
-function zagrebTime(ctx: Ctx, moment: Date): string | null {
-  if (leagueDateString(moment) !== isoDay(ctx.today)) return null;
+// Zagreb wall-clock "HH:MM" of a moment, or null when it falls on another day than day (YYYY-MM-DD)
+function zagrebTime(day: string, moment: Date): string | null {
+  if (leagueDateString(moment) !== day) return null;
   return new Intl.DateTimeFormat("en-GB", {timeZone: "Europe/Zagreb", hour: "2-digit", minute: "2-digit", hourCycle: "h23"}).format(moment);
 }
 
@@ -252,12 +253,18 @@ export async function seedTodayTournaments(ctx: Ctx, people: People, pool: TeamP
   reserve(adminTeam);
 
   // --- live: started an hour ago, Kolo 1 played, Kolo 2 in every table state
-  const startedAt = zagrebTime(ctx, new Date(ctx.now.getTime() - 70 * 60_000));
+  // Dated at the league night, like a tournament still played after midnight: until 06:00 that is yesterday. The admin's
+  // corrections reopen a table only on that night (reopenCheck in hands.ts), and Uživo calls it Jučer. When an hour ago
+  // is already past the night's midnight, it started at 23:59, with Okupljanje half an hour before (DECISIONS #99)
+  const night = ctx.tonightString;
+  const startedAt = zagrebTime(night, new Date(ctx.now.getTime() - 70 * 60_000)) ?? "23:59";
+  const half = zagrebTime(night, new Date(ctx.now.getTime() - 100 * 60_000));
+  const gatheredAt = half && half < startedAt ? half : "23:29";
   const live = await createTournament(
     await atPitanik(ctx, tournamentRequest({
       name: "Subotnji turnir uživo",
-      date: today,
-      gathering_time: null,
+      date: night,
+      gathering_time: gatheredAt,
       start_time: startedAt,
       max_teams: 12,
       rounds: 4,
@@ -268,8 +275,8 @@ export async function seedTodayTournaments(ctx: Ctx, people: People, pool: TeamP
   );
   const liveTeams: Team[] = [adminTeam, ...pick(9, "live")];
   await enter(ctx, pool, live, liveTeams);
-  for (const team of liveTeams.slice(0, startedAt ? 9 : 10)) await adminSetArrival(live, team.team_id, true);
-  if (startedAt) await prisma.$transaction((tx) => closeArrival(tx, live, ctx.now));
+  for (const team of liveTeams.slice(0, 9)) await adminSetArrival(live, team.team_id, true);
+  await prisma.$transaction((tx) => closeArrival(tx, live, ctx.now));
   await makeKoloDraft(live);
   await publishKolo(live, 1);
   const kolo = async (n: number) =>
@@ -316,8 +323,8 @@ export async function seedTodayTournaments(ctx: Ctx, people: People, pool: TeamP
   ctx.catalog.tournaments.live = {id: live, name: "Subotnji turnir uživo", state: "Uživo: Kolo 1 odigrano; Kolo 2 nedolazak, dodijeljena pobjeda, odigran stol i stolovi u igri"};
 
   // --- arrival window open now: gathering 15 min ago, start in an hour; the player's team hasn't said Tu smo yet
-  const gathering = zagrebTime(ctx, new Date(ctx.now.getTime() - 15 * 60_000));
-  const startsAt = zagrebTime(ctx, new Date(ctx.now.getTime() + 60 * 60_000));
+  const gathering = zagrebTime(today, new Date(ctx.now.getTime() - 15 * 60_000));
+  const startsAt = zagrebTime(today, new Date(ctx.now.getTime() + 60 * 60_000));
   const arrivalOpen = gathering != null && startsAt != null;
   const arrivalDate = arrivalOpen ? today : isoDay(addDays(ctx.today, 1));
   const arrival = await createTournament(
@@ -342,15 +349,17 @@ export async function seedTodayTournaments(ctx: Ctx, people: People, pool: TeamP
       : "Sutra (seed je bio kasno navečer), Potvrda dolaska još nije otvorena",
   };
 
-  // --- ready: everyone here, sign-ups closed, nothing drafted; the admin's test makes and publishes Kolo 1
+  // --- ready: everyone here, sign-ups closed, nothing drafted; the admin's test makes and publishes Kolo 1. Its start
+  // (00:01) has come, so Potvrda dolaska is closed, as at a tournament about to begin
   const ready = await createTournament(
-    await atPitanik(ctx, tournamentRequest({name: "Turnir spreman za start", date: today, gathering_time: null, start_time: null, max_teams: 8, rounds: 3})),
+    await atPitanik(ctx, tournamentRequest({name: "Turnir spreman za start", date: today, gathering_time: "00:00", start_time: "00:01", max_teams: 8, rounds: 3})),
     admin,
   );
   const readyTeams = pick(6, "ready");
   await enter(ctx, pool, ready, readyTeams);
   for (const team of readyTeams) await adminSetArrival(ready, team.team_id, true);
   await prisma.tournament.update({where: {tournament_id: ready}, data: {registrations_open: false}});
+  await prisma.$transaction((tx) => closeArrival(tx, ready, ctx.now));
   ctx.catalog.tournaments.ready = {id: ready, name: "Turnir spreman za start", state: "Danas, svi stigli, prijave zatvorene, Kolo 1 nije napravljeno"};
 
   ctx.log("tournaments (today): live, arrival, ready");

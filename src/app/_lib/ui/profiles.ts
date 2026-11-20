@@ -183,8 +183,15 @@ export function longestWord(name: string): number {
   return Math.max(0, ...name.replace(/-/g, "- ").split(/\s+/).map((w) => Array.from(w).length));
 }
 
-// The Osobni podaci rows of a Player page (P:467): the name and the username for everyone (#88); for the player
-// themself and admins (full) also the email, phone, birth date and Pušač. A missing value is "—".
+// The lock note under another player's Osobni podaci: what stays theirs. Whoever got the phone (an organizer) isn't told
+// it is private
+export const PRIVATE_NOTE = "Email, mobitel, datum rođenja i Pušač vidljivi su samo igraču i administratorima.";
+export const privateNote = (player: PlayerView): string =>
+  player.phone !== undefined ? "Email, datum rođenja i Pušač vidljivi su samo igraču i administratorima." : PRIVATE_NOTE;
+
+// The Osobni podaci rows of a Player page (P:467): the name and the username for everyone (#88); the phone also for
+// whoever the server sends it to, an organizer too (they call the teams of their tournament, DECISIONS #86); for the
+// player themself and admins (full) also the email, phone, birth date and Pušač. A missing value is "—".
 export function personalRows(player: PlayerView, full: boolean): {key: string; value: string}[] {
   const or = (v: string | null | undefined) => (v && v.trim() ? v : "—");
   const rows = [
@@ -193,7 +200,8 @@ export function personalRows(player: PlayerView, full: boolean): {key: string; v
     // public (#88): how a player is known in the league
     {key: "Korisničko ime", value: player.username ? `@${player.username}` : "—"},
   ];
-  if (!full) return rows;
+  // the server sends the phone, even a missing one (null), only to whoever may see it (privacy.ts contactAccess)
+  if (!full) return player.phone !== undefined ? [...rows, {key: "Mobitel", value: or(player.phone)}] : rows;
   return [
     ...rows,
     {key: "Email", value: or(player.email)},

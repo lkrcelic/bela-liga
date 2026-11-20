@@ -104,16 +104,22 @@ async function main() {
   await seedTodayTournaments(ctx, people, pool, [...busyTonight, ...scenarioTeams]);
   await seedUpcomingTournaments(ctx, people, pool);
   ctx.log(`tournaments done · ${lap()}`);
+  // The open matches were started at seed time, and Vrijeme partije (35 min) would close each one on the first read
+  // after its deadline while a section is still working. They carry no deadline, as matches started before the limit
+  // came in (timeLimit.ts); a test that needs the clock gives its match one (helpers/scorepad.ts freshClock).
+  const unclocked = await ctx.prisma.ongoingMatch.updateMany({where: {ends_at: {not: null}}, data: {ends_at: null}});
+  ctx.log(`open matches without a deadline: ${unclocked.count}`);
 
   // 5. the rest of the app
   await seedSponsors(ctx, current.league.league_id);
   await seedBurza(ctx, people, current, leagues.past2);
 
-  const outDir = join(__dirname, "out");
+  // the suite (e2e/local/app.sh) gives each section its own manifest folder
+  const outDir = process.env.E2E_SEED_OUT ?? join(__dirname, "out");
   mkdirSync(outDir, {recursive: true});
   const manifest = {seed, now: now.toISOString(), tonight: ctx.tonightString, catalog: ctx.catalog};
   writeFileSync(join(outDir, "seed-manifest.json"), JSON.stringify(manifest, null, 2));
-  ctx.log(`done in ${lap()} → e2e/seed/out/seed-manifest.json`);
+  ctx.log(`done in ${lap()} → ${join(outDir, "seed-manifest.json")}`);
   await ctx.prisma.$disconnect();
 }
 

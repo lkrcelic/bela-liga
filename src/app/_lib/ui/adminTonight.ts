@@ -146,23 +146,26 @@ export type TonightTable = {round: number; done: boolean; started: boolean; bye:
 export type TonightState =
   // no published round tonight
   | {kind: "none"}
-  // the first round with a table still open: `done` of its `tables` are finished; started: a match was played or is
-  // being played at one of them
-  | {kind: "playing"; round: number; rounds: number; done: number; tables: number; started: boolean}
+  // the first round with a table still open (round: its Kolo number, which counts up through the season; at: which of
+  // tonight's `rounds` it is): `done` of its `tables` are finished; started: a match was played or is being played at
+  // one of them
+  | {kind: "playing"; round: number; at: number; rounds: number; done: number; tables: number; started: boolean}
   // every published round is finished
   | {kind: "finished"; rounds: number};
 
-// How tonight is going. rounds: how many rounds the night has, unpublished ones too (Kolo 2 od 3).
+// How tonight is going. rounds: how many rounds the night has, unpublished ones too (Kolo 2 od 3). Kolo numbers count
+// up through the season, so the night's count and position come from tonight's own Kola, not from the numbers (#89).
 export function tonightState(tables: TonightTable[], rounds = 0): TonightState {
   const numbers = Array.from(new Set(tables.map((t) => t.round))).sort((a, b) => a - b);
   if (numbers.length === 0) return {kind: "none"};
-  const all = Math.max(rounds, numbers[numbers.length - 1]);
+  const all = Math.max(rounds, numbers.length);
   const current = numbers.find((n) => tables.some((t) => t.round === n && !t.done));
   if (current == null) return {kind: "finished", rounds: all};
   const round = tables.filter((t) => t.round === current);
   return {
     kind: "playing",
     round: current,
+    at: numbers.indexOf(current) + 1,
     rounds: all,
     done: round.filter((t) => t.done).length,
     tables: round.length,
@@ -203,7 +206,9 @@ export function placesTonight(
   });
 }
 
-// The eyebrow of the night card: "Kolo 2 od 3 · u tijeku"
+// The eyebrow of the night card: "Kolo 2 od 3 · u tijeku"; on a later night of the season the Kolo keeps its season
+// number and says where it is in the night, as the round's date line does: "Kolo 22 · 2. od 3 · u tijeku"
 export function tonightEyebrow(state: Extract<TonightState, {kind: "playing"}>): string {
-  return `Kolo ${state.round} od ${state.rounds} · ${state.started ? "u tijeku" : "nije počelo"}`;
+  const kolo = state.round === state.at ? `Kolo ${state.round} od ${state.rounds}` : `Kolo ${state.round} · ${state.at}. od ${state.rounds}`;
+  return `${kolo} · ${state.started ? "u tijeku" : "nije počelo"}`;
 }

@@ -50,6 +50,10 @@ test("an organizer may make tournaments and run their own, and nothing of the le
   ];
   assert.deepEqual(capabilitiesOf(organizer), may);
   assert.equal(can(organizer, "location.manage"), false);
+  // everything with their own tournament but Otkaži, Vrati and Obriši turnir (the user, 16.11.2026)
+  assert.equal(can(organizer, "tournament.cancel"), false);
+  assert.equal(can(organizer, "tournament.delete"), false);
+  assert.equal(can(admin, "tournament.cancel"), true);
   // what the role must not grow into by accident: the whole list minus the seven above
   for (const cap of ALL_CAPABILITIES) {
     if (!may.includes(cap)) assert.equal(can(organizer, cap), false, cap);

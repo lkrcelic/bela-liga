@@ -1,14 +1,13 @@
 "use client";
 
 import type {PlayerView} from "@/app/_interfaces/player";
-import {personalRows} from "@/app/_lib/ui/profiles";
+import {personalRows, privateNote} from "@/app/_lib/ui/profiles";
 import {color} from "@/app/_styles/tokens";
 import {Card, ColumnCard, ellipsis, SectionLabel} from "@/app/_ui/sp";
 import LockRoundedIcon from "@mui/icons-material/LockRounded";
 import {Box} from "@mui/material";
 import React, {useId} from "react";
 
-const PRIVATE_NOTE = "Email, mobitel, datum rođenja i Pušač vidljivi su samo igraču i administratorima.";
 
 // The rows and, for another player's page, the lock note (P:96-102 phone, P:298-306 desktop)
 function PersonalDataList({player, full, desktop}: {player: PlayerView; full: boolean; desktop: boolean}) {
@@ -53,7 +52,7 @@ function PersonalDataList({player, full, desktop}: {player: PlayerView; full: bo
           }}
         >
           <LockRoundedIcon aria-hidden />
-          <span>{PRIVATE_NOTE}</span>
+          <span>{privateNote(player)}</span>
         </Box>
       )}
     </>

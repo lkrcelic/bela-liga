@@ -1,5 +1,6 @@
 "use client";
 
+import useCan from "@/app/_hooks/useCan";
 import {addTournamentTeamAPI, admitTournamentTeamAPI, candidateTeamsAPI, removeTournamentTeamAPI} from "@/app/_fetchers/tournament";
 import {AdminTournament, CandidateTeam, TournamentEntryView} from "@/app/_interfaces/tournament";
 import {publishedTimeLabel} from "@/app/_lib/roundStatus";
@@ -31,6 +32,8 @@ type Props = {t: AdminTournament; waiting: boolean; onChanged: (t: AdminTourname
 const signedUp = (iso: string, withTime: boolean) => (withTime ? `${dayMonth(iso)} ${publishedTimeLabel(iso)}` : dayMonth(iso));
 
 export default function EntriesDesktop({t, waiting, onChanged}: Props) {
+  // Vrati turnir is the admin's (16.11.2026), so an organizer isn't told to use it
+  const mayRestore = useCan("tournament.cancel");
   const [query, setQuery] = useState("");
   const [confirm, setConfirm] = useState<number | null>(null);
   const [busy, setBusy] = useState<number | null>(null);
@@ -109,7 +112,9 @@ export default function EntriesDesktop({t, waiting, onChanged}: Props) {
         ) : (
           <InfoNote icon={<InfoRoundedIcon />}>
             {t.phase === "cancelled"
-              ? "Turnir je otkazan: prijave se ne mijenjaju. Vrati turnir pa se prijave ponovo otvaraju."
+              ? mayRestore
+                ? "Turnir je otkazan: prijave se ne mijenjaju. Vrati turnir pa se prijave ponovo otvaraju."
+                : "Turnir je otkazan: prijave se ne mijenjaju."
               : "Turnir je počeo: prijave se više ne mijenjaju. Ekipe za stolovima mijenjaš u tabu Kola."}
           </InfoNote>
         )}

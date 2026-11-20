@@ -9,6 +9,7 @@ import {
   longestWord,
   nightParts,
   personalRows,
+  privateNote,
   playerTeamLeagues,
   playerTiles,
   rosterSubline,
@@ -223,6 +224,19 @@ test("Osobni podaci: name and username for everyone (#88), all seven rows for th
     personalRows(bare, true).map((r) => r.value),
     ["—", "—", "@g123", "g@example.com", "—", "—", "Ne"]
   );
+});
+
+test("Osobni podaci: an organizer sees the phone the server sent them, and the note no longer calls it private", () => {
+  const other = {id: 7, first_name: "Ivan", last_name: "Perić", name: "Ivan Perić", username: "iperic", active: true};
+  // the server sends the phone only to whoever may see it (privacy.ts): an organizer calls the teams of their tournament
+  assert.deepEqual(
+    personalRows({...other, phone: "091 234 5678"}, false).map((r) => `${r.key}: ${r.value}`),
+    ["Ime: Ivan", "Prezime: Perić", "Korisničko ime: @iperic", "Mobitel: 091 234 5678"]
+  );
+  const missing = personalRows({...other, phone: null}, false);
+  assert.deepEqual(missing[missing.length - 1], {key: "Mobitel", value: "—"});
+  assert.equal(privateNote(other), "Email, mobitel, datum rođenja i Pušač vidljivi su samo igraču i administratorima.");
+  assert.equal(privateNote({...other, phone: null}), "Email, datum rođenja i Pušač vidljivi su samo igraču i administratorima.");
 });
 
 test("the Team page's tiles: the best place with its league, the players, the leagues still running", () => {
