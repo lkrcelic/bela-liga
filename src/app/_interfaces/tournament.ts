@@ -9,6 +9,7 @@ import type {StandingsItem} from "@/app/_lib/ui/standings";
 import {GAME_MINUTES_ERROR, GAME_MINUTES_MAX, GAME_MINUTES_MIN} from "@/app/_lib/gameTime";
 import {isValidPhone, PHONE_ERROR} from "@/app/_lib/phone";
 import {TIME_ERROR, tournamentTimesErrors} from "@/app/_lib/tournamentDay";
+import {SmokingTablesValidation} from "@/app/_interfaces/smoking";
 
 // Turniri: what the admin sends to create or change a tournament, what a player sends to sign a team up, and what the
 // tournament API answers with.
@@ -60,6 +61,8 @@ export const TournamentRequestValidation = z
   hide_entries: z.boolean().default(false),
   // Telefon organizatora: required for a new tournament (checked by the service); an old one may stay without
   organizer_phone: z.string().trim().max(30).refine((v) => v === "" || isValidPhone(v), PHONE_ERROR).nullable().default(null),
+  // Pušački stolovi: the table numbers where smoking is allowed (DECISIONS 100); none when left out
+  smoking_tables: SmokingTablesValidation.default([]),
   })
   .superRefine((b, ctx) => {
     // a time in the wrong format is already refused by its field
@@ -89,6 +92,7 @@ export type TournamentRequest = {
   open_signups: boolean;
   hide_entries: boolean;
   organizer_phone: string | null;
+  smoking_tables: number[];
 };
 
 export const ORGANIZER_PHONE_REQUIRED = "Upiši telefon organizatora. Igrači ga zovu ako kasne.";
@@ -338,6 +342,8 @@ export type CandidateTeam = {team_id: number; team_name: string; players: EntryP
 // Upravljanje turnirom: the tournament's fields, its entries, its Kolos and the standings
 export type AdminTournament = TournamentCard & {
   rules_url: string | null;
+  // Pušački stolovi, ascending (empty: none)
+  smoking_tables: number[];
   prizes: TournamentPrizeView[];
   started_at: string | null;
   cancelled_at: string | null;

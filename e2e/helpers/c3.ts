@@ -125,6 +125,7 @@ function request(spec: Spec): TournamentRequest {
     open_signups: false,
     hide_entries: false,
     organizer_phone: "+385 91 000 0001",
+    smoking_tables: [],
     ...spec,
     name: `${PREFIX}${spec.name}`,
   };

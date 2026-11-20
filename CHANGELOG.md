@@ -2,6 +2,17 @@
 
 What the commits changed for the people using the app, newest first. The reasons and details are in DECISIONS.md.
 
+## 20.11.2026 · Pušački stolovi po večeri i na turniru
+
+On development since 20.11. (DECISIONS 100).
+
+### Admin
+- **Pušački stolovi** u svakom kolu idu mečevima s **najviše pušača za stolom**; ekipa s više pušača ima prednost. Kod jednakog broja pušača prednost ima meč čije su ekipe večeras manje puta sjedile za pušačkim stolom.
+- **Svaka večer kreće ispočetka**: ranije večeri se više ne broje. **Pušački raspored** pokazuje samo večeras (stupac **Propušteno** je maknut).
+
+### Admin i organizator
+- **Turnir ima Pušačke stolove**: polje pod **Mjesto** u **Novom turniru** i **Podacima** ("1, 2" ili "1-4"). Svako kolo turnira sjeda mečeve s najviše pušača za te stolove, a broji se samo taj turnir. Promjena stolova ponovno slaže skicu kola koje čeka.
+
 ## 22.11.2026 · Σ pri upisu igre
 
 On development, not live yet.

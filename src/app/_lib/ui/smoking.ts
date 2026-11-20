@@ -1,4 +1,5 @@
 import {count, NOUN} from "./text";
+import {MAX_SMOKING_TABLES} from "@/app/_interfaces/smoking";
 
 // The copy of Novo kolo's Pušački stolovi card and the Pušački raspored (design 12g). Framework free so the counts
 // can be unit tested.
@@ -33,13 +34,27 @@ export const smokersLabel = (n: number): string => (n > 0 ? count(n, NOUN.puša�
 export const roundDotLabel = (round: string, smoking: boolean | null): string =>
   `${round}: ${smoking == null ? "nije za stolom" : smoking ? "pušački stol" : "običan stol"}`;
 
-// "2,5": the fair share with a decimal comma
-const decimal = (n: number) => String(n).replace(".", ",");
+// "Večeras 2 od 3 kola za pušačkim stolom": a rotation row's line for screen readers and the tooltip
+export const tonightTitle = (tonight: (boolean | null)[]): string =>
+  `Večeras ${tonight.filter((s) => s === true).length} od ${tonight.filter((s) => s != null).length} kola za pušačkim stolom`;
 
-// The Udio cell's tooltip: "3 od 12 kola za pušačkim stolom; pravedan udio 2,5" ("od 1 kola", "od 5 kola": the
-// genitive is "kola" for every number)
-export const shareTitle = (smokingRounds: number, rounds: number, fairShare: number): string =>
-  `${smokingRounds} od ${rounds} kola za pušačkim stolom; pravedan udio ${decimal(fairShare)}`;
+// Pušački stolovi in a tournament's form, as typed: numbers and ranges split by commas or spaces ("1, 2, 5",
+// "1-4, 7"). Empty: no smoking tables. null: something in it isn't a table number from 1 to MAX_SMOKING_TABLES.
+export const SMOKING_TABLES_ERROR = `Upiši brojeve stolova od 1 do ${MAX_SMOKING_TABLES}, npr. 1, 2 ili 1-4.`;
 
-// The Propušteno cell's tooltip: "2 večeri s pušačem, bez pušačkog stola"
-export const missedTitle = (nights: number): string => `${count(nights, NOUN.večer)} s pušačem, bez pušačkog stola`;
+export function parseSmokingTables(text: string): number[] | null {
+  const tables = new Set<number>();
+  const parts = text.split(/[\s,;]+/).filter(Boolean);
+  for (const part of parts) {
+    const range = /^(\d+)(?:[-–](\d+))?$/.exec(part);
+    if (!range) return null;
+    const from = Number(range[1]);
+    const to = range[2] == null ? from : Number(range[2]);
+    if (from < 1 || to > MAX_SMOKING_TABLES || from > to) return null;
+    for (let t = from; t <= to; t++) tables.add(t);
+  }
+  return Array.from(tables).sort((a, b) => a - b);
+}
+
+// The tables back in the form: "1, 2, 3"
+export const formatSmokingTables = (tables: readonly number[]): string => [...tables].sort((a, b) => a - b).join(", ");

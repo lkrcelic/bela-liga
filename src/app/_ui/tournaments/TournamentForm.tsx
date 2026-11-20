@@ -5,6 +5,7 @@ import {isIsoDate, isSafeUrl} from "@/app/_lib/nights";
 import {tournamentTimesErrors} from "@/app/_lib/tournamentDay";
 import {GAME_MINUTES_ERROR, GAME_MINUTES_MAX, GAME_MINUTES_MIN} from "@/app/_lib/gameTime";
 import {isValidPhone, phoneInput, PHONE_ERROR} from "@/app/_lib/phone";
+import {formatSmokingTables, parseSmokingTables, SMOKING_TABLES_ERROR} from "@/app/_lib/ui/smoking";
 import useAuthStore from "@/app/_store/authStore";
 import {color, font, tint} from "@/app/_styles/tokens";
 import {LocationPicker} from "@/app/_ui/locations/LocationPicker";
@@ -37,6 +38,8 @@ export type TournamentDraft = {
   prizes: PrizeDraft[];
   // Telefon organizatora (required)
   phone: string;
+  // Pušački stolovi as typed ("1, 2", "1-4"; "" = none)
+  smokingTables: string;
   // Vrijeme partije · min
   gameMinutes: string;
   // Iduća kola: published by themselves (Automatski) or after the admin's Objavi (Ručno)
@@ -63,6 +66,7 @@ export const EMPTY_TOURNAMENT: TournamentDraft = {
   rulesUrl: DEFAULT_RULES_URL,
   prizes: [{prize: "", description: ""}],
   phone: "",
+  smokingTables: "",
   gameMinutes: "35",
   autoPublish: false,
   openSignups: false,
@@ -84,6 +88,7 @@ type Source = Pick<
   | "rules_url"
   | "prizes"
   | "organizer_phone"
+  | "smoking_tables"
   | "game_minutes"
   | "auto_publish"
   | "open_signups"
@@ -105,6 +110,7 @@ export function draftOf(t: Source): TournamentDraft {
     rulesUrl: t.rules_url ?? "",
     prizes: t.prizes.length ? t.prizes.map((p) => ({prize: p.prize, description: p.description})) : [{prize: "", description: ""}],
     phone: t.organizer_phone ?? "",
+    smokingTables: formatSmokingTables(t.smoking_tables),
     gameMinutes: String(t.game_minutes),
     autoPublish: t.auto_publish,
     openSignups: t.open_signups,
@@ -120,7 +126,7 @@ export function copyOf(t: Source): TournamentDraft {
 const wholeNumber = (v: string) => /^\d+$/.test(v.trim());
 
 export type FormErrors = Partial<
-  Record<"name" | "date" | "gathering" | "start" | "rounds" | "maxTeams" | "fee" | "rulesUrl" | "prizes" | "phone" | "gameMinutes", string>
+  Record<"name" | "date" | "gathering" | "start" | "rounds" | "maxTeams" | "fee" | "rulesUrl" | "prizes" | "phone" | "smokingTables" | "gameMinutes", string>
 >;
 
 export const PHONE_REQUIRED = "Upiši telefon organizatora. Igrači ga zovu ako kasne.";
@@ -141,6 +147,7 @@ export function draftErrors(d: TournamentDraft): FormErrors {
   if (d.prizes.some((p) => !p.prize.trim() && p.description.trim())) e.prizes = "Upiši nagradu za svako mjesto ili makni redak.";
   if (!d.phone.trim()) e.phone = PHONE_REQUIRED;
   else if (!isValidPhone(d.phone)) e.phone = PHONE_ERROR;
+  if (parseSmokingTables(d.smokingTables) == null) e.smokingTables = SMOKING_TABLES_ERROR;
   if (!wholeNumber(d.gameMinutes) || Number(d.gameMinutes) < GAME_MINUTES_MIN || Number(d.gameMinutes) > GAME_MINUTES_MAX) e.gameMinutes = GAME_MINUTES_ERROR;
   return e;
 }
@@ -166,6 +173,7 @@ export function draftPayload(d: TournamentDraft): TournamentRequest {
     open_signups: d.openSignups,
     hide_entries: d.hideEntries,
     organizer_phone: text(d.phone),
+    smoking_tables: parseSmokingTables(d.smokingTables) ?? [],
   };
 }
 
@@ -331,6 +339,22 @@ export function TournamentFields({form, locks, compact = false, sx}: {form: Tour
       </Field>
       <Box sx={{mt: "-8px", pl: "4px", fontSize: 13, lineHeight: 1.45, color: color.muted}}>
         Obavezno. Igrači ga vide na stranici turnira (Nazovi · WhatsApp) i javljaju se ako kasne.
+      </Box>
+      <TextField
+        label="Pušački stolovi"
+        placeholder="npr. 1, 2 ili 1-4"
+        autoCapitalize="off"
+        spellCheck={false}
+        maxLength={200}
+        value={d.smokingTables}
+        onChange={(e) => set("smokingTables", e.target.value)}
+        soft
+        inputSx={input}
+        error={errors.smokingTables}
+      />
+      <Box sx={{mt: "-8px", pl: "4px", fontSize: 13, lineHeight: 1.45, color: color.muted}}>
+        Stolovi u prostoru gdje se smije pušiti. U svakom kolu za njih sjedaju mečevi s najviše pušača; broji se samo ovaj
+        turnir. Prazno = nema pušačkih stolova.
       </Box>
 
       <Box component="hr" sx={rule} />
