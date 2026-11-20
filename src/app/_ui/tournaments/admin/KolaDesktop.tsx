@@ -33,7 +33,7 @@ import WarningRoundedIcon from "@mui/icons-material/WarningRounded";
 import {Box, Dialog} from "@mui/material";
 import {TableStates} from "./DayAdmin";
 import {KoloTimerChip, KoloTimerPanel} from "./KoloTimer";
-import React, {useEffect, useId, useState} from "react";
+import React, {useEffect, useId, useState, useSyncExternalStore} from "react";
 
 // Upravljanje turnirom · Kola (Claude Design "Turniri admin" C1–C4): one Kolo's tables on the left with the Kolos 1…N
 // above them (✓ played, a red dot live, the pencil a draft); on the right what comes next. Kolo 1 is drawn at random
@@ -572,7 +572,7 @@ function DeleteKoloDialog({removal, busy, error, onClose, onConfirm}: {removal: 
 
 // Kolo preko cijelog ekrana (opened on the computer): the Kolo's tables on three fifths of the screen and the
 // tournament's standings on two, for the screen at the club; two fifths, so the standings keep the teams' names (on a
-// third they were cut, and on a TV's 960 px gone), and the tables, two names a row, keep the wider part. Nothing is edited here — the same rows (DesktopTableRow)
+// third they were cut), and the tables, two names a row, keep the wider part. Under 1440 px the whole view shrinks. Nothing is edited here — the same rows (DesktopTableRow)
 // and the same standings table (StandingsGrid) as the tabs Kola and Poredak, only bigger and without the shell. The
 // page under it keeps refreshing every 15 s while the tournament is played, so the view follows the games by itself.
 // A TV browser's full screen can be narrower than the computer's 1024 px (Android TV gives the page 960 px), so the
@@ -594,81 +594,110 @@ export function KoloFullscreen({t, kolo, rows, live, done, onClose}: {t: AdminTo
     };
   }, []);
 
+  // under SCREEN_WIDTH the view is laid out at SCREEN_WIDTH and shrunk to the screen: a TV's 960 px shows the 1440 px
+  // view at two thirds, sharp on its 1920 real pixels, instead of a third of 960 that leaves the names one letter
+  const scale = Math.min(1, useWindowWidth() / SCREEN_WIDTH);
+
   const headCard = {flex: "none", display: "flex", alignItems: "center", gap: "10px", p: "14px 20px"} as const;
   return (
-    <Dialog open fullScreen onClose={onClose} aria-labelledby={titleId} PaperProps={{sx: {background: color.cream, display: "flex", flexDirection: "column"}}}>
-      <Box sx={{flex: "none", display: "flex", alignItems: "center", gap: "16px", p: "18px 24px 14px"}}>
-        <Box sx={{flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: "2px"}}>
-          <Box component="span" sx={{fontSize: 14, fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", color: color.muted}}>
-            {nightLabel(t.date)} · {t.name}
-          </Box>
-          <Box component="h2" id={titleId} sx={{m: 0, fontFamily: font.display, fontSize: 38, fontWeight: 800, lineHeight: 1.05}}>
-            Kolo {kolo} od {t.rounds}
-          </Box>
-        </Box>
-        {live > 0 && (
-          <Box component="span" sx={{flex: "none", height: 38, display: "flex", alignItems: "center", gap: "8px", px: "14px", borderRadius: "12px", background: tint.red[10], color: color.red, fontSize: 16, fontWeight: 700}}>
-            <LiveDot size={9} />
-            {count(live, NOUN.stol)} uživo
-          </Box>
-        )}
-        {view && <KoloTimerChip kolo={view} height={38} fontSize={18} sx={{px: "14px", borderRadius: "12px", ...(view.ended_at == null && {background: color.navy, color: color.cream})}} />}
-        <Box component="span" sx={{flex: "none", fontSize: 16, color: color.ink2}}>
-          Gotovo {done} od {rows.length}
-        </Box>
-        <IconCircleButton label="Zatvori cijeli ekran" size={46} onClick={onClose} sx={{borderRadius: "14px", boxShadow: "none", background: color.white, "& svg": {fontSize: 26}}}>
-          <CloseRoundedIcon />
-        </IconCircleButton>
-      </Box>
-      <Box sx={{flex: 1, minHeight: 0, display: "grid", gridTemplateColumns: "minmax(0,3fr) minmax(0,2fr)", gap: "20px", p: "0 24px 24px"}}>
-        <Card component="section" aria-label={`Kolo ${kolo}`} sx={{minHeight: 0, display: "flex", flexDirection: "column", overflow: "hidden", borderRadius: "24px"}}>
-          <Box ref={areaRef} sx={{flex: 1, minHeight: 0, display: "flex", flexDirection: "column"}}>
-            {rows.length === 0 ? (
-              <EmptyState>Ovo kolo nema stolova.</EmptyState>
-            ) : (
-              <Box
-                component="ul"
-                aria-label={`Kolo ${kolo}: ${count(rows.length, NOUN.stol)}`}
-                sx={{
-                  listStyle: "none",
-                  m: 0,
-                  p: 0,
-                  flex: 1,
-                  minHeight: 0,
-                  overflowY: "auto",
-                  display: "grid",
-                  gridTemplateColumns: twoColumns ? "minmax(0,1fr) minmax(0,1fr)" : "minmax(0,1fr)",
-                  alignContent: "start",
-                  ...(twoColumns && {"& > li:nth-of-type(odd)": {borderRight: `1px solid ${color.divider}`}}),
-                  [NARROW_DESKTOP]: {gridTemplateColumns: "minmax(0,1fr)", "& > li:nth-of-type(odd)": {borderRight: "none"}},
-                }}
-              >
-                {rows.map((row) => (
-                  <DesktopTableRow key={row.id} t={row} dense={false} />
-                ))}
-              </Box>
-            )}
-          </Box>
-        </Card>
-        <Card component="section" aria-label="Poredak" sx={{minHeight: 0, display: "flex", flexDirection: "column", overflow: "hidden", borderRadius: "24px"}}>
-          <Box sx={headCard}>
-            <Box component="h3" sx={{m: 0, fontFamily: font.display, fontSize: 24, fontWeight: 800}}>
-              Poredak
+    <Dialog open fullScreen onClose={onClose} aria-labelledby={titleId} PaperProps={{sx: {background: color.cream, overflow: "hidden"}}}>
+      {/* transform, not zoom: the layout inside stays in plain px (zoom changes how %, the measurements and the
+          media queries behave, and differently in older Chromium), so useElementHeight sees the 1440 px layout */}
+      <Box
+        sx={{
+          width: `${100 / scale}%`,
+          height: `${100 / scale}%`,
+          display: "flex",
+          flexDirection: "column",
+          ...(scale < 1 && {transform: `scale(${scale})`, transformOrigin: "0 0"}),
+        }}
+      >
+        <Box sx={{flex: "none", display: "flex", alignItems: "center", gap: "16px", p: "18px 24px 14px"}}>
+          <Box sx={{flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: "2px"}}>
+            <Box component="span" sx={{fontSize: 14, fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", color: color.muted}}>
+              {nightLabel(t.date)} · {t.name}
             </Box>
-            <Box component="span" sx={{fontSize: 14, color: color.ink2}}>
-              {t.completed_kolos === 0 ? "Prije prvog kola" : `Nakon ${t.completed_kolos} od ${t.rounds} kola`}
+            <Box component="h2" id={titleId} sx={{m: 0, fontFamily: font.display, fontSize: 38, fontWeight: 800, lineHeight: 1.05}}>
+              Kolo {kolo} od {t.rounds}
             </Box>
           </Box>
-          {standings.length === 0 ? (
-            <EmptyState>Poredak će biti ovdje kad počne prvo kolo.</EmptyState>
-          ) : (
-            <Box sx={{flex: 1, minHeight: 0, overflowY: "auto"}}>
-              {/* every px goes to the names, so NER goes out while nobody has a draw */}
-              <StandingsGrid rows={standings} dense columns={standings.some((r) => r.draws > 0) ? ["wins", "draws", "losses"] : ["wins", "losses"]} caption={`Poredak turnira ${t.name}`} />
+          {live > 0 && (
+            <Box component="span" sx={{flex: "none", height: 38, display: "flex", alignItems: "center", gap: "8px", px: "14px", borderRadius: "12px", background: tint.red[10], color: color.red, fontSize: 16, fontWeight: 700}}>
+              <LiveDot size={9} />
+              {count(live, NOUN.stol)} uživo
             </Box>
           )}
-        </Card>
+          {view && <KoloTimerChip kolo={view} height={38} fontSize={18} sx={{px: "14px", borderRadius: "12px", ...(view.ended_at == null && {background: color.navy, color: color.cream})}} />}
+          <Box component="span" sx={{flex: "none", fontSize: 16, color: color.ink2}}>
+            Gotovo {done} od {rows.length}
+          </Box>
+          <IconCircleButton label="Zatvori cijeli ekran" size={46} onClick={onClose} sx={{borderRadius: "14px", boxShadow: "none", background: color.white, "& svg": {fontSize: 26}}}>
+            <CloseRoundedIcon />
+          </IconCircleButton>
+        </Box>
+        <Box sx={{flex: 1, minHeight: 0, display: "grid", gridTemplateColumns: "minmax(0,3fr) minmax(0,2fr)", gap: "20px", p: "0 24px 24px"}}>
+          <Card component="section" aria-label={`Kolo ${kolo}`} sx={{minHeight: 0, display: "flex", flexDirection: "column", overflow: "hidden", borderRadius: "24px"}}>
+            <Box ref={areaRef} sx={{flex: 1, minHeight: 0, display: "flex", flexDirection: "column"}}>
+              {rows.length === 0 ? (
+                <EmptyState>Ovo kolo nema stolova.</EmptyState>
+              ) : (
+                <Box
+                  component="ul"
+                  aria-label={`Kolo ${kolo}: ${count(rows.length, NOUN.stol)}`}
+                  sx={{
+                    listStyle: "none",
+                    m: 0,
+                    p: 0,
+                    flex: 1,
+                    minHeight: 0,
+                    overflowY: "auto",
+                    display: "grid",
+                    gridTemplateColumns: twoColumns ? "minmax(0,1fr) minmax(0,1fr)" : "minmax(0,1fr)",
+                    alignContent: "start",
+                    ...(twoColumns && {"& > li:nth-of-type(odd)": {borderRight: `1px solid ${color.divider}`}}),
+                  }}
+                >
+                  {rows.map((row) => (
+                    <DesktopTableRow key={row.id} t={row} dense={false} />
+                  ))}
+                </Box>
+              )}
+            </Box>
+          </Card>
+          <Card component="section" aria-label="Poredak" sx={{minHeight: 0, display: "flex", flexDirection: "column", overflow: "hidden", borderRadius: "24px"}}>
+            <Box sx={headCard}>
+              <Box component="h3" sx={{m: 0, fontFamily: font.display, fontSize: 24, fontWeight: 800}}>
+                Poredak
+              </Box>
+              <Box component="span" sx={{fontSize: 14, color: color.ink2}}>
+                {t.completed_kolos === 0 ? "Prije prvog kola" : `Nakon ${t.completed_kolos} od ${t.rounds} kola`}
+              </Box>
+            </Box>
+            {standings.length === 0 ? (
+              <EmptyState>Poredak će biti ovdje kad počne prvo kolo.</EmptyState>
+            ) : (
+              <Box sx={{flex: 1, minHeight: 0, overflowY: "auto"}}>
+                {/* every px goes to the names, so NER goes out while nobody has a draw */}
+                <StandingsGrid rows={standings} dense columns={standings.some((r) => r.draws > 0) ? ["wins", "draws", "losses"] : ["wins", "losses"]} caption={`Poredak turnira ${t.name}`} />
+              </Box>
+            )}
+          </Card>
+        </Box>
       </Box>
     </Dialog>
+  );
+}
+
+// The width the full-screen view is laid out at: below it, it is shrunk to fit (a TV browser gives the page 960 px)
+const SCREEN_WIDTH = 1440;
+
+function useWindowWidth(): number {
+  return useSyncExternalStore(
+    (onChange) => {
+      window.addEventListener("resize", onChange);
+      return () => window.removeEventListener("resize", onChange);
+    },
+    () => window.innerWidth,
+    () => SCREEN_WIDTH
   );
 }
