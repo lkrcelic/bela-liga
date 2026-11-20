@@ -6,7 +6,7 @@ import {AdminTournament, KoloView} from "@/app/_interfaces/tournament";
 import {isByeTeam} from "@/app/_lib/bye";
 import {KoloPair} from "@/app/_lib/matching/tournamentPairing";
 import {nightLabel} from "@/app/_lib/nights";
-import {KOLO_MAX, KoloRemoval, koloRemovalOf, koloRemovalWarns, koloSteps, removesResults, tableWasPlayed} from "@/app/_lib/tournaments";
+import {KOLO_MAX, KoloRemoval, koloRemovalOf, koloRemovalWarns, koloSteps, removesResults, screenKolo, tableWasPlayed} from "@/app/_lib/tournaments";
 import {filterTables, TableFilter, tableColumns, TableRow, toTableRows} from "@/app/_lib/ui/tables";
 import {toStandingsRows} from "@/app/_lib/ui/standings";
 import useElementHeight from "@/app/_hooks/useElementHeight";
@@ -47,7 +47,8 @@ type Props = {
   onKolo: (n: number) => void;
   // the Kolo over the whole screen; the page keeps it (in the address), so it outlives this view being built again
   full: boolean;
-  onFull: (on: boolean) => void;
+  // closing it may leave the tab on another Kolo: the one it was showing
+  onFull: (on: boolean, kolo?: number) => void;
   onChanged: (t: AdminTournament) => void;
   reload: () => void;
 };
@@ -382,7 +383,7 @@ export default function KolaDesktop({t, kolo, onKolo, full, onFull, onChanged, r
           </Box>
         )}
         </Box>
-        {full && view && <KoloFullscreen t={t} kolo={kolo} rows={rows} live={live} done={done} onClose={() => onFull(false)} />}
+        {full && <KoloFullscreen t={t} onClose={(k) => onFull(false, k)} />}
         {askDelete && removal && (
           <DeleteKoloDialog removal={removal} busy={busy === "delete"} error={error} onClose={() => setAskDelete(false)} onConfirm={remove} />
         )}
@@ -570,19 +571,24 @@ function DeleteKoloDialog({removal, busy, error, onClose, onConfirm}: {removal: 
   );
 }
 
-// Kolo preko cijelog ekrana (opened on the computer): the Kolo's tables on three fifths of the screen and the
-// tournament's standings on two, for the screen at the club; two fifths, so the standings keep the teams' names (on a
-// third they were cut), and the tables, two names a row, keep the wider part. Under 1440 px the whole view shrinks. Nothing is edited here — the same rows (DesktopTableRow)
-// and the same standings table (StandingsGrid) as the tabs Kola and Poredak, only bigger and without the shell. The
-// page under it keeps refreshing every 15 s while the tournament is played, so the view follows the games by itself.
-// A TV browser's full screen can be narrower than the computer's 1024 px (Android TV gives the page 960 px), so the
-// page stays the computer's while this is open (?ekran=1), whatever the width.
-export function KoloFullscreen({t, kolo, rows, live, done, onClose}: {t: AdminTournament; kolo: number; rows: TableRow[]; live: number; done: number; onClose: () => void}) {
+// Kolo preko cijelog ekrana (opened on the computer), for the screen at the club: the Kolo's tables on three fifths of
+// the screen and the tournament's standings on two, so the standings keep the teams' names and the tables, two names a
+// row, keep the wider part. Nothing is edited here — the same rows (DesktopTableRow) and the same standings table
+// (StandingsGrid) as the tabs Kola and Poredak, only bigger and without the shell. It shows the Kolo being played
+// (screenKolo), whichever Kolo it was opened on: the page under it refreshes every 15 s while the tournament is played,
+// so the view follows the games and moves on to the next Kolo once it is out, as Dnevni poredak follows the league's
+// round. Under 1440 px the whole view shrinks. A TV browser's full screen can be narrower than the computer's 1024 px
+// (Android TV gives the page 960 px), so the page stays the computer's while this is open (?ekran=1), whatever the width.
+// Closed, it leaves the Kola tab on the Kolo it was showing.
+export function KoloFullscreen({t, onClose}: {t: AdminTournament; onClose: (kolo: number) => void}) {
+  const view = t.results.kolos.find((k) => k.number === screenKolo(t.results.kolos)) ?? null;
+  const rows = view ? koloRows(view) : [];
+  const live = rows.filter((r) => r.live).length;
+  const done = rows.filter((r) => r.done).length;
   const [areaRef, areaHeight] = useElementHeight<HTMLDivElement>();
   const twoColumns = tableColumns(rows.length, areaHeight == null ? undefined : Math.floor(areaHeight / TABLE_ROW_HEIGHT)) > 1;
   const standings = toStandingsRows(t.results.standings);
   const titleId = useId();
-  const view = t.results.kolos.find((k) => k.number === kolo) ?? null;
 
   // the browser's own full screen too, so the tabs and the address bar go away; it needs the click that opened the
   // view, and a browser that refuses it just shows the view over the page
@@ -598,9 +604,14 @@ export function KoloFullscreen({t, kolo, rows, live, done, onClose}: {t: AdminTo
   // view at two thirds, sharp on its 1920 real pixels, instead of a third of 960 that leaves the names one letter
   const scale = Math.min(1, useWindowWidth() / SCREEN_WIDTH);
 
+  // no Kolo out (yet): nothing to show
+  if (!view) return null;
+  const kolo = view.number;
+  const close = () => onClose(kolo);
+
   const headCard = {flex: "none", display: "flex", alignItems: "center", gap: "10px", p: "14px 20px"} as const;
   return (
-    <Dialog open fullScreen onClose={onClose} aria-labelledby={titleId} PaperProps={{sx: {background: color.cream, overflow: "hidden"}}}>
+    <Dialog open fullScreen onClose={close} aria-labelledby={titleId} PaperProps={{sx: {background: color.cream, overflow: "hidden"}}}>
       {/* transform, not zoom: the layout inside stays in plain px (zoom changes how %, the measurements and the
           media queries behave, and differently in older Chromium), so useElementHeight sees the 1440 px layout */}
       <Box
@@ -627,11 +638,11 @@ export function KoloFullscreen({t, kolo, rows, live, done, onClose}: {t: AdminTo
               {count(live, NOUN.stol)} uživo
             </Box>
           )}
-          {view && <KoloTimerChip kolo={view} height={38} fontSize={18} sx={{px: "14px", borderRadius: "12px", ...(view.ended_at == null && {background: color.navy, color: color.cream})}} />}
+          <KoloTimerChip kolo={view} height={38} fontSize={18} sx={{px: "14px", borderRadius: "12px", ...(view.ended_at == null && {background: color.navy, color: color.cream})}} />
           <Box component="span" sx={{flex: "none", fontSize: 16, color: color.ink2}}>
             Gotovo {done} od {rows.length}
           </Box>
-          <IconCircleButton label="Zatvori cijeli ekran" size={46} onClick={onClose} sx={{borderRadius: "14px", boxShadow: "none", background: color.white, "& svg": {fontSize: 26}}}>
+          <IconCircleButton label="Zatvori cijeli ekran" size={46} onClick={close} sx={{borderRadius: "14px", boxShadow: "none", background: color.white, "& svg": {fontSize: 26}}}>
             <CloseRoundedIcon />
           </IconCircleButton>
         </Box>

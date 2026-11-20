@@ -170,7 +170,7 @@ export default function ManageTournamentDesktop({id}: {id: number}) {
               kolo={shownKolo}
               onKolo={(k) => go("kola", k)}
               full={screen}
-              onFull={(on) => go("kola", shownKolo, on)}
+              onFull={(on, k = shownKolo) => go("kola", k, on)}
               onChanged={setTournament}
               reload={reload}
             />

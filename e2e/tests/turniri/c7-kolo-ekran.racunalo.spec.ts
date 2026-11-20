@@ -1,8 +1,19 @@
 // C7 · Kolo preko cijelog ekrana on the computer, for the screen at the club: the view stays open when the page gets
 // narrower than the computer's 1024 px, as a TV browser's full screen does (Android TV gives the page 960 × 540), and
-// when the page is loaded again; Zatvori cijeli ekran closes it for good.
-import {expect, test} from "../../helpers/c7";
+// when the page is loaded again; Zatvori cijeli ekran closes it for good. It follows the tournament: once the next Kolo
+// is out it shows that one, as Dnevni poredak follows the league's round being played.
+import type {APIRequestContext} from "@playwright/test";
+import {expect, koloTables, test} from "../../helpers/c7";
 import {DESKTOP} from "../../helpers/devices";
+import {addHands, startMatch} from "../../helpers/scorepad";
+
+// a table played to the end through the scorepad's routes: seven hands of 152 : 10 for team1, 1064 : 70, Završi meč
+async function playTable(api: APIRequestContext, roundId: number) {
+  const matchId = await startMatch(api, roundId);
+  await addHands(api, matchId, Array.from({length: 7}, () => ({caller: 1 as const, game1: 152})));
+  const ended = await api.post("/api/matches", {data: matchId});
+  expect(ended.ok(), `Završi meč: ${await ended.text()}`).toBeTruthy();
+}
 
 // a 1080p TV as an Android TV browser gives it to the page (devicePixelRatio 2)
 const TV = {width: 960, height: 540};
@@ -37,5 +48,38 @@ test("Kolo preko cijelog ekrana stays open when the page narrows to a TV's 960 p
   await page.reload();
   await expect(page.getByRole("button", {name: "Preko cijelog ekrana"})).toBeVisible();
   await expect(screen).toHaveCount(0);
+  await healthy(page);
+});
+
+test("Kolo preko cijelog ekrana moves on to Kolo 2 by itself once it is out, and closed leaves the Kola tab on it", async ({as, own, organizer, db, healthy}) => {
+  const t = await own({teams: 4, rounds: 2, kolo1: true});
+  const page = await as("organizer");
+  // nobody touches the screen: the page reads the tournament again every 15 s while it is played, on a clock the test
+  // moves
+  await page.clock.install();
+  await page.goto(`/turniri/${t.id}/upravljanje?view=kola&kolo=1`);
+  await page.getByRole("button", {name: "Preko cijelog ekrana"}).click();
+  const kolo1 = page.getByRole("dialog", {name: "Kolo 1 od 2"});
+  await expect(kolo1.getByRole("list", {name: "Kolo 1: 2 stola"})).toBeVisible();
+
+  // Kolo 1 played to the end and Kolo 2 made (the draft the last table made, kept by Složi kolo), from elsewhere:
+  // between the Kolos the screen keeps Kolo 1 with its results, the draft isn't shown
+  for (const table of await koloTables(db, t.id, 1)) await playTable(organizer, table.id);
+  const made = await organizer.post(`/api/admin/tournaments/${t.id}/kola`, {data: {}});
+  expect(made.ok(), `Složi Kolo 2: ${await made.text()}`).toBeTruthy();
+  await page.clock.fastForward(15_000);
+  await expect(kolo1).toContainText("Gotovo 2 od 2");
+
+  // Objavi kolo: on the next refresh the screen is on Kolo 2
+  const published = await organizer.post(`/api/admin/tournaments/${t.id}/kola/2/publish`);
+  expect(published.ok(), `Objavi Kolo 2: ${await published.text()}`).toBeTruthy();
+  await page.clock.fastForward(15_000);
+  const screen = page.getByRole("dialog", {name: "Kolo 2 od 2"});
+  await expect(screen.getByRole("list", {name: "Kolo 2: 2 stola"})).toBeVisible();
+  await expect(screen).toContainText("Gotovo 0 od 2");
+
+  await screen.getByRole("button", {name: "Zatvori cijeli ekran"}).click();
+  await expect(screen).toBeHidden();
+  await expect(page.getByRole("list", {name: "Kolo 2: 2 stola"})).toBeVisible();
   await healthy(page);
 });
