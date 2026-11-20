@@ -85,6 +85,14 @@ export function liveKolo(kolos: KoloSummary[]): number | null {
   return published.length > 0 && !kolosDone(published[0]) ? published[0].number : null;
 }
 
+// The Kolo on the screen at the club (Kolo preko cijelog ekrana): the last one published — the one being played, and
+// between Kolos the one just played until the next is out, as Dnevni poredak follows the league's round being played.
+// A draft isn't shown; null before Kolo 1 is out.
+export function screenKolo(kolos: {number: number; published: boolean}[]): number | null {
+  const published = kolos.filter((k) => k.published).map((k) => k.number);
+  return published.length > 0 ? Math.max(...published) : null;
+}
+
 // The tournament's last Kolo is made (a draft or published): there is no next Kolo to join, so Tu smo · Želimo
 // uskočiti isn't offered any more
 export function lastKoloMade(kolos: KoloSummary[], rounds: number): boolean {

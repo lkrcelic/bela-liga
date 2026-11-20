@@ -18,6 +18,7 @@ import {
   prizeSummary,
   rankTeams,
   rulesLabel,
+  screenKolo,
   standingsOrderLabel,
   TableResult,
   tournamentPhase,
@@ -330,6 +331,21 @@ test("the Kolos played, the one being played and every Kolo's step", () => {
     koloSteps(4, [...kolos, {number: 3, published: false, tables: 3, done: 0, live: 0}]).map((k) => k.step),
     ["played", "live", "draft", "waiting"]
   );
+});
+
+test("the screen at the club shows the last Kolo out: the one being played, between Kolos the one just played, never a draft", () => {
+  const played = {number: 1, published: true, tables: 3, done: 3, live: 0};
+  const live = {number: 2, published: true, tables: 3, done: 1, live: 2};
+  const draft = {number: 3, published: false, tables: 3, done: 0, live: 0};
+  assert.equal(screenKolo([played, live]), 2);
+  // Kolo 2 played to the end and Kolo 3 drafted: Kolo 2 stays until Kolo 3 is out
+  assert.equal(screenKolo([played, {...live, done: 3, live: 0}, draft]), 2);
+  assert.equal(screenKolo([played, live, {...draft, published: true}]), 3);
+  // in whatever order the Kolos come
+  assert.equal(screenKolo([draft, live, played]), 2);
+  // nothing out yet: nothing to show
+  assert.equal(screenKolo([{...played, published: false}]), null);
+  assert.equal(screenKolo([]), null);
 });
 
 test("the words of the tournament screens", () => {
