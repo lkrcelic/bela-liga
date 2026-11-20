@@ -1,17 +1,23 @@
 import {BelaResultCreateRequest} from "@/app/_interfaces/belaResult";
 import {declarationsError, InvalidResultError, normalizeBelaResult} from "@/app/_lib/validation/validateResult";
 import {prisma} from "@/app/_lib/prisma";
+import {TIME_UP} from "@/app/_lib/service/ongoingBelaResult/create";
 
 type UpdateOngoingBelaResultType = {
     result_id: number,
     resultData: BelaResultCreateRequest,
     // checks the hand and recomputes its totals (an admin's manual hand uses its own rule)
     normalize?: (r: BelaResultCreateRequest) => BelaResultCreateRequest,
+    // the admin's corrections don't depend on the time (DECISIONS #83)
+    admin?: boolean,
 }
 
 // Replaces a hand and moves the match score by the difference, all in one transaction.
 // The match is taken from the stored hand, never from the request body.
-export async function updateOngoingBelaResult({result_id, resultData, normalize = normalizeBelaResult}: UpdateOngoingBelaResultType): Promise<void> {
+// Vrijeme partije: once the match's time is up a player can't correct a hand either, as they can't add one (#45): the
+// match ends with the score entered when the time was up. Correcting a hand after a team passed 1001 stays allowed,
+// the board offers it ("Klikni na igru za ispravak ili završi meč").
+export async function updateOngoingBelaResult({result_id, resultData, normalize = normalizeBelaResult, admin = false}: UpdateOngoingBelaResultType): Promise<void> {
     // match_id and expected_hands aren't columns of the hand: the match comes from the stored hand, and expected_hands
     // only guards a new hand against being entered twice (createBelaResult), an edit of a saved one doesn't count hands
     const {announcements, match_id: _matchId, expected_hands: _expectedHands, ...nonRelationalData} = normalize(resultData);
@@ -27,8 +33,9 @@ export async function updateOngoingBelaResult({result_id, resultData, normalize 
             throw new InvalidResultError("Igra ne postoji.");
         }
         // a tournament "bez zvanja" takes only bela
-        const [table] = await tx.$queryRaw<{declarations: boolean}[]>`
-            SELECT r.declarations FROM "OngoingMatch" om JOIN "Round" r ON r.id = om.round_id WHERE om.id = ${existingResult.match_id}`;
+        const [table] = await tx.$queryRaw<{declarations: boolean, ends_at: Date | null}[]>`
+            SELECT r.declarations, om.ends_at FROM "OngoingMatch" om JOIN "Round" r ON r.id = om.round_id WHERE om.id = ${existingResult.match_id}`;
+        if (!admin && table?.ends_at && Date.now() > table.ends_at.getTime()) throw new InvalidResultError(TIME_UP);
         const zvanja = declarationsError(table?.declarations ?? true, announcements);
         if (zvanja) throw new InvalidResultError(zvanja);
 

@@ -1,7 +1,7 @@
 // C4 · Vrijeme partije, when a match's time runs out (DECISIONS #83, CHANGELOG 07.11. and 14.11.): the match closes
 // with the score entered then and the team with more points wins it, on the first read after the deadline (the board
 // itself, a reload, or the scheduler's /api/cron/tick), and the table goes on to Meč 2 on a fresh clock or to Kraj
-// kola. A hand saved after the deadline doesn't count; with the score level one more hand is played, and it ends the
+// kola. A hand saved after the deadline doesn't count, nor does a correction of a saved one (#45); with the score level one more hand is played, and it ends the
 // match.
 // Each test plays its own one-table Kolo of tonight in "E2E · Scorepad" for the teams of tables.timeLimit
 // (helpers/c4.ts: published as the admin does, Tko igra, the first match started with the league's 35 minutes), with
@@ -9,7 +9,7 @@
 // and the server recounts the standings.
 // A hand is 162 game points; the caller must score more than the other team (game points + zvanja), else it is pad.
 import {expect, expectRoundWins, expectTimer, moveDeadline, test, tick, type OwnTable} from "../../helpers/c4";
-import {addHands, expectTotal, fillHand, handRows} from "../../helpers/scorepad";
+import {addHands, expectTotal, fillHand, handRows, openHand} from "../../helpers/scorepad";
 import type {Db} from "../../helpers/db";
 import {expectHealthy, watch} from "../../helpers/health";
 
@@ -128,6 +128,40 @@ test("a hand saved after the time is up isn't counted: Spremi says Meč je već 
   await page.getByRole("button", {name: "Na meč"}).click();
   const second = await expectSecondMatch(page, db, t, t.matchId, [1, 0]);
   expect(await db.ongoingBelaResult.count({where: {match_id: second.id}})).toBe(0);
+  await healthy(page);
+});
+
+test("a correction saved after the time is up isn't counted either: Spremi says Meč je već završen, and the match closes with the hand as it was (#45)", async ({
+  as,
+  api,
+  db,
+  table: t,
+  healthy,
+}) => {
+  await addHands(await api(t.phone), t.matchId, homeAhead(t));
+  const page = await as(t.phone);
+  await page.goto(`/ongoing-match/${t.matchId}`);
+  await expect(handRows(page)).toHaveCount(3);
+
+  // Igra 2 (away's 90 + bela 20, 72 : 110) is corrected in time to home calling and taking 100 with no zvanja, which
+  // would make it 352 : 134; the time runs out before Spremi
+  await openHand(page, 2);
+  await fillHand(page, {caller: t.home.name, zvanja: {}, points: {team: t.home.name, game: 100}});
+  await moveDeadline(db, t.matchId, -1);
+  await page.getByRole("button", {name: "Spremi", exact: true}).click();
+  await expect(page.getByRole("main").getByRole("alert")).toHaveText("Meč je već završen, pa ova igra nije spremljena.");
+
+  // the match closed with the hands as they were when the time ran out
+  expect(await finished(db, t)).toEqual([{score: [324, 182], byTime: true}]);
+  const played = await db.match.findFirstOrThrow({where: {round_id: t.roundId}, include: {belaResults: {orderBy: {result_id: "asc"}}}});
+  expect(played.belaResults.map((r) => t.byTeam(r.player_pair1_total_points, r.player_pair2_total_points))).toEqual([
+    [100, 62],
+    [72, 110],
+    [152, 10],
+  ]);
+
+  await page.getByRole("button", {name: "Na meč"}).click();
+  await expectSecondMatch(page, db, t, t.matchId, [1, 0]);
   await healthy(page);
 });
 

@@ -1,12 +1,14 @@
 import assert from "node:assert/strict";
 import {after, before, test} from "node:test";
 import {prisma} from "@/app/_lib/prisma";
-import {getTablePad} from "@/app/_lib/service/admin/hands";
+import {getTablePad, updateHand} from "@/app/_lib/service/admin/hands";
 import {expireDueMatches} from "@/app/_lib/service/match/timeLimit";
 import {createBelaResult, TIME_UP} from "@/app/_lib/service/ongoingBelaResult/create";
+import {updateOngoingBelaResult} from "@/app/_lib/service/ongoingBelaResult/update";
 
 // Vrijeme partije against a real Postgres: a match whose time is up closes at once (no wait after the deadline) with
-// the team ahead winning, a player's hand after the time is refused, and a level score plays one more hand. Run with
+// the team ahead winning, a player's hand after the time is refused (a new one or a correction of a saved one, #45), and
+// a level score plays one more hand. Run with
 // `npm run test:db` and DATABASE_URL on a throwaway database with the migrations applied (it adds its own league and
 // teams and removes them afterwards). Never point it at production.
 
@@ -100,4 +102,38 @@ test("a level score after the deadline stays open for one more hand, and that ha
   assert.deepEqual([finished.player_pair1_score, finished.player_pair2_score, finished.time_expired], [542, 580, true]);
   const round = await prisma.round.findUniqueOrThrow({where: {id: roundId}});
   assert.deepEqual([round.team1_wins, round.team2_wins], [0, 1]);
+});
+
+// a saved hand of a match out of time: the admin enters it (the admin's hands don't depend on the time), so the match
+// goes from 400:338 to 500:400 with team 1 calling
+async function savedHandOutOfTime(team1: number, team2: number, secondsAgo: number) {
+  const {matchId} = await tableOutOfTime(team1, team2, 400, 338, secondsAgo);
+  await createBelaResult(hand(matchId, 1), undefined, {admin: true});
+  const saved = await prisma.ongoingBelaResult.findFirstOrThrow({where: {match_id: matchId}});
+  return {matchId, resultId: saved.result_id};
+}
+
+async function scoreOf(matchId: number) {
+  const match = await prisma.ongoingMatch.findUniqueOrThrow({where: {id: matchId}});
+  return [match.player_pair1_score, match.player_pair2_score];
+}
+
+test("a player's correction of a saved hand after the deadline is refused, and the hand and the score stay", async () => {
+  const {matchId, resultId} = await savedHandOutOfTime(teams[3], teams[4], 1);
+  await assert.rejects(updateOngoingBelaResult({result_id: resultId, resultData: hand(matchId, 2)}), {message: TIME_UP});
+  assert.deepEqual(await scoreOf(matchId), [500, 400]);
+  const kept = await prisma.ongoingBelaResult.findUniqueOrThrow({where: {result_id: resultId}});
+  assert.deepEqual([kept.player_pair1_total_points, kept.player_pair2_total_points], [100, 62]);
+});
+
+test("the admin's correction of a saved hand after the deadline is taken", async () => {
+  const {matchId, resultId} = await savedHandOutOfTime(teams[0], teams[5], 1);
+  await updateHand("ongoing", resultId, {manual: true, points1: 62, points2: 100});
+  assert.deepEqual(await scoreOf(matchId), [462, 438]);
+});
+
+test("a player's correction of a saved hand before the deadline moves the score", async () => {
+  const {matchId, resultId} = await savedHandOutOfTime(teams[2], teams[4], -60);
+  await updateOngoingBelaResult({result_id: resultId, resultData: hand(matchId, 2)});
+  assert.deepEqual(await scoreOf(matchId), [462, 438]);
 });

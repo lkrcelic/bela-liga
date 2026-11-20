@@ -2,6 +2,13 @@
 
 What the commits changed for the people using the app, newest first. The reasons and details are in DECISIONS.md.
 
+## 20.11.2026 · Ispravak igre nakon isteka vremena
+
+On development, not live yet.
+
+### Changed
+- Kad partiji istekne vrijeme, igrač više ne može ni **ispraviti** već spremljenu igru, kao što ni novu ne može upisati: partija završava s rezultatom upisanim kad je vrijeme isteklo. Ispravak igre nakon što ekipa prijeđe 1001 i dalje radi, a admin i dalje ispravlja igre bez obzira na vrijeme (#45).
+
 ## 19.11.2026 · Ekipa s jednim igračem
 
 On development, not live yet.
