@@ -570,8 +570,9 @@ function DeleteKoloDialog({removal, busy, error, onClose, onConfirm}: {removal: 
   );
 }
 
-// Kolo preko cijelog ekrana (opened on the computer): the Kolo's tables on two thirds of the screen and the tournament's
-// standings on the last third, for the screen at the club. Nothing is edited here — the same rows (DesktopTableRow)
+// Kolo preko cijelog ekrana (opened on the computer): the Kolo's tables on three fifths of the screen and the
+// tournament's standings on two, for the screen at the club; two fifths, so the standings keep the teams' names (on a
+// third they were cut, and on a TV's 960 px gone), and the tables, two names a row, keep the wider part. Nothing is edited here — the same rows (DesktopTableRow)
 // and the same standings table (StandingsGrid) as the tabs Kola and Poredak, only bigger and without the shell. The
 // page under it keeps refreshing every 15 s while the tournament is played, so the view follows the games by itself.
 // A TV browser's full screen can be narrower than the computer's 1024 px (Android TV gives the page 960 px), so the
@@ -619,7 +620,7 @@ export function KoloFullscreen({t, kolo, rows, live, done, onClose}: {t: AdminTo
           <CloseRoundedIcon />
         </IconCircleButton>
       </Box>
-      <Box sx={{flex: 1, minHeight: 0, display: "grid", gridTemplateColumns: "minmax(0,2fr) minmax(0,1fr)", gap: "20px", p: "0 24px 24px"}}>
+      <Box sx={{flex: 1, minHeight: 0, display: "grid", gridTemplateColumns: "minmax(0,3fr) minmax(0,2fr)", gap: "20px", p: "0 24px 24px"}}>
         <Card component="section" aria-label={`Kolo ${kolo}`} sx={{minHeight: 0, display: "flex", flexDirection: "column", overflow: "hidden", borderRadius: "24px"}}>
           <Box ref={areaRef} sx={{flex: 1, minHeight: 0, display: "flex", flexDirection: "column"}}>
             {rows.length === 0 ? (
@@ -662,7 +663,7 @@ export function KoloFullscreen({t, kolo, rows, live, done, onClose}: {t: AdminTo
             <EmptyState>Poredak će biti ovdje kad počne prvo kolo.</EmptyState>
           ) : (
             <Box sx={{flex: 1, minHeight: 0, overflowY: "auto"}}>
-              {/* a third of the screen is narrow for the names, so NER goes out while nobody has a draw */}
+              {/* every px goes to the names, so NER goes out while nobody has a draw */}
               <StandingsGrid rows={standings} dense columns={standings.some((r) => r.draws > 0) ? ["wins", "draws", "losses"] : ["wins", "losses"]} caption={`Poredak turnira ${t.name}`} />
             </Box>
           )}
