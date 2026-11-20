@@ -2,9 +2,16 @@
 
 What the commits changed for the people using the app, newest first. The reasons and details are in DECISIONS.md.
 
+## 19.11.2026 · Ekipa s jednim igračem
+
+On development, not live yet.
+
+### Changed
+- **Ekipa s jednim igračem** (suigrač deaktiviran, obrisan ili maknut iz ekipe) sad se vidi prije večeri: u **Upravljanje ligom · Ekipe** piše "Ekipa ima samo 1 aktivnog igrača", a u **Novo kolo · Tko igra večeras?** stoji crveno **1 igrač**. Kad se otvori njezin stol, **Tko igra** iznad **Potvrdi** kaže da ekipa ima samo jednog igrača s računom (i dalje se može potvrditi) (#41).
+
 ## 18.11.2026 · Turnir uvijek ima vrijeme, organizator ne otkazuje turnir
 
-On development since 18.11. (with the E2E suite, DECISIONS #99).
+Live since 20.11. (5328da8, DECISIONS #99, #89, #31, #36).
 
 ### Admin
 - **Novi turnir** i **Podaci** traže **Okupljanje** i **Početak**, a okupljanje mora biti prije početka. Zato svaki turnir ima **Potvrdu dolaska**.
@@ -18,7 +25,6 @@ On development since 18.11. (with the E2E suite, DECISIONS #99).
 - **Večer lige** (admin) od druge večeri sezone broji večerašnja kola: "Kolo 22 · 2. od 3 · u tijeku" i "2 / 2 kola odigrano", umjesto "Kolo 22 od 22" i "8 / 8" (#89).
 - **Prijava**: "Belatronika" na užim mobitelima (360 px) više se ne lomi u "Belatronik / a"; riječ ostaje u jednom retku, a zvono i slova se po potrebi malo smanje (#31).
 - **Moj profil** (mobitel): kartica s imenom i rejtingom sad se pomiče zajedno s podacima, pa kod uređivanja **Mobitela**, **Korisničkog imena** i **Datuma rođenja** polje i **Spremi** ostaju vidljivi i kad se otvori tipkovnica (#36).
-- **Ekipa s jednim igračem** (suigrač deaktiviran, obrisan ili maknut iz ekipe) sad se vidi prije večeri: u **Upravljanje ligom · Ekipe** piše "Ekipa ima samo 1 aktivnog igrača", a u **Novo kolo · Tko igra večeras?** stoji crveno **1 igrač**. Kad se otvori njezin stol, **Tko igra** iznad **Potvrdi** kaže da ekipa ima samo jednog igrača s računom (i dalje se može potvrditi) (#41).
 
 ## 17.11.2026 · Organizator vodi stolove svog turnira
 
