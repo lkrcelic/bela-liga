@@ -55,6 +55,20 @@ export function computeHandTotals(hand: HandInput): HandTotals {
   return {totalPoints1: total1, totalPoints2: total2, pass: true};
 }
 
+// The "Σ" line under each team on the points step: the totals Spremi will save (pad and štiglja included) and the
+// team that fell, if any. Until the game points are a whole hand (nothing typed yet) or with no caller, it is just
+// each team's points plus its zvanja, and nobody has fallen.
+export function handPreview(
+  hand: Omit<HandInput, "trumpCaller"> & {trumpCaller: Side | null}
+): {sums: [number, number]; fell: Side | null} {
+  const raw: [number, number] = [hand.gamePoints1 + hand.announcementPoints1, hand.gamePoints2 + hand.announcementPoints2];
+  if (hand.trumpCaller == null || gamePointsError(hand.gamePoints1, hand.gamePoints2, hand.completeVictory)) {
+    return {sums: raw, fell: null};
+  }
+  const totals = computeHandTotals({...hand, trumpCaller: hand.trumpCaller});
+  return {sums: [totals.totalPoints1, totals.totalPoints2], fell: totals.pass ? null : hand.trumpCaller};
+}
+
 export function sumAnnouncements(announcements: {team?: Side; announcement_type?: AnnouncementName}[], team: Side): number {
   return announcements
     .filter((a) => a.team === team)

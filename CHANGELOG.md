@@ -2,6 +2,13 @@
 
 What the commits changed for the people using the app, newest first. The reasons and details are in DECISIONS.md.
 
+## 22.11.2026 · Σ pri upisu igre
+
+On development, not live yet.
+
+### Changed
+- **Upiši igru · Korak 3 od 3** (igrači i adminov semafor): **Σ** ispod ekipa sad pokazuje točno ono što će se spremiti. Kad ekipa koja je zvala padne, piše crveno **Σ 0 · pad**, a druga ekipa dobiva 162 i sva zvanja; kod **Štiglje** 252 i sva zvanja idu ekipi koja je uzela sve štihove (#48).
+
 ## 20.11.2026 · Ispravak igre nakon isteka vremena
 
 On development, not live yet.

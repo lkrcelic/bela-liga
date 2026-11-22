@@ -3,6 +3,7 @@
 import {addHandAPI, deleteHandAPI, finishTableMatchAPI, getTablePadAPI, HandTarget, NoWinnerError, updateHandAPI} from "@/app/_fetchers/admin/daily";
 import {NoWinnerAsk, NoWinnerConfirm} from "./NoWinnerConfirm";
 import {PadHand, PadMatch, TablePad} from "@/app/_interfaces/adminHand";
+import {handPreview} from "@/app/_lib/bela/scoring";
 import {currentMatchNumber, matchSlots, matchTabSub, roundWins} from "@/app/_lib/tableOverview";
 import {adminLineupHref, roundBackBy, roundHref, tableHref, tableScopeOf} from "@/app/_lib/ui/tableScope";
 import {
@@ -388,6 +389,15 @@ function MatchPhone({
         </>
       );
     }
+    // Σ: what Spremi will save, pad and štiglja included (#48)
+    const preview = handPreview({
+      gamePoints1: entry.points[0],
+      gamePoints2: entry.points[1],
+      announcementPoints1: zv[0],
+      announcementPoints2: zv[1],
+      trumpCaller: entry.caller,
+      completeVictory: entry.stiglja,
+    });
     return wizard(
       <>
         <Box component="header" sx={{display: "flex", flexDirection: "column", gap: "12px", pb: "12px", flex: "none"}}>
@@ -396,7 +406,8 @@ function MatchPhone({
             names={names}
             label="Igra"
             values={entry.points}
-            sums={[entry.points[0] + zv[0], entry.points[1] + zv[1]]}
+            sums={preview.sums}
+            fell={preview.fell == null ? null : preview.fell === 2 ? 1 : 0}
             active={active}
             onPick={(i) => setEntry((s) => setActive(s, i === 1 ? 2 : 1))}
           />
