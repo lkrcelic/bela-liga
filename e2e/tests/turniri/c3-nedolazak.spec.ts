@@ -17,7 +17,7 @@ test("the admin makes Kolo 1 of a ready tournament with Složi Kolo 1, publishes
   const page = await as("admin");
   await page.goto(`/turniri/${t.id}/upravljanje`);
   await page.getByRole("tab", {name: "Kola"}).click();
-  await expect(page.getByRole("tabpanel", {name: "Kola"})).toContainText("Prijave su zatvorene: Kolo 1 se slaže nasumično.");
+  await expect(page.getByRole("tabpanel", {name: "Kola"})).toContainText("Kolo 1 se slaže nasumično, od ekipa koje su potvrdile dolazak.");
   await page.getByRole("button", {name: "Složi Kolo 1"}).click();
 
   // Skica kola: three tables drawn at random, every team at one; players don't see it yet

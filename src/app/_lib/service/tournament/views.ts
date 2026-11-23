@@ -21,9 +21,9 @@ import {waitingList} from "@/app/_lib/tournamentEntries";
 import {draftIsStale, entriesHidden, koloTimes, lastKoloMade, signUpsOpenNow} from "@/app/_lib/tournaments";
 import {leagueClock} from "@/app/_lib/dates";
 import {displayName} from "@/app/_lib/players/names";
-import {arrivalPhase, DayEntry, isTournamentDay, startSwitch} from "@/app/_lib/tournamentDay";
+import {arrivalPhase, DayEntry, isTournamentDay, koloTeams, startSwitch, TOO_FEW_TEAMS} from "@/app/_lib/tournamentDay";
 import {tableState} from "@/app/_lib/tableState";
-import {windowOf} from "./day";
+import {dayClosed, windowOf} from "./day";
 import {LoadedEntry, LoadedPlayer, LoadedTable, Snapshot, tableStarted} from "./load";
 
 // The tournament API's answers, built from a snapshot (load.ts) for the viewer: the username of every player (it is
@@ -321,11 +321,14 @@ export function resultsView(s: Snapshot, viewer: Viewer | null): TournamentResul
   };
 }
 
+// The teams the next Kolo is made from: playing and confirmed (koloTeams, as kola.ts's playingTeams)
+const koloTeamsOf = (s: Snapshot) =>
+  koloTeams(dayEntries(s), s.tournament.max_teams, {confirmation: windowOf(s.tournament) != null, switched: dayClosed(s.tournament)});
+
 // The teams at the waiting draft (of any Kolo) are not the teams that play now (draftIsStale)
 export function staleDraft(s: Snapshot): boolean {
   const draft = s.tables.filter((t) => t.status !== "PUBLISHED").map((t) => ({team1Id: t.team1_id, team2Id: t.team2_id}));
-  const playing = s.entries.filter((e) => e.status === "REGISTERED" && e.active && !e.excluded_at).map((e) => e.team_id);
-  return draftIsStale(draft, playing);
+  return draftIsStale(draft, koloTeamsOf(s));
 }
 
 // Which Kolo can be made next (Složi Kolo N), and why not yet
@@ -336,9 +339,8 @@ export function nextKolo(s: Snapshot): AdminTournament["next_kolo"] {
   const number = last + 1;
   if (number > s.tournament.rounds) return null;
   if (number === 1) {
-    // Otvorene prijave: Kolo 1 is made from whoever is here; the sign-ups go on (DECISIONS #88)
-    if (s.tournament.registrations_open && !s.tournament.open_signups) return {number, ready: false, reason: "Prvo zatvori prijave, zatim složi Kolo 1."};
-    if (s.entries.filter((e) => e.status === "REGISTERED" && e.active && !e.excluded_at).length < 2) return {number, ready: false, reason: "Za kolo trebaju barem dvije aktivne ekipe."};
+    // whenever the admin wants it, from the confirmed teams (DECISIONS 103)
+    if (koloTeamsOf(s).length < 2) return {number, ready: false, reason: TOO_FEW_TEAMS};
     return {number, ready: true, reason: null};
   }
   const previous = s.kolos.find((k) => k.number === last)!;

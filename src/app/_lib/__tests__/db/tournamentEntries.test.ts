@@ -3,10 +3,12 @@ import {after, before, test} from "node:test";
 import {prisma} from "@/app/_lib/prisma";
 import {adminAddTeam, admitTeam, setRegistrationsOpen, SIGN_UPS_CLOSED, signOff, signUp, TEAM_NEEDS_TWO} from "@/app/_lib/service/tournament/entries";
 import {ensureNextKoloDraft, makeKoloDraft, publishKolo, STALE_DRAFT_ERROR, StaleDraftError} from "@/app/_lib/service/tournament/kola";
+import {adminSetActive, adminSetArrival, closeArrival} from "@/app/_lib/service/tournament/day";
+import {BYE_TEAM_ID} from "@/app/_lib/bye";
 
 // Tournament sign-ups and Kolos against a real Postgres: the limit and the waiting list, sign-off promoting the first
 // team waiting, a player in two entries, a stale Kolo 1 draft, the next Kolo made only once the previous one is over,
-// and two taps making one draft. Run with `npm run test:db` and DATABASE_URL on a throwaway database with the
+// two taps making one draft, and a Kolo made before Početak pairing only the teams that confirmed arrival. Run with `npm run test:db` and DATABASE_URL on a throwaway database with the
 // migrations applied (it adds its own tournaments, teams and players and removes them afterwards). Never point it at
 // production.
 
@@ -41,7 +43,7 @@ async function team(name: string, playerIds: number[]) {
   return t.team_id;
 }
 
-async function tournament(data: {max_teams?: number | null; rounds?: number; registrations_open?: boolean}) {
+async function tournament(data: {max_teams?: number | null; rounds?: number; registrations_open?: boolean; open_signups?: boolean; gathering_time?: string; start_time?: string}) {
   const t = await prisma.tournament.create({data: {tournament_name: `${tag} turnir`, date: day(7), rounds: 3, matches_per_round: 1, ...data}});
   tournaments.push(t.tournament_id);
   return t.tournament_id;
@@ -78,6 +80,8 @@ before(async () => {
   t.C = await team("C", [p[4], p[5]]);
   t.AX = await team("AX", [p[0], p[6]]);
   t.L = await team("L", [p[7], p[8]]);
+  // a Kolo of an odd number of teams has a Slobodna runda table, whose team is 0
+  await prisma.team.upsert({where: {team_id: BYE_TEAM_ID}, update: {}, create: {team_id: BYE_TEAM_ID, team_name: `${tag} Bye`}});
 });
 
 after(async () => {
@@ -147,7 +151,7 @@ test("Kolos: a stale Kolo 1 draft is refused, the next Kolo waits for the open t
   const D = await team("D", [p[6], p[7]]);
   await signUp(id, viewer(p[6]), {team_id: D});
 
-  await assert.rejects(makeKoloDraft(id), /Prvo zatvori prijave/);
+  // (this tournament has no start time, so no Potvrda dolaska: its teams are drawn as they are)
   await setRegistrationsOpen(id, false);
 
   // two taps make one draft
@@ -194,4 +198,107 @@ test("Kolos: a stale Kolo 1 draft is refused, the next Kolo waits for the open t
   // Kolo 2 is paired by the standings: Kolo 1's winners meet each other
   const winners = new Set((await tables(id)).filter((r) => r.round_number === 1).map((r) => r.team1_id));
   assert.ok(kolo2.some((r) => winners.has(r.team1_id) && winners.has(r.team2_id)));
+});
+
+const entryOf = (tournamentId: number, teamId: number) => prisma.tournamentTeam.findUniqueOrThrow({where: {tournament_id_team_id: {tournament_id: tournamentId, team_id: teamId}}});
+
+const seatedIn = async (tournamentId: number, kolo: number) =>
+  (await tables(tournamentId))
+    .filter((r) => r.round_number === kolo)
+    .flatMap((r) => [r.team1_id, r.team2_id])
+    .filter((teamId) => teamId !== BYE_TEAM_ID)
+    .sort((a, b) => a - b);
+
+const sorted = (ids: number[]) => [...ids].sort((a, b) => a - b);
+
+test("Kolo 1 made before Početak with sign-ups open: only the confirmed teams are drawn, a later confirmation makes it stale, Objavi runs the start switch, and a team the admin switches on after it is in Kolo 2", async () => {
+  // a week ahead, so the start time is far off; sign-ups stay open (no Otvorene prijave)
+  const id = await tournament({max_teams: 3, rounds: 2, gathering_time: "09:30", start_time: "10:00"});
+  const G = await team("G", [await player("p13"), await player("p14")]);
+  for (const teamId of [t.A, t.B, t.C]) assert.equal(await adminAddTeam(id, teamId), "REGISTERED");
+  assert.equal(await adminAddTeam(id, G), "WAITING");
+  // A, B and the waiting G confirm arrival; C doesn't
+  for (const teamId of [t.A, t.B, G]) await adminSetArrival(id, teamId, true);
+
+  // Složi Kolo 1 while sign-ups are open: C isn't drawn, and G takes the place C leaves, as the start time would do
+  const made = await makeKoloDraft(id);
+  assert.equal(made.number, 1);
+  assert.deepEqual(await seatedIn(id, 1), sorted([t.A, t.B, G]));
+
+  // C confirms after the draw: the draft is stale; its confirmation taken back, it isn't
+  await adminSetArrival(id, t.C, true);
+  await assert.rejects(publishKolo(id, 1), (e: Error) => e instanceof StaleDraftError);
+  await adminSetArrival(id, t.C, false);
+
+  // published before Početak: the tournament starts and the switch runs now: C inactive, G in, sign-ups closed
+  await publishKolo(id, 1);
+  const started = await prisma.tournament.findUniqueOrThrow({where: {tournament_id: id}});
+  assert.ok(started.started_at && started.arrival_closed_at);
+  assert.equal(started.registrations_open, false);
+  assert.equal((await entryOf(id, t.C)).active, false);
+  assert.equal((await entryOf(id, G)).status, "REGISTERED");
+
+  // the admin switches C on after the start: that marks its arrival, so it is paired in Kolo 2
+  await adminSetActive(id, t.C, true);
+  const c = await entryOf(id, t.C);
+  assert.ok(c.active && c.arrived_at && c.arrived_by_admin);
+  await finishKolo(id, 1);
+  await ensureNextKoloDraft(id);
+  assert.deepEqual(await seatedIn(id, 2), sorted([t.A, t.B, t.C, G]));
+});
+
+test("Otvorene prijave: a Kolo 1 made before Početak also pairs only the confirmed teams", async () => {
+  const id = await tournament({max_teams: null, rounds: 2, open_signups: true, gathering_time: "09:30", start_time: "10:00"});
+  for (const teamId of [t.A, t.B, t.C]) await adminAddTeam(id, teamId);
+  for (const teamId of [t.A, t.B]) await adminSetArrival(id, teamId, true);
+  await makeKoloDraft(id);
+  assert.deepEqual(await seatedIn(id, 1), sorted([t.A, t.B]));
+  // too few confirmed teams: no Kolo, whatever the time
+  await adminSetArrival(id, t.B, false);
+  await assert.rejects(makeKoloDraft(id, {redo: true}), /barem dvije aktivne ekipe s potvrđenim dolaskom/);
+});
+
+test("after Početak's switch the admin's Ubaci and Aktivna mark a team's arrival, so it is drawn; before the switch Ubaci doesn't", async () => {
+  const id = await tournament({max_teams: 2, rounds: 2, gathering_time: "09:30", start_time: "10:00"});
+  const H = await team("H", [await player("p15"), await player("p16")]);
+  const I = await team("I", [await player("p17"), await player("p18")]);
+  for (const teamId of [t.A, t.B]) assert.equal(await adminAddTeam(id, teamId), "REGISTERED");
+  for (const teamId of [t.C, H, I]) assert.equal(await adminAddTeam(id, teamId), "WAITING");
+  for (const teamId of [t.A, t.B]) await adminSetArrival(id, teamId, true);
+
+  // before the switch Ubaci only lets C in: it still confirms by itself
+  await admitTeam(id, t.C);
+  const c = await entryOf(id, t.C);
+  assert.deepEqual([c.status, c.arrived_at], ["REGISTERED", null]);
+
+  // Početak's switch (the clock, a day after it): C didn't confirm, so it is inactive; H and I keep waiting
+  await prisma.$transaction((tx) => closeArrival(tx, id, day(8)));
+  assert.equal((await entryOf(id, t.C)).active, false);
+
+  // after it, Ubaci (H), Aktivna on a waiting team (I) and Aktivna on an inactive one (C) mark the arrival as the admin's
+  await admitTeam(id, H);
+  await adminSetActive(id, I, true);
+  await adminSetActive(id, t.C, true);
+  for (const teamId of [H, I, t.C]) {
+    const e = await entryOf(id, teamId);
+    assert.deepEqual([e.status, e.active, e.arrived_at != null, e.arrived_by_admin], ["REGISTERED", true, true, true], `team ${teamId}`);
+  }
+  await makeKoloDraft(id);
+  assert.deepEqual(await seatedIn(id, 1), sorted([t.A, t.B, t.C, H, I]));
+});
+
+test("reopening sign-ups keeps a Kolo 1 draft; a team that signs up and confirms after it makes the draft stale", async () => {
+  const id = await tournament({max_teams: null, rounds: 2, gathering_time: "09:30", start_time: "10:00"});
+  for (const teamId of [t.A, t.B]) await adminAddTeam(id, teamId);
+  for (const teamId of [t.A, t.B]) await adminSetArrival(id, teamId, true);
+  await setRegistrationsOpen(id, false);
+  await makeKoloDraft(id);
+  const drawn = (await tables(id)).map((r) => r.id);
+  assert.equal(drawn.length, 1);
+
+  await setRegistrationsOpen(id, true);
+  assert.deepEqual((await tables(id)).map((r) => r.id), drawn, "the draft stays");
+  await adminAddTeam(id, t.C);
+  await adminSetArrival(id, t.C, true);
+  await assert.rejects(publishKolo(id, 1), (e: Error) => e instanceof StaleDraftError);
 });

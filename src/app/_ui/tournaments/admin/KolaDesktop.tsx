@@ -2,7 +2,7 @@
 
 import {addKoloAPI, addKoloTableAPI, deleteKoloAPI, makeKoloAPI, publishKoloAPI} from "@/app/_fetchers/tournament";
 import {LeagueTeam} from "@/app/_hooks/useLeagueTeams";
-import {AdminTournament, KoloView} from "@/app/_interfaces/tournament";
+import {AdminTournament, KOLO_1_TEXT, KoloView} from "@/app/_interfaces/tournament";
 import {isByeTeam} from "@/app/_lib/bye";
 import {KoloPair} from "@/app/_lib/matching/tournamentPairing";
 import {nightLabel} from "@/app/_lib/nights";
@@ -530,7 +530,7 @@ function SideCard({
   return (
     <Card component="section" sx={card}>
       {title(`Kolo ${kolo}`)}
-      {text(isNext ? (next!.reason ?? (kolo === 1 ? "Prijave su zatvorene: Kolo 1 se slaže nasumično." : "Prethodno kolo je odigrano.")) : `Kolo ${kolo} dolazi nakon Kola ${kolo - 1}.`)}
+      {text(isNext ? (next!.reason ?? (kolo === 1 ? KOLO_1_TEXT : "Prethodno kolo je odigrano.")) : `Kolo ${kolo} dolazi nakon Kola ${kolo - 1}.`)}
       {isNext && (
         <PrimaryButton icon={<AutoAwesomeRoundedIcon />} loading={busy === "make"} disabled={!next!.ready || busy != null} onClick={() => onMake(false)}>
           Složi Kolo {kolo}

@@ -2,6 +2,19 @@
 
 What the commits changed for the people using the app, newest first. The reasons and details are in DECISIONS.md.
 
+## 23.11.2026 · U kolo samo ekipe s potvrđenim dolaskom
+
+On development, not live yet (DECISIONS 103).
+
+### Admin i organizator
+- **Složi Kolo 1** radi kad god hoćeš: s otvorenim ili zatvorenim prijavama, prije ili poslije Okupljanja i Početka, u oba formata prijava.
+- U kolo ulaze **samo ekipe s potvrđenim dolaskom** (Tu smo ili Označi dolazak). Ekipa koja potvrdi nakon što je skica složena traži **Složi ponovo**.
+- **Objavi kolo** za Kolo 1 prije Početka napravi ono što bi napravio Početak: nepotvrđene ekipe postaju **Neaktivne**, a potvrđene s liste čekanja ulaze dok ima mjesta.
+- Nakon početka prekidač **Aktivna** i **Ubaci** ujedno označe dolazak ekipe.
+
+### Changed
+- Kolo 1 složeno prije Početka više ne uvrštava ekipu koja nije potvrdila dolazak. Dosad je takva ekipa igrala i sva kola nakon njega.
+
 ## 23.11.2026 · Otključaj partiju s Vremenom partije turnira
 
 On development, not live yet (DECISIONS 102).

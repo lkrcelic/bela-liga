@@ -1,7 +1,7 @@
 // C7's own setup: the organizer (accounts.organizer) on tournaments of their own. The seeded ones (tournaments.organizer,
 // tournaments.finishedNoDeclarations) are put back by each test; a tournament of today, for the day's flows (arrival,
 // Kolo 1, a skipped table), is made by the test itself through the organizer's own routes (Novi turnir, Dodaj ekipu,
-// Prijave, Složi Kolo, Objavi) and removed afterwards, so --repeat-each always starts from the same point.
+// Označi dolazak, Prijave, Složi Kolo, Objavi) and removed afterwards, so --repeat-each always starts from the same point.
 import {expect, type APIRequestContext} from "@playwright/test";
 import {CRON_HEADERS, type Db} from "./db";
 import {test as base} from "./fixtures";
@@ -24,7 +24,8 @@ export type OwnOptions = {
   arrival?: boolean;
   teams?: number;
   rounds?: number;
-  // Prijave zatvorene, Složi Kolo 1 and Objavi kolo, as the organizer
+  // Označi dolazak for every team, Složi Kolo 1 and Objavi kolo, as the organizer (only a confirmed team is drawn,
+  // DECISIONS 103)
   kolo1?: boolean;
 };
 
@@ -110,8 +111,8 @@ export async function freeTeams(db: Db, n: number, {tournamentId, skip = []}: {t
   return out;
 }
 
-// Novi turnir as the organizer sends it, then Dodaj ekipu for each team, then (kolo1) Prijave zatvorene, Složi Kolo 1
-// and Objavi kolo
+// Novi turnir as the organizer sends it, then Dodaj ekipu for each team, then (kolo1) Označi dolazak for each, Složi
+// Kolo 1 and Objavi kolo
 export async function makeOwnTournament(organizer: APIRequestContext, db: Db, {arrival = false, teams = 4, rounds = 2, kolo1 = false}: OwnOptions = {}): Promise<Own> {
   const name = `${OWN_PREFIX}Organizatorov dan`;
   const created = await organizer.post("/api/admin/tournaments", {
@@ -144,14 +145,22 @@ export async function makeOwnTournament(organizer: APIRequestContext, db: Db, {a
     const added = await organizer.post(`/api/admin/tournaments/${id}/teams`, {data: {team_id: team.id}});
     expect(added.status(), `Dodaj ekipu ${team.name}: ${await added.text()}`).toBe(201);
   }
-  if (kolo1) await publishKolo1(organizer, id);
+  if (kolo1) await publishKolo1(organizer, id, sides);
   return {id, name, teams: sides};
 }
 
-// Prijave zatvorene, Složi Kolo 1, Objavi kolo: the organizer's three taps that start their tournament
-export async function publishKolo1(organizer: APIRequestContext, id: number) {
-  const closed = await organizer.patch(`/api/admin/tournaments/${id}/registrations`, {data: {open: false}});
-  expect(closed.ok(), `Prijave zatvorene: ${await closed.text()}`).toBeTruthy();
+// Označi dolazak (the organizer's, as for a team without a phone): only a team that confirmed is drawn into a Kolo
+export async function markArrived(organizer: APIRequestContext, id: number, teams: Side[]) {
+  for (const team of teams) {
+    const marked = await organizer.patch(`/api/admin/tournaments/${id}/teams/${team.id}`, {data: {arrived: true}});
+    expect(marked.ok(), `Označi dolazak ${team.name}: ${await marked.text()}`).toBeTruthy();
+  }
+}
+
+// Označi dolazak for every team, Složi Kolo 1, Objavi kolo: the organizer's taps that start their tournament (Objavi
+// closes the sign-ups)
+export async function publishKolo1(organizer: APIRequestContext, id: number, teams: Side[]) {
+  await markArrived(organizer, id, teams);
   const made = await organizer.post(`/api/admin/tournaments/${id}/kola`, {data: {}});
   expect(made.status(), `Složi Kolo 1: ${await made.text()}`).toBe(201);
   const published = await organizer.post(`/api/admin/tournaments/${id}/kola/1/publish`);

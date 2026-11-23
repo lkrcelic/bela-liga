@@ -108,6 +108,9 @@ export type RegistrationRequest = {team_id: number} | {new_team: {name: string; 
 
 export const TeamIdValidation = z.object({team_id: z.number().int()});
 export const RegistrationsOpenValidation = z.object({open: z.boolean()});
+// Složi Kolo 1's card when it can be made: whenever the admin wants, from the teams that confirmed arrival (DECISIONS 103)
+export const KOLO_1_TEXT = "Kolo 1 se slaže nasumično, od ekipa koje su potvrdile dolazak.";
+
 export const KoloRequestValidation = z.object({redo: z.boolean().optional()});
 export const KoloTableValidation = z.object({team1_id: z.number().int(), team2_id: z.number().int()});
 

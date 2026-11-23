@@ -1,13 +1,13 @@
 // C7 · the organizer runs the day of their own tournament on the phone: Označi dolazak and the Aktivna switch in
-// Potvrda dolaska, Prijave zatvorene → Složi Kolo 1 → Skica kola → Objavi kolo (also with Pušački stolovi), Isključi
-// ekipu and Vrati, a skipped
+// Potvrda dolaska, Složi Kolo 1 before Početak with sign-ups open (only the confirmed teams) → Skica kola → Objavi kolo
+// (also with Pušački stolovi), Isključi ekipu and Vrati, a skipped
 // table's Uredi ishod and Vrati stol, and a hand on the table's scorepad (on the screen, and through its routes). DECISIONS #86: the organizer runs their own tournament as the admin does
 // (kola, Skica, Objavi, stolovi, rezultati, prijave, dolasci). The rules of the day are _lib/tournamentDay.ts: at 10
 // minutes without a game the table is skipped and both teams are out (in Kolo 1 with a ban on sign-ups); Uredi ishod
 // gives one team every match 1001 : 700 and puts the other out; Vrati stol plays the table as if both had come.
 // Each test makes its own tournament of today as the organizer (the `own` fixture: Novi turnir, Dodaj ekipu through the
 // organizer's routes) and the fixture removes it afterwards.
-import {expect, koloTables, tableOutFor, test, tournamentRequest} from "../../helpers/c7";
+import {expect, koloTables, markArrived, tableOutFor, test, tournamentRequest} from "../../helpers/c7";
 import {enterHand, handRow} from "../../helpers/scorepad";
 
 const escape = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -53,40 +53,63 @@ test("on the day the organizer marks the teams that came with Označi dolazak an
   await healthy(page);
 });
 
-test("the organizer closes sign-ups, makes Kolo 1 with Složi Kolo 1 and publishes it", async ({as, own, db, healthy}) => {
-  // Potvrda dolaska not open yet (Okupljanje 23:58): the sign-ups close with the switch, and Kolo 1 is made after that
-  const t = await own({teams: 4});
+test("before Početak, with sign-ups still open, Složi Kolo 1 draws only the teams that confirmed arrival, a late confirmation makes the Skica stale, and Objavi kolo makes the unconfirmed team Neaktivna", async ({as, own, organizer, db, healthy}) => {
+  // DECISIONS 103: a Kolo is made whenever the organizer wants (sign-ups open, Početak at 23:59 still to come), and only
+  // a team that confirmed arrival is in it; before, the draft took every team in, the unconfirmed one too
+  const t = await own({arrival: true, teams: 5});
+  const here = t.teams.slice(0, 4);
+  const [away] = t.teams.slice(4);
   const page = await as("organizer");
-  await page.goto(`/turniri/${t.id}/upravljanje?view=prijave`);
-  const open = page.getByRole("switch", {name: /^Prijave otvorene 4 od 4 ekipe/});
-  await expect(open).toBeChecked();
-  await open.click();
-  await expect(page.getByRole("switch", {name: /^Prijave zatvorene 4 od 4 ekipe/})).not.toBeChecked();
 
-  await page.getByRole("tab", {name: "Kola"}).click();
-  await expect(page.getByText("Prijave su zatvorene: Kolo 1 se slaže nasumično.")).toBeVisible();
+  // nobody has confirmed yet: no Kolo, and the card says why
+  await page.goto(`/turniri/${t.id}/upravljanje?view=kola`);
+  await expect(page.getByText("Za kolo trebaju barem dvije aktivne ekipe s potvrđenim dolaskom.")).toBeVisible();
+  await expect(page.getByRole("button", {name: "Složi Kolo 1"})).toBeDisabled();
+
+  // four teams are here; the sign-ups stay open ("Prvo zatvori prijave" is gone)
+  await markArrived(organizer, t.id, here);
+  expect((await db.tournament.findUniqueOrThrow({where: {tournament_id: t.id}})).registrations_open).toBe(true);
+  await page.reload();
+  await expect(page.getByText("Kolo 1 se slaže nasumično, od ekipa koje su potvrdile dolazak.")).toBeVisible();
   await page.getByRole("button", {name: "Složi Kolo 1"}).click();
 
-  // Skica kola: two tables, every team once, nobody sees them yet
+  // Skica kola: two tables, the four confirmed teams once each, the unconfirmed team at none
   await expect(page.getByRole("heading", {name: "Skica kola"})).toBeVisible();
-  await expect(page.getByRole("list", {name: "Skica Kola 1, stolovi"}).getByRole("listitem")).toHaveCount(2);
+  const skica = page.getByRole("list", {name: "Skica Kola 1, stolovi"});
+  await expect(skica.getByRole("listitem")).toHaveCount(2);
+  await expect(skica).not.toContainText(away.name);
   const drafts = await koloTables(db, t.id, 1);
-  expect(drafts.flatMap((d) => [d.team1.id, d.team2.id]).sort((a, b) => a - b)).toEqual(t.teams.map((x) => x.id).sort((a, b) => a - b));
-  expect(await db.round.count({where: {id: {in: drafts.map((d) => d.id)}, status: "DRAFT"}})).toBe(2);
+  expect(drafts.flatMap((d) => [d.team1.id, d.team2.id]).sort((a, b) => a - b)).toEqual(here.map((x) => x.id).sort((a, b) => a - b));
+  const all = await db.round.findMany({where: {tournamentRounds: {some: {tournament_id: t.id}}}});
+  expect(all.map((r) => r.status)).toEqual(["DRAFT", "DRAFT"]);
+
+  // the fifth team confirms after the draw: the Skica is stale and Objavi kolo waits for Složi ponovo
+  const stale = page.getByText("Popis ekipa se promijenio nakon što je kolo složeno. Složi ga ponovo pa objavi.");
+  await markArrived(organizer, t.id, [away]);
+  await page.reload();
+  await expect(stale).toBeVisible();
+  await expect(page.getByRole("button", {name: "Objavi kolo"})).toBeDisabled();
+  // its confirmation taken back (Makni potvrdu), the Skica holds again
+  const unmarked = await organizer.patch(`/api/admin/tournaments/${t.id}/teams/${away.id}`, {data: {arrived: false}});
+  expect(unmarked.ok(), `Makni potvrdu ${away.name}: ${await unmarked.text()}`).toBeTruthy();
+  await page.reload();
+  await expect(page.getByRole("button", {name: "Objavi kolo"})).toBeEnabled();
+  await expect(stale).toHaveCount(0);
 
   await page.getByRole("button", {name: "Objavi kolo"}).click();
   await expect(page.getByRole("heading", {name: "Kolo 1", level: 1})).toBeVisible();
   for (const d of drafts) {
     await expect(page.getByRole("link", {name: new RegExp(`^Stol ${d.table}: ${escape(d.team1.name)} 0, ${escape(d.team2.name)} 0, nije počelo\\. Otvori stol$`)})).toBeVisible();
   }
-  // published, and the tournament has started with its sign-ups closed
-  const tables = await db.round.findMany({where: {id: {in: drafts.map((d) => d.id)}}});
-  expect(tables.map((r) => [r.status, r.published_at != null])).toEqual([
-    ["PUBLISHED", true],
-    ["PUBLISHED", true],
-  ]);
+  // published before Početak: the tournament has started, its sign-ups are closed, and what the start time does
+  // happened then: the team that didn't confirm is Neaktivna (still signed up)
   const after = await db.tournament.findUniqueOrThrow({where: {tournament_id: t.id}});
-  expect([after.started_at != null, after.registrations_open]).toEqual([true, false]);
+  expect([after.started_at != null, after.arrival_closed_at != null, after.registrations_open]).toEqual([true, true, false]);
+  const entries = await db.tournamentTeam.findMany({where: {tournament_id: t.id}});
+  expect(entries.filter((e) => !e.active).map((e) => e.team_id)).toEqual([away.id]);
+  await page.goto(`/turniri/${t.id}/upravljanje?view=prijave`);
+  const awayRow = page.getByRole("list", {name: "Prijavljene ekipe"}).getByRole("listitem").filter({has: page.getByText(away.name, {exact: true})});
+  await expect(awayRow).toContainText("Neaktivna");
   await healthy(page);
 });
 
@@ -100,7 +123,8 @@ test("with Pušački stolovi, Složi Kolo 1 seats the team with the most smokers
   try {
     await db.player.updateMany({where: {id: {in: players.map((p) => p.id)}}, data: {smoker: false}});
     await db.player.updateMany({where: {id: {in: smokerIds}}, data: {smoker: true}});
-    // Podaci · Spremi promjene with Stol 2 as the smoking table, then Prijave zatvorene
+    // Podaci · Spremi promjene with Stol 2 as the smoking table, Označi dolazak for every team, then Prijave zatvorene
+    await markArrived(organizer, t.id, t.teams);
     const saved = await organizer.patch(`/api/admin/tournaments/${t.id}`, {data: {...(await tournamentRequest(db, t.id)), smoking_tables: [2]}});
     expect(saved.ok(), `Spremi promjene: ${await saved.text()}`).toBeTruthy();
     const closed = await organizer.patch(`/api/admin/tournaments/${t.id}/registrations`, {data: {open: false}});

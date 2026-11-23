@@ -88,6 +88,26 @@ export function startSwitch(entries: DayEntry[], maxTeams: number | null): {inac
   return {inactive, admitted: admittedFromWaiting(after, maxTeams)};
 }
 
+// Složi Kolo with fewer than two of them (koloTeams)
+export const TOO_FEW_TEAMS = "Za kolo trebaju barem dvije aktivne ekipe s potvrđenim dolaskom.";
+
+// The teams a Kolo is made from, in sign-up order: playing and confirmed (Tu smo, or the admin's Označi dolazak). A team
+// that hasn't confirmed is never paired, whenever the Kolo is made (DECISIONS 103). Before the start time's switch has
+// run (a Kolo 1 made before Početak) that is who the switch would leave playing: the confirmed teams in, and the
+// confirmed waiting ones while there is room; publishing that Kolo runs the switch. A tournament without a start time
+// has no Potvrda dolaska (nobody can confirm), so its playing teams are paired as they are.
+export function koloTeams(entries: DayEntry[], maxTeams: number | null, at: {confirmation: boolean; switched: boolean}): number[] {
+  if (!at.confirmation) return entries.filter(playing).sort(byTime).map((e) => e.teamId);
+  let after = entries;
+  if (!at.switched) {
+    const {inactive, admitted} = startSwitch(entries, maxTeams);
+    after = entries.map((e) =>
+      inactive.includes(e.teamId) ? {...e, active: false} : admitted.includes(e.teamId) ? {...e, status: "REGISTERED" as const, active: true} : e
+    );
+  }
+  return after.filter((e) => playing(e) && e.arrived).sort(byTime).map((e) => e.teamId);
+}
+
 // There is room for one more playing team
 export function hasRoom(entries: DayEntry[], maxTeams: number | null): boolean {
   return maxTeams == null || entries.filter(playing).length < maxTeams;

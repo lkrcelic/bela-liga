@@ -17,7 +17,7 @@ import {
 } from "@/app/_fetchers/tournament";
 import useNavStack from "@/app/_hooks/useNavStack";
 import {useAdminTournament} from "@/app/_hooks/useTournaments";
-import {AdminTournament, TournamentEntryView} from "@/app/_interfaces/tournament";
+import {AdminTournament, KOLO_1_TEXT, TournamentEntryView} from "@/app/_interfaces/tournament";
 import {isByeTeam} from "@/app/_lib/bye";
 import {leagueDateString} from "@/app/_lib/dates";
 import {KoloPair} from "@/app/_lib/matching/tournamentPairing";
@@ -596,7 +596,7 @@ function KolaTab({t, onOpen, onChanged}: {t: AdminTournament; onOpen: (kolo: num
   const [asking, setAsking] = useState<number | null>(null);
   const steps = koloSteps(t.rounds, t.results.kolos.map((k) => ({number: k.number, published: k.published, tables: k.tables.length, done: k.tables.filter((x) => !x.open).length, live: 0})));
   const next = t.next_kolo;
-  // the Kolo to make by hand: Kolo 1 (once sign-ups are closed; until then why not), or a later one the app didn't
+  // the Kolo to make by hand: Kolo 1 (whenever, from the confirmed teams; with fewer than two, why not), or a later one the app didn't
   // make by itself when its Kolo before was played
   const toMake = next != null && !t.results.kolos.some((k) => k.number === next.number) && (next.number === 1 || next.ready) ? next : null;
   // Obriši kolo: any Kolo, its results too after the warning; Dodaj kolo: one more, up to 20
@@ -636,7 +636,7 @@ function KolaTab({t, onOpen, onChanged}: {t: AdminTournament; onOpen: (kolo: num
       {toMake && t.phase !== "finished" && t.phase !== "cancelled" && (
         <Box sx={{...adminCardSx, gap: "10px"}}>
           <Box component="span" sx={{fontSize: 15, lineHeight: 1.45}}>
-            {toMake.reason ?? (toMake.number === 1 ? "Prijave su zatvorene: Kolo 1 se slaže nasumično." : `Kolo ${toMake.number - 1} je odigrano.`)}
+            {toMake.reason ?? (toMake.number === 1 ? KOLO_1_TEXT : `Kolo ${toMake.number - 1} je odigrano.`)}
           </Box>
           <PrimaryButton icon={<AutoAwesomeRoundedIcon />} loading={busy === "make"} disabled={!toMake.ready || busy != null} onClick={make} height={56}>
             Složi Kolo {toMake.number}

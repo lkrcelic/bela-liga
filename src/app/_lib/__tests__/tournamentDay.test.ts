@@ -1,12 +1,12 @@
 import assert from "node:assert/strict";
 import {test} from "node:test";
 import {leagueClock, leagueMoment} from "@/app/_lib/dates";
-import {admittedFromWaiting, arrivalPhase, arrivalWindow, DayEntry, hasRoom, noShowStep, noShowTimes, startSwitch, tournamentTimesErrors} from "@/app/_lib/tournamentDay";
+import {admittedFromWaiting, arrivalPhase, arrivalWindow, DayEntry, hasRoom, koloTeams, noShowStep, noShowTimes, startSwitch, tournamentTimesErrors} from "@/app/_lib/tournamentDay";
 import {addToDay, banActive, banDay, banDaysLeft, banUntil, untilLabel} from "@/app/_lib/bans";
 import {tableState, StateTable} from "@/app/_lib/tableState";
 
-// A tournament's day: the arrival window and the start time's switch, the no-show clock, the bans and the admin's
-// table statuses
+// A tournament's day: the arrival window and the start time's switch, who a Kolo pairs, the no-show clock, the bans
+// and the admin's table statuses
 
 test("a tournament has both Okupljanje and Početak, the gathering before the start", () => {
   assert.deepEqual(tournamentTimesErrors("17:30", "18:00"), {});
@@ -70,6 +70,28 @@ test("at the start: unconfirmed teams become inactive, confirmed waiting teams c
   assert.deepEqual(startSwitch(entries, 3), {inactive: [2, 4], admitted: [11]});
   // no limit: nobody waits, the unconfirmed still become inactive
   assert.deepEqual(startSwitch(entries.slice(0, 4), null), {inactive: [2, 4], admitted: []});
+});
+
+test("a Kolo pairs only teams that confirmed arrival, also a Kolo 1 made before Početak", () => {
+  const entries = [
+    entry(1, "REGISTERED", 1, true),
+    entry(2, "REGISTERED", 2, false),
+    entry(3, "REGISTERED", 3, true),
+    entry(4, "REGISTERED", 4, true, {active: false}),
+    entry(5, "REGISTERED", 5, true, {excluded: true}),
+    entry(10, "WAITING", 6, false),
+    entry(11, "WAITING", 7, true),
+    entry(12, "WAITING", 8, true),
+  ];
+  // before the switch: 2 hasn't confirmed, so it isn't paired and its place (limit 3) goes to the first confirmed
+  // waiting team; 10 hasn't confirmed either
+  assert.deepEqual(koloTeams(entries, 3, {confirmation: true, switched: false}), [1, 3, 11]);
+  assert.deepEqual(koloTeams(entries, null, {confirmation: true, switched: false}), [1, 3, 11, 12]);
+  // after the switch: in, active, not excluded and confirmed; a team still active without a confirmation (Makni
+  // potvrdu after the start) isn't paired either
+  assert.deepEqual(koloTeams(entries, 4, {confirmation: true, switched: true}), [1, 3]);
+  // a tournament without a start time has no Potvrda dolaska: its playing teams as they are
+  assert.deepEqual(koloTeams(entries, 4, {confirmation: false, switched: false}), [1, 2, 3]);
 });
 
 test("during the tournament a place freed lets the first confirmed waiting team in", () => {

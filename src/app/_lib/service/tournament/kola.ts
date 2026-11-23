@@ -10,19 +10,23 @@ import {seatRounds, smokingRecords} from "@/app/_lib/matching/smokingTables";
 import {teamSmokers} from "@/app/_lib/service/team/smokers";
 import {toSmokingTable} from "@/app/_lib/service/round/smoking";
 import {draftIsStale, KOLO_MAX, opponentsOf, rankTeams, TableResult, tournamentTotals} from "@/app/_lib/tournaments";
+import {koloTeams, TOO_FEW_TEAMS} from "@/app/_lib/tournamentDay";
+import {dayClosed, dayEntries, runStartSwitch, windowOf} from "./day";
 import {lockTournament} from "./lock";
 import {TOURNAMENT_NOT_FOUND} from "./tournaments";
 
 // A tournament's Kolos (Turniri · Kola). A Kolo is made as a draft only the admins see (Skica Kola N): Kolo 1 drawn
-// at random once sign-ups are closed, every later one paired by the standings once the Kolo before it is played to
-// the end. Objavi kolo publishes it; publishing Kolo 1 starts the tournament. Players never see a draft. With
-// Pušački stolovi, the matches with the most smokers sit at them, counting this tournament's Kolos only (DECISIONS 100,
-// 101).
+// at random whenever the admin wants it (sign-ups open or closed, before or after Okupljanje and Početak), every later
+// one paired by the standings once the Kolo before it is played to the end. Only the teams that confirmed arrival are
+// in a Kolo (koloTeams, DECISIONS 103). Objavi kolo publishes it; publishing Kolo 1 starts the tournament. Players
+// never see a draft. With Pušački stolovi, the matches with the most smokers sit at them, counting this tournament's
+// Kolos only (DECISIONS 100, 101).
 
 type Tx = Prisma.TransactionClient;
 
-// Publishing a Kolo made from other teams than the ones that play now (a team signed off, came in, left or was
-// excluded or let back after it was made; a later Kolo's draft is made by itself as soon as the Kolo before it ends)
+// Publishing a Kolo made from other teams than the ones that play now (a team signed off, came in, confirmed arrival,
+// left or was excluded or let back after it was made; a later Kolo's draft is made by itself as soon as the Kolo
+// before it ends)
 export const STALE_DRAFT = "STALE_DRAFT";
 export const STALE_DRAFT_ERROR = "Popis ekipa se promijenio nakon što je kolo složeno. Složi ga ponovo pa objavi.";
 
@@ -55,12 +59,12 @@ const roundSelect = {
   matches: {select: {player_pair1_score: true, player_pair2_score: true}},
 } as const;
 
-// The teams a Kolo is made from: in the tournament, active (Aktivna) and not excluded
-export const PLAYING = {status: "REGISTERED", active: true, excluded_at: null} as const;
+type KoloTournament = {tournament_id: number; max_teams: number | null; date: Date; gathering_time: string | null; start_time: string | null; arrival_closed_at: Date | null; started_at: Date | null};
 
-export async function playingTeams(tx: Tx, tournamentId: number): Promise<number[]> {
-  const rows = await tx.tournamentTeam.findMany({where: {tournament_id: tournamentId, ...PLAYING}, select: {team_id: true}, orderBy: {registered_at: "asc"}});
-  return rows.map((r) => r.team_id);
+// The teams a Kolo is made from: in the tournament, active (Aktivna), not excluded and confirmed (koloTeams). Before the
+// start time's switch, the ones it would leave playing.
+export async function playingTeams(tx: Tx, t: KoloTournament): Promise<number[]> {
+  return koloTeams(await dayEntries(tx, t.tournament_id), t.max_teams, {confirmation: windowOf(t) != null, switched: dayClosed(t)});
 }
 
 async function tournamentRounds(tx: Tx, tournamentId: number) {
@@ -118,14 +122,15 @@ export async function makeKoloDraft(tournamentId: number, {redo = false}: {redo?
     const draft = rounds.filter((r) => r.status !== "PUBLISHED");
     if (draft.length > 0 && !redo) return {number, tables: draft.length, repeats: []};
 
-    // Otvorene prijave: the teams keep coming all tournament, so Kolo 1 is made from whoever is here (DECISIONS #88)
-    if (number === 1 && t.registrations_open && !t.open_signups) throw new InvalidResultError("Prvo zatvori prijave, zatim složi Kolo 1.");
+    // Kolo 1 is made whenever the admin wants it, sign-ups open or not, before Okupljanje and Početak or after (DECISIONS
+    // 103): it takes the confirmed teams there are now, and a team that confirms later makes the draft stale
     if (number > 1 && rounds.some((r) => r.status === "PUBLISHED" && r.round_number === last && r.open)) {
       throw new InvalidResultError(`Kolo ${last} još traje: sljedeće se slaže kad svi stolovi završe.`);
     }
-    // only the teams that play: in, active and not excluded (Slobodna runda, inactive and excluded teams get no pair)
-    const teams = await playingTeams(tx, tournamentId);
-    if (teams.length < 2) throw new InvalidResultError("Za kolo trebaju barem dvije aktivne ekipe.");
+    // only the teams that play: in, active, not excluded and confirmed (Slobodna runda, inactive, excluded and
+    // unconfirmed teams get no pair)
+    const teams = await playingTeams(tx, t);
+    if (teams.length < 2) throw new InvalidResultError(TOO_FEW_TEAMS);
 
     await dropTables(tx, draft.map((r) => r.id));
     const {pairs, repeats} = await pairsFor(tx, number, rounds, teams);
@@ -171,7 +176,9 @@ export async function makeKoloDraft(tournamentId: number, {redo = false}: {redo?
 }
 
 // Objavi kolo: the draft's tables go out to the players. Publishing Kolo 1 starts the tournament: sign-ups are closed
-// for good and the waiting list stays as it is.
+// for good (not with Otvorene prijave), and if Početak hasn't come yet its switch runs now: the teams that didn't
+// confirm become inactive and the confirmed waiting teams come in while there is room, the same teams the draft was
+// made from.
 export async function publishKolo(tournamentId: number, number: number): Promise<{publishedAt: string}> {
   return prisma.$transaction(async (tx) => {
     await lockTournament(tx, tournamentId);
@@ -185,11 +192,12 @@ export async function publishKolo(tournamentId: number, number: number): Promise
       throw new InvalidResultError(`Kolo ${number - 1} još traje.`);
     }
     const draft = tables.map((r) => ({team1Id: r.team1_id, team2Id: r.team2_id}));
-    if (draftIsStale(draft, await playingTeams(tx, tournamentId))) throw new StaleDraftError();
+    if (draftIsStale(draft, await playingTeams(tx, t))) throw new StaleDraftError();
     const now = new Date();
+    if (number === 1 && !dayClosed(t) && windowOf(t) != null) await runStartSwitch(tx, t, now);
     await tx.round.updateMany({where: {id: {in: tables.map((r) => r.id)}}, data: {status: "PUBLISHED", published_at: now, draft_order: null}});
-    // the tournament starts: the arrival window is over (who plays was decided by the draft) and sign-ups close —
-    // unless it has Otvorene prijave, where they stay open until the last Kolo is made (DECISIONS #88)
+    // the tournament starts: the arrival window is over (the switch above, or none without a start time) and sign-ups
+    // close — unless it has Otvorene prijave, where they stay open until the last Kolo is made (DECISIONS #88)
     if (number === 1) {
       await tx.tournament.update({
         where: {tournament_id: tournamentId},

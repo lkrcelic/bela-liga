@@ -12,12 +12,12 @@ import {CandidateTeam, RegistrationRequest} from "@/app/_interfaces/tournament";
 import {playersInOtherEntries, signUpStatus} from "@/app/_lib/tournamentEntries";
 import {joinsAsPresent} from "@/app/_lib/tournaments";
 import {hasRoom} from "@/app/_lib/tournamentDay";
-import {dayClosed, dayEntries, LAST_KOLO_MADE, lastKoloIsMade} from "./day";
+import {adminArrival, dayClosed, dayEntries, LAST_KOLO_MADE, lastKoloIsMade} from "./day";
 import {BYE_TEAM_ID} from "@/app/_lib/bye";
 import {banDay} from "@/app/_lib/bans";
 import {activeBans, banReason} from "@/app/_lib/service/bans/bans";
 import {lockTournament} from "./lock";
-import {applyLimit, dropDrafts, TOURNAMENT_NOT_FOUND} from "./tournaments";
+import {applyLimit, TOURNAMENT_NOT_FOUND} from "./tournaments";
 
 // Signing a team up (a player's Prijavi ekipu, the admin's Dodaj ekipu), signing it off, the waiting list (Ubaci u
 // turnir) and Prijave otvorene. Every change holds the tournament's lock, so two teams can't both take the last place.
@@ -183,21 +183,25 @@ export async function adminAddTeam(tournamentId: number, teamId: number): Promis
   }, {timeout: 20_000});
 }
 
-// Ubaci u turnir: a team from the waiting list comes in now, and the limit grows by one for it
+// Ubaci u turnir: a team from the waiting list comes in now, and the limit grows by one for it. After the start time's
+// switch that also marks its arrival (adminArrival): only a confirmed team is paired.
 export async function admitTeam(tournamentId: number, teamId: number): Promise<void> {
   await prisma.$transaction(async (tx) => {
     const t = await lockOpenTournament(tx, tournamentId);
     const entry = await tx.tournamentTeam.findUnique({where: {tournament_id_team_id: {tournament_id: tournamentId, team_id: teamId}}});
     if (!entry) throw new NotFoundError("Ekipa nije prijavljena na ovaj turnir.");
     if (entry.status === "REGISTERED") return;
-    await tx.tournamentTeam.update({where: {tournament_id_team_id: {tournament_id: tournamentId, team_id: teamId}}, data: {status: "REGISTERED"}});
+    await tx.tournamentTeam.update({
+      where: {tournament_id_team_id: {tournament_id: tournamentId, team_id: teamId}},
+      data: {status: "REGISTERED", ...adminArrival(t, entry, new Date())},
+    });
     if (t.max_teams != null) await tx.tournament.update({where: {tournament_id: tournamentId}, data: {max_teams: t.max_teams + 1}});
   });
 }
 
-// Prijave otvorene / zatvorene. Before the start, opening them again drops a Kolo 1 draft: it is made once the teams
-// are final. On a tournament with Otvorene prijave the switch works while it is played too, and then changes nothing
-// but the switch — the Kolos already made stay as they are.
+// Prijave otvorene / zatvorene. It changes nothing but the switch: a Kolo 1 draft is made whenever the admin wants,
+// from the confirmed teams (DECISIONS 103), and a team that confirms after it makes it stale (Složi ponovo). On a
+// tournament with Otvorene prijave the switch works while it is played too.
 export async function setRegistrationsOpen(tournamentId: number, open: boolean): Promise<void> {
   await prisma.$transaction(async (tx) => {
     await lockTournament(tx, tournamentId);
@@ -206,7 +210,6 @@ export async function setRegistrationsOpen(tournamentId: number, open: boolean):
     if (t.cancelled_at) throw new InvalidResultError("Turnir je otkazan.");
     // a started tournament may keep its sign-ups open only with Otvorene prijave (Tournament_started_check)
     if (t.started_at && !t.open_signups) throw new InvalidResultError(TOURNAMENT_STARTED);
-    if (open && !t.started_at) await dropDrafts(tx, tournamentId);
     await tx.tournament.update({where: {tournament_id: tournamentId}, data: {registrations_open: open}});
   });
 }

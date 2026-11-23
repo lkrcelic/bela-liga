@@ -2169,3 +2169,37 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
       reads 35 and its Kolo note says 35, both red on the code before, and its match played on ends 35 minutes from the
       unlock) and Playwright (`c5-otkljucaj`: the sheet without minutes, saying the tournament's minutes on a table given
       its own 20 first, the match ending the tournament's minutes from now; `b-dozvole`'s unlock rows).
+103. **U kolo ulaze samo ekipe s potvrđenim dolaskom; kolo se slaže kad god admin hoće** (the user's message of 23.11.:
+    "u kola ulaze samo ekipe s potvrđenim dolaskom, uvijek i zauvijek … ja kolo mogu kreirati kad god želim … U oba
+    formata"). The bug: a Kolo 1 made before Početak drew every team in, also one that hadn't confirmed. The draft took
+    the teams in, Aktivna and not excluded, and only Početak's switch makes an unconfirmed team inactive; publishing
+    Kolo 1 earlier skipped that switch for good, so such a team kept being paired in every Kolo after it too.
+    - **Only a confirmed team is paired, in every Kolo.** `koloTeams` (`_lib/tournamentDay.ts`) is the one rule, read
+      by Složi kolo, the stale-draft check at Objavi and the admin's `next_kolo`: in, Aktivna, not excluded and arrived
+      (Tu smo or Označi dolazak). Before Početak's switch has run, Kolo 1 is made from the teams the switch would leave
+      playing: the confirmed teams in, and the confirmed waiting teams while there is room. A team that confirms (or
+      loses its confirmation) after the draft makes it stale, so Objavi asks for Složi ponovo. With fewer than two:
+      "Za kolo trebaju barem dvije aktivne ekipe s potvrđenim dolaskom."
+    - **Kolo 1 whenever the admin wants**, in both formats: "Prvo zatvori prijave, zatim složi Kolo 1." is gone, so
+      sign-ups open or closed, before Okupljanje, between it and Početak, or after. Opening sign-ups again no longer
+      drops a Kolo 1 draft (the stale check guards it). The card says "Kolo 1 se slaže nasumično, od ekipa koje su
+      potvrdile dolazak." instead of "Prijave su zatvorene: …".
+    - **Objavi Kolo 1 before Početak runs Početak's switch then**: the unconfirmed teams become Neaktivna (still signed
+      up; Tu smo · Želimo uskočiti or Označi dolazak brings one in from the next Kolo), the confirmed waiting teams come
+      in up to the limit, and sign-ups close (not with Otvorene prijave). Before, publishing only wrote
+      `arrival_closed_at`, and the switch never ran.
+    - **After the start, the admin putting a team into play marks its arrival**: the Aktivna switch turned on, and Ubaci
+      u turnir once the switch has run, write Označi dolazak for a team that has none. Without it the computer's
+      Aktivna switch, its only way to bring in a team that came late, would make a team active that no Kolo pairs.
+    - **A tournament without Početak** (only ones made before 16.11., DECISIONS 99) has no Potvrda dolaska, so nobody
+      can confirm: its active teams are paired as before. Alternative: require confirmation there too; not chosen,
+      since nothing on the screen could then make a Kolo for it.
+    - **Checked**: unit (`tournamentDay.test.ts`: who `koloTeams` pairs before and after the switch, and without
+      Početak) and db (`db/tournamentEntries.test.ts`: Kolo 1 before Početak with sign-ups open, in both formats, the
+      draft stale after a late confirmation, the switch at Objavi, Aktivna marking arrival so the team is in Kolo 2;
+      Ubaci and Aktivna on a waiting team marking arrival after the switch and Ubaci not before it; reopening sign-ups
+      keeping the draft), all four red on the code before. Playwright `c7-dan-turnira` replaces "the organizer closes
+      sign-ups, makes Kolo 1": with nobody confirmed the card says why and Složi Kolo 1 is off; with sign-ups open the
+      unconfirmed team is in no table of the Skica, a late confirmation makes it stale (Objavi off) and taking it back
+      clears that, and after Objavi the team is Neaktivna. C7's `publishKolo1` and the Pušački stolovi test mark the
+      teams' arrival first; C3's helpers already did.

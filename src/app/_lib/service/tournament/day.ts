@@ -62,12 +62,19 @@ export async function closeArrival(tx: Tx, tournamentId: number, now: Date): Pro
   if (!t || t.cancelled_at || dayClosed(t)) return false;
   const window = windowOf(t);
   if (!window || now.getTime() < window.closes.getTime()) return false;
+  await runStartSwitch(tx, t, now);
+  return true;
+}
+
+// The switch itself, at the start time or when Kolo 1 goes out before it (publishKolo): what the start time does
+// happens then, so the teams that play Kolo 1 are the ones its draft was made from (koloTeams)
+export async function runStartSwitch(tx: Tx, t: {tournament_id: number; max_teams: number | null; open_signups: boolean}, now: Date): Promise<void> {
+  const tournamentId = t.tournament_id;
   const {inactive, admitted} = startSwitch(await dayEntries(tx, tournamentId), t.max_teams);
   if (inactive.length > 0) await tx.tournamentTeam.updateMany({where: {tournament_id: tournamentId, team_id: {in: inactive}}, data: {active: false}});
   for (const teamId of admitted) await tx.tournamentTeam.update({where: entryKey(tournamentId, teamId), data: {status: "REGISTERED", active: true}});
   // Otvorene prijave: the switch still decides who is here, but sign-ups stay open for the rest of the tournament
   await tx.tournament.update({where: {tournament_id: tournamentId}, data: {arrival_closed_at: now, ...(t.open_signups ? {} : {registrations_open: false})}});
-  return true;
 }
 
 async function lockedTournament(tx: Tx, tournamentId: number) {
@@ -186,22 +193,29 @@ export async function adminSetArrival(tournamentId: number, teamId: number, arri
   });
 }
 
+// Once the day is closed (the start time's switch ran, or Kolo 1 is out), the admin putting a team into play says it is
+// here: its arrival is marked as the admin's Označi dolazak if it has none, since only a confirmed team is paired
+// (koloTeams). Before that the team still confirms by itself.
+export const adminArrival = (t: {arrival_closed_at: Date | null; started_at: Date | null}, entry: {arrived_at: Date | null}, now: Date) =>
+  dayClosed(t) && !entry.arrived_at ? {arrived_at: now, arrived_by: null, arrived_by_admin: true} : {};
+
 // The Aktivna switch: a team in plays the next Kolo or not. Switching on a waiting team lets it in (Ubaci u turnir:
-// the limit grows by one when it is full).
+// the limit grows by one when it is full). After the start switching a team on also marks its arrival (adminArrival).
 export async function adminSetActive(tournamentId: number, teamId: number, active: boolean): Promise<void> {
   await prisma.$transaction(async (tx) => {
     const t = await lockedTournament(tx, tournamentId);
     const entry = await adminEntry(tx, tournamentId, teamId);
     if (entry.excluded_at) throw new InvalidResultError("Ekipa je isključena: prvo je vrati u turnir.");
+    const arrival = active ? adminArrival(t, entry, new Date()) : {};
     if (entry.status === "WAITING") {
       if (!active) return;
       const full = !hasRoom(await dayEntries(tx, tournamentId), t.max_teams);
-      await tx.tournamentTeam.update({where: entryKey(tournamentId, teamId), data: {status: "REGISTERED", active: true}});
+      await tx.tournamentTeam.update({where: entryKey(tournamentId, teamId), data: {status: "REGISTERED", active: true, ...arrival}});
       if (full && t.max_teams != null) await tx.tournament.update({where: {tournament_id: tournamentId}, data: {max_teams: t.max_teams + 1}});
       return;
     }
     if (entry.active === active) return;
-    await tx.tournamentTeam.update({where: entryKey(tournamentId, teamId), data: {active}});
+    await tx.tournamentTeam.update({where: entryKey(tournamentId, teamId), data: {active, ...arrival}});
     if (!active && dayClosed(t)) await fillPlaces(tx, tournamentId, t.max_teams);
   });
 }
