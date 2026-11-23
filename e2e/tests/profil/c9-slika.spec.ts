@@ -103,6 +103,9 @@ test("Odustani in Pomakni i zumiraj keeps the photo; Makni sliku in the player's
   await page.goto("/profile");
   const hero = page.getByRole("region", {name: me.username});
   await expect(photoOf(hero, me.id)).toHaveAttribute("src", url);
+  // Moje ekipe: the player's own chip carries the same photo
+  const chip = page.getByRole("article", {name: me.team.name}).getByRole("list", {name: "Igrači"}).getByRole("listitem").filter({hasText: `@${me.username}`});
+  await expect(photoOf(chip, me.id)).toHaveAttribute("src", url);
 
   // a new file picked, then Odustani: nothing saved
   await hero.getByRole("button", {name: "Promijeni profilnu sliku"}).click();
@@ -121,6 +124,9 @@ test("Odustani in Pomakni i zumiraj keeps the photo; Makni sliku in the player's
   await expect(hero.getByRole("button", {name: "Dodaj profilnu sliku"})).toBeVisible();
   await expect(hero.getByRole("button", {name: "Dodaj sliku"})).toBeVisible();
   await expect(photoOf(hero, me.id)).toHaveCount(0);
+  // and the initials in Moje ekipe at once, without a reload (#80)
+  await chip.scrollIntoViewIfNeeded();
+  await expect(photoOf(chip, me.id)).toHaveCount(0);
   expect(await me.photoUrl()).toBeNull();
   expect(await db.playerPhoto.count({where: {player_id: me.id}})).toBe(0);
   await healthy(page);
@@ -134,9 +140,8 @@ test("Odustani in Pomakni i zumiraj keeps the photo; Makni sliku in the player's
   expect(await mate.evaluate((u) => fetch(u, {cache: "no-store"}).then((r) => r.status), url)).toBe(404);
 });
 
+// #80: Moje ekipe is read when the page opens, but the player's own chip follows the avatar above it, so no reload
 test("a new photo shows in Moje ekipe at once, as on the avatar above it", async ({as, me}) => {
-  // BUG #80: Moje ekipe keeps the player's old avatar (here the initials) until the page is loaded again
-  test.fail();
   await me.removePhoto();
   const page = await as(me.username);
   await page.goto("/profile");

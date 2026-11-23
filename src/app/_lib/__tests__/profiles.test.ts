@@ -20,6 +20,7 @@ import {
   teamLeagueRows,
   teamSubline,
   teamTiles,
+  withOwnPhoto,
 } from "../ui/profiles";
 import {leagueEnded} from "../league";
 import {ratingSummary} from "../ui/ratings";
@@ -305,4 +306,23 @@ test("a season label: numbers only get \"Sezona\", words stay", () => {
 test("a Team page's player shows the username only when the server sent it, else the team's name", () => {
   assert.equal(rosterSubline({username: "mmarkovic"}, "Dalmatinci"), "@mmarkovic");
   assert.equal(rosterSubline({username: null}, "Dalmatinci"), "Dalmatinci");
+});
+
+test("Moje ekipe shows the player's own photo as the avatar above it: a photo just saved or taken away is there at once (#80)", () => {
+  const read = [
+    {id: 7, username: "ja", photo_url: null},
+    {id: 9, username: "partner", photo_url: "/api/players/9/photo?v=1"},
+  ];
+  assert.deepEqual(withOwnPhoto(read, 7, "/api/players/7/photo?v=2"), [
+    {id: 7, username: "ja", photo_url: "/api/players/7/photo?v=2"},
+    {id: 9, username: "partner", photo_url: "/api/players/9/photo?v=1"},
+  ]);
+  const withMine = [{id: 7, username: "ja", photo_url: "/api/players/7/photo?v=2"}];
+  assert.deepEqual(withOwnPhoto(withMine, 7, null), [{id: 7, username: "ja", photo_url: null}]);
+});
+
+test("a teammate's photo is never changed, and without a logged-in player Moje ekipe stays as it was read", () => {
+  const read = [{id: 9, username: "partner", photo_url: "/api/players/9/photo?v=1"}];
+  assert.deepEqual(withOwnPhoto(read, 7, null), read);
+  assert.deepEqual(withOwnPhoto(read, null, "/api/players/7/photo?v=2"), read);
 });

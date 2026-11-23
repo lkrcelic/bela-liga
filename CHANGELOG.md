@@ -2,6 +2,16 @@
 
 What the commits changed for the people using the app, newest first. The reasons and details are in DECISIONS.md.
 
+## 24.11.2026 · Nova slika odmah i u Mojim ekipama
+
+On development, not live yet (#80).
+
+### Igrači
+- Na **Mom profilu** nova slika (ili maknuta slika) odmah se vidi i na tvom igraču u **Mojim ekipama**, kao i na slici iznad.
+
+### Changed
+- Dosad su Moje ekipe do ponovnog otvaranja stranice pokazivale staru sliku (ili inicijale).
+
 ## 24.11.2026 · Stol novog kola bez ponovnog otvaranja stranice
 
 On development, not live yet (#85).

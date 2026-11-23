@@ -210,3 +210,13 @@ export function personalRows(player: PlayerView, full: boolean): {key: string; v
     {key: "Pušač", value: player.smoker ? "Da" : "Ne"},
   ];
 }
+
+// ---------- Moj profil ----------
+
+// Moje ekipe: the player's own chip shows the photo the avatar above it shows (Moj profil's own copy, changed by Spremi
+// and Makni sliku), while the teams were read when the page opened, so a photo just saved or taken away is there at
+// once (#80). The teammates' photos stay as read.
+export function withOwnPhoto<P extends {id: number; photo_url?: string | null}>(players: P[], meId: number | null | undefined, ownPhoto: string | null): P[] {
+  if (meId == null) return players;
+  return players.map((p) => (p.id === meId ? {...p, photo_url: ownPhoto} : p));
+}

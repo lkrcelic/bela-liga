@@ -10,6 +10,7 @@ import useKeyboardInset from "@/app/_hooks/useKeyboardInset";
 import useLogout from "@/app/_hooks/useLogout";
 import {useRole} from "@/app/_hooks/useCan";
 import useMyTeams from "@/app/_hooks/useMyTeams";
+import {withOwnPhoto} from "@/app/_lib/ui/profiles";
 import useNavStack from "@/app/_hooks/useNavStack";
 import {useMyRating} from "@/app/_hooks/useRatings";
 import {fullName} from "@/app/_lib/players/names";
@@ -230,8 +231,13 @@ export default function ProfilePage() {
       teams={teams.map((t) => ({
         team_id: t.team_id,
         team_name: t.team_name,
-        players: (t.teamPlayers ?? []).flatMap(({player: p}) =>
-          p?.id == null ? [] : [{id: p.id, first_name: p.first_name ?? "", last_name: p.last_name ?? "", username: p.username ?? "", photo_url: p.photo_url}]
+        // the player's own chip follows the avatar above it: a photo just saved or taken away shows at once (#80)
+        players: withOwnPhoto(
+          (t.teamPlayers ?? []).flatMap(({player: p}) =>
+            p?.id == null ? [] : [{id: p.id, first_name: p.first_name ?? "", last_name: p.last_name ?? "", username: p.username ?? "", photo_url: p.photo_url}]
+          ),
+          user?.id,
+          photo.info.photo_url,
         ),
       }))}
     />
