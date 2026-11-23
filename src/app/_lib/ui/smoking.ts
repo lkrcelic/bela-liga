@@ -34,23 +34,15 @@ export const smokersLabel = (n: number): string => (n > 0 ? count(n, NOUN.puša�
 export const roundDotLabel = (round: string, smoking: boolean | null): string =>
   `${round}: ${smoking == null ? "nije za stolom" : smoking ? "pušački stol" : "običan stol"}`;
 
-// A rotation row's Udio: of tonight's rounds where the team had a table, how many it sat at a smoking table (a round
-// without its table doesn't count)
-export function tonightShare(tonight: readonly (boolean | null)[]): {smoking: number; rounds: number} {
-  return {smoking: tonight.filter((s) => s === true).length, rounds: tonight.filter((s) => s != null).length};
-}
+// A rotation row's Udio, in this league with tonight: "3 / 12" (rounds at a smoking table / rounds at a table)
+export const shareText = (smokingRounds: number, rounds: number): string => `${smokingRounds} / ${rounds}`;
 
-// The Udio cell: "2 / 3"
-export const tonightShareText = (tonight: readonly (boolean | null)[]): string => {
-  const {smoking, rounds} = tonightShare(tonight);
-  return `${smoking} / ${rounds}`;
-};
+// Its tooltip: "3 od 12 kola za pušačkim stolom u ovoj ligi" ("od 1 kola", "od 5 kola": the genitive is "kola" for every
+// number)
+export const shareTitle = (smokingRounds: number, rounds: number): string => `${smokingRounds} od ${rounds} kola za pušačkim stolom u ovoj ligi`;
 
-// Its tooltip: "Večeras 2 od 3 kola za pušačkim stolom"
-export const tonightTitle = (tonight: readonly (boolean | null)[]): string => {
-  const {smoking, rounds} = tonightShare(tonight);
-  return `Večeras ${smoking} od ${rounds} kola za pušačkim stolom`;
-};
+// The Propušteno cell's tooltip: "2 večeri s pušačem, bez pušačkog stola"
+export const missedTitle = (nights: number): string => `${count(nights, NOUN.večer)} s pušačem, bez pušačkog stola`;
 
 // Pušački stolovi in a tournament's form, as typed: numbers and ranges split by commas or spaces ("1, 2, 5",
 // "1-4, 7"). Empty: no smoking tables. null: something in it isn't a table number from 1 to MAX_SMOKING_TABLES.

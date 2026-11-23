@@ -2,19 +2,22 @@ import {Prisma} from "@prisma/client";
 import {prisma} from "@/app/_lib/prisma";
 import {BYE_TEAM_ID, isByeTeam} from "@/app/_lib/bye";
 import {leagueNightString} from "@/app/_lib/dates";
-import {SmokingSetup, SmokingTable, smokingTurns} from "@/app/_lib/matching/smokingTables";
+import {SmokingSetup, SmokingTable, smokingRecords} from "@/app/_lib/matching/smokingTables";
 import {SmokingPlan, SmokingPlanSide, SmokingPlanTeam} from "@/app/_interfaces/smoking";
 import {NotFoundError} from "@/app/_lib/service/admin/tables";
 import {draftLetters, roundName, roundStatusOf} from "@/app/_lib/roundStatus";
 import {teamSmokers} from "@/app/_lib/service/team/smokers";
 import {Slot} from "@/app/_lib/locations";
 
-// Smoking tables on the database side: tonight's tables of the league as the rule reads them (every night starts
-// afresh, DECISIONS 100), and the plan admins see in Create Round
+// Smoking tables on the database side: the league's tables as the rule reads them (only this league is remembered,
+// DECISIONS 101), and the plan admins see in Create Round
 
 type Db = Prisma.TransactionClient | typeof prisma;
 
+const isoDate = (d: Date) => d.toISOString().slice(0, 10);
+
 const roundSelect = {
+  round_date: true,
   round_number: true,
   table_number: true,
   team1_id: true,
@@ -29,7 +32,12 @@ const roundSelect = {
 
 type RoundRow = Prisma.RoundGetPayload<{select: typeof roundSelect}>;
 
-export const toSmokingTable = (r: Pick<RoundRow, "team1_id" | "team2_id" | "team1_smokers" | "team2_smokers" | "smoking_table">): SmokingTable => ({
+export const toSmokingTable = (
+  r: Pick<RoundRow, "round_date" | "round_number" | "location_slot" | "team1_id" | "team2_id" | "team1_smokers" | "team2_smokers" | "smoking_table">
+): SmokingTable => ({
+  date: isoDate(r.round_date!),
+  roundNumber: r.round_number,
+  slot: r.location_slot,
   team1Id: r.team1_id,
   team2Id: r.team2_id,
   team1Smokers: r.team1_smokers,
@@ -37,23 +45,24 @@ export const toSmokingTable = (r: Pick<RoundRow, "team1_id" | "team2_id" | "team
   smoking: r.smoking_table,
 });
 
-// The league's tables tonight (both places of a two-place night: a team plays at one of them)
-async function tonightRounds(leagueId: number, today: string, db: Db): Promise<RoundRow[]> {
+// The league's tables up to tonight: this league only, never another league's or a tournament's
+async function leagueRounds(leagueId: number, today: string, db: Db): Promise<RoundRow[]> {
   return db.round.findMany({
-    where: {leagueRounds: {some: {league_id: leagueId}}, round_date: new Date(`${today}T00:00:00.000Z`)},
+    where: {leagueRounds: {some: {league_id: leagueId}}, round_date: {not: null, lte: new Date(`${today}T00:00:00.000Z`)}},
     select: roundSelect,
   });
 }
 
-// What Create Round seats tonight's new rounds with: the smoking tables, the teams' smokers and their turns at a smoking
-// table in tonight's earlier rounds
+// What Create Round seats tonight's new rounds with: the smoking tables, the teams' smokers and their records in this
+// league
 export async function smokingSetup(leagueId: number, tables: number[], smokers: Map<number, number>, db: Db = prisma): Promise<SmokingSetup> {
-  const rounds = await tonightRounds(leagueId, leagueNightString(), db);
-  return {tables, smokers, turns: smokingTurns(rounds.map(toSmokingTable))};
+  const today = leagueNightString();
+  const rounds = await leagueRounds(leagueId, today, db);
+  return {tables, smokers, records: smokingRecords(rounds.map(toSmokingTable), today)};
 }
 
-// Tonight's smoking tables round by round, and where every smoking team sat in each of tonight's rounds (admin). slot:
-// at one place of a two-place night, that place's rounds tonight.
+// Tonight's smoking tables round by round, and every smoking team's record in this league (admin). slot: at one place
+// of a two-place night, that place's rounds tonight (the records are the league's, both places counted).
 export async function smokingPlan(leagueId: number, slot: Slot | null = null): Promise<SmokingPlan> {
   const league = await prisma.league.findUnique({
     where: {league_id: leagueId},
@@ -66,10 +75,11 @@ export async function smokingPlan(leagueId: number, slot: Slot | null = null): P
 
   const today = leagueNightString();
   const teams = league.leagueTeams.map((lt) => lt.team);
-  const [smokers, rounds] = await Promise.all([teamSmokers(teams.map((t) => t.team_id)), tonightRounds(leagueId, today, prisma)]);
+  const [smokers, rounds] = await Promise.all([teamSmokers(teams.map((t) => t.team_id)), leagueRounds(leagueId, today, prisma)]);
+  const records = smokingRecords(rounds.map(toSmokingTable), today);
   const names = new Map(teams.map((t) => [t.team_id, t.team_name]));
 
-  const tonight = rounds.filter((r) => r.round_number != null && (slot == null || r.location_slot === slot));
+  const tonight = rounds.filter((r) => isoDate(r.round_date!) === today && r.round_number != null && (slot == null || r.location_slot === slot));
   const roundNumbers = Array.from(new Set(tonight.map((r) => r.round_number!))).sort((a, b) => a - b);
   // a round still waiting in Skica is called by its letter
   const letters = draftLetters(
@@ -87,19 +97,30 @@ export async function smokingPlan(leagueId: number, slot: Slot | null = null): P
   }
   const side = (id: number, smokers: number): SmokingPlanSide => ({id, name: names.get(id) ?? `Ekipa ${id}`, smokers});
 
-  // teams that had a smoker at one of tonight's tables (a smoker may have left the team since)
-  const smokedTonight = new Set(tonight.flatMap((r) => [...(r.team1_smokers > 0 ? [r.team1_id] : []), ...(r.team2_smokers > 0 ? [r.team2_id] : [])]));
+  const playedRounds = new Map<number, number>();
+  rounds.forEach((r) => {
+    if (isByeTeam(r.team1_id) || isByeTeam(r.team2_id)) return;
+    [r.team1_id, r.team2_id].forEach((id) => playedRounds.set(id, (playedRounds.get(id) ?? 0) + 1));
+  });
+
   const rotation: SmokingPlanTeam[] = teams
-    .map((t) => ({
-      id: t.team_id,
-      name: t.team_name,
-      smokers: smokers.get(t.team_id) ?? 0,
-      tonight: roundNumbers.map((n) => {
-        const table = tonight.find((r) => r.round_number === n && (r.team1_id === t.team_id || r.team2_id === t.team_id));
-        return table && !isByeTeam(table.team1_id) && !isByeTeam(table.team2_id) ? table.smoking_table : null;
-      }),
-    }))
-    .filter((t) => t.smokers > 0 || smokedTonight.has(t.id))
+    .map((t) => {
+      const record = records.get(t.team_id);
+      return {
+        id: t.team_id,
+        name: t.team_name,
+        smokers: smokers.get(t.team_id) ?? 0,
+        tonight: roundNumbers.map((n) => {
+          const table = tonight.find((r) => r.round_number === n && (r.team1_id === t.team_id || r.team2_id === t.team_id));
+          return table && !isByeTeam(table.team1_id) && !isByeTeam(table.team2_id) ? table.smoking_table : null;
+        }),
+        smokingRounds: record?.turns ?? 0,
+        rounds: playedRounds.get(t.team_id) ?? 0,
+        missedNights: record?.missedNights ?? 0,
+      };
+    })
+    // a team whose smoker left still shows its record
+    .filter((t) => t.smokers > 0 || t.smokingRounds > 0 || t.missedNights > 0)
     .sort((a, b) => b.smokers - a.smokers || a.name.localeCompare(b.name, "hr"));
 
   return {

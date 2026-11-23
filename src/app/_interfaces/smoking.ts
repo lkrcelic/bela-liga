@@ -10,8 +10,7 @@ export const SmokingTablesValidation = z
 
 export type SmokingPlanSide = {id: number; name: string; smokers: number};
 
-// A team in the rotation (Manage League · Create round · Smoking plan). Only tonight counts: every night starts afresh
-// (DECISIONS 100).
+// A team in the rotation (Manage League · Create round · Smoking plan). Its record is this league's only (DECISIONS 101).
 export type SmokingPlanTeam = {
   id: number;
   name: string;
@@ -19,6 +18,11 @@ export type SmokingPlanTeam = {
   smokers: number;
   // per round of tonight (roundNumbers): at a smoking table, at another table, or not at a table (null)
   tonight: (boolean | null)[];
+  // in this league, tonight included: rounds at a smoking table, and rounds at any table
+  smokingRounds: number;
+  rounds: number;
+  // earlier nights of this league it had a smoker but sat at no smoking table
+  missedNights: number;
 };
 
 export type SmokingPlan = {
@@ -31,6 +35,6 @@ export type SmokingPlan = {
   roundNames: string[];
   // tonight's smoking tables, round by round
   rounds: {roundNumber: number; name: string; tables: {table: number; teams: [SmokingPlanSide, SmokingPlanSide]}[]}[];
-  // teams with smokers, or with a smoker at one of tonight's tables; most smokers first
+  // teams with smokers, or with a smoking record in this league; most smokers first
   teams: SmokingPlanTeam[];
 };

@@ -2,13 +2,14 @@
 
 What the commits changed for the people using the app, newest first. The reasons and details are in DECISIONS.md.
 
-## 20.11.2026 · Pušački stolovi po večeri i na turniru
+## 20.11.2026 · Pušački stolovi: više pušača prvo, turnir ima svoje
 
-On development since 20.11. (DECISIONS 100).
+On development since 20.11. (DECISIONS 100, 101).
 
 ### Admin
-- **Pušački stolovi** u svakom kolu idu mečevima s **najviše pušača za stolom**; ekipa s više pušača ima prednost. Kod jednakog broja pušača prednost ima meč čije su ekipe večeras manje puta sjedile za pušačkim stolom.
-- **Svaka večer kreće ispočetka**: ranije večeri se više ne broje. **Pušački raspored** pokazuje samo večeras (stupac **Propušteno** je maknut).
+- **Pušački stolovi** u svakom kolu idu mečevima s **najviše pušača za stolom**; ekipa s više pušača ima prednost i pred ekipom koja je propuštala večeri.
+- Kod jednakog broja pušača prednost ima meč s više **propuštenih večeri u ovoj ligi**, pa meč čije su ekipe u ligi manje puta sjedile za pušačkim stolom.
+- Pamti se **samo ta liga**: turniri i druge lige se ne broje. **Pušački raspored** i dalje pokazuje **Udio** i **Propušteno** za ovu ligu.
 
 ### Admin i organizator
 - **Turnir ima Pušačke stolove**: polje pod **Mjesto** u **Novom turniru** i **Podacima** ("1, 2" ili "1-4"). Svako kolo turnira sjeda mečeve s najviše pušača za te stolove, a broji se samo taj turnir. Promjena stolova ponovno slaže skicu kola koje čeka.
