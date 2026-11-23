@@ -23,9 +23,9 @@ export function adCount(n: number): string {
   return count(n, NOUN.oglas);
 }
 
-// The teams looking for a substitute, as Početna's Burza card and Burza's Zamjene count them (DECISIONS #29): other
-// teams only (not the viewer's own ads), each team once however many nights it asks for, in the order of the list.
-// With a night, only the teams asking for that night.
+// The teams looking for a substitute, as Početna's Burza card and Burza's Zamjene count them (DECISIONS #29): every
+// team's ads except the ones the viewer wrote (a teammate's ad counts too, #63), each team once however many nights it
+// asks for, in the order of the list. With a night, only the teams asking for that night.
 export function teamsAsking(posts: BurzaPost[], night: string | null = null): {id: number; name: string}[] {
   const teams = new Map<number, string>();
   for (const p of posts) {

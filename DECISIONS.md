@@ -173,9 +173,11 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
     - Team names aren't declined or given a verb: "Ekipa Slavonci traži zamjenu", "Taj dan igraš za ekipu
       Dalmatinci", since names like "Barcelona" or "Mujo i Haso" can't follow the design's "Slavonci trebaju
       zamjenu" / "za Dalmatince".
-    - Početna's card counts other teams' substitute ads ("1 ekipa traži igrača"), not the player's own. Burza ·
-      Zamjene's date filter counts the same way (#49): other teams only, each team once however many nights it asks
-      for, for "Svi datumi" and for the picked night (it used to count every ad, the player's own included).
+    - Početna's card counts the substitute ads ("1 ekipa traži igrača") except the ones the player wrote. Burza ·
+      Zamjene's date filter counts the same way (#49): each team once however many nights it asks for, for "Svi
+      datumi" and for the picked night (it used to count every ad, the player's own included). A teammate's ad counts
+      for the rest of the team too, so they are asked to step in or find someone: the user's call on 23.11.2026,
+      closing #63, which wanted the whole team left out.
     - Croatian addresses, as the links get shared: `/burza`, `/burza/12`, `/burza/novi/zamjena|partner|dostupan`,
       `/raspored`. The design's `front_hand` and `event_upcoming` icons aren't in `@mui/icons-material`; BackHand
       and Event stand in.
