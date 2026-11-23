@@ -2,19 +2,20 @@ import {Prisma} from "@prisma/client";
 import {prisma} from "@/app/_lib/prisma";
 import {PadLock} from "@/app/_interfaces/adminHand";
 import {isByeTeam} from "@/app/_lib/bye";
-import {GAME_MINUTES_ERROR, GAME_MINUTES_MAX, GAME_MINUTES_MIN, matchDeadline} from "@/app/_lib/gameTime";
+import {matchDeadline} from "@/app/_lib/gameTime";
 import {ROUND_NOT_PUBLISHED} from "@/app/_lib/roundStatus";
 import {InvalidResultError} from "@/app/_lib/validation/validateResult";
 import {NotFoundError} from "@/app/_lib/service/admin/tables";
 import {finishedMatchWinner} from "@/app/_lib/service/admin/hands";
 import {replayRatings} from "@/app/_lib/service/admin/recalc";
+import {gameMinutesOf} from "@/app/_lib/service/match/timeLimit";
 import {lockRound} from "@/app/_lib/service/round/finish";
 import {lockTournament} from "@/app/_lib/service/tournament/lock";
 import {lockKind} from "@/app/_lib/tableLock";
 
-// Otključaj partiju (DECISIONS #89): a locked table of a tournament is played on again, with the Vrijeme partije the
-// admin chooses as they unlock it (the table's own limit from then on, gameMinutesOf). What the lock did is undone with
-// it, so the unlocked table is as it was before:
+// Otključaj partiju (DECISIONS #89): a locked table of a tournament is played on again, always with the tournament's
+// Vrijeme partije counted from the unlock (nothing to pick; the next match at the table has the same time, as every
+// match). What the lock did is undone with it, so the unlocked table is as it was before:
 //   - Nedolazak (NO_SHOW): the 1001:700 matches the answer wrote are deleted (a match an admin has since entered hands
 //     into is real play and stays), the team that didn't come is back in the tournament and the app's own ban from
 //     Kolo 1 is lifted. The table is new again: Započni igru starts the game.
@@ -160,8 +161,7 @@ async function recountWins(tx: Tx, roundId: number) {
   });
 }
 
-export async function unlockTable(roundId: number, minutes: number, by: number | null = null): Promise<Unlocked> {
-  if (!Number.isInteger(minutes) || minutes < GAME_MINUTES_MIN || minutes > GAME_MINUTES_MAX) throw new InvalidResultError(GAME_MINUTES_ERROR);
+export async function unlockTable(roundId: number, by: number | null = null): Promise<Unlocked> {
   const link = await prisma.tournamentRound.findFirst({where: {round_id: roundId}, select: {tournament_id: true}});
   if (!link) {
     const exists = await prisma.round.count({where: {id: roundId}});
@@ -181,12 +181,13 @@ export async function unlockTable(roundId: number, minutes: number, by: number |
     if (!kind) throw new InvalidResultError(NOT_LOCKED);
 
     const now = new Date();
-    // The table answers Tu smo from here on (the admin says the teams are at it): the Vrijeme partije is the table's
-    // own from now on, and the question "Jesu li … za stolom?" can't come back at a table that was just unlocked —
-    // its Kolo went out long ago, so the clock would be past the skip at once and close the table again.
+    const minutes = await gameMinutesOf(tx, roundId);
+    // The table answers Tu smo from here on (the admin says the teams are at it): the question "Jesu li … za stolom?"
+    // can't come back at a table that was just unlocked — its Kolo went out long ago, so the clock would be past the
+    // skip at once and close the table again. A table's own time an earlier unlock wrote is cleared.
     await tx.round.update({
       where: {id: roundId},
-      data: {game_minutes: minutes, open: true, active: false, attendance: "PRESENT", attendance_team_id: table.team1_id, attendance_by: by, attendance_at: now},
+      data: {game_minutes: null, open: true, active: false, attendance: "PRESENT", attendance_team_id: table.team1_id, attendance_by: by, attendance_at: now},
     });
 
     // Nedolazak: the matches its answer wrote (1001:700, no hands) are not play and go; one an admin has entered hands

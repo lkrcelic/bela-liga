@@ -2148,3 +2148,24 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
       Propušteno), db (`db/smoking.test.ts` test 1: C, with a missed night in this league, gets the second smoking
       table before E, whose missed night was in another league, red on #100's code, where E-F got it, and red when the
       league filter is taken out of the query; Pušački raspored keeps a team whose smoker left but has a record).
+102. **Otključaj partiju uvijek daje Vrijeme partije turnira** (the user's messages of 23.11., asked from Treseta: "just
+    simple each unlock puts default time no matter what"; and before it, "the time I set for that match is an exception
+    for that match only, the second match on the table gets regular time"). Replaces #89's custom Vrijeme partije at the
+    unlock.
+    - **No time to pick**: the sheet has no minutes (no 10–45, no Drugo). A match played on gets the tournament's
+      Vrijeme partije counted from the unlock, and the sheet says how much ("… i traje još 35 min od sada (Vrijeme
+      partije turnira)."). A Nedolazak or Preskočen table starts its match at Započni igru with the same time.
+    - **A table has no time of its own any more**: the unlock no longer writes `Round.game_minutes`, it clears it, and
+      `gameMinutesOf` no longer reads it, so a table an unlock gave its own minutes before this goes back to the
+      tournament's (or the league's) for every match from now. The table's second match gets the regular time. The
+      Kolo's Vrijeme isteklo note ("završena nakon 35 min") quotes the tournament's time too, so nothing reads the
+      column any more; an old table whose match ran on its own minutes now reads the tournament's there, accepted.
+      Alternative: a time per match, picked at the unlock; not chosen: the user wanted it simple.
+    - The route ignores a body (an older page still sends `{minutes}`). `b-dozvole` can't send it an invalid body any
+      more, so the admin is SKIP on a tournament's played table and the owners' way through is a league table (400) and
+      a table that isn't there (404).
+    - **Checked**: unit (`tableLock.test.ts`: the sheet's line with the minutes), db (`db/unlock.test.ts`: every unlock
+      gives the tournament's 35 and leaves `game_minutes` empty; a table with its own 20 minutes from an older unlock
+      reads 35 and its Kolo note says 35, both red on the code before, and its match played on ends 35 minutes from the
+      unlock) and Playwright (`c5-otkljucaj`: the sheet without minutes, saying the tournament's minutes on a table given
+      its own 20 first, the match ending the tournament's minutes from now; `b-dozvole`'s unlock rows).

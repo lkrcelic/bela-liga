@@ -2,6 +2,14 @@
 
 What the commits changed for the people using the app, newest first. The reasons and details are in DECISIONS.md.
 
+## 23.11.2026 · Otključaj partiju s Vremenom partije turnira
+
+On development, not live yet (DECISIONS 102).
+
+### Admin i organizator
+- **Otključaj partiju** više ne pita koliko partija traje: otključana partija uvijek dobiva **Vrijeme partije turnira** od trenutka otključavanja, a list to i piše ("traje još 35 min od sada").
+- Stol više nema svoje vrijeme: i **sljedeća partija za tim stolom** igra se s vremenom turnira, pa i za stolom koji je ranije otključan s drugim vremenom.
+
 ## 23.11.2026 · Pušački stolovi: više pušača prvo, turnir ima svoje
 
 On development, not live yet (DECISIONS 100, 101).

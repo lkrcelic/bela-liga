@@ -2,11 +2,11 @@
 // match the admin's correction leaves under 1001 goes back in play by itself only while nothing came after it. A
 // table of Kolo 1 when Kolo 2 is out can't: the warning says so, Obriši svejedno leaves the match without a winner and
 // the table locked ("Partija je odigrana do kraja i zaključana."), and Otključaj partiju puts the match back in play
-// with its hands and the minutes the admin picks.
+// with its hands and the tournament's Vrijeme partije from now (nothing to pick).
 // The table is the first played table of Kolo 1 of tournaments.live ("Subotnji turnir uživo", one match per Kolo), as
 // the generator has no tournament of C5's own (asked for in C5's report); the fixture puts the hand back, closes the
-// match again through the admin's routes and gives the table and its match back the fields the unlock wrote (its own
-// Vrijeme partije, Tu smo, the match's times). The match's row is a new one afterwards.
+// match again through the admin's routes and gives the table and its match back the fields the unlock wrote (Tu smo,
+// the match's times). The match's row is a new one afterwards.
 import {expect, test as base} from "../../helpers/fixtures";
 import {cantReopen, decidingHand, deleteHand, expectHand, finishedMatches, handShape, noWinnerSheet, openTable, putBackDecidingHand, type FinishedMatch} from "../../helpers/c5";
 import {expectTotal, handRows} from "../../helpers/scorepad";
@@ -45,7 +45,7 @@ const test = base.extend<{locked: Locked}>({
   },
 });
 
-test("Kolo 1's table when Kolo 2 is out: the warning says why the match can't go back in play, the table stays locked, and Otključaj partiju puts it back in play with the minutes the admin picks", async ({
+test("Kolo 1's table when Kolo 2 is out: the warning says why the match can't go back in play, the table stays locked, and Otključaj partiju puts it back in play with the tournament's Vrijeme partije", async ({
   as,
   db,
   locked: {tournamentId, roundId, names, match},
@@ -53,6 +53,11 @@ test("Kolo 1's table when Kolo 2 is out: the warning says why the match can't go
 }) => {
   const {hand, without} = decidingHand(match);
   const n = match.belaResults.length;
+  // the table has its own 20 minutes, as an unlock wrote them before every unlock took the tournament's (the fixture
+  // puts back what the table had)
+  const {game_minutes: minutes} = await db.tournament.findUniqueOrThrow({where: {tournament_id: tournamentId}});
+  expect(minutes).not.toBe(20);
+  await db.round.update({where: {id: roundId}, data: {game_minutes: 20}});
   const page = await as("admin");
   await openTable(page, `/turniri/${tournamentId}/stol/${roundId}`);
   await expect(page.getByText("Partija je odigrana do kraja i zaključana.")).toBeVisible();
@@ -70,13 +75,14 @@ test("Kolo 1's table when Kolo 2 is out: the warning says why the match can't go
   const stillLocked = await db.round.findUniqueOrThrow({where: {id: roundId}});
   expect([stillLocked.open, stillLocked.team1_wins, stillLocked.team2_wins, await db.ongoingMatch.count({where: {round_id: roundId}})]).toEqual([false, 0, 0, 0]);
 
-  // Otključaj partiju with 20 minutes: the match goes on with its hands from now
+  // Otključaj partiju: the match goes on with its hands and the tournament's Vrijeme partije from now, not the table's
+  // own 20 minutes, with no time to pick
   await page.getByRole("button", {name: "Otključaj partiju"}).click();
   const sheet = page.getByRole("dialog", {name: "Otključaj partiju"});
-  await expect(sheet).toContainText("Zadnja odigrana partija se nastavlja s upisanim igrama, s novim vremenom od sada.");
-  await sheet.getByRole("button", {name: "20 min", exact: true}).click();
-  await expect(sheet.getByRole("button", {name: "20 min", exact: true})).toHaveAttribute("aria-pressed", "true");
-  await sheet.getByRole("button", {name: "Otključaj · 20 min"}).click();
+  await expect(sheet).toContainText(`Zadnja odigrana partija se nastavlja s upisanim igrama i traje još ${minutes} min od sada (Vrijeme partije turnira).`);
+  await expect(sheet.getByRole("spinbutton")).toHaveCount(0);
+  await expect(sheet.getByRole("button", {name: /^\d+ min$/})).toHaveCount(0);
+  await sheet.getByRole("button", {name: "Otključaj", exact: true}).click();
   await expect(sheet).toBeHidden();
 
   // the board: the match being played, its hands, Upiši igru, no lock
@@ -88,8 +94,8 @@ test("Kolo 1's table when Kolo 2 is out: the warning says why the match can't go
   await expect(page.getByText("Partija je odigrana do kraja i zaključana.")).toHaveCount(0);
   await healthy(page);
 
-  // the database: the match is the one being played (its hands with their zvanja), 20 minutes from now, on a table
-  // that is open again with its own Vrijeme partije and Tu smo
+  // the database: the match is the one being played (its hands with their zvanja), the tournament's minutes from now,
+  // on a table that is open again with Tu smo and no time of its own
   expect(await db.match.count({where: {round_id: roundId}})).toBe(0);
   const open = await db.ongoingMatch.findFirstOrThrow({
     where: {round_id: roundId},
@@ -98,8 +104,8 @@ test("Kolo 1's table when Kolo 2 is out: the warning says why the match can't go
   expect(open.belaResults.map(handShape)).toEqual(match.belaResults.slice(0, -1).map(handShape));
   expect([open.player_pair1_score, open.player_pair2_score]).toEqual(without);
   const left = (open.ends_at!.getTime() - Date.now()) / 60_000;
-  expect(left).toBeGreaterThan(19);
-  expect(left).toBeLessThanOrEqual(20);
+  expect(left).toBeGreaterThan(minutes - 1);
+  expect(left).toBeLessThanOrEqual(minutes);
   const unlocked = await db.round.findUniqueOrThrow({where: {id: roundId}});
-  expect([unlocked.open, unlocked.game_minutes, unlocked.attendance, unlocked.team1_wins, unlocked.team2_wins]).toEqual([true, 20, "PRESENT", 0, 0]);
+  expect([unlocked.open, unlocked.game_minutes, unlocked.attendance, unlocked.team1_wins, unlocked.team2_wins]).toEqual([true, null, "PRESENT", 0, 0]);
 });
