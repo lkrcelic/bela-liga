@@ -25,7 +25,18 @@ export function authHref(page: "/login" | "/signup", next: string | null | undef
   return back && back !== "/" ? `${page}?next=${encodeURIComponent(back)}` : page;
 }
 
-// Where to go after logging in: only a page of this app ("/burza/novi/zamjena"), never another site ("//evil.example")
+// two made-up origins: a path stays on whichever one it is read against, while an address of another site, even one of
+// these two, leaves at least one of them
+const READ_AGAINST = ["https://a.invalid", "https://b.invalid"];
+
+// Where to go after logging in: only a page of this app ("/burza/novi/zamjena"), never another site. The path is read
+// the way the browser will read it: it drops tabs and line breaks and reads "\" as "/", so "//evil.example",
+// "/\evil.example" and "/<tab>/evil.example" all go to another site.
 export function safeNextPath(next: string | null | undefined): string | null {
-  return next && next.startsWith("/") && !next.startsWith("//") && !next.startsWith("/\\") ? next : null;
+  if (!next || !next.startsWith("/")) return null;
+  try {
+    return READ_AGAINST.every((origin) => new URL(next, origin).origin === origin) ? next : null;
+  } catch {
+    return null;
+  }
 }

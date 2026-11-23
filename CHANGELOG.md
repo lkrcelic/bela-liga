@@ -2,6 +2,13 @@
 
 What the commits changed for the people using the app, newest first. The reasons and details are in DECISIONS.md.
 
+## 24.11.2026 · Nakon prijave samo na stranice aplikacije
+
+On development, not live yet.
+
+### Changed
+- **Prijava** i **Registracija** nakon prijave vode samo na stranice aplikacije. Poveznica na Prijavu u kojoj je stranica za povratak podmetnuta tako da preglednik ode na drugu web stranicu (npr. tabulatorom ili novim redom u adresi) sad nakon prijave otvara **Početnu**.
+
 ## 24.11.2026 · Meč stola samo za njegove igrače
 
 On development, not live yet (#88).
