@@ -2205,3 +2205,24 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
       unconfirmed team is in no table of the Skica, a late confirmation makes it stale (Objavi off) and taking it back
       clears that, and after Objavi the team is Neaktivna. C7's `publishKolo1` and the Pušački stolovi test mark the
       teams' arrival first; C3's helpers already did.
+
+105. **Ne, nisu došli ostaje odmah, a zatim Javi organizatoru** (#60; the user's messages of 24.11.: "after the nisu došli
+    is selected a new modal needs to pop up for the players 'javi organizatoru'", "not the other way round", "comes only
+    with the mobile phone and text"). #60 asked whether one player's Ne, nisu došli should stay final at once, or wait
+    for the other team or the organizer. It stays as it is: the first answer counts, 1001 : 700, the other team out
+    (in Kolo 1 with a month's ban).
+    - **Javi organizatoru**: right after Potvrđujem, nisu došli, the phone that answered shows a sheet over the
+      tournament's page: "Nedolazak je upisan: X ispadaju iz turnira. Javi organizatoru turnira da X nisu došli za Stol
+      n.", the organizer's mobile as a number to call (tel:), and Zatvori. No Nazovi or WhatsApp buttons, no message
+      written for them. A mistake is the organizer's to undo with Vrati stol (#97).
+    - **Only for the team whose answer it was**: the answer's response for a no-show now says `mine` (the table went to
+      the viewer's team). A team the other team declared absent first gets NO_SHOW back for its own Ne, nisu došli too,
+      and without `mine` it would have been told to report the other team.
+    - **Without an organizer's phone, no sheet**: a new tournament can't be made without one, but one made before it was
+      asked for has none, and a sheet with nobody to call says nothing.
+    - **Alternatives the user turned down**: a claim that waits for the other team's Tu smo or the organizer's decision
+      (with the 10-minute skip held back for it), and a sheet for the team declared absent ("Greška? Javite se
+      organizatoru").
+    - **Checked**: Playwright `c3-nedolazak` (the sheet's text and the tel: link after the confirm, then Zatvori; the
+      #85 test closes it; no sheet for an older tournament without the phone; no sheet for a team declared absent
+      first), the first two red on the code before; `c3-popravci` expects `mine: true` with a no-show's answer.

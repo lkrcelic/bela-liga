@@ -103,6 +103,9 @@ komentarom `// BUG:`: test opisuje kako bi trebalo biti, a prolazi dok greška p
 | Nedolazak za stol 4 / 6 (1001 : 700, zabrana) | igrač | `turniri/c3-nedolazak.spec.ts` › Nedolazak za stol: no question before 4 minutes… |
 | Nedolazak za stol 10 (preskok) | sustav, igrač | `turniri/c3-nedolazak.spec.ts` › a table with neither a game nor an answer is skipped at 10 minutes… |
 | Stranica turnira nakon Ne, nisu došli (#85) | igrač | `turniri/c3-nedolazak.spec.ts` › after Ne, nisu došli on the tournament's page… |
+| Javi organizatoru nakon Ne, nisu došli (#60) | igrač | `turniri/c3-nedolazak.spec.ts` › Nedolazak za stol: no question before 4 minutes… |
+| Bez Javi organizatoru: turnir bez telefona organizatora (#60) | igrač | `turniri/c3-nedolazak.spec.ts` › a tournament without an organizer's phone… |
+| Bez Javi organizatoru: ekipa koju su prvi prijavili da nije došla (#60) | igrač | `turniri/c3-nedolazak.spec.ts` › a team declared absent first… |
 | Vrati stol | admin | `turniri/c3-popravci.spec.ts` › Vrati stol brings a no-show table back into play… |
 | Uredi ishod | admin | `turniri/c3-popravci.spec.ts` › Uredi ishod gives a skipped table to one team… |
 | Kolo 2 (švicarski), poredak i kraj turnira | admin, igrač | `turniri/c3-kolo2.spec.ts` › Kolo 2 pairs the neighbours of the standings… |

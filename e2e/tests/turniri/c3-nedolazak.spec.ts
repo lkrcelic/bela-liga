@@ -109,6 +109,12 @@ test("Nedolazak za stol: no question before 4 minutes, the question at 4 with Ne
   await expect(confirm).toContainText(`${here.name} pobjeđuju`);
   await expect(confirm).toContainText(`${absent.name} dobivaju i zabranu prijava na turnire na mjesec dana`);
   await confirm.getByRole("button", {name: "Potvrđujem, nisu došli"}).click();
+  // then Javi organizatoru: what was written and the organizer's mobile, a number to call
+  const tell = page.getByRole("alertdialog", {name: "Javi organizatoru"});
+  await expect(tell).toContainText(`Nedolazak je upisan: ${absent.name} ispadaju iz turnira.`);
+  await expect(tell).toContainText(`Javi organizatoru turnira da ${absent.name} nisu došli za Stol ${table.table_number}.`);
+  await expect(tell.getByRole("link", {name: "+385 91 000 0001"})).toHaveAttribute("href", "tel:+385910000001");
+  await tell.getByRole("button", {name: "Zatvori"}).click();
   await expect(page.getByRole("alertdialog")).toHaveCount(0);
 
   // the table: closed, won 1001 : 700 without play; the absent team out after Kolo 1 and banned with its players
@@ -233,7 +239,53 @@ test("after Ne, nisu došli on the tournament's page, the page shows Pobjeda bez
   await expect(page.getByRole("button", {name: new RegExp(`^STOL ${tables[0].table_number} .*Započni igru$`)})).toBeVisible();
   await page.getByRole("alertdialog", {name: `Jesu li ${absent.name} za stolom?`}).getByRole("button", {name: "Ne, nisu došli"}).click();
   await page.getByRole("button", {name: "Potvrđujem, nisu došli"}).click();
+  await page.getByRole("alertdialog", {name: "Javi organizatoru"}).getByRole("button", {name: "Zatvori"}).click();
   await expect(page.getByRole("alertdialog")).toHaveCount(0);
   await expect(page.getByRole("region", {name: "Pobjeda bez igre"})).toBeVisible();
   await expect(page.getByRole("button", {name: /Započni igru$/})).toHaveCount(0);
+});
+
+// Javi organizatoru shows the organizer's mobile. A new tournament can't be made without one, but a tournament made
+// before it was asked for has none: nobody to call, so no sheet comes after Ne, nisu došli and the page shows Pobjeda
+// bez igre at once
+test("a tournament without an organizer's phone shows no Javi organizatoru after Ne, nisu došli", async ({as, db, admin, tournaments}) => {
+  const teams = await pickTeams(db, 6, {phones: 6});
+  const t = await makeReady(tournaments.make, admin, teams, {name: "Turnir bez telefona organizatora"});
+  await db.tournament.update({where: {tournament_id: t.id}, data: {organizer_phone: null}});
+  const {tables} = await publishNextKolo(admin, db, t.id);
+  const [here, absent] = [byId(teams, tables[0].team1_id), byId(teams, tables[0].team2_id)];
+  await koloOutFor(db, t.id, 1, 6);
+  const page = await as(here.phone!);
+  await page.goto(`/turniri/${t.id}`);
+  await page.getByRole("alertdialog", {name: `Jesu li ${absent.name} za stolom?`}).getByRole("button", {name: "Ne, nisu došli"}).click();
+  await page.getByRole("button", {name: "Potvrđujem, nisu došli"}).click();
+  await expect(page.getByRole("region", {name: "Pobjeda bez igre"})).toBeVisible();
+  await expect(page.getByRole("alertdialog")).toHaveCount(0);
+});
+
+// Javi organizatoru is only for the team whose Ne, nisu došli decided the table. The first answer counts: a team the
+// other team has already declared absent gets NO_SHOW back for its own Ne, nisu došli, but not as its own, so it is
+// told nothing to report and sees that it is out
+test("a team declared absent first that taps Ne, nisu došli too gets no Javi organizatoru", async ({as, api, db, admin, tournaments}) => {
+  const teams = await pickTeams(db, 6, {phones: 6});
+  const t = await makeReady(tournaments.make, admin, teams, {name: "Turnir dvaju nedolazaka"});
+  const {tables} = await publishNextKolo(admin, db, t.id);
+  const [late, first] = [byId(teams, tables[0].team1_id), byId(teams, tables[0].team2_id)];
+  await koloOutFor(db, t.id, 1, 6);
+  const page = await as(late.phone!);
+  await page.goto(`/turniri/${t.id}`);
+  await page.getByRole("alertdialog", {name: `Jesu li ${first.name} za stolom?`}).getByRole("button", {name: "Ne, nisu došli"}).click();
+  await expect(page.getByRole("button", {name: "Potvrđujem, nisu došli"})).toBeVisible();
+  // the phone keeps its question as it is: its next reads of it are held back
+  await page.route("**/api/tournaments/attention", (route) => route.abort());
+
+  // meanwhile the other team answers first, and it is theirs
+  const res = await (await api(first.players[0].username)).post(`/api/rounds/${tables[0].id}/attendance`, {data: {answer: "NO_SHOW"}});
+  expect(await res.json()).toEqual({outcome: "NO_SHOW", mine: true});
+
+  await page.getByRole("button", {name: "Potvrđujem, nisu došli"}).click();
+  await expect(page.getByRole("region", {name: "Isključeni ste iz turnira"})).toBeVisible();
+  await expect(page.getByRole("alertdialog", {name: "Javi organizatoru"})).toHaveCount(0);
+  const closed = await db.round.findUniqueOrThrow({where: {id: tables[0].id}});
+  expect([closed.attendance, closed.attendance_team_id]).toEqual(["NO_SHOW", first.id]);
 });

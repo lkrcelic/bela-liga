@@ -141,6 +141,15 @@ export async function skipDueTables(tournamentId: number, now = new Date()): Pro
   return closed;
 }
 
+// After a no-show: whether it was the viewer's team that answered Ne, nisu došli, so the table is theirs and they tell the
+// organizer (Javi organizatoru). False for the team declared absent, which also gets NO_SHOW back when its own answer
+// came second.
+export async function noShowAnsweredByViewer(roundId: number, viewerId: number): Promise<boolean> {
+  const table = await prisma.round.findUnique({where: {id: roundId}, select: {attendance: true, attendance_team_id: true}});
+  if (table?.attendance !== "NO_SHOW" || table.attendance_team_id == null) return false;
+  return (await prisma.teamPlayer.count({where: {player_id: viewerId, team_id: table.attendance_team_id}})) > 0;
+}
+
 // The answer of one of the table's players. The first answer counts: a later one gets the table as it is. Answers with
 // what the table is now.
 export async function answerAttendance(roundId: number, viewer: Viewer, answer: AttendanceAnswer): Promise<"PRESENT" | "NO_SHOW" | "SKIPPED" | "STARTED"> {

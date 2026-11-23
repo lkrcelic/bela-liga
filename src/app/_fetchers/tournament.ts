@@ -60,7 +60,7 @@ export const arrivalAPI = (id: number, action: "confirm" | "cancel" | "join" | "
 // Nedolazak za stol: the question about the player's table, and the answer
 export const getAttentionAPI = () => send<Attention>("/api/tournaments/attention", "GET", undefined, "Provjera stola nije uspjela.");
 export const answerAttendanceAPI = (roundId: number, answer: "PRESENT" | "NO_SHOW") =>
-  send<{outcome: "PRESENT" | "NO_SHOW" | "SKIPPED" | "STARTED"}>(`/api/rounds/${roundId}/attendance`, "POST", {answer}, "Odgovor nije spremljen.");
+  send<{outcome: "PRESENT" | "NO_SHOW" | "SKIPPED" | "STARTED"; mine?: boolean}>(`/api/rounds/${roundId}/attendance`, "POST", {answer}, "Odgovor nije spremljen.");
 
 export type TeammateHit = {id: number; name: string; username: string; photo_url: string | null};
 export const searchTeammatesAPI = (q: string) => send<TeammateHit[]>(`/api/players/search?q=${encodeURIComponent(q)}`, "GET", undefined, "Igrači se nisu učitali.");

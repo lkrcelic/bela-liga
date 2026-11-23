@@ -3,6 +3,7 @@
 import {answerAttendanceAPI, getAttentionAPI} from "@/app/_fetchers/tournament";
 import useStartGame from "@/app/_hooks/useStartGame";
 import {clockLabel} from "@/app/_lib/gameTime";
+import {telHref} from "@/app/_lib/phone";
 import type {Attention, AttentionNotice, AttentionPrompt} from "@/app/_lib/service/tournament/attention";
 import {useTransitionRouter} from "@/app/_lib/viewTransitions";
 import useAuthStore from "@/app/_store/authStore";
@@ -63,6 +64,8 @@ export default function TournamentAttention() {
   const [busy, setBusy] = useState<"PRESENT" | "NO_SHOW" | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [dismissed, setDismissed] = useState<number | null>(null);
+  // the table this phone's Ne, nisu došli just decided: Javi organizatoru is shown for it (#60)
+  const [told, setTold] = useState<AttentionPrompt | null>(null);
   const timer = useRef<number | null>(null);
   const router = useTransitionRouter();
   const game = useStartGame({scope: "tournament"});
@@ -105,6 +108,7 @@ export default function TournamentAttention() {
     return () => window.clearInterval(id);
   }, [prompt]);
 
+  if (told && user && !quiet) return <CallOrganizer p={told} onClose={() => setTold(null)} />;
   if (!user || quiet || (!prompt && !notice)) return null;
   const serverNow = now + offset;
 
@@ -113,12 +117,18 @@ export default function TournamentAttention() {
     setBusy(kind);
     setError(null);
     try {
-      const {outcome} = await answerAttendanceAPI(prompt.round_id, kind);
+      const {outcome, mine} = await answerAttendanceAPI(prompt.round_id, kind);
       setDismissed(prompt.round_id);
       setConfirming(false);
       tableChanged();
       if (outcome === "PRESENT" || outcome === "STARTED") await game.start();
-      else router.push(`/turniri/${prompt.tournament_id}`);
+      else {
+        // the no-show is this team's: the player tells the organizer, over the tournament's page (#60). A team that was
+        // declared absent first gets NO_SHOW back too, but not as its own (mine: false), and an older tournament may
+        // have no organizer's phone
+        if (outcome === "NO_SHOW" && mine && prompt.organizer_phone) setTold(prompt);
+        router.push(`/turniri/${prompt.tournament_id}`);
+      }
       check();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Odgovor nije spremljen.");
@@ -333,6 +343,28 @@ function NoShowConfirm({p, serverNow, busy, error, onConfirm, onBack}: {p: Atten
       <OutlineButton onClick={onBack} disabled={busy} sx={{height: 52, borderWidth: "1.5px", borderColor: color.line, background: color.white}}>
         Ipak su tu
       </OutlineButton>
+    </Cover>
+  );
+}
+
+// Javi organizatoru (#60): Ne, nisu došli is written at once (1001 : 700, the other team out), and the player who gave it
+// tells the organizer: only the text and the organizer's mobile, a number to call. A mistake the organizer undoes
+// with Vrati stol
+function CallOrganizer({p, onClose}: {p: AttentionPrompt; onClose: () => void}) {
+  const phone = p.organizer_phone ?? "";
+  return (
+    <Cover label="Javi organizatoru">
+      <Title>Javi organizatoru</Title>
+      <Box sx={{fontSize: 16, lineHeight: 1.45, color: color.ink2}}>
+        {`Nedolazak je upisan: ${p.opponent} ispadaju iz turnira. Javi organizatoru turnira da ${p.opponent} nisu došli ${p.table_number != null ? `za Stol ${p.table_number}` : "za stol"}.`}
+      </Box>
+      <Box component="a" href={telHref(phone)} sx={{alignSelf: "flex-start", fontFamily: font.display, fontSize: 30, fontWeight: 800, lineHeight: 1.1, color: color.navy, textDecoration: "none"}}>
+        {phone}
+      </Box>
+      <Box sx={{flex: 1, minHeight: 8}} />
+      <PrimaryButton onClick={onClose} sx={{height: 56, fontSize: 16}}>
+        Zatvori
+      </PrimaryButton>
     </Cover>
   );
 }

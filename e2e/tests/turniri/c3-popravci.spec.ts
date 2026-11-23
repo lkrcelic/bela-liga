@@ -17,7 +17,8 @@ async function liveKolo1(make: Parameters<typeof makeReady>[0], admin: Admin, db
   const [noShow, skipped, present] = tables;
   const answer = async (table: (typeof tables)[number], a: "PRESENT" | "NO_SHOW") => {
     const res = await (await api(byId(teams, table.team1_id).players[0].username)).post(`/api/rounds/${table.id}/attendance`, {data: {answer: a}});
-    expect(await res.json()).toEqual({outcome: a});
+    // a no-show also says it was this team's answer (Javi organizatoru on its phone, #60)
+    expect(await res.json()).toEqual(a === "NO_SHOW" ? {outcome: a, mine: true} : {outcome: a});
   };
   await koloOutFor(db, t.id, 1, 4);
   await answer(present, "PRESENT");

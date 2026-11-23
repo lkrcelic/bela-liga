@@ -25,6 +25,8 @@ export type AttentionPrompt = {
   ask_at: string;
   unlock_at: string;
   skip_at: string;
+  // the organizer's mobile, for Javi organizatoru after Ne, nisu došli (null: an older tournament without one)
+  organizer_phone: string | null;
 };
 
 export type AttentionNotice = {
@@ -111,6 +113,7 @@ export async function attentionFor(viewer: Viewer): Promise<Attention> {
       ask_at: times.ask.toISOString(),
       unlock_at: times.unlock.toISOString(),
       skip_at: times.skip.toISOString(),
+      organizer_phone: tournament.organizer_phone,
     };
     pollIn = FAST_S;
     break;

@@ -2,6 +2,14 @@
 
 What the commits changed for the people using the app, newest first. The reasons and details are in DECISIONS.md.
 
+## 24.11.2026 · Javi organizatoru nakon Ne, nisu došli
+
+On development, not live yet (DECISIONS 105, #60).
+
+### Igrači
+- Nakon **Potvrđujem, nisu došli** iskoči **Javi organizatoru**: nedolazak je upisan, javi organizatoru turnira da druga ekipa nije došla. Na listu je **broj mobitela organizatora**, dodir ga zove.
+- Nedolazak i dalje vrijedi odmah: 1001 : 700, druga ekipa ispada iz turnira. Ako je greška, organizator vraća stol.
+
 ## 24.11.2026 · Nakon prijave samo na stranice aplikacije
 
 On development, not live yet.
