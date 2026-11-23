@@ -1,5 +1,6 @@
 "use client";
 
+import useEvery from "@/app/_hooks/useEvery";
 import useNavStack from "@/app/_hooks/useNavStack";
 import useOpenTable from "@/app/_hooks/useOpenTable";
 import useStartGame from "@/app/_hooks/useStartGame";
@@ -25,12 +26,15 @@ export default function ResultsPage({id}: {id: number}) {
   const params = useSearchParams();
   const asked = Number(params.get("kolo"));
   const [tab, setTab] = useState<number>(Number.isInteger(asked) && asked > 0 ? asked : 0);
-  const [every, setEvery] = useState<number | undefined>(undefined);
-  const {results: r, error, notFound, reload} = useTournamentResults(id, every);
+  const {results: r, error, notFound, reload, refresh} = useTournamentResults(id);
   const nav = useNavStack(r ? (tab ? `Kolo ${tab}` : "Poredak") : null, `/turniri/${id}`);
-  const {table: openTable} = useOpenTable("tournament");
+  const {table: openTable, reload: reloadTable} = useOpenTable("tournament");
   const game = useStartGame({scope: "tournament"});
-  if ((r?.phase === "active" ? 30_000 : undefined) !== every) setEvery(r?.phase === "active" ? 30_000 : undefined);
+  // while it is played the results come in again every 30 s, and the player's table with them on the same tick (#85)
+  useEvery(r?.phase === "active" ? 30_000 : undefined, () => {
+    refresh();
+    reloadTable();
+  });
 
   const pick = (k: number) => {
     setTab(k);

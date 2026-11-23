@@ -19,7 +19,8 @@ export async function getOpenRoundByPlayerIdAPI(
   const response = await apiFetch(scope === "any" ? `/api/rounds/open` : `/api/rounds/open?scope=${scope}`);
 
   if (!response.ok) {
-    throw new Error(await responseErrorMessage(response, "Otvorena runda se nije učitala."));
+    // status: 404 means no open table, which a reader tells apart from a failed read (useOpenTable)
+    throw Object.assign(new Error(await responseErrorMessage(response, "Otvorena runda se nije učitala.")), {status: response.status});
   }
 
   return response.json();

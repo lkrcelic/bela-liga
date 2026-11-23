@@ -2,6 +2,18 @@
 
 What the commits changed for the people using the app, newest first. The reasons and details are in DECISIONS.md.
 
+## 24.11.2026 · Stol novog kola bez ponovnog otvaranja stranice
+
+On development, not live yet (#85).
+
+### Igrači
+- Na otvorenoj **stranici turnira** tvoj **stol novog kola** (STOL n … **Započni igru**) pojavi se sam, najkasnije za 20 sekundi, zajedno s ostatkom stranice. Isto na **Turnirima** i u **Poretku i rezultatima**, svakih 30 sekundi.
+- Nakon **Ne, nisu došli** stranica odmah pokazuje **Pobjeda bez igre**.
+- Kad se vratiš u aplikaciju iz druge, tvoj stol se odmah provjeri (i na Početnoj i u Dnevnom poretku).
+
+### Changed
+- Dosad se stol novog kola pojavio tek kad se stranica ponovo otvori, a do tada je kartica pisala "Vaš stol u Kolu 2 je odigran" za stol koji tek čeka. Nakon Ne, nisu došli ostajao je Započni igru za stol koji je već zatvoren.
+
 ## 23.11.2026 · Prijava s Burze vodi na obrazac
 
 On development, not live yet (#79).

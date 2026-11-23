@@ -3,8 +3,10 @@
 import {getRoundDataAPI} from "@/app/_fetchers/round/getOne";
 import {getOpenRoundByPlayerIdAPI, OpenScope} from "@/app/_fetchers/round/getOpenByPlayerId";
 import {RoundExtendedResponse} from "@/app/_interfaces/round";
+import {readSaysNothing} from "@/app/_lib/ui/openTable";
 import useAuthStore from "@/app/_store/authStore";
-import {useEffect, useState} from "react";
+import {useTableSignal} from "@/app/_store/tableSignal";
+import {useCallback, useEffect, useState} from "react";
 
 export type OpenTable = {
   roundId: number;
@@ -31,13 +33,33 @@ export function myTeamIsTeam1(round: Pick<RoundExtendedResponse, "team1" | "team
 }
 
 // The next table the logged-in player sits at, if they have an open round. scope: only a league's table (Početna ·
-// Liga) or a tournament's (Početna · Turniri, a tournament's page); any by default
-export default function useOpenTable(scope: OpenScope = "any"): {table: OpenTable | null; loading: boolean} {
+// Liga) or a tournament's (Početna · Turniri, a tournament's page); any by default.
+// It is read when the page opens, again when the app comes back to the front, at once when the player's table changes
+// from outside the page (useTableSignal: an answer to "Jesu li … za stolom?"), and on reload(), which a page that reads
+// its own data on a timer calls on the same tick (useEvery), so a Kolo published or a table closed meanwhile shows (#85).
+// A guest has no table: nothing is read (a read would only answer 401 and start the session check, every refresh).
+export default function useOpenTable(scope: OpenScope = "any"): {table: OpenTable | null; loading: boolean; reload: () => void} {
   const userId = useAuthStore((s) => s.user?.id);
+  const signal = useTableSignal((s) => s.version);
   const [table, setTable] = useState<OpenTable | null>(null);
   const [loading, setLoading] = useState(true);
+  const [nonce, setNonce] = useState(0);
+  const reload = useCallback(() => setNonce((n) => n + 1), []);
 
   useEffect(() => {
+    const wake = () => {
+      if (document.visibilityState === "visible") reload();
+    };
+    document.addEventListener("visibilitychange", wake);
+    return () => document.removeEventListener("visibilitychange", wake);
+  }, [reload]);
+
+  useEffect(() => {
+    if (userId == null) {
+      setTable(null);
+      setLoading(false);
+      return;
+    }
     let cancelled = false;
     (async () => {
       try {
@@ -58,9 +80,9 @@ export default function useOpenTable(scope: OpenScope = "any"): {table: OpenTabl
           tournamentId: tournamentId ?? null,
           kolo: nightKolo ?? null,
         });
-      } catch {
-        // no open round (404) or offline: no card
-        if (!cancelled) setTable(null);
+      } catch (e) {
+        // no open round (404): no card; offline or a server fault: what is shown stays (none on the first read)
+        if (!cancelled) setTable((shown) => (readSaysNothing(e) ? shown : null));
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -68,7 +90,7 @@ export default function useOpenTable(scope: OpenScope = "any"): {table: OpenTabl
     return () => {
       cancelled = true;
     };
-  }, [userId, scope]);
+  }, [userId, scope, nonce, signal]);
 
-  return {table, loading};
+  return {table, loading, reload};
 }

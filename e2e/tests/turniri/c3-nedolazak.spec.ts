@@ -215,10 +215,9 @@ test("a table with neither a game nor an answer is skipped at 10 minutes, not be
   await healthy(page);
 });
 
-// BUG: answering Ne, nisu došli on the tournament's own page leaves its Započni igru for the table just closed (the open
-// table is read once, when the page opens); tapping it says "Trenutno nemaš otvorenu rundu."
-// BUG #85: useOpenTable reads the open table once, so the closed table's Započni igru stays after the answer
-test.fail("after Ne, nisu došli on the tournament's page, the page shows Pobjeda bez igre instead of the closed table's Započni igru", async ({
+// #85: the answer is given on the tournament's own page, so nothing opens the page again; the answer itself makes the
+// page read the player's table and the tournament again, so the table just closed doesn't keep its Započni igru
+test("after Ne, nisu došli on the tournament's page, the page shows Pobjeda bez igre instead of the closed table's Započni igru", async ({
   as,
   db,
   admin,

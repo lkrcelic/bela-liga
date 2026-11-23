@@ -101,10 +101,15 @@ komentarom `// BUG:`: test opisuje kako bi trebalo biti, a prolazi dok greška p
 | Složi i objavi Kolo 1 | admin | `turniri/c3-nedolazak.spec.ts` › the admin makes Kolo 1 of a ready tournament with Složi Kolo 1… |
 | Nedolazak za stol 4 / 6 (1001 : 700, zabrana) | igrač | `turniri/c3-nedolazak.spec.ts` › Nedolazak za stol: no question before 4 minutes… |
 | Nedolazak za stol 10 (preskok) | sustav, igrač | `turniri/c3-nedolazak.spec.ts` › a table with neither a game nor an answer is skipped at 10 minutes… |
-| Stranica turnira nakon Ne, nisu došli | igrač | `turniri/c3-nedolazak.spec.ts` › after Ne, nisu došli on the tournament's page… (bug #85) |
+| Stranica turnira nakon Ne, nisu došli (#85) | igrač | `turniri/c3-nedolazak.spec.ts` › after Ne, nisu došli on the tournament's page… |
 | Vrati stol | admin | `turniri/c3-popravci.spec.ts` › Vrati stol brings a no-show table back into play… |
 | Uredi ishod | admin | `turniri/c3-popravci.spec.ts` › Uredi ishod gives a skipped table to one team… |
 | Kolo 2 (švicarski), poredak i kraj turnira | admin, igrač | `turniri/c3-kolo2.spec.ts` › Kolo 2 pairs the neighbours of the standings… |
+| Otvorena stranica turnira dobije stol novog kola bez ponovnog učitavanja (#85) | igrač | `turniri/c3-kolo2.spec.ts` › with the tournament's page open, the player's table of a Kolo just published… |
+| Povratak u aplikaciju odmah pokaže stol novog kola (#85) | igrač | `turniri/c3-kolo2.spec.ts` › a player who comes back to the app sees the table of a Kolo published meanwhile… |
+| Turniri: stol novog kola na osvježavanju od 30 s (#85) | igrač | `turniri/c3-kolo2.spec.ts` › Turniri reads the player's table again with the tournaments every 30 s… |
+| Poredak i rezultati: Započni igru na stolu novog kola (#85) | igrač | `turniri/c3-kolo2.spec.ts` › Poredak i rezultati reads the player's table again with the results every 30 s… |
+| Gost na Turnirima ne traži stol (#85) | gost | `turniri/c3-kolo2.spec.ts` › a guest on Turniri never asks for a table to play… |
 | Završen turnir kao gost | gost | `turniri/c3-kolo2.spec.ts` › a finished tournament (tournaments.finished) as a guest sees it… |
 
 ## Turniri: organizator

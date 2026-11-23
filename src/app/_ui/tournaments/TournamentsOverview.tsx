@@ -2,6 +2,7 @@
 
 import {arrivalAPI} from "@/app/_fetchers/tournament";
 import useBurza from "@/app/_hooks/useBurza";
+import useEvery from "@/app/_hooks/useEvery";
 import useOpenTable from "@/app/_hooks/useOpenTable";
 import useStartGame from "@/app/_hooks/useStartGame";
 import {useTournaments} from "@/app/_hooks/useTournaments";
@@ -29,8 +30,13 @@ export function mainTournament(list: TournamentCard[], today: string = leagueDat
 export const playingToday = (list: TournamentCard[] | null) => (list ?? []).some((t) => t.phase === "active" && t.me?.status === "REGISTERED");
 
 export default function TournamentsOverview({withBurza = false}: {withBurza?: boolean}) {
-  const {tournaments, error, reload} = useTournaments(30_000);
-  const {table: openTable, loading: tableLoading} = useOpenTable("tournament");
+  const {tournaments, error, reload, refresh} = useTournaments();
+  const {table: openTable, loading: tableLoading, reload: reloadTable} = useOpenTable("tournament");
+  // the tournaments come in again every 30 s, and the player's table with them on the same tick (#85)
+  useEvery(30_000, () => {
+    refresh();
+    reloadTable();
+  });
   const game = useStartGame({scope: "tournament"});
   const {posts} = useBurza();
   const list = tournaments ?? [];

@@ -6,6 +6,7 @@ import {clockLabel} from "@/app/_lib/gameTime";
 import type {Attention, AttentionNotice, AttentionPrompt} from "@/app/_lib/service/tournament/attention";
 import {useTransitionRouter} from "@/app/_lib/viewTransitions";
 import useAuthStore from "@/app/_store/authStore";
+import {useTableSignal} from "@/app/_store/tableSignal";
 import {color, font, tint} from "@/app/_styles/tokens";
 import {ErrorNote, OutlineButton, PrimaryButton} from "@/app/_ui/sp";
 import BlockRoundedIcon from "@mui/icons-material/BlockRounded";
@@ -65,6 +66,8 @@ export default function TournamentAttention() {
   const timer = useRef<number | null>(null);
   const router = useTransitionRouter();
   const game = useStartGame({scope: "tournament"});
+  // an answer changes the player's table: the page already open reads it again at once (#85)
+  const tableChanged = useTableSignal((s) => s.changed);
 
   const quiet = ["/login", "/signup"].some((p) => pathname.startsWith(p));
 
@@ -113,6 +116,7 @@ export default function TournamentAttention() {
       const {outcome} = await answerAttendanceAPI(prompt.round_id, kind);
       setDismissed(prompt.round_id);
       setConfirming(false);
+      tableChanged();
       if (outcome === "PRESENT" || outcome === "STARTED") await game.start();
       else router.push(`/turniri/${prompt.tournament_id}`);
       check();

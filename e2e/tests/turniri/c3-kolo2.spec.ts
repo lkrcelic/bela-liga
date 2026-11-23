@@ -5,6 +5,7 @@
 // tournament is over: Pobjednici, Konačni poredak and Vaš rezultat; tournaments.finished shows the same to a guest.
 // The first test makes its own tournament of five teams and plays its tables through the app (Tko igra, the hands,
 // Završi meč); removing it deletes its Kolos with their results, so the ratings are counted again without them.
+import type {Page} from "@playwright/test";
 import {escape, expect, koloTables, makeReady, openTable, pickTeams, playTable, publishNextKolo, runClock, test, type Entry} from "../../helpers/c3";
 
 const byId = (teams: Entry[], id: number) => teams.find((t) => t.id === id)!;
@@ -12,6 +13,10 @@ const byId = (teams: Entry[], id: number) => teams.find((t) => t.id === id)!;
 // a table won by team1 1064 : 70 (seven hands of 152 : 10, +994), or 1080 : 378 (nine of 120 : 42, +702)
 const BIG = Array<number>(7).fill(152);
 const SMALL = Array<number>(9).fill(120);
+
+// the page's first read of the player's table has come back (none between the Kolos), so a table published after it
+// can only come up through a later read
+const firstTableRead = (page: Page) => page.waitForResponse((r) => new URL(r.url()).pathname === "/api/rounds/open");
 
 test("Kolo 2 pairs the neighbours of the standings with the bye for the lowest team, and after it the tournament is over", async ({
   as,
@@ -87,6 +92,143 @@ test("Kolo 2 pairs the neighbours of the standings with the bye for the lowest t
   await theirs.goto(`/turniri/${t.id}`);
   await expect(theirs.getByRole("region", {name: "Vaš rezultat"}).getByLabel("5. mjesto od 5")).toBeVisible();
   await healthy(theirs);
+});
+
+// #85: the tournament's page reads the player's table again on the tick it reads the tournament on (every 20 s while
+// it is played), so a Kolo published while the page is open shows the player's new table without a reload. Nobody
+// touches the page: its clock is a fake one the test moves
+test("with the tournament's page open, the player's table of a Kolo just published comes up on the next refresh, without a reload", async ({
+  as,
+  db,
+  admin,
+  tournaments,
+  healthy,
+}) => {
+  const teams = await pickTeams(db, 4, {phones: 4});
+  const t = await makeReady(tournaments.make, admin, teams, {name: "Kup otvorene stranice", rounds: 2});
+  const kolo1 = await publishNextKolo(admin, db, t.id);
+  for (const table of kolo1.tables) await playTable(admin, table.id, BIG);
+  const me = byId(teams, kolo1.tables[0].team1_id);
+
+  const page = await as(me.phone!);
+  await page.clock.install();
+  const read = firstTableRead(page);
+  await page.goto(`/turniri/${t.id}`);
+  await read;
+  // between the Kolos the team waits, with no table to play
+  await expect(page.getByRole("region", {name: "Tvoja ekipa"})).toBeVisible();
+  await expect(page.getByRole("button", {name: /Započni igru$/})).toHaveCount(0);
+
+  const kolo2 = await publishNextKolo(admin, db, t.id);
+  const mine = kolo2.tables.find((r) => r.team1_id === me.id || r.team2_id === me.id);
+  expect(mine, "Kolo 2 seats every team").toBeDefined();
+  await page.clock.fastForward(20_000);
+  await expect(page.getByRole("button", {name: new RegExp(`^STOL ${mine!.table_number} .*Započni igru$`)})).toBeVisible();
+  await expect(page.getByRole("region", {name: "Tvoja ekipa"})).toHaveCount(0);
+  await healthy(page);
+});
+
+// #85: coming back to the app reads the player's table at once. The check runs within seconds of the page opening,
+// long before its 20 s refresh, so only the return to the app can bring the table
+test("a player who comes back to the app sees the table of a Kolo published meanwhile at once", async ({as, db, admin, tournaments, healthy}) => {
+  const teams = await pickTeams(db, 4, {phones: 4});
+  const t = await makeReady(tournaments.make, admin, teams, {name: "Kup povratka u aplikaciju", rounds: 2});
+  const kolo1 = await publishNextKolo(admin, db, t.id);
+  for (const table of kolo1.tables) await playTable(admin, table.id, BIG);
+  const me = byId(teams, kolo1.tables[0].team1_id);
+
+  const page = await as(me.phone!);
+  const read = firstTableRead(page);
+  await page.goto(`/turniri/${t.id}`);
+  await read;
+  await expect(page.getByRole("region", {name: "Tvoja ekipa"})).toBeVisible();
+
+  const kolo2 = await publishNextKolo(admin, db, t.id);
+  const mine = kolo2.tables.find((r) => r.team1_id === me.id || r.team2_id === me.id);
+  expect(mine, "Kolo 2 seats every team").toBeDefined();
+  // the phone was in a pocket, and the app comes back to the front
+  await page.evaluate(() => document.dispatchEvent(new Event("visibilitychange")));
+  await expect(page.getByRole("button", {name: new RegExp(`^STOL ${mine!.table_number} .*Započni igru$`)})).toBeVisible({timeout: 5_000});
+  await healthy(page);
+});
+
+// #85: Početna · Turniri reads the tournaments every 30 s, and the player's table with them on the same tick
+test("Turniri reads the player's table again with the tournaments every 30 s, so a Kolo published meanwhile shows its table", async ({
+  as,
+  db,
+  admin,
+  tournaments,
+  healthy,
+}) => {
+  const teams = await pickTeams(db, 4, {phones: 4});
+  const t = await makeReady(tournaments.make, admin, teams, {name: "Kup na Turnirima", rounds: 2});
+  const kolo1 = await publishNextKolo(admin, db, t.id);
+  for (const table of kolo1.tables) await playTable(admin, table.id, BIG);
+  const me = byId(teams, kolo1.tables[0].team1_id);
+
+  const page = await as(me.phone!);
+  await page.clock.install();
+  const read = firstTableRead(page);
+  await page.goto("/turniri");
+  await read;
+  await expect(page.getByRole("button", {name: /Započni igru$/})).toHaveCount(0);
+
+  const kolo2 = await publishNextKolo(admin, db, t.id);
+  const mine = kolo2.tables.find((r) => r.team1_id === me.id || r.team2_id === me.id);
+  expect(mine, "Kolo 2 seats every team").toBeDefined();
+  await page.clock.fastForward(30_000);
+  await expect(page.getByRole("button", {name: new RegExp(`^STOL ${mine!.table_number} ${escape(me.name)} .*Započni igru$`)})).toBeVisible();
+  await healthy(page);
+});
+
+// #85: Poredak i rezultati reads the results every 30 s while the tournament is played, and the player's table with
+// them, so the new Kolo's own table offers Započni igru instead of only opening the table
+test("Poredak i rezultati reads the player's table again with the results every 30 s, so the new Kolo's own table offers Započni igru", async ({
+  as,
+  db,
+  admin,
+  tournaments,
+  healthy,
+}) => {
+  const teams = await pickTeams(db, 4, {phones: 4});
+  const t = await makeReady(tournaments.make, admin, teams, {name: "Kup u rezultatima", rounds: 2});
+  const kolo1 = await publishNextKolo(admin, db, t.id);
+  for (const table of kolo1.tables) await playTable(admin, table.id, BIG);
+  const me = byId(teams, kolo1.tables[0].team1_id);
+
+  const page = await as(me.phone!);
+  await page.clock.install();
+  const read = firstTableRead(page);
+  await page.goto(`/turniri/${t.id}/poredak`);
+  await read;
+  await expect(page.getByRole("tab", {name: /^Kolo 1/})).toBeVisible();
+
+  const kolo2 = await publishNextKolo(admin, db, t.id);
+  const mine = kolo2.tables.find((r) => r.team1_id === me.id || r.team2_id === me.id);
+  expect(mine, "Kolo 2 seats every team").toBeDefined();
+  await page.clock.fastForward(30_000);
+  await page.getByRole("tab", {name: /^Kolo 2/}).click();
+  await expect(page.getByRole("button", {name: new RegExp(`^Stol ${mine!.table_number}: .*\\. Započni igru$`)})).toBeVisible();
+  await healthy(page);
+});
+
+// #85: a guest has no table, so Turniri never asks for one: not when it opens, not on its 30 s refresh (each such
+// request would only answer 401 and start the session check)
+test("a guest on Turniri never asks for a table to play, also on the 30 s refresh", async ({as}) => {
+  const page = await as("guest");
+  const asked: string[] = [];
+  page.on("request", (r) => {
+    if (new URL(r.url()).pathname === "/api/rounds/open") asked.push(r.url());
+  });
+  await page.clock.install();
+  const isList = (r: {url(): string; ok(): boolean}) => new URL(r.url()).pathname === "/api/tournaments" && r.ok();
+  const listed = page.waitForResponse(isList);
+  await page.goto("/turniri");
+  await listed;
+  const again = page.waitForResponse(isList);
+  await page.clock.fastForward(30_000);
+  await again;
+  expect(asked).toEqual([]);
 });
 
 test("a finished tournament (tournaments.finished) as a guest sees it: Pobjednici, Konačni poredak of every team and its five Kolos", async ({

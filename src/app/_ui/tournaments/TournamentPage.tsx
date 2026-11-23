@@ -1,13 +1,16 @@
 "use client";
 
 import {arrivalAPI, signOffAPI} from "@/app/_fetchers/tournament";
+import useEvery from "@/app/_hooks/useEvery";
 import useNavStack from "@/app/_hooks/useNavStack";
 import useOpenTable from "@/app/_hooks/useOpenTable";
 import useStartGame from "@/app/_hooks/useStartGame";
 import {useTournament, useTournaments} from "@/app/_hooks/useTournaments";
 import {leagueDateString} from "@/app/_lib/dates";
 import {isComingUp} from "@/app/_lib/tournaments";
+import {tableToPlay} from "@/app/_lib/ui/openTable";
 import useAuthStore from "@/app/_store/authStore";
+import {useTableChanged} from "@/app/_store/tableSignal";
 import {color, font, shadow} from "@/app/_styles/tokens";
 import {StartCard} from "@/app/_ui/home/StartCard";
 import {buttonBase, Card, ConfirmSheet, EmptyState, ErrorNote, LoadingRows, StackTopBar} from "@/app/_ui/sp";
@@ -30,8 +33,7 @@ import {ArrivalAction, ArrivalCard, ExcludedCard, JoinedSheet, NoShowWinCard, Or
 export default function TournamentPage({id}: {id: number}) {
   const meId = useAuthStore((s) => s.user?.id ?? null);
   const signedIn = meId != null;
-  const [every, setEvery] = useState<number | undefined>(undefined);
-  const {tournament: t, error, notFound, reload} = useTournament(id, every);
+  const {tournament: t, error, notFound, reload, refresh} = useTournament(id);
   const nav = useNavStack(t ? t.name : null, "/turniri");
   const params = useSearchParams();
   const [sheet, setSheet] = useState(false);
@@ -43,14 +45,20 @@ export default function TournamentPage({id}: {id: number}) {
   const [joined, setJoined] = useState<string | null>(null);
   // a sign-up that went on the waiting list: the sheet with the team's place, once the page has it (DECISIONS #93)
   const [waitSheet, setWaitSheet] = useState(false);
-  const {table: openTable} = useOpenTable("tournament");
+  const {table: openTable, reload: reloadTable} = useOpenTable("tournament");
   const game = useStartGame({scope: "tournament"});
   const {tournaments} = useTournaments();
   const today = leagueDateString();
 
-  // a tournament being played comes in again every 30 s, and on its day every 20 s (the arrival window)
+  // a tournament being played (or on its day, the arrival window) comes in again every 20 s, and the player's table with
+  // it on the same tick, so a Kolo published or a table closed meanwhile shows without a reload (#85)
   const live = t?.phase === "active" || (t?.day != null && t.day.phase !== "before" && t.phase === "upcoming");
-  if ((live ? 20_000 : undefined) !== every) setEvery(live ? 20_000 : undefined);
+  useEvery(live ? 20_000 : undefined, () => {
+    refresh();
+    reloadTable();
+  });
+  // an answer to "Jesu li … za stolom?" given over this page: Pobjeda bez igre at once, not on the next tick
+  useTableChanged(refresh);
   useEffect(() => {
     if (t && params.get("prijava") === "1" && signedIn && t.signups_open_now && !t.me) setSheet(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -84,7 +92,7 @@ export default function TournamentPage({id}: {id: number}) {
   };
 
   const others = (tournaments ?? []).filter((x) => isComingUp(x, leagueDateString()) && x.id !== id).sort((a, b) => a.date.localeCompare(b.date)).slice(0, 3);
-  const myTable = openTable && openTable.tournamentId === id ? openTable : null;
+  const myTable = tableToPlay(openTable, id, t?.my_last_table);
   // the day has started (the start time or Kolo 1): no more signing off
   const dayClosed = t?.day?.phase === "closed";
   // a table of the Kolo being played won without play (Pobjeda bez igre)
