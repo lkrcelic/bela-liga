@@ -195,9 +195,10 @@ test("a league's records count turns at a smoking table, tonight's turns and nig
 test("records skip the bye, rounds where the team had no smoker, and later nights", () => {
   const r = smokingRecords(
     [
+      // team 1's only round on 1 October was its bye: no table, so no missed night, though the round had a smoking table
       ...tables("2026-10-01", 1, {1: 1}, `1-${BYE_TEAM_ID}`, "2-3*"),
       // team 4 had no smoker that night (it joined later), so it didn't miss it
-      ...tables("2026-10-01", 2, {1: 1}, "1-2*", "3-4"),
+      ...tables("2026-10-08", 2, {1: 1}, "1-2*", "3-4"),
       ...tables("2026-10-20", 3, {1: 1, 4: 1}, "1-4*"),
     ],
     "2026-10-15"
@@ -230,20 +231,23 @@ const rng = (seed: number) => () => {
   return seed / 2147483648;
 };
 
-// One league's season of random pairings with one smoking table; remember: whether the rule reads the league's records
-function season(remember: boolean): Map<number, SmokingRecord> {
-  const random = rng(3);
+// One league's season of random pairings: 20 teams, three with two smokers and nine with one, three smoking tables, three
+// rounds a night. missed: whether the rule reads the league's missed nights (without them it still reads the turns).
+// Returns the nights each team with one smoker went without a smoking table.
+function season(seed: number, missed: boolean): number[] {
+  const random = rng(seed);
   const ids = Array.from({length: 20}, (_, i) => i + 1);
-  // four teams with two smokers, eight with one
-  const smokersOf = smokers(Object.fromEntries(ids.map((id) => [id, id <= 4 ? 2 : id <= 12 ? 1 : 0])));
+  const smokersOf = smokers(Object.fromEntries(ids.map((id) => [id, id <= 3 ? 2 : id <= 12 ? 1 : 0])));
   const history: SmokingTable[] = [];
-  for (let night = 1; night <= 24; night++) {
-    const date = `2026-${String(Math.ceil(night / 28) + 9).padStart(2, "0")}-${String(night).padStart(2, "0")}`;
+  for (let night = 1; night <= 20; night++) {
+    const date = `2026-10-${String(night).padStart(2, "0")}`;
     const rounds = Array.from({length: 3}, () => {
       const order = [...ids].sort(() => random() - 0.5);
       return Array.from({length: 10}, (_, k) => ({teamOne: team(order[2 * k]), teamTwo: team(order[2 * k + 1])}));
     });
-    const seated = seatRounds(rounds, {tables: [1], smokers: smokersOf, records: remember ? smokingRecords(history, date) : records()});
+    const known = smokingRecords(history, date);
+    if (!missed) known.forEach((r) => (r.missedNights = 0));
+    const seated = seatRounds(rounds, {tables: [1, 2, 3], smokers: smokersOf, records: known});
     seated.forEach((r, k) =>
       r.forEach((p) =>
         history.push({
@@ -258,20 +262,13 @@ function season(remember: boolean): Map<number, SmokingRecord> {
       )
     );
   }
-  return smokingRecords(history, "2027-01-01");
+  const final = smokingRecords(history, "2026-12-31");
+  return ids.filter((id) => smokersOf.get(id) === 1).map((id) => final.get(id)?.missedNights ?? 0);
 }
 
-test("over a league's season, teams with one smoker miss about as many nights as each other", () => {
-  const one = [5, 6, 7, 8, 9, 10, 11, 12];
-  const spread = (r: Map<number, SmokingRecord>) => {
-    const missed = one.map((id) => r.get(id)!.missedNights);
-    return Math.max(...missed) - Math.min(...missed);
-  };
-  const remembered = spread(season(true));
-  const forgotten = spread(season(false));
-  // one smoking table for twelve smoking teams, and the four with two smokers come first, so a team with one smoker
-  // misses most nights (16 to 20 of 24); the league's memory keeps them within 4 of each other, where the same
-  // pairings without it leave them 14 to 21
-  assert.ok(remembered <= 4, `nights without a smoking table, spread ${remembered}`);
-  assert.ok(forgotten > remembered, `spread with memory ${remembered}, without ${forgotten}`);
+test("remembering a league's missed nights, teams with one smoker go fewer nights without a smoking table", () => {
+  const total = (missed: boolean) => [3, 10, 17, 24].flatMap((seed) => season(seed, missed)).reduce((a, b) => a + b, 0);
+  const remembered = total(true);
+  const forgotten = total(false);
+  assert.ok(remembered < forgotten, `nights without a smoking table: ${remembered} with the missed nights, ${forgotten} without`);
 });

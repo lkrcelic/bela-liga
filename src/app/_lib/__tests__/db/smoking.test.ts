@@ -78,6 +78,8 @@ test("a league remembers its own missed nights, not another league's; more smoke
   // last week in this league C (one smoker) sat at an ordinary table while A had the smoking table: C missed that night
   await leagueRound(leagueId, lastWeek, 6, seatedTable("A", "B", 1, true));
   await leagueRound(leagueId, lastWeek, 6, seatedTable("C", "D", 2, false));
+  // G had a smoker last week, who has left the team since: it keeps its missed night in the league's record
+  await leagueRound(leagueId, lastWeek, 6, {...seatedTable("G", "F", 3, false), team1_smokers: 1});
   // last week in the other league E (one smoker) missed a night too: that doesn't count here
   await leagueRound(otherLeagueId, lastWeek, 3, seatedTable("G", "B", 1, true));
   await leagueRound(otherLeagueId, lastWeek, 3, seatedTable("E", "F", 2, false));
@@ -111,7 +113,7 @@ test("a league remembers its own missed nights, not another league's; more smoke
     ]
   );
 
-  // Pušački raspored: tonight, and the record in this league
+  // Pušački raspored: tonight, and the record in this league; G shows though it has no smoker now
   const plan = await smokingPlan(leagueId);
   assert.deepEqual(
     plan.teams.map((t) => [nameOf(t.id), t.smokers, t.tonight, t.smokingRounds, t.rounds, t.missedNights]),
@@ -119,6 +121,7 @@ test("a league remembers its own missed nights, not another league's; more smoke
       ["A", 2, [true], 2, 2, 0],
       ["C", 1, [false], 0, 2, 1],
       ["E", 1, [false], 0, 1, 0],
+      ["G", 0, [null], 0, 1, 1],
     ]
   );
 });
