@@ -2,9 +2,9 @@
 
 What the commits changed for the people using the app, newest first. The reasons and details are in DECISIONS.md.
 
-## 20.11.2026 · Pušački stolovi: više pušača prvo, turnir ima svoje
+## 23.11.2026 · Pušački stolovi: više pušača prvo, turnir ima svoje
 
-On development since 20.11. (DECISIONS 100, 101).
+On development, not live yet (DECISIONS 100, 101).
 
 ### Admin
 - **Pušački stolovi** u svakom kolu idu mečevima s **najviše pušača za stolom**; ekipa s više pušača ima prednost i pred ekipom koja je propuštala večeri.
