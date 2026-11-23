@@ -15,7 +15,8 @@ komentarom `// BUG:`: test opisuje kako bi trebalo biti, a prolazi dok greška p
 | Gost dobije obrazac za prijavu; baza odgovara manifestu | gost | `smoke/baza.spec.ts` › a guest gets the login form; › the database holds the world of the manifest |
 | Svaka stranica kao gost: javne se otvore, ostale vode na Prijavu s ?next= | gost | `smoke/a-stranice.spec.ts`, `a-stranice.racunalo.spec.ts` › guest · <stranica> … |
 | Svaka stranica kao igrač: svoje stranice, svoja igra, Početna ili odbijanje za tuđe i adminove | igrač | `smoke/a-stranice*.spec.ts` › player · <stranica> … |
-| Svaka stranica kao organizator: svoj turnir, Ekipe i Igrači, "Ovo nije tvoj turnir." na tuđem, ništa od lige | organizator | `smoke/a-stranice*.spec.ts` › organizer · <stranica> … (bug: /league/new i /turniri/novi na računalu #87, tuđi stol na mobitelu #86, tuđi semafor #88) |
+| Svaka stranica kao organizator: svoj turnir, Ekipe i Igrači, "Ovo nije tvoj turnir." na tuđem, "Ne igraš u ovoj rundi." na tuđem semaforu (#88), ništa od lige | organizator | `smoke/a-stranice*.spec.ts` › organizer · <stranica> … (bug: /league/new i /turniri/novi na računalu #87, tuđi stol na mobitelu #86) |
+| Tuđi semafor po adresi: Upiši igru se ne vidi ni dok aplikacija pita (#88) | organizator | `dozvole/b-tudji-semafor.spec.ts` › a player who doesn't play at a table never sees Upiši igru's steps… |
 | Svaka stranica kao admin: adminovi ekrani na mobitelu i računalu, stol vodi na Tko igra | admin | `smoke/a-stranice*.spec.ts` › admin · <stranica> … |
 | Zdravlje stranice: 5xx, konzola, vodoravni scroll, undefined/NaN, ekran greške, dio koji se nije učitao | sve | `helpers/health.ts` (svaki `healthy(page)`) |
 | Vrijeme do stranice, 10 najsporijih (samo podatak) | sve | `smoke/a-stranice*.spec.ts` › afterAll (`results/a-slowest-<projekt>.txt`) |

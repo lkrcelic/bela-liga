@@ -224,7 +224,9 @@ const ROWS: Row[] = [
   // go through (Završi meč, a hand saved, a match started), so the admin is SKIP there
   {method: "POST", route: "/api/ongoing-matches", body: INVALID, guard: "user", allowed: status(400)},
   {method: "POST", route: "/api/ongoing-matches", note: "someone else's table", body: (i: Ids) => ({round_id: i.otherTable.round, score_threshold: 1001}), guard: "user", allowed: NOT_MY_ROUND, as: {admin: SKIP}},
-  {method: "GET", route: "/api/ongoing-matches/[id]", params: (i) => ({id: i.playerTable.match}), guard: "user", allowed: status(200)},
+  // a match and its hands only to who may play its table, as Tko igra above: its two teams' players and the admin (#88)
+  {method: "GET", route: "/api/ongoing-matches/[id]", note: "the player's table", params: (i) => ({id: i.playerTable.match}), guard: "user", allowed: status(200), as: {organizer: NOT_MY_ROUND}},
+  {method: "GET", route: "/api/ongoing-matches/[id]", note: "someone else's table", params: (i) => ({id: i.otherTable.match}), guard: "user", allowed: status(200), as: {player: NOT_MY_ROUND, organizer: NOT_MY_ROUND}},
   {method: "POST", route: "/api/ongoing-bela-result", body: INVALID, guard: "user", allowed: status(400)},
   {method: "POST", route: "/api/ongoing-bela-result", note: "someone else's table", body: (i: Ids) => hand(i.otherTable.match), guard: "user", allowed: NOT_MY_ROUND, as: {admin: SKIP}},
   {method: "GET", route: "/api/ongoing-bela-result/[id]", params: (i) => ({id: i.playerTable.hand}), guard: "user", allowed: status(200)},

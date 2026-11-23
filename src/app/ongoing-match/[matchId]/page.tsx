@@ -1,7 +1,7 @@
 "use client";
 
 import {createMatchAPI, MatchAlreadyFinishedError} from "@/app/_fetchers/match/create";
-import {getOngoingMatchAPI, OngoingMatchGoneError} from "@/app/_fetchers/ongoingMatch/getOne";
+import {getOngoingMatchAPI, NotYourMatchError, OngoingMatchGoneError} from "@/app/_fetchers/ongoingMatch/getOne";
 import {getRoundDataAPI} from "@/app/_fetchers/round/getOne";
 import useCountUp from "@/app/_hooks/useCountUp";
 import useIsDesktop from "@/app/_hooks/useIsDesktop";
@@ -17,6 +17,7 @@ import {HandList, HandRow, ScorePanel} from "@/app/ongoing-match/ui/BoardParts";
 import HandEntryPanel from "@/app/ongoing-match/ui/HandEntryPanel";
 import {markWizardOpened, openHandForEdit, previousTotals, rememberTotals, startNewHand, takeHandMark} from "@/app/ongoing-match/ui/handFlow";
 import useMatchSides from "@/app/ongoing-match/ui/useMatchSides";
+import {boardReadMatch} from "@/app/ongoing-match/ui/useMatchRefusal";
 import {TimerChip, TimeUpNote, TimeWarning, useMatchClock} from "@/app/ongoing-match/ui/MatchClock";
 import AddCircleRoundedIcon from "@mui/icons-material/AddCircleRounded";
 import DoneRoundedIcon from "@mui/icons-material/DoneRounded";
@@ -46,7 +47,8 @@ export default function ScoreBoardPage() {
   const sides = useMatchSides();
 
   const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState<string | null>(null);
+  // retry: Pokušaj ponovno helps a failed read, never a refusal ("Ne igraš u ovoj rundi.", #88)
+  const [loadError, setLoadError] = useState<{text: string; retry: boolean} | null>(null);
   const [finishing, setFinishing] = useState(false);
   const [finishError, setFinishError] = useState<string | null>(null);
   const [opening, setOpening] = useState<number | null>(null);
@@ -70,6 +72,8 @@ export default function ScoreBoardPage() {
     setLoadError(null);
     try {
       const m = await getOngoingMatchAPI(matchId);
+      // the server sent it, so this player may play it: Upiši igru opened from here needn't ask again (#88)
+      boardReadMatch(matchId);
       setOngoingMatch(m);
       if (m.round_id) setRoundData(await getRoundDataAPI(Number(m.round_id)));
       setMark(takeHandMark(matchId));
@@ -78,7 +82,11 @@ export default function ScoreBoardPage() {
         await followFinishedMatch();
         return;
       }
-      setLoadError("Meč nije moguće učitati.");
+      if (error instanceof NotYourMatchError) {
+        setLoadError({text: error.message, retry: false});
+        return;
+      }
+      setLoadError({text: "Meč nije moguće učitati.", retry: true});
     } finally {
       setLoading(false);
     }
@@ -276,7 +284,7 @@ export default function ScoreBoardPage() {
     );
 
   if (loadError) {
-    const body = <ErrorNote onRetry={load}>{loadError}</ErrorNote>;
+    const body = <ErrorNote onRetry={loadError.retry ? load : undefined}>{loadError.text}</ErrorNote>;
     return isDesktop ? <DesktopShell active="game" title="Meč">{body}</DesktopShell> : <Screen>{body}</Screen>;
   }
 

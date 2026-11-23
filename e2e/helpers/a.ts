@@ -141,6 +141,8 @@ export type Outcome = {
   refused?: true;
   // a known bug in the app: the test stays as it should be and is marked test.fail with this line
   bug?: string;
+  // none of these is on screen once the page has settled (a refusal that shows nothing of what it refuses)
+  absent?: Look[];
 };
 // a guest on a page that needs a login: Prijava, coming back to the page afterwards (pageGate.ts loginUrl)
 type Login = "login";
@@ -249,6 +251,7 @@ export function definePages(rows: Row[], device: Device) {
           await page.waitForLoadState("networkidle");
           await expect(page.getByRole("status", {name: "Učitavanje"}), "the page is still loading").toHaveCount(0);
           await seen();
+          for (const look of outcome.absent ?? []) await expect(lookFor(page, look, ids), `${role} on ${path} is shown none of the refused page`).toHaveCount(0);
           if (outcome !== notFound) await expect(page.getByRole("heading", {name: "Stranica ne postoji"})).toHaveCount(0);
           await healthy(page);
         } catch (e) {
@@ -331,12 +334,20 @@ function slowestOf(testInfo: TestInfo): string | null {
 
 // ---------- the table: every page and what each role sees there ----------
 
-// BUG #88: a signed-in player who doesn't play at a table (the organizer, not at the player's table) gets its board and
-// the hand steps, and only Spremi tells them "Ne igraš u ovoj rundi." (403; Tko igra of such a table says it at once)
-const NOT_AT_TABLE = bug(
-  `#88: a player who doesn't play at the table gets its scorepad and hand steps as if they did; only Spremi answers "${NOT_YOUR_ROUND}"`,
-  REFUSED,
-);
+// #88: a signed-in player who doesn't play at a table (the organizer, not at the player's table) is told at once on its
+// board and on every hand step, as Tko igra of such a table tells them; the match isn't sent to them (403), and
+// nothing of the table is offered: no Pokušaj ponovno (a refusal isn't a failed read), no board, no step
+const NOT_AT_TABLE: Outcome = {
+  ...says(NOT_YOUR_ROUND),
+  title: `says "${NOT_YOUR_ROUND}" and shows nothing of the table`,
+  absent: [
+    {role: "button", name: "Pokušaj ponovno"},
+    {role: "button", name: /^Igra 1: /},
+    {role: "heading", name: "Izaberi tko je zvao"},
+    {role: "radiogroup", name: "Zvanja: upis za ekipu"},
+    {role: "group", name: "Bodovi igre"},
+  ],
+};
 
 // a match's board with its saved hands ("Igra 1: …"; the computer's board has the next hand's entry open beside it,
 // the phone's Upiši igru)

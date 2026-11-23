@@ -1,18 +1,22 @@
 "use client";
 
-import {Screen} from "@/app/_ui/sp";
+import {CenteredSpinner, ErrorNote, Screen} from "@/app/_ui/sp";
 import WizardHeader from "@/app/ongoing-match/[matchId]/ongoing-result/ui/WizardHeader";
+import useMatchRefusal from "@/app/ongoing-match/ui/useMatchRefusal";
 import {activeNavDirection} from "@/app/_lib/viewTransitions";
 import {Box} from "@mui/material";
-import {usePathname} from "next/navigation";
+import {useParams, usePathname} from "next/navigation";
 import React, {useState} from "react";
 
 const STEPS = ["trump-caller", "announcement", "score"];
 
 // Hand entry wizard frame. The team header stays mounted between the zvanja and game steps (it only changes its
-// values); the step body slides in from the right going forward and from the left going back.
+// values); the step body slides in from the right going forward and from the left going back. A player who doesn't
+// play at the table is told so instead of getting the steps (#88).
 export default function Layout({children}: {children: React.ReactNode}) {
   const pathname = usePathname();
+  const params = useParams<{matchId: string}>();
+  const refusal = useMatchRefusal(Number(params.matchId));
   const step = Math.max(0, STEPS.findIndex((s) => pathname.endsWith(`/${s}`)));
   // direction of the last step change (derived from the previous render, StrictMode safe)
   const [nav, setNav] = useState({step, direction: "forward"});
@@ -20,6 +24,21 @@ export default function Layout({children}: {children: React.ReactNode}) {
   const direction = nav.step !== step ? (step > nav.step ? "forward" : "back") : nav.direction;
   // a view transition already slides the page; the CSS slide is the fallback (older browsers, browser back button)
   const viaViewTransition = activeNavDirection() != null;
+
+  if (refusal === "checking") {
+    return (
+      <Screen fill>
+        <CenteredSpinner />
+      </Screen>
+    );
+  }
+  if (refusal) {
+    return (
+      <Screen>
+        <ErrorNote>{refusal}</ErrorNote>
+      </Screen>
+    );
+  }
 
   return (
     <Screen fill gap={0} sx={{pt: "calc(22px + env(safe-area-inset-top))"}}>

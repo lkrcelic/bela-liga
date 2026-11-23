@@ -2,6 +2,16 @@
 
 What the commits changed for the people using the app, newest first. The reasons and details are in DECISIONS.md.
 
+## 24.11.2026 · Meč stola samo za njegove igrače
+
+On development, not live yet (#88).
+
+### Igrači
+- Igrač koji ne igra za stolom na **meču tog stola** i na svakom koraku **Upiši igru** odmah vidi **"Ne igraš u ovoj rundi."**, kao u **Tko igra**. Igrači stola, admin i organizator za stolovima svog turnira i dalje ga otvaraju kao dosad.
+
+### Changed
+- Dosad je takav igrač, otvorivši meč po adresi, vidio ploču s igrama i prošao sve korake Upiši igru, a odbio ga je tek Spremi.
+
 ## 24.11.2026 · Slobodna runda nije stol
 
 On development, not live yet (#54).
