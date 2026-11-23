@@ -61,7 +61,7 @@ Commit in the worktree and `git push origin HEAD:development`. Rejected: rebase 
 
 ## 7. Hand off (always, even after ⏸, ❌ or no ticket)
 Clean up: stop the servers and databases you started, release the lock, `git worktree remove` your worktree (unless you wait on the user with an unpushed commit: then keep it and say where it is). No issue may keep `fixer-radi` from this run.
-Then start the next routine with the scheduled-tasks tool: `list_scheduled_tasks`; when `bela-e2e-nightly` is enabled, `run_scheduled_task` it, otherwise `run_scheduled_task bela-release-review`. When the tool isn't available or is refused, add `Next: not started – <reason>` to your final message (the release review has fallback runs at 02:00 and 14:00).
+Then start the next routine with the scheduled-tasks tool: `run_scheduled_task bela-release-review` (`bela-e2e-nightly` has its own 01:00 run). When the tool isn't available or is refused, add `Next: not started – <reason>` to your final message (the release review has fallback runs at 02:00 and 14:00).
 Write your report (README, Report).
 
 ## 8. Final message: this format only, at most 7 short lines, no other text

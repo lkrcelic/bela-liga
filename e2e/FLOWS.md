@@ -113,6 +113,7 @@ komentarom `// BUG:`: test opisuje kako bi trebalo biti, a prolazi dok greška p
 | Početna i traka organizatora na mobitelu (52ef6b3) | organizator | `turniri/c7-svoj-turnir.spec.ts` › Početna opens the organizer's phone on their own Turniri… |
 | Novi turnir | organizator | `turniri/c7-svoj-turnir.spec.ts` › the organizer makes a tournament with Novi turnir, and it is theirs |
 | Podaci · Spremi promjene (svoj turnir) | organizator | `turniri/c7-svoj-turnir.spec.ts` › the organizer changes their tournament in Podaci… |
+| Podaci · Pušački stolovi (svoj turnir): raspon se sprema kao stolovi, stol 0 se ne sprema | organizator | `turniri/c7-svoj-turnir.spec.ts` › the organizer sets Pušački stolovi in Podaci… |
 | Prijave otvorene / zatvorene, Dodaj ekipu | organizator | `turniri/c7-svoj-turnir.spec.ts` › the organizer closes and reopens their sign-ups and adds a team… |
 | Makni ekipu (svoj turnir) | organizator | `turniri/c7-svoj-turnir.spec.ts` › Makni takes a team off the organizer's own tournament (bug #84) |
 | Otkaži i Vrati turnir samo admin (organizator ih nema, poslužitelj ih odbija) | organizator | `turniri/c7-svoj-turnir.spec.ts` › the organizer can neither cancel their tournament nor bring it back…; `turniri/c7-tudi-turnir.spec.ts` › on the admin's tournament (open/live) the organizer's Otkaži turnir / Vrati turnir is refused… |
@@ -122,10 +123,14 @@ komentarom `// BUG:`: test opisuje kako bi trebalo biti, a prolazi dok greška p
 | Dodaj kolo / Obriši kolo na završenom turniru | organizator | `turniri/c7-svoj-turnir.spec.ts` › on their finished tournament the organizer adds a Kolo… |
 | Potvrda dolaska: Označi dolazak, Aktivna | organizator | `turniri/c7-dan-turnira.spec.ts` › on the day the organizer marks the teams that came… |
 | Prijave zatvorene → Složi Kolo 1 → Objavi | organizator | `turniri/c7-dan-turnira.spec.ts` › the organizer closes sign-ups, makes Kolo 1… |
+| Složi Kolo 1 s Pušačkim stolovima: ekipa s najviše pušača za pušačkim stolom, oznaka u Skici i Kolu 1 | organizator | `turniri/c7-dan-turnira.spec.ts` › with Pušački stolovi, Složi Kolo 1 seats the team with the most smokers… |
 | Isključi ekipu / Vrati | organizator | `turniri/c7-dan-turnira.spec.ts` › once their tournament has started the organizer takes a team out… |
 | Uredi ishod preskočenog stola | organizator | `turniri/c7-dan-turnira.spec.ts` › a table skipped at 10 minutes gets the organizer's Uredi ishod… |
 | Vrati stol | organizator | `turniri/c7-dan-turnira.spec.ts` › Vrati stol puts the organizer's skipped table back in play… |
-| Kolo preko cijelog ekrana (ekran u klubu, i TV od 960 px) | organizator | `turniri/c7-kolo-ekran.racunalo.spec.ts` › Kolo preko cijelog ekrana stays open when the page narrows to a TV's 960 px… |
+| Kolo preko cijelog ekrana (ekran u klubu, i TV od 960 px) | organizator | `turniri/c7-kolo-ekran.racunalo.spec.ts` › Kolo preko cijelog ekrana stays open and fills the screen when the page narrows to a TV's 960 px… |
+| Kolo preko cijelog ekrana prati turnir: sljedeće kolo čim je objavljeno | organizator | `turniri/c7-kolo-ekran.racunalo.spec.ts` › Kolo preko cijelog ekrana moves on to Kolo 2 by itself once it is out… |
+| Objava novog kola prebacuje odabrani tab Kola na to kolo, i s Poretka (skica ne) | organizator | `turniri/c7-kolo-ekran.racunalo.spec.ts` › a Kolo published takes the Kola tab picked on another Kolo to it, also from Poredak… |
+| Strelice u Kolu preko cijelog ekrana (kroz objavljena kola; nova objava i dalje preuzima ekran) | organizator | `turniri/c7-kolo-ekran.racunalo.spec.ts` › the arrows of Kolo preko cijelog ekrana go through the Kolos out… |
 | Semafor svog stola (Tko igra, Upiši igru) | organizator | `turniri/c7-dan-turnira.spec.ts` › the organizer opens a table of their Kolo 1…; › the scorepad's routes take the organizer's hands… |
 | Tuđi turnir skriven na ekranu | organizator | `turniri/c7-tudi-turnir.spec.ts` › the admin's tournament (open/live) is not in the organizer's Turniri…; › a table of the admin's live tournament shows the organizer no scorepad…; › …tells the organizer it isn't theirs… (bug #86) |
 | Tuđi turnir: 403 na svakoj ruti | organizator | `turniri/c7-tudi-turnir.spec.ts` › on the admin's tournament (open/live) the organizer's … is refused with 403 and changes nothing |

@@ -50,6 +50,7 @@ function fields(r: TournamentRequest) {
     open_signups: r.open_signups,
     hide_entries: r.hide_entries,
     organizer_phone: normalizePhone(r.organizer_phone),
+    smoking_tables: Array.from(new Set(r.smoking_tables ?? [])).sort((a, b) => a - b),
   };
 }
 
@@ -88,7 +89,7 @@ export async function dropDrafts(tx: Tx, tournamentId: number, above = 0) {
 
 // Podaci · Spremi promjene. Before the start everything changes (a lower limit sends the last teams to sign up to the
 // waiting list, a higher one lets teams in, a new number of matches per table drops a Kolo 1 draft, which is made
-// again). Once it has started, and after it is over, everything but the date: Partija po kolu, Zvanja and Vrijeme
+// again). New Pušački stolovi drop the waiting draft at any time, so the next Kolo is seated with them. Once it has started, and after it is over, everything but the date: Partija po kolu, Zvanja and Vrijeme
 // partije hold for the Kolos made from then on (the next Kolo's draft is made again), Broj kola goes down only to the
 // Kolos already published (so the admin can end it early), and a higher limit lets confirmed waiting teams in. A
 // phone once given can't be emptied.
@@ -100,6 +101,8 @@ export async function updateTournament(id: number, request: TournamentRequest): 
     if (t.cancelled_at) throw new InvalidResultError("Turnir je otkazan.");
     const next = fields(request);
     if (t.organizer_phone && !next.organizer_phone) throw new InvalidResultError(ORGANIZER_PHONE_REQUIRED);
+    // the waiting draft was seated at the old smoking tables: it is made again (the published Kolos keep theirs)
+    if (next.smoking_tables.join(",") !== [...t.smoking_tables].sort((a, b) => a - b).join(",")) await dropDrafts(tx, id);
 
     if (t.started_at) {
       if (next.date.getTime() !== t.date.getTime()) throw new InvalidResultError(STARTED_LOCKED);

@@ -3,7 +3,7 @@
 import {getSmokingPlanAPI} from "@/app/_fetchers/league/smoking";
 import {Slot} from "@/app/_lib/locations";
 import {SmokingPlan, SmokingPlanSide, SmokingPlanTeam} from "@/app/_interfaces/smoking";
-import {missedTitle, planHeading, roundDotLabel, shareTitle, smokersLabel} from "@/app/_lib/ui/smoking";
+import {missedTitle, planHeading, roundDotLabel, shareText, shareTitle, smokersLabel} from "@/app/_lib/ui/smoking";
 import {color, font, shadow, tint} from "@/app/_styles/tokens";
 import {buttonBase, ellipsis, ErrorNote, IconTile, LoadingRows, SwitchTrack, tabular} from "@/app/_ui/sp";
 import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
@@ -219,24 +219,23 @@ function PlanSide({side}: {side: SmokingPlanSide}) {
   );
 }
 
-// The rule of _lib/matching/smokingTables.ts (matchNeed: the tier, then the points) in the design's words (Desktop.dc
-// "Kako se biraju stolovi"), with what the design doesn't have: matches with a team that hasn't sat at a smoking table
-// tonight first, then the most missed nights, and the ten points for such a team (DECISIONS #32, #38)
+// The rule of _lib/matching/smokingTables.ts in the design's words (Desktop.dc "Kako se biraju stolovi"): the most
+// smokers at the table first, then the missed nights in this league, then fewer turns in it (DECISIONS 100, 101)
 function HowChosen() {
   return (
     <Box sx={{display: "flex", flexDirection: "column", gap: "8px", p: "14px 16px", borderRadius: "16px", background: color.paper, fontSize: 13.5, lineHeight: 1.5, color: color.ink}}>
       <Box sx={{fontSize: 12.5, fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", color: color.navy}}>Kako se biraju stolovi</Box>
       <div>1. Prvo se sparuju ekipe po poretku. Pušački stolovi odlučuju samo gdje se meč igra.</div>
       <div>
-        2. Prednost imaju mečevi s ekipom koja večeras još nije sjela za pušački stol, a od njih oni u kojima takva ekipa
-        ima najviše propuštenih večeri (Propušteno). Propuštena večer vrijedi više od dodatnih pušača.
+        2. U svakom kolu pušačke stolove, redom brojeva, dobivaju mečevi s najviše pušača za stolom (obje ekipe zajedno).
+        Ekipa s više pušača ima prednost pred ekipom s manje.
       </div>
       <div>
-        3. Među mečevima s jednakom prednošću odlučuju bodovi: deset za svaku ekipu koja večeras još nije sjela za pušački
-        stol, jedan po pušaču za stolom, te do tri boda više za ekipu koja je ove sezone imala manje kola za pušačkim
-        stolom od svog udjela (do tri manje za onu koja je imala više). Mečevi s najviše bodova dobivaju pušačke stolove,
-        redom brojeva stolova gore. Ekipa s više pušača bira se češće, ali se sve ekipe s pušačima izmjenjuju.
+        3. Kod jednakog broja pušača prednost ima meč s više propuštenih večeri u ovoj ligi (Propušteno). Propuštene večeri
+        ekipe broje se dok večeras ne sjedne za pušački stol.
       </div>
+      <div>4. Zatim meč čije su ekipe u ovoj ligi manje puta sjedile za pušačkim stolom (Udio), pa bolje plasirani.</div>
+      <div>5. Pamti se samo ova liga: turniri i druge lige se ne broje.</div>
     </Box>
   );
 }
@@ -264,13 +263,13 @@ function TonightDots({team, roundNumbers, roundNames}: {team: SmokingPlanTeam; r
 }
 
 // a rotation dot and the gap between dots; the Večeras column fits all of tonight's rounds (the design's 76 px holds 4).
-// The other columns fit their headers ("Propušteno" on two lines), so the team names keep the room at 1024 px.
+// The other columns fit their headers, so the team names keep the room at 1024 px.
 const DOT = 14;
 const DOT_GAP = 5;
 const rotationColumns = (rounds: number) => `minmax(0,1fr) 56px ${Math.max(76, rounds * DOT + (rounds - 1) * DOT_GAP)}px 56px 56px`;
 
-// Every smoking team this season: smokers, tonight, rounds at a smoking table and nights without one. The design's
-// columns, plus Propušteno, which the rule uses (DECISIONS #38).
+// Every smoking team in this league: smokers, tonight, rounds at a smoking table and nights without one. The design's
+// columns, plus Propušteno, which the rule uses (DECISIONS #38, 101).
 function PlanRotation({plan}: {plan: SmokingPlan}) {
   const cell = {display: "flex", alignItems: "center"} as const;
   const columns = rotationColumns(plan.roundNumbers.length);
@@ -311,13 +310,8 @@ function PlanRotation({plan}: {plan: SmokingPlan}) {
             <Box component="span" role="cell" sx={cell}>
               <TonightDots team={t} roundNumbers={plan.roundNumbers} roundNames={plan.roundNames} />
             </Box>
-            <Box
-              component="span"
-              role="cell"
-              title={shareTitle(t.smokingRounds, t.rounds, t.fairShare)}
-              sx={{textAlign: "right", fontSize: 13.5, fontWeight: 600, color: color.ink2, ...tabular}}
-            >
-              {t.smokingRounds} / {t.rounds}
+            <Box component="span" role="cell" title={shareTitle(t.smokingRounds, t.rounds)} sx={{textAlign: "right", fontSize: 13.5, fontWeight: 600, color: color.ink2, ...tabular}}>
+              {shareText(t.smokingRounds, t.rounds)}
             </Box>
             <Box
               component="span"
@@ -341,7 +335,7 @@ function RotationHeading() {
         Rotacija · ekipe s pušačima
       </Box>
       <Box component="span" sx={{fontSize: 12.5, color: color.muted}}>
-        Udio = kola za pušačkim stolom ove sezone, uključujući večeras. Propušteno = večeri s pušačem, a bez pušačkog stola.
+        Udio = kola za pušačkim stolom u ovoj ligi, uključujući večeras. Propušteno = večeri s pušačem, a bez pušačkog stola.
       </Box>
     </Box>
   );

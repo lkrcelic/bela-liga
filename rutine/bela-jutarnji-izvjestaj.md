@@ -9,7 +9,7 @@ SINCE = the ISO time in `backups/.jutarnji-last`, or 24 hours ago when the file 
 
 ## 2. Gather
 - **Routine reports:** every `reports/rutine/*/*.md` changed after SINCE (`find reports/rutine -name '*.md' -newer backups/.jutarnji-last`, or the last two days' folders when the file is missing). Read them all.
-- **Missing reports:** with the scheduled-tasks tools, `list_scheduled_tasks`. A routine whose `lastRunAt` is after SINCE but has no report, or one that should have run (fixer 00:00, sync 05:00, `treseta-e2e-nightly` after the sync) and didn't, is "nije se javila".
+- **Missing reports:** with the scheduled-tasks tools, `list_scheduled_tasks`. A routine whose `lastRunAt` is after SINCE but has no report, or one that should have run (fixer 00:00, `bela-e2e-nightly` 01:00, sync 05:00, `treseta-e2e-nightly` after the sync) and didn't, is "nije se javila".
 - **GitHub** (`gh api`, REST): issues opened after SINCE, counted by source label (`auto-scan`, `mobile-ux-scan`, `e2e`, `flaky`, `user`); issues closed after SINCE; every open `treba-korisnika` issue with its question (the last comment by a routine) in one line.
 - **Deploy:** `git fetch origin`; `git rev-list --count origin/master..origin/development`, and the release review's latest report: `⏸ DEPLOY READY <sha>` (still waiting while `git merge-base --is-ancestor <sha> origin/master` fails; take the run's start time from its report), ⏸ NEEDS YOU with its questions, ✅ LIVE, ❌ with why, or nothing new. Only the newest DEPLOY READY counts: it contains the older ones.
 - **Production data:** the data-health line of the newest `reports/e2e/` report, only when it says new.

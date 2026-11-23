@@ -85,6 +85,32 @@ export function liveKolo(kolos: KoloSummary[]): number | null {
   return published.length > 0 && !kolosDone(published[0]) ? published[0].number : null;
 }
 
+// The Kolo on the screen at the club (Kolo preko cijelog ekrana): the last one published — the one being played, and
+// between Kolos the one just played until the next is out, as Dnevni poredak follows the league's round being played.
+// A draft isn't shown; null before Kolo 1 is out.
+export function screenKolo(kolos: {number: number; published: boolean}[]): number | null {
+  const published = kolos.filter((k) => k.published).map((k) => k.number);
+  return published.length > 0 ? Math.max(...published) : null;
+}
+
+// Kolo preko cijelog ekrana's arrows: the Kolo out before (-1) or after (+1) the one on the screen; null at the first
+// and at the last one out, which has no arrow that way. A draft isn't out, so the arrows never reach it.
+export function screenKoloStep(kolos: {number: number; published: boolean}[], current: number, dir: -1 | 1): number | null {
+  const out = kolos.filter((k) => k.published).map((k) => k.number).sort((a, b) => a - b);
+  const i = out.indexOf(current);
+  return i < 0 ? null : (out[i + dir] ?? null);
+}
+
+// Objava novog kola: the Kolo the Kola tab moves to when the last Kolo out (screenKolo) went from `before` to `after`
+// between two reads of the tournament — a Kolo just published, on this screen, from the phone or by Automatska kola.
+// Only a Kolo the admin picked (a click, or ?kolo= in the address) moves: a tab with nothing picked follows by itself
+// (defaultKolo: the draft first, else the Kolo being played), so it is on the new Kolo already and keeps going to the
+// next draft. Nothing moves on the first read (before is null: the address's Kolo stands), for a draft (it isn't
+// out) or when a Kolo is deleted. Null: the tab stays.
+export function koloOnPublish(picked: number | null, before: number | null, after: number | null): number | null {
+  return picked != null && before != null && after != null && after > before ? after : null;
+}
+
 // The tournament's last Kolo is made (a draft or published): there is no next Kolo to join, so Tu smo · Želimo
 // uskočiti isn't offered any more
 export function lastKoloMade(kolos: KoloSummary[], rounds: number): boolean {

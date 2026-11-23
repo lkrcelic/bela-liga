@@ -11,6 +11,7 @@ import {
   isComingUp,
   feeLabel,
   formatLabel,
+  koloOnPublish,
   koloSteps,
   koloTimes,
   liveKolo,
@@ -18,6 +19,8 @@ import {
   prizeSummary,
   rankTeams,
   rulesLabel,
+  screenKolo,
+  screenKoloStep,
   standingsOrderLabel,
   TableResult,
   tournamentPhase,
@@ -330,6 +333,51 @@ test("the Kolos played, the one being played and every Kolo's step", () => {
     koloSteps(4, [...kolos, {number: 3, published: false, tables: 3, done: 0, live: 0}]).map((k) => k.step),
     ["played", "live", "draft", "waiting"]
   );
+});
+
+test("the screen at the club shows the last Kolo out: the one being played, between Kolos the one just played, never a draft", () => {
+  const played = {number: 1, published: true, tables: 3, done: 3, live: 0};
+  const live = {number: 2, published: true, tables: 3, done: 1, live: 2};
+  const draft = {number: 3, published: false, tables: 3, done: 0, live: 0};
+  assert.equal(screenKolo([played, live]), 2);
+  // Kolo 2 played to the end and Kolo 3 drafted: Kolo 2 stays until Kolo 3 is out
+  assert.equal(screenKolo([played, {...live, done: 3, live: 0}, draft]), 2);
+  assert.equal(screenKolo([played, live, {...draft, published: true}]), 3);
+  // in whatever order the Kolos come
+  assert.equal(screenKolo([draft, live, played]), 2);
+  // nothing out yet: nothing to show
+  assert.equal(screenKolo([{...played, published: false}]), null);
+  assert.equal(screenKolo([]), null);
+});
+
+test("the screen's arrows go through the Kolos out, one by one, and stop at the first and the last; a draft isn't one", () => {
+  const kolos = [
+    {number: 3, published: false},
+    {number: 1, published: true},
+    {number: 2, published: true},
+  ];
+  assert.equal(screenKoloStep(kolos, 2, -1), 1);
+  assert.equal(screenKoloStep(kolos, 1, 1), 2);
+  // Kolo 1 has nothing before it; Kolo 2, the last out, nothing after it: Kolo 3 is only a draft
+  assert.equal(screenKoloStep(kolos, 1, -1), null);
+  assert.equal(screenKoloStep(kolos, 2, 1), null);
+  // a Kolo that isn't out (deleted meanwhile, or a draft) has no arrows
+  assert.equal(screenKoloStep(kolos, 3, -1), null);
+  assert.equal(screenKoloStep([], 1, 1), null);
+});
+
+test("a Kolo published takes a picked Kola tab to it; a tab following by itself, the first read, a draft and a Kolo deleted move nothing", () => {
+  // Kolo 2 published after Kolo 1: the tab picked on Kolo 1 (or on any Kolo) goes to Kolo 2
+  assert.equal(koloOnPublish(1, 1, 2), 2);
+  assert.equal(koloOnPublish(1, 2, 3), 3);
+  // nothing picked: the tab follows by itself (the draft first, then the Kolo out), so it is left to do that
+  assert.equal(koloOnPublish(null, 1, 2), null);
+  // the page's first read: the Kolo in the address stands
+  assert.equal(koloOnPublish(1, null, 2), null);
+  // a draft isn't out (the last Kolo out stays), a refresh with nothing new, a Kolo deleted
+  assert.equal(koloOnPublish(1, 2, 2), null);
+  assert.equal(koloOnPublish(2, 3, 2), null);
+  assert.equal(koloOnPublish(2, 2, null), null);
 });
 
 test("the words of the tournament screens", () => {

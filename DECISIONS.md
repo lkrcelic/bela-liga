@@ -2083,3 +2083,68 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
       back and Podaci has neither button (`c7-svoj-turnir`, `c7-tudi-turnir`, B's cancel rows), and the player's page
       shows the organizer Mobitel (`c7-admin-stranice`). The suite's helpers and the generator give every tournament
       both times (23:58/23:59 where a test's tournament of today must keep Potvrda dolaska shut).
+100. **Pušački stolovi: svaka večer i svaki turnir kreću ispočetka, prednost ima više pušača** (the user's message of
+    20.11.: "čini mi se čak da pratiš koliko se pušače štuje između turnira, a zapravo trebaš gledati po turniru… svaki
+    turnir se to za pušenje restartira… I prednost imaju oni koji ih je više u timu koji puše… neki turnir sam
+    organizirao mimo lige i u sobi gdje se treba pušiti niko ne puši"). Replaces the rule of #32 and #38, and #65's
+    "No smoking tables" for tournaments.
+    - **The rule** (`seatRounds`, `_lib/matching/smokingTables.ts`): in every round the smoking tables, in the order
+      of their numbers, go to the matches with the most smokers at the table (both teams together); of matches with
+      as many, to the one whose smoking teams sat at a smoking table fewer times in this event so far; then to the
+      pairing's order. An event is a league night or a tournament: nothing from an earlier one counts. Gone: the
+      season's fair share, the missed nights (Propušteno) and the "hasn't sat at one tonight" tier, which came before
+      the smokers. Reason: with them a team with one smoker that had missed an earlier night, or hadn't sat at a
+      smoking table yet that night, took the table from a team with two or three smokers, so the smokers sat at
+      ordinary tables while the smoking room held teams with one smoker, or (a spare smoking table) none.
+      Alternative: keep the turns tonight before the smokers (each smoking team once a night first). Not chosen: the
+      user asked for more smokers first; the turns stay, as the tie-break among matches with as many smokers.
+    - What it costs: when there are fewer smoking seats than smoking teams, a team with one smoker can go a whole
+      night without a smoking table while teams with two keep them (the simulation behind #32). As asked.
+    - **League**: Novo kolo counts only tonight's tables (both places of a two-place night: a team plays at one).
+      Pušački raspored shows tonight: Udio is "kola za pušačkim stolom večeras / kola u kojima je ekipa igrala", the
+      Propušteno column is gone, and Kako se biraju stolovi says the rule above ("Svaka večer kreće ispočetka").
+    - **Tournaments** have Pušački stolovi: a field under Mjesto in Novi turnir and Podaci ("1, 2" or "1-4", empty =
+      none; refused outside 1-100 with "Upiši brojeve stolova od 1 do 100, npr. 1, 2 ili 1-4."), kept in
+      `Tournament.smoking_tables` (migration `20261120120000_tournament_smoking_tables`: a tournament made before has
+      none, as before). Kopiraj turnir copies them, as it copies the place. Every Kolo's draft (Složi, the next one
+      made by itself, Automatska kola) is seated by the same rule, counting only the tournament's published Kolos,
+      and its tables keep `smoking_table` and each team's smokers as a league's do, so the smoking mark shows on the
+      Kola list, Početna's Započni igru and the table pages. New Pušački stolovi drop the waiting draft, which is made
+      again, as a new Partija po kolu does; published Kolos keep their tables. Novi stol is not a smoking table, as in
+      the league.
+    - In comments the number is written "DECISIONS 100", without "#": the colour check (`tokens.test.ts`) reads
+      "#100" as a hex colour.
+    - **Checked**: unit (`smokingTables`: the rule, the turns and a tournament's pairs of ids; `smokingUi`: tonight's
+      Udio, the field's parsing), db (`db/smoking.test.ts`, red on the code before: the league seated C-D, one smoker
+      that missed last week, instead of A-B with two; the tournament's Kolo 1 had no smoking table; in Kolo 3, of two
+      matches with one smoker each, E's (no turn yet) gets the smoking Stol 1 before C's (one turn), which is also red
+      when the tournament's turns are left out) and Playwright (`c7-svoj-turnir`: Pušački stolovi in Podaci).
+101. **Liga pamti propušteno, ali samo unutar sebe** (the user's message of 23.11. about #100: "za ligu želim da se
+    pamti propušteno, Ono što ne želim je da se između natjecanja pamti… između dva turnira, između lige i turnira,
+    između dvije lige… Ali na jednoj ligi želim da se pamti ko je pušio, ko nije pušio", and the answer "Više pušača"
+    to: a team with two smokers and no missed night against a team with one that missed two nights of the league, one
+    smoking table). Updates #100's league.
+    - **The rule** (`seatRounds`): 1. the most smokers at the table; 2. more missed nights in this league, summed over
+      the match's smoking teams, a team's missed nights counting until it sits at a smoking table tonight; 3. fewer
+      rounds at a smoking table in this competition (tonight included); 4. the pairing's order. What is remembered is
+      one competition: a league (all its nights) or a tournament. Another league's or a tournament's tables never
+      count (the league's tables are read by `league_id`, a tournament's by `tournament_id`). The code before #100
+      already read only its own league; what the user saw was the order (missed nights above smokers) and tournaments
+      without smoking tables. Alternative: missed nights above smokers, as #32 had it. Not chosen: the user picked
+      more smokers first.
+    - `smokingRecords` gives every team its turns, tonight's turns and missed nights from one competition's tables. A
+      tournament's Kolos all carry its date, so it has turns and no missed nights; `makeKoloDraft` reads it the same way.
+    - **Pušački raspored** has Udio again ("3 / 12": rounds at a smoking table in this league, tonight included / rounds
+      at a table) and Propušteno; #32's fair share stays gone, as the rule no longer uses it. Kako se biraju stolovi
+      says the rule above and "Pamti se samo ova liga: turniri i druge lige se ne broje."
+    - What the missed nights buy (simulated seasons: 20 teams, three with two smokers and nine with one, three smoking
+      tables, 20 nights): the teams with one smoker went 108 nights without a smoking table over four seasons, against
+      160 when the rule reads only the turns. With one smoking table for twelve smoking teams the teams with two
+      smokers take most rounds, a team with one smoker misses most nights either way (about 18 of 24) and the missed
+      nights change little. That is the cost of more smokers first.
+    - **Checked**: unit (`smokingTables`: the user's example, missed nights between equal smokers, missed nights
+      stopping once the team sat tonight, records of a league (a bye isn't a missed night), a two-place night and a
+      tournament, and the simulation above, which is red when the missed nights leave the order; `smokingUi`: Udio and
+      Propušteno), db (`db/smoking.test.ts` test 1: C, with a missed night in this league, gets the second smoking
+      table before E, whose missed night was in another league, red on #100's code, where E-F got it, and red when the
+      league filter is taken out of the query; Pušački raspored keeps a team whose smoker left but has a record).

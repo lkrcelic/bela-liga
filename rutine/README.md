@@ -6,8 +6,8 @@ The scheduled routines of this repo work as one team. Each local scheduled task 
 
 | Routine | Where | When (Zagreb) | Job | Hands off to |
 | --- | --- | --- | --- | --- |
-| `bela-github-issue-fixer` | laptop | 00:00 and 12:00 | one issue → fix with its test → `development` | `bela-e2e-nightly` when it is enabled, otherwise `bela-release-review` |
-| `bela-e2e-nightly` | laptop | started by the fixer (disabled until the Playwright suite exists) | unit, db and Playwright tests on the head, a data check of the production copy (report only) | `bela-release-review` |
+| `bela-github-issue-fixer` | laptop | 00:00 and 12:00 | one issue → fix with its test → `development` | `bela-release-review` |
+| `bela-e2e-nightly` | laptop | 01:00 | unit, db and Playwright tests on the head, a data check of the production copy (report only) | — (the review's 02:00 run reads its report) |
 | `bela-release-review` | laptop | started in the chain; fallback 02:00 and 14:00 | reviews `master..development`, tests, prepares the deploy; deploys only after the user's "deploy" | — |
 | `bela-nightly-sync` | laptop | 05:00 | deployed Bela commits → Treseta branch `bela-sync` | `treseta-e2e-nightly` |
 | `treseta-e2e-nightly` | laptop | started by the sync; fallback 06:15 | Treseta's unit, db, lint and tsc (Playwright later) on its `master` and `bela-sync`; prompt in Treseta's `rutine/` | its report, read by the morning report |

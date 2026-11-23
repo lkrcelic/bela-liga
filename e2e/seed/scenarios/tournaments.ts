@@ -39,6 +39,7 @@ export function tournamentRequest(over: Partial<TournamentRequest> & {name: stri
     open_signups: false,
     hide_entries: false,
     organizer_phone: "+385 91 000 0001",
+    smoking_tables: [],
     ...over,
   };
 }

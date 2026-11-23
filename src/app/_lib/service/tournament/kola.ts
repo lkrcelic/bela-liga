@@ -6,13 +6,18 @@ import {addCompetitionTable, NotFoundError} from "@/app/_lib/service/admin/table
 import {replayRatings} from "@/app/_lib/service/admin/recalc";
 import {createByeMatches} from "@/app/_lib/service/round/insertPairRounds";
 import {firstKoloPairs, KoloPair, swissPairs} from "@/app/_lib/matching/tournamentPairing";
+import {seatRounds, smokingRecords} from "@/app/_lib/matching/smokingTables";
+import {teamSmokers} from "@/app/_lib/service/team/smokers";
+import {toSmokingTable} from "@/app/_lib/service/round/smoking";
 import {draftIsStale, KOLO_MAX, opponentsOf, rankTeams, TableResult, tournamentTotals} from "@/app/_lib/tournaments";
 import {lockTournament} from "./lock";
 import {TOURNAMENT_NOT_FOUND} from "./tournaments";
 
 // A tournament's Kolos (Turniri · Kola). A Kolo is made as a draft only the admins see (Skica Kola N): Kolo 1 drawn
 // at random once sign-ups are closed, every later one paired by the standings once the Kolo before it is played to
-// the end. Objavi kolo publishes it; publishing Kolo 1 starts the tournament. Players never see a draft.
+// the end. Objavi kolo publishes it; publishing Kolo 1 starts the tournament. Players never see a draft. With
+// Pušački stolovi, the matches with the most smokers sit at them, counting this tournament's Kolos only (DECISIONS 100,
+// 101).
 
 type Tx = Prisma.TransactionClient;
 
@@ -32,6 +37,8 @@ export type MadeKolo = {number: number; tables: number; repeats: KoloPair[]};
 
 const roundSelect = {
   id: true,
+  round_date: true,
+  location_slot: true,
   round_number: true,
   status: true,
   open: true,
@@ -42,6 +49,9 @@ const roundSelect = {
   active: true,
   attendance: true,
   matches_per_round: true,
+  smoking_table: true,
+  team1_smokers: true,
+  team2_smokers: true,
   matches: {select: {player_pair1_score: true, player_pair2_score: true}},
 } as const;
 
@@ -119,8 +129,16 @@ export async function makeKoloDraft(tournamentId: number, {redo = false}: {redo?
 
     await dropTables(tx, draft.map((r) => r.id));
     const {pairs, repeats} = await pairsFor(tx, number, rounds, teams);
-    for (let i = 0; i < pairs.length; i++) {
-      const [team1, team2] = pairs[i];
+    // the tables in the pairing's order, the bye last; with Pušački stolovi the matches with the most smokers sit there,
+    // and of those with as many, the teams that sat at one fewer times in this tournament's published Kolos (one day, so
+    // no missed nights)
+    const smokers = await teamSmokers(teams, tx);
+    const records = smokingRecords(rounds.filter((r) => r.status === "PUBLISHED").map(toSmokingTable), t.date.toISOString().slice(0, 10));
+    const smoking = t.smoking_tables.length ? {tables: t.smoking_tables, smokers, records} : null;
+    const [seated] = seatRounds([pairs.map(([a, b]) => ({teamOne: {id: a}, teamTwo: {id: b}}))], smoking);
+    for (const s of seated) {
+      const team1 = s.teamOne.id;
+      const team2 = s.teamTwo.id;
       const bye = isByeTeam(team1) || isByeTeam(team2);
       const round = await tx.round.create({
         data: {
@@ -128,7 +146,11 @@ export async function makeKoloDraft(tournamentId: number, {redo = false}: {redo?
           round_date: t.date,
           team1_id: team1,
           team2_id: team2,
-          table_number: i + 1,
+          table_number: s.table,
+          smoking_table: s.smoking,
+          // each team's smokers when it was seated, as at a league's table: the turns count from them
+          team1_smokers: smokers.get(team1) ?? 0,
+          team2_smokers: smokers.get(team2) ?? 0,
           status: "DRAFT",
           matches_per_round: t.matches_per_round,
           declarations: t.declarations,

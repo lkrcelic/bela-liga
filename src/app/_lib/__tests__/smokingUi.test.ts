@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import {test} from "node:test";
-import {missedTitle, planHeading, roundDotLabel, shareTitle, smokersLabel, smokingSummary} from "../ui/smoking";
+import {formatSmokingTables, missedTitle, parseSmokingTables, planHeading, roundDotLabel, shareText, shareTitle, smokersLabel, smokingSummary} from "../ui/smoking";
 
 test("Pušački stolovi card line: off, none picked, no smokers, and counts that agree after 'u'", () => {
   assert.equal(smokingSummary(false, [1, 2], 7, 6), "Isključeno · svi stolovi su nepušački");
@@ -34,13 +34,36 @@ test("smokers under a team name", () => {
   assert.equal(smokersLabel(5), "5 pušača");
 });
 
-test("rotation dots, share and missed nights", () => {
+test("rotation dots, the share in this league and missed nights (DECISIONS 101)", () => {
   assert.equal(roundDotLabel("Kolo 3", true), "Kolo 3: pušački stol");
   assert.equal(roundDotLabel("Kolo 3", false), "Kolo 3: običan stol");
   assert.equal(roundDotLabel("Skica A", null), "Skica A: nije za stolom");
-  assert.equal(shareTitle(3, 12, 2.5), "3 od 12 kola za pušačkim stolom; pravedan udio 2,5");
-  assert.equal(shareTitle(0, 1, 0), "0 od 1 kola za pušačkim stolom; pravedan udio 0");
+  assert.equal(shareText(3, 12), "3 / 12");
+  assert.equal(shareText(0, 0), "0 / 0");
+  assert.equal(shareTitle(3, 12), "3 od 12 kola za pušačkim stolom u ovoj ligi");
+  assert.equal(shareTitle(0, 1), "0 od 1 kola za pušačkim stolom u ovoj ligi");
   assert.equal(missedTitle(1), "1 večer s pušačem, bez pušačkog stola");
   assert.equal(missedTitle(2), "2 večeri s pušačem, bez pušačkog stola");
   assert.equal(missedTitle(0), "0 večeri s pušačem, bez pušačkog stola");
+});
+
+test("a tournament's Pušački stolovi as typed: numbers and ranges, in any order, once each", () => {
+  assert.deepEqual(parseSmokingTables(""), []);
+  assert.deepEqual(parseSmokingTables("   "), []);
+  assert.deepEqual(parseSmokingTables("1, 2, 5"), [1, 2, 5]);
+  assert.deepEqual(parseSmokingTables("5 1 2"), [1, 2, 5]);
+  assert.deepEqual(parseSmokingTables("1-4, 7"), [1, 2, 3, 4, 7]);
+  // an en dash, as a phone keyboard may put it, and a range that overlaps a number
+  assert.deepEqual(parseSmokingTables("2–3; 3"), [2, 3]);
+  assert.deepEqual(parseSmokingTables("100"), [100]);
+});
+
+test("Pušački stolovi that aren't table numbers are refused", () => {
+  for (const text of ["0", "101", "1, x", "4-2", "1.5", "-3", "1-", "stol 1"]) assert.equal(parseSmokingTables(text), null, text);
+});
+
+test("the tables back in the form read as typed", () => {
+  assert.equal(formatSmokingTables([3, 1, 2]), "1, 2, 3");
+  assert.equal(formatSmokingTables([]), "");
+  assert.deepEqual(parseSmokingTables(formatSmokingTables([1, 2, 7])), [1, 2, 7]);
 });

@@ -2,23 +2,35 @@
 
 What the commits changed for the people using the app, newest first. The reasons and details are in DECISIONS.md.
 
+## 23.11.2026 · Pušački stolovi: više pušača prvo, turnir ima svoje
+
+On development, not live yet (DECISIONS 100, 101).
+
+### Admin
+- **Pušački stolovi** u svakom kolu idu mečevima s **najviše pušača za stolom**; ekipa s više pušača ima prednost i pred ekipom koja je propuštala večeri.
+- Kod jednakog broja pušača prednost ima meč s više **propuštenih večeri u ovoj ligi**, pa meč čije su ekipe u ligi manje puta sjedile za pušačkim stolom.
+- Pamti se **samo ta liga**: turniri i druge lige se ne broje. **Pušački raspored** i dalje pokazuje **Udio** i **Propušteno** za ovu ligu.
+
+### Admin i organizator
+- **Turnir ima Pušačke stolove**: polje pod **Mjesto** u **Novom turniru** i **Podacima** ("1, 2" ili "1-4"). Svako kolo turnira sjeda mečeve s najviše pušača za te stolove, a broji se samo taj turnir. Promjena stolova ponovno slaže skicu kola koje čeka.
+
 ## 22.11.2026 · Σ pri upisu igre
 
-On development, not live yet.
+Live since 23.11. (1b29d80, #48).
 
 ### Changed
 - **Upiši igru · Korak 3 od 3** (igrači i adminov semafor): **Σ** ispod ekipa sad pokazuje točno ono što će se spremiti. Kad ekipa koja je zvala padne, piše crveno **Σ 0 · pad**, a druga ekipa dobiva 162 i sva zvanja; kod **Štiglje** 252 i sva zvanja idu ekipi koja je uzela sve štihove (#48).
 
 ## 20.11.2026 · Ispravak igre nakon isteka vremena
 
-On development, not live yet.
+Live since 23.11. (1b29d80, #45).
 
 ### Changed
 - Kad partiji istekne vrijeme, igrač više ne može ni **ispraviti** već spremljenu igru, kao što ni novu ne može upisati: partija završava s rezultatom upisanim kad je vrijeme isteklo. Ispravak igre nakon što ekipa prijeđe 1001 i dalje radi, a admin i dalje ispravlja igre bez obzira na vrijeme (#45).
 
 ## 19.11.2026 · Ekipa s jednim igračem
 
-On development, not live yet.
+Live since 23.11. (1b29d80, #41).
 
 ### Changed
 - **Ekipa s jednim igračem** (suigrač deaktiviran, obrisan ili maknut iz ekipe) sad se vidi prije večeri: u **Upravljanje ligom · Ekipe** piše "Ekipa ima samo 1 aktivnog igrača", a u **Novo kolo · Tko igra večeras?** stoji crveno **1 igrač**. Kad se otvori njezin stol, **Tko igra** iznad **Potvrdi** kaže da ekipa ima samo jednog igrača s računom (i dalje se može potvrditi) (#41).
