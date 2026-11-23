@@ -3,7 +3,7 @@ import {BYE_TEAM_ID} from "@/app/_lib/bye";
 import {isDbId} from "@/app/_lib/helpers/query/dbId";
 import {isAdminRole} from "@/app/_lib/players/admin";
 import {fullAccess, playerView, Viewer} from "@/app/_lib/players/privacy";
-import {allRatings, lastNights} from "@/app/_lib/service/ratings/ratings";
+import {lastNights, ratingsOf} from "@/app/_lib/service/ratings/ratings";
 import {ratingSummary} from "@/app/_lib/ui/ratings";
 import {inRatingOrder} from "@/app/_lib/ui/profiles";
 import {PlayerOverview, PlayerOverviewTeam} from "@/app/_interfaces/profiles";
@@ -39,8 +39,7 @@ export async function getPlayerOverview(playerId: number, viewer: Viewer): Promi
   if (!player) return null;
 
   const full = fullAccess(viewer, playerId);
-  const [list, teams, history, photos, own] = await Promise.all([
-    allRatings(),
+  const [teams, history, photos, own] = await Promise.all([
     prisma.team.findMany({
       where: {team_id: {not: BYE_TEAM_ID}, teamPlayers: {some: {player_id: playerId}}},
       select: {
@@ -64,6 +63,9 @@ export async function getPlayerOverview(playerId: number, viewer: Viewer): Promi
     full ? ownPhoto(playerId, viewer) : null,
   ]);
 
+  // only the rows of this player and their teammates (#51), in Rejting's order
+  const {rows: list, total} = await ratingsOf([playerId, ...teams.flatMap((t) => t.teamPlayers.map((tp) => tp.player.id))]);
+
   const teamRows: PlayerOverviewTeam[] = teams
     .map((t) => ({
       team_id: t.team_id,
@@ -81,7 +83,7 @@ export async function getPlayerOverview(playerId: number, viewer: Viewer): Promi
     player: playerView(player, viewer),
     photo: own ?? {photo_url: photos.player(player)},
     full,
-    rating: {...ratingSummary(list, player), total: list.length},
+    rating: {...ratingSummary(list, player), total},
     teams: teamRows,
     nights: await lastNights(playerId, history),
     viewer: {admin: isAdminRole(viewer), self: viewer.id === playerId},

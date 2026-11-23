@@ -1,3 +1,4 @@
+import {Prisma} from "@prisma/client";
 import {prisma} from "@/app/_lib/prisma";
 import {BYE_TEAM_ID} from "@/app/_lib/bye";
 import {ratedPlayerIds} from "@/app/_lib/lineup";
@@ -17,7 +18,18 @@ import {playerPhotoUrls} from "@/app/_lib/service/players/photos";
 // aren't listed (their rounds still count for everyone else's rating); the username is public (#88), so the search
 // matches it and the detail shows it.
 
-type Row = {id: number; first_name: string; last_name: string; username: string; rating: number; team: string | null; rounds: number; change: number | null};
+type Row = {
+  id: number;
+  first_name: string;
+  last_name: string;
+  username: string;
+  rating: number;
+  team: string | null;
+  rounds: number;
+  change: number | null;
+  rank: number;
+  total: number;
+};
 
 export async function listRatings(viewer: Viewer): Promise<RatingsList> {
   const list = await allRatings();
@@ -25,20 +37,33 @@ export async function listRatings(viewer: Viewer): Promise<RatingsList> {
   return {players: list.map((p) => ({...p, photo_url: photos.get(p.id) ?? null})), me: list.some((p) => p.id === viewer.id) ? viewer.id : null};
 }
 
-// The whole list, ranked: players with the same rating share a place. One query per call (not cached), so a caller
-// that needs it twice passes it on.
-export async function allRatings(): Promise<RatingRow[]> {
+// Who is on the list: not deleted, and on a team or with a rated night
+const LISTED = Prisma.sql`
+    SELECT p.id, p.rating
+    FROM "Player" p
+    WHERE p.deleted_at IS NULL
+      AND (EXISTS (SELECT 1 FROM "PlayerRatingHistory" h WHERE h.player_id = p.id)
+        OR EXISTS (SELECT 1 FROM "TeamPlayer" tp WHERE tp.player_id = p.id AND tp.team_id <> ${BYE_TEAM_ID}))`;
+
+// Rows of the list, ranked over the whole list (players with the same rating share a place), with the list's length:
+// all of them, or only these players'. The team and the rated rounds are worked out only for the rows returned, so
+// one player's or one team's page doesn't pay for the whole list (#51).
+async function ratingRows(ids?: number[]): Promise<{rows: RatingRow[]; total: number}> {
   const rows = await prisma.$queryRaw<Row[]>`
-      SELECT p.id, p.first_name, p.last_name, p.username, p.rating,
+      WITH ranked AS (SELECT l.id,
+                             (RANK() OVER (ORDER BY l.rating DESC))::int AS rank,
+                             (COUNT(*) OVER ())::int                     AS total
+                      FROM (${LISTED}) l)
+      SELECT p.id, p.first_name, p.last_name, p.username, p.rating, k.rank, k.total,
              team.team_name                AS team,
              COALESCE(h.rounds, 0)::int    AS rounds,
              h.change
-      FROM "Player" p
-               LEFT JOIN (SELECT player_id,
-                                 SUM(rounds)                                AS rounds,
-                                 (ARRAY_AGG(change ORDER BY night DESC))[1] AS change
-                          FROM "PlayerRatingHistory"
-                          GROUP BY player_id) h ON h.player_id = p.id
+      FROM ranked k
+               JOIN "Player" p ON p.id = k.id
+               LEFT JOIN LATERAL (SELECT SUM(rounds)                                AS rounds,
+                                         (ARRAY_AGG(change ORDER BY night DESC))[1] AS change
+                                  FROM "PlayerRatingHistory"
+                                  WHERE player_id = p.id) h ON true
                -- the player's team that played most recently (a player can be on more than one)
                LEFT JOIN LATERAL (
           SELECT t.team_name
@@ -52,20 +77,17 @@ export async function allRatings(): Promise<RatingRow[]> {
                       AND r.status = 'PUBLISHED') DESC NULLS LAST,
                    t.team_name
           LIMIT 1) team ON true
-      WHERE p.deleted_at IS NULL
-        AND (h.player_id IS NOT NULL
-         OR EXISTS (SELECT 1 FROM "TeamPlayer" tp WHERE tp.player_id = p.id AND tp.team_id <> ${BYE_TEAM_ID}))`;
+      ${ids ? Prisma.sql`WHERE p.id = ANY(${ids}::int[])` : Prisma.empty}`;
 
+  const total = rows[0]?.total ?? (ids ? (await prisma.$queryRaw<{n: number}[]>`SELECT COUNT(*)::int AS n FROM (${LISTED}) l`)[0].n : 0);
   const players = rows
     .map((r) => ({...r, name: displayName(r)}))
     .sort((a, b) => b.rating - a.rating || a.name.localeCompare(b.name, "hr"));
-
-  let rank = 0;
-  return players.map((p, i) => {
-    if (i === 0 || p.rating !== players[i - 1].rating) rank = i + 1;
-    return {
+  return {
+    total,
+    rows: players.map((p) => ({
       id: p.id,
-      rank,
+      rank: p.rank,
       name: p.name,
       username: p.username,
       team: p.team,
@@ -73,21 +95,31 @@ export async function allRatings(): Promise<RatingRow[]> {
       change: p.change,
       rounds: p.rounds,
       provisional: p.rounds < PROVISIONAL_ROUNDS,
-    };
-  });
+    })),
+  };
+}
+
+// The whole list, highest rating first. One query per call (not cached), so a caller that needs it twice passes it on.
+export async function allRatings(): Promise<RatingRow[]> {
+  return (await ratingRows()).rows;
+}
+
+// Only these players' rows (in the list's order; those not on the list are left out) and the list's length
+export async function ratingsOf(ids: number[]): Promise<{rows: RatingRow[]; total: number}> {
+  return ratingRows(Array.from(new Set(ids)));
 }
 
 // These players' ratings as Rejting shows them (a team's players on the Team page). A player who isn't on the list
 // keeps their stored rating, unranked and Privremeno (ratingSummary).
 export async function ratingSummaries(players: {id: number; rating: number}[]): Promise<Map<number, RatingSummary>> {
-  const list = await allRatings();
-  return new Map(players.map((p) => [p.id, ratingSummary(list, p)]));
+  const {rows} = await ratingsOf(players.map((p) => p.id));
+  return new Map(players.map((p) => [p.id, ratingSummary(rows, p)]));
 }
 
 // A deleted player (or one never on a team) isn't on the list: 404 "Igrač ne postoji."
 export async function getPlayerRating(playerId: number, viewer: Viewer): Promise<PlayerRatingDetail> {
-  const players = await allRatings();
-  const found = players.find((p) => p.id === playerId);
+  const {rows, total} = await ratingsOf([playerId]);
+  const found = rows[0];
   if (!found) throw new NotFoundError(PLAYER_NOT_FOUND);
   const player = {...found, photo_url: (await playerPhotoUrls(viewer, [playerId])).get(playerId) ?? null};
 
@@ -99,7 +131,7 @@ export async function getPlayerRating(playerId: number, viewer: Viewer): Promise
 
   return {
     player,
-    total: players.length,
+    total,
     history: history.map((h) => ({night: isoDate(h.night), rating: h.rating})),
     lastNights: await lastNights(playerId, history.slice(-5).reverse()),
   };
