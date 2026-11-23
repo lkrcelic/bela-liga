@@ -122,6 +122,8 @@ model Session {
   userId       Int
   expires      DateTime
   user         Player   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model LuciaSession {
@@ -129,6 +131,8 @@ model LuciaSession {
   userId    Int
   expiresAt DateTime
   player    Player   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model Account {
@@ -575,6 +579,7 @@ model TeamPlayer {
   player Player @relation(fields: [player_id], references: [id], onDelete: Cascade)
 
   @@id([team_id, player_id])
+  @@index([player_id])
 }
 
 // A team's entry in a tournament: in it, or on its waiting list. The waiting list goes in the order the teams signed up
@@ -723,6 +728,10 @@ model Round {
   leagueRounds     LeagueRound[]
   roundPlayers     RoundPlayer[]
   attendanceBy     Player?           @relation("RoundAttendance", fields: [attendance_by], references: [id], onDelete: SetNull)
+
+  @@index([team1_id])
+  @@index([team2_id])
+  @@index([round_date])
 }
 
 // A player's rating after each league night they played (Glicko-2, one rating period per night). Rewritten by
@@ -756,6 +765,7 @@ model RoundPlayer {
 
   @@id([round_id, team_id, player_id])
   @@index([team_id])
+  @@index([player_id])
 }
 
 model TournamentRound {
@@ -777,6 +787,7 @@ model LeagueRound {
   round  Round  @relation(fields: [round_id], references: [id], onDelete: Cascade)
 
   @@id([league_id, round_id])
+  @@index([round_id])
 }
 
 model Match {
@@ -793,6 +804,8 @@ model Match {
 
   round          Round?          @relation(fields: [round_id], references: [id], onDelete: SetNull)
   belaResults    BelaResult[]
+
+  @@index([round_id])
 }
 
 model OngoingMatch {
@@ -811,6 +824,8 @@ model OngoingMatch {
 
   round       Round?              @relation(fields: [round_id], references: [id], onDelete: SetNull)
   belaResults OngoingBelaResult[]
+
+  @@index([round_id])
 }
 
 model BelaResult {
@@ -829,6 +844,8 @@ model BelaResult {
 
   match                   Match                    @relation(fields: [match_id], references: [id], onDelete: Cascade)
   belaPlayerAnnouncements BelaPlayerAnnouncement[]
+
+  @@index([match_id])
 }
 
 model OngoingBelaResult {
@@ -847,6 +864,8 @@ model OngoingBelaResult {
 
   match                   OngoingMatch                    @relation(fields: [match_id], references: [id], onDelete: Cascade)
   belaPlayerAnnouncements OngoingBelaPlayerAnnouncement[]
+
+  @@index([match_id])
 }
 
 model BelaPlayerAnnouncement {
@@ -857,6 +876,8 @@ model BelaPlayerAnnouncement {
   announcement_type BelaAnnouncementEnum
 
   result BelaResult @relation(fields: [result_id], references: [result_id], onDelete: Cascade)
+
+  @@index([result_id])
 }
 
 model OngoingBelaPlayerAnnouncement {
@@ -867,6 +888,8 @@ model OngoingBelaPlayerAnnouncement {
   announcement_type BelaAnnouncementEnum
 
   result OngoingBelaResult @relation(fields: [result_id], references: [result_id], onDelete: Cascade)
+
+  @@index([result_id])
 }
 
 // Failed logins per account from any address, so every serverless instance sees the same count (accountLimiting.ts).

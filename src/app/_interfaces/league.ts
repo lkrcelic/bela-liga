@@ -213,6 +213,8 @@ export type LeagueTeamDetails = {
   players: {id: number; username: string}[];
   // players on the team who smoke
   smokers: number;
+  // players on the team who aren't deactivated: the ones a lineup is picked from
+  active_players: number;
   // the ban that keeps it from the league's nights (its own or a player's), null: none
   ban: PlayBan | null;
 };

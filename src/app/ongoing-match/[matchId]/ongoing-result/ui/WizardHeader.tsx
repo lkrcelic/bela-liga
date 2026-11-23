@@ -1,5 +1,6 @@
 "use client";
 
+import {handPreview} from "@/app/_lib/bela/scoring";
 import useAnnouncementStore from "@/app/_store/bela/announcementStore";
 import useResultStore from "@/app/_store/bela/resultStore";
 import {Eyebrow} from "@/app/_ui/sp";
@@ -25,6 +26,16 @@ export default function WizardHeader({step}: {step: number}) {
   const gp = (side: 1 | 2) => (side === 1 ? result.player_pair1_game_points : result.player_pair2_game_points) ?? 0;
   const zv = (side: 1 | 2) => teamsAnnouncements[side]?.totalAnnouncements ?? 0;
   const label = isScore ? "Igra" : "Zvanja";
+  // Σ: what Spremi will save, pad and štiglja included (#48)
+  const preview = handPreview({
+    gamePoints1: gp(1),
+    gamePoints2: gp(2),
+    announcementPoints1: zv(1),
+    announcementPoints2: zv(2),
+    trumpCaller: result.trump_caller_team === 1 || result.trump_caller_team === 2 ? result.trump_caller_team : null,
+    completeVictory: !!result.complete_victory,
+  });
+  const sumOf = (side: 1 | 2) => preview.sums[side - 1];
 
   return (
     <Box component="header" sx={{display: "flex", flexDirection: "column", gap: "12px", pb: "12px", flex: "none", viewTransitionName: "team-header"}}>
@@ -33,7 +44,8 @@ export default function WizardHeader({step}: {step: number}) {
         names={sides.names}
         label={label}
         values={[isScore ? gp(sides.sides[0]) : zv(sides.sides[0]), isScore ? gp(sides.sides[1]) : zv(sides.sides[1])]}
-        sums={isScore ? [gp(sides.sides[0]) + zv(sides.sides[0]), gp(sides.sides[1]) + zv(sides.sides[1])] : null}
+        sums={isScore ? [sumOf(sides.sides[0]), sumOf(sides.sides[1])] : null}
+        fell={isScore && preview.fell != null ? (sides.sides.indexOf(preview.fell) === 1 ? 1 : 0) : null}
         active={sides.sides.indexOf(active) === 1 ? 1 : 0}
         onPick={(i) => setActiveTeam(sides.key(sides.sides[i]))}
       />

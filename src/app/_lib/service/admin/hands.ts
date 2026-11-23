@@ -469,7 +469,7 @@ export async function updateHand(kind: HandKind, resultId: number, hand: AdminHa
     const stored = await prisma.ongoingBelaResult.findUnique({where: {result_id: resultId}, select: {match_id: true}});
     if (!stored) throw new NotFoundError("Igra ne postoji.");
     const result = adminHandToResult(hand, stored.match_id);
-    await updateOngoingBelaResult({result_id: resultId, resultData: result, normalize: (r) => r});
+    await updateOngoingBelaResult({result_id: resultId, resultData: result, normalize: (r) => r, admin: true});
     return {reopened: false};
   }
 

@@ -88,12 +88,14 @@ export function CallerCards({names, caller, onPick, disabled}: {names: readonly 
 }
 
 // Steps 2 and 3: the two team boxes that pick which team the zvanja or points are entered for (label "Zvanja",
-// "Igra"; sums: the "Σ 162" line under each box on the points step)
+// "Igra"; sums: the "Σ 162" line under each box on the points step, what Spremi will save; fell: the calling team that
+// falls (pad), whose line reads "Σ 0 · pad" in red)
 export function TeamValueBoxes({
   names,
   label,
   values,
   sums,
+  fell = null,
   active,
   onPick,
 }: {
@@ -101,6 +103,7 @@ export function TeamValueBoxes({
   label: string;
   values: [number, number];
   sums?: [number, number] | null;
+  fell?: 0 | 1 | null;
   active: 0 | 1;
   onPick: (i: 0 | 1) => void;
 }) {
@@ -141,8 +144,8 @@ export function TeamValueBoxes({
                 {values[i]}
               </Box>
             </Box>
-            <Box aria-live="polite" sx={{height: 18, pl: "8px", fontSize: 14, fontWeight: 600, color: color.muted, ...tabular}}>
-              {sums ? `Σ ${sums[i]}` : ""}
+            <Box aria-live="polite" sx={{height: 18, pl: "8px", fontSize: 14, fontWeight: 600, color: fell === i ? color.red : color.muted, ...tabular}}>
+              {sums ? `Σ ${sums[i]}${fell === i ? " · pad" : ""}` : ""}
             </Box>
           </Box>
         );
