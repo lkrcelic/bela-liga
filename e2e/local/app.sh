@@ -16,7 +16,8 @@ case "$ID" in
   a) PORT=3910 ;;
   b) PORT=3911 ;;
   c[1-9]) PORT=$((3920 + ${ID#c})) ;;
-  *) echo "app.sh: unknown section id '$ID' (smoke, a, b, c1 … c9)" >&2; exit 2 ;;
+  nightly) PORT=3930 ;;
+  *) echo "app.sh: unknown id '$ID' (smoke, a, b, c1 … c9, nightly)" >&2; exit 2 ;;
 esac
 
 HERE=$(git rev-parse --show-toplevel)
