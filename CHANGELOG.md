@@ -16,21 +16,21 @@ On development, not live yet (DECISIONS 100, 101).
 
 ## 22.11.2026 · Σ pri upisu igre
 
-On development, not live yet.
+Live since 23.11. (1b29d80, #48).
 
 ### Changed
 - **Upiši igru · Korak 3 od 3** (igrači i adminov semafor): **Σ** ispod ekipa sad pokazuje točno ono što će se spremiti. Kad ekipa koja je zvala padne, piše crveno **Σ 0 · pad**, a druga ekipa dobiva 162 i sva zvanja; kod **Štiglje** 252 i sva zvanja idu ekipi koja je uzela sve štihove (#48).
 
 ## 20.11.2026 · Ispravak igre nakon isteka vremena
 
-On development, not live yet.
+Live since 23.11. (1b29d80, #45).
 
 ### Changed
 - Kad partiji istekne vrijeme, igrač više ne može ni **ispraviti** već spremljenu igru, kao što ni novu ne može upisati: partija završava s rezultatom upisanim kad je vrijeme isteklo. Ispravak igre nakon što ekipa prijeđe 1001 i dalje radi, a admin i dalje ispravlja igre bez obzira na vrijeme (#45).
 
 ## 19.11.2026 · Ekipa s jednim igračem
 
-On development, not live yet.
+Live since 23.11. (1b29d80, #41).
 
 ### Changed
 - **Ekipa s jednim igračem** (suigrač deaktiviran, obrisan ili maknut iz ekipe) sad se vidi prije večeri: u **Upravljanje ligom · Ekipe** piše "Ekipa ima samo 1 aktivnog igrača", a u **Novo kolo · Tko igra večeras?** stoji crveno **1 igrač**. Kad se otvori njezin stol, **Tko igra** iznad **Potvrdi** kaže da ekipa ima samo jednog igrača s računom (i dalje se može potvrditi) (#41).
