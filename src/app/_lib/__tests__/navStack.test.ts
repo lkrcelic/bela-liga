@@ -149,6 +149,22 @@ test("nextNavStack: Home and the nav drawer make roots, a load from outside star
   assert.deepEqual(nextNavStack(s, "/players/7", {...link, first: true, loadType: null}), startOver("/players/7"));
 });
 
+test("a page the app loads in full in Prijava's place (after logging in) takes Prijava's place in the stack, so Back stays (#79)", () => {
+  // Burza · Objavi · Dostupan sam sent a guest to Prijava; logged in, the form is loaded in Prijava's place
+  const atLogin = push(startOver("/burza", "Burza"), "/login");
+  const loaded = nextNavStack(atLogin, "/burza/novi/dostupan", {...link, first: true, loadType: "navigate", inPlace: true});
+  assert.deepEqual(paths(loaded), ["/burza", "/burza/novi/dostupan"]);
+  assert.equal(previous(loaded)?.label, "Burza");
+  // Home loaded that way is a root, as after any way of reaching it
+  assert.equal(previous(nextNavStack(atLogin, "/", {...link, first: true, loadType: "navigate", inPlace: true})), null);
+  // only a load of that kind: Back into the app goes by the usual rules, and an empty stack starts over
+  const form = "/burza/novi/dostupan";
+  assert.deepEqual(nextNavStack(atLogin, form, {...link, first: true, loadType: "back_forward", inPlace: true}), startOver(form));
+  assert.deepEqual(nextNavStack([], form, {...link, first: true, loadType: "navigate", inPlace: true}), startOver(form));
+  // any other load from outside still starts over
+  assert.deepEqual(nextNavStack(atLogin, form, {...link, first: true, loadType: "navigate"}), startOver(form));
+});
+
 test("/league/current/… opened from outside: the league's page it lands on takes its place, with no Back", () => {
   // a shared "/league/current/standings?team=29": the app starts there, then Next swaps it for the league's page
   const shared = nextNavStack(push(startOver("/profile"), "/teams/29"), "/league/current/standings", {...link, first: true, loadType: "navigate"});

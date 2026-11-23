@@ -119,6 +119,9 @@ export type NavFacts = {
   // the first page of this document, and how the document was loaded ("navigate", "reload", "back_forward")
   first: boolean;
   loadType: string | null;
+  // the document is a full load the app made in place of the page at the top (noteReplaceLoad: logging in loads the
+  // page it came for)
+  inPlace?: boolean;
 };
 
 // /league/current/<page> only forwards to that page of the league being played now. Opened as a document (a bookmark, a
@@ -131,11 +134,17 @@ function forwardsOnly(path: string): boolean {
 // The stack once the page at `path` is on screen. Home ("/") and a page opened from the nav drawer are roots: the
 // navigation is recorded as it happened (Back to Home pops, a link pushes, a replace swaps), and then the page is made a
 // root. The first page of a document keeps the stack only when it is the page the stack left off at (a reload, or Back
-// into the app to that page); any other load starts a new stack.
+// into the app to that page), and swaps the top for itself when the app loaded it in place of that page, as a replace
+// would; any other load starts a new stack.
 export function nextNavStack(stack: NavStack, path: string, facts: NavFacts): NavStack {
   if (facts.first) {
     const keeps = (facts.loadType === "reload" || facts.loadType === "back_forward") && top(stack)?.path === path;
-    return keeps ? stack : startOver(path);
+    if (keeps) return stack;
+    if (facts.inPlace && facts.loadType === "navigate" && top(stack) != null) {
+      const next = replaceTop(stack, path);
+      return path === "/" ? reset(next, path) : next;
+    }
+    return startOver(path);
   }
   const from = top(stack);
   const kind = facts.kind === "push" && from != null && forwardsOnly(from.path) ? "replace" : facts.kind;
@@ -236,6 +245,29 @@ export function noteReplace(path: string) {
   replaceTo = path;
 }
 
+// A full load of the page at `path` that the app makes in place of the page on screen (replaceWithLoad, after logging
+// in): the note outlives the document in the tab's storage, and the next document's first page reads it once
+const IN_PLACE_KEY = "bela.navInPlace";
+
+export function noteReplaceLoad(path: string) {
+  try {
+    storage()?.setItem(IN_PLACE_KEY, path);
+  } catch {
+    // blocked: the page loaded starts a new stack, as any load
+  }
+}
+
+function takeReplaceLoad(): string | null {
+  const s = storage();
+  try {
+    const path = s?.getItem(IN_PLACE_KEY) ?? null;
+    s?.removeItem(IN_PLACE_KEY);
+    return path;
+  } catch {
+    return null;
+  }
+}
+
 // A nav drawer item to `path` was chosen while `here` is shown: the page it opens is a root, whatever path it ends on
 // (/league/current/... lands on the league being played now). The stack changes once that page is on screen, so the
 // page that is leaving doesn't redraw its Back first; the item of the page shown makes it a root at once.
@@ -261,7 +293,7 @@ let arrived: {path: string; kind: NavKind} | null = null;
 // The page at `path` came on screen; first = the first page of this document. Every note is used up, also one for a
 // navigation that never changed the path (a replace of ?tab=).
 export function recordNavigation(path: string, first: boolean, loadType: string | null) {
-  const facts: NavFacts = {...peekFacts(path), first, loadType};
+  const facts: NavFacts = {...peekFacts(path), first, loadType, inPlace: first && takeReplaceLoad() === path};
   popTo = null;
   replaceTo = null;
   freshNext = false;

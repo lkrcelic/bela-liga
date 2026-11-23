@@ -2,6 +2,14 @@
 
 What the commits changed for the people using the app, newest first. The reasons and details are in DECISIONS.md.
 
+## 23.11.2026 · Prijava s Burze vodi na obrazac
+
+On development, not live yet (#79).
+
+### Changed
+- Gost koji na **Burzi** dodirne **Objavi** (npr. **Dostupan sam**) i odmah se prijavi sad dolazi na obrazac. Dosad je, ako se prijavio u prvih 30 sekundi, ostajao na **Prijavi** s gumbom **Prijavi se** koji se vrti (#79).
+- Nakon prijave korisničkim imenom stranica na koju se vraćaš učita se iznova, kao i nakon prijave Googleom, a **Natrag** i dalje vodi putem kojim si došao.
+
 ## 23.11.2026 · U kolo samo ekipe s potvrđenim dolaskom
 
 On development, not live yet (DECISIONS 103).

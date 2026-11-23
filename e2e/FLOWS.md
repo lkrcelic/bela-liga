@@ -39,6 +39,7 @@ komentarom `// BUG:`: test opisuje kako bi trebalo biti, a prolazi dok greška p
 | Kriva lozinka / nepostojeće ime | gost | `prijava/c6-prijava.spec.ts` › a wrong password or an unknown username is refused with the same words… |
 | Google gumb (samo vidljiv) | gost | `prijava/c6-prijava.spec.ts` › Prijava and Registracija offer Google first… |
 | Deaktiviran račun (DECISIONS #40) | igrač | `prijava/c6-prijava.spec.ts` › a deactivated account can't log in… |
+| Prijava s turnira kao gost: natrag na turnir, Natrag i dalje vodi istim putem (#79) | gost | `prijava/c6-prijava.spec.ts` › a guest who logs in from a tournament's Prijavi se is back on it… (#79) |
 | Odjava na mobitelu | igrač | `prijava/c6-prijava.spec.ts` › Odjava on Moj profil ends the session… |
 | Prijava i odjava na računalu | igrač | `prijava/c6-prijava.racunalo.spec.ts` › on the computer, logging in opens Početna… |
 | Zaključavanje nakon 5 pokušaja (po adresi) | igrač | `prijava/c6-zakljucavanje.spec.ts` › five wrong passwords lock the account on that phone… |
@@ -153,6 +154,7 @@ komentarom `// BUG:`: test opisuje kako bi trebalo biti, a prolazi dok greška p
 | Zatvori oglas u Mojim oglasima | igrač | `burza/c8-moji.spec.ts` › Zatvori oglas on Moji oglasi closes without asking… |
 | Kartice Burze i datumi Zamjena, istekli oglasi | igrač | `burza/c8-moji.spec.ts` › Burza's tabs list the open ads of their kind… |
 | Javna Burza za gosta, objava traži prijavu | gost | `burza/c8-gost.spec.ts` › a guest reads every open ad of the public Burza… |
+| Gost s Objavi na Prijavu i natrag na obrazac (#79) | gost | `burza/c8-gost.spec.ts` › a guest sent to Prijava from Objavi comes back to the form once logged in (#79) |
 | Gost bez broja, prijava s oglasa vraća broj (#11) | gost | `burza/c8-gost.spec.ts` › a guest gets no phone number, and logging in from an ad brings its number back… (#11) |
 
 ## Profil

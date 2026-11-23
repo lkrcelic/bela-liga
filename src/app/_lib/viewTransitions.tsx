@@ -11,7 +11,7 @@
 //   back     the reverse
 //   morph    elements with the same view-transition-name morph (Start Game card -> scoreboard), the rest crossfades
 
-import {noteReplace, notePop, recordNavigation} from "@/app/_lib/navStack";
+import {noteReplace, noteReplaceLoad, notePop, recordNavigation} from "@/app/_lib/navStack";
 import Link from "next/link";
 import {usePathname, useRouter} from "next/navigation";
 import React, {useCallback, useEffect, useLayoutEffect, useMemo} from "react";
@@ -121,6 +121,14 @@ export function useTransitionRouter() {
   );
   const back = useCallback(() => navigateWithTransition(() => router.back(), "back"), [router]);
   return useMemo(() => ({push, replace, back, router}), [push, replace, back, router]);
+}
+
+// A replace that loads `href` in full, past the router's cache, which still holds answers given before the player
+// logged in (a page that needs a login was answered with a redirect to Prijava, kept 30 s: #79). The new page still
+// takes the current one's place in the page stack, so its Back goes where it went before.
+export function replaceWithLoad(href: string) {
+  noteReplaceLoad(pathOfHref(href));
+  window.location.replace(href);
 }
 
 // The address bar shows `href` in place of the current address, and the page stays as it is (no navigation, nothing

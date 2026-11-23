@@ -26,6 +26,26 @@ test("a guest reads every open ad of the public Burza, has no Moji oglasi, and i
   await expect(page.getByRole("heading", {name: "Prijava"})).toBeVisible();
 });
 
+// #79: Objavi opens the form by a client-side navigation, which the middleware answers with a redirect to Prijava, and
+// the router keeps that answer for 30 s. Logging in within them used to replay it: Prijava again, Prijavi se spinning.
+test("a guest sent to Prijava from Objavi comes back to the form once logged in (#79)", async ({as, world, healthy}) => {
+  const page = await as("guest");
+  await page.goto("/burza");
+  await page.getByRole("button", {name: "Objavi", exact: true}).click();
+  await page.getByRole("dialog", {name: "Što objavljuješ?"}).getByRole("button", {name: /^Dostupan sam/}).click();
+  await expect(page).toHaveURL(/\/login\?next=%2Fburza%2Fnovi%2Fdostupan$/);
+  // the phone login page always offers to install the app first
+  await page.getByRole("button", {name: "Nastavi u pregledniku"}).click();
+  await page.getByLabel("Korisničko ime ili Email").fill(world.accounts.player.username);
+  await page.getByLabel("Lozinka", {exact: true}).fill(PASSWORD);
+  await page.getByRole("button", {name: "Prijavi se", exact: true}).click();
+
+  await expect(page).toHaveURL(/\/burza\/novi\/dostupan$/);
+  await expect(page.getByRole("heading", {name: "Dostupan sam", level: 1})).toBeVisible();
+  await expect(page.getByRole("button", {name: "Zamjena", exact: true})).toBeVisible();
+  await healthy(page);
+});
+
 test("a guest gets no phone number, and logging in from an ad brings its number back to the ad (#11)", async ({as, api, db, world, healthy}) => {
   // the seeded availability ad with a number of its own
   const ad = world.ads.availablePartner;

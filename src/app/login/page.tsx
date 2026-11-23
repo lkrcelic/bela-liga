@@ -8,7 +8,7 @@ import {color} from "@/app/_styles/tokens";
 import GoogleLoginButton from "@/app/login/ui/GoogleLoginButton";
 import LogInForm from "@/app/login/ui/LogInForm";
 import {Box} from "@mui/material";
-import {useTransitionRouter} from "@/app/_lib/viewTransitions";
+import {replaceWithLoad, useTransitionRouter} from "@/app/_lib/viewTransitions";
 import {authHref, safeNextPath} from "@/app/_lib/publicPaths";
 import {useSearchParams} from "next/navigation";
 import {loginErrorMessage} from "@/app/_interfaces/login";
@@ -20,7 +20,10 @@ export default function LogIn() {
   // ?next=: the page that sent the player here (a Burza form), opened again after logging in
   const params = useSearchParams();
   const next = safeNextPath(params.get("next")) ?? "/";
-  const onSuccess = () => router.replace(next);
+  // Logged in: a full load of `next` in Prijava's place (replaceWithLoad), as the Google login loads it. A client-side
+  // replace could take the router's cached answer for `next` from before the login, the middleware's redirect back to
+  // Prijava for a page that needs one (kept 30 s), and leave the player here with Prijavi se spinning (#79).
+  const onSuccess = () => replaceWithLoad(next);
   // ?error=: a refused or failed Google login, or a login that ended because the account was deactivated
   // (loginErrorMessage). Read once and taken out of the address, so a reload doesn't show it again; it goes away
   // when the player tries again, so only the latest error is on screen.

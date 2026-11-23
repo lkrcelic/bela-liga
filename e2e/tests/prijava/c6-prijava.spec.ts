@@ -8,6 +8,7 @@ import {PASSWORD} from "../../helpers/fixtures";
 import {
   capitalised,
   DEACTIVATED_NOTE,
+  dismissInstallSheet,
   expect,
   logIn,
   note,
@@ -134,6 +135,43 @@ test("Odjava on Moj profil ends the session: the old cookie is refused, a page t
   await expect(page).toHaveURL(/\/login\?next=%2Fratings$/);
   expect((await logIn(page, world.accounts.noTeam.username, PASSWORD)).status()).toBe(200);
   await expect(page).toHaveURL(/\/ratings$/);
+  expect(await whoIsLoggedIn(page)).toBe(world.accounts.noTeam.username);
+  await healthy(page);
+});
+
+// #79: logging in loads the page it came for in full, past the router's cache (which could replay a redirect to
+// Prijava), and that page takes Prijava's place in the page stack, as the client-side replace before it did: Natrag
+// still steps back the way the guest came. The browser's history holds the tournament twice (before Prijava, and in
+// Prijava's place), so the first Natrag stays on it and the second returns to Nadolazeći turniri.
+test("a guest who logs in from a tournament's Prijavi se is back on it with the sign-up open, and Natrag still steps back the way they came (#79)", async ({
+  as,
+  world,
+  healthy,
+}) => {
+  const t = world.tournaments.open;
+  const page = await as("guest");
+  await page.goto("/turniri/nadolazeci");
+  await page.getByRole("link", {name: t.name}).click();
+  await expect(page).toHaveURL(new RegExp(`/turniri/${t.id}$`));
+  await page.getByRole("region", {name: "Prijave otvorene"}).getByRole("button", {name: "Prijavi se", exact: true}).click();
+  await page.getByRole("dialog", {name: "Sjedni za stol."}).getByRole("link", {name: "Prijavi se"}).click();
+  await expect(page).toHaveURL(new RegExp(`/login\\?next=%2Fturniri%2F${t.id}%3Fprijava%3D1$`));
+  await dismissInstallSheet(page);
+  expect((await logIn(page, world.accounts.noTeam.username, PASSWORD)).status()).toBe(200);
+
+  await expect(page).toHaveURL(new RegExp(`/turniri/${t.id}\\?prijava=1$`));
+  // the sign-up sheet (Bez.ekipe has no team yet: Nova ekipa)
+  const sheet = page.getByRole("dialog", {name: "Nova ekipa"});
+  await expect(sheet).toBeVisible();
+  await sheet.getByRole("button", {name: "Zatvori"}).click();
+  await expect(sheet).toHaveCount(0);
+  const back = page.getByRole("button", {name: "Natrag"});
+  await expect(back).toBeVisible();
+  await back.click();
+  await expect(page).toHaveURL(new RegExp(`/turniri/${t.id}$`));
+  await expect(back).toBeVisible();
+  await back.click();
+  await expect(page).toHaveURL(/\/turniri\/nadolazeci$/);
   expect(await whoIsLoggedIn(page)).toBe(world.accounts.noTeam.username);
   await healthy(page);
 });
