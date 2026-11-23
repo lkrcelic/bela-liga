@@ -1,12 +1,13 @@
 // C7 · the organizer runs the day of their own tournament on the phone: Označi dolazak and the Aktivna switch in
-// Potvrda dolaska, Prijave zatvorene → Složi Kolo 1 → Skica kola → Objavi kolo, Isključi ekipu and Vrati, a skipped
+// Potvrda dolaska, Prijave zatvorene → Složi Kolo 1 → Skica kola → Objavi kolo (also with Pušački stolovi), Isključi
+// ekipu and Vrati, a skipped
 // table's Uredi ishod and Vrati stol, and a hand on the table's scorepad (on the screen, and through its routes). DECISIONS #86: the organizer runs their own tournament as the admin does
 // (kola, Skica, Objavi, stolovi, rezultati, prijave, dolasci). The rules of the day are _lib/tournamentDay.ts: at 10
 // minutes without a game the table is skipped and both teams are out (in Kolo 1 with a ban on sign-ups); Uredi ishod
 // gives one team every match 1001 : 700 and puts the other out; Vrati stol plays the table as if both had come.
 // Each test makes its own tournament of today as the organizer (the `own` fixture: Novi turnir, Dodaj ekipu through the
 // organizer's routes) and the fixture removes it afterwards.
-import {expect, koloTables, tableOutFor, test} from "../../helpers/c7";
+import {expect, koloTables, tableOutFor, test, tournamentRequest} from "../../helpers/c7";
 import {enterHand, handRow} from "../../helpers/scorepad";
 
 const escape = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -87,6 +88,48 @@ test("the organizer closes sign-ups, makes Kolo 1 with Složi Kolo 1 and publish
   const after = await db.tournament.findUniqueOrThrow({where: {tournament_id: t.id}});
   expect([after.started_at != null, after.registrations_open]).toEqual([true, false]);
   await healthy(page);
+});
+
+test("with Pušački stolovi, Složi Kolo 1 seats the team with the most smokers at the smoking table, marked in Skica and in Kolo 1", async ({as, own, organizer, db, healthy}) => {
+  // DECISIONS 100: before, a tournament had no smoking tables, so its tables went in the draw's order whoever smoked
+  const t = await own({teams: 4});
+  const [smokers] = t.teams;
+  // every active player of `smokers` smokes and nobody else in the tournament does; put back afterwards
+  const players = await db.player.findMany({where: {teamPlayers: {some: {team_id: {in: t.teams.map((x) => x.id)}}}}, select: {id: true, smoker: true}});
+  const smokerIds = (await db.teamPlayer.findMany({where: {team_id: smokers.id, player: {active: true}}, select: {player_id: true}})).map((p) => p.player_id);
+  try {
+    await db.player.updateMany({where: {id: {in: players.map((p) => p.id)}}, data: {smoker: false}});
+    await db.player.updateMany({where: {id: {in: smokerIds}}, data: {smoker: true}});
+    // Podaci · Spremi promjene with Stol 2 as the smoking table, then Prijave zatvorene
+    const saved = await organizer.patch(`/api/admin/tournaments/${t.id}`, {data: {...(await tournamentRequest(db, t.id)), smoking_tables: [2]}});
+    expect(saved.ok(), `Spremi promjene: ${await saved.text()}`).toBeTruthy();
+    const closed = await organizer.patch(`/api/admin/tournaments/${t.id}/registrations`, {data: {open: false}});
+    expect(closed.ok(), `Prijave zatvorene: ${await closed.text()}`).toBeTruthy();
+
+    const page = await as("organizer");
+    await page.goto(`/turniri/${t.id}/upravljanje?view=kola`);
+    await page.getByRole("button", {name: "Složi Kolo 1"}).click();
+
+    // Skica kola: the draw is random, but the smokers' match sits at Stol 2, the only one with the smoking mark
+    const skica = page.getByRole("list", {name: "Skica Kola 1, stolovi"});
+    await expect(skica.getByRole("listitem")).toHaveCount(2);
+    const smokersRow = skica.getByRole("listitem").filter({has: page.getByText(smokers.name, {exact: true})});
+    await expect(smokersRow.getByRole("img", {name: "Pušački stol"})).toBeVisible();
+    await expect(skica.getByRole("img", {name: "Pušački stol"})).toHaveCount(1);
+    const [stol1, stol2] = await koloTables(db, t.id, 1);
+    expect([stol2.table, [stol2.team1.id, stol2.team2.id].includes(smokers.id)]).toEqual([2, true]);
+
+    // published, Kolo 1 says the same to the organizer and to every reader of the table's link
+    await page.getByRole("button", {name: "Objavi kolo"}).click();
+    await expect(page.getByRole("heading", {name: "Kolo 1", level: 1})).toBeVisible();
+    await expect(page.getByRole("link", {name: new RegExp(`^Stol 2, pušački: ${escape(stol2.team1.name)} 0, ${escape(stol2.team2.name)} 0, nije počelo\\. Otvori stol$`)})).toBeVisible();
+    await expect(page.getByRole("link", {name: new RegExp(`^Stol 1: ${escape(stol1.team1.name)} 0, ${escape(stol1.team2.name)} 0, nije počelo\\. Otvori stol$`)})).toBeVisible();
+    await healthy(page);
+  } finally {
+    for (const smoker of [true, false]) {
+      await db.player.updateMany({where: {id: {in: players.filter((p) => p.smoker === smoker).map((p) => p.id)}}, data: {smoker}});
+    }
+  }
 });
 
 test("once their tournament has started the organizer takes a team out with Isključi ekipu and brings it back with Vrati", async ({as, own, db, healthy}) => {

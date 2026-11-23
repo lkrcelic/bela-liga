@@ -197,6 +197,7 @@ export async function tournamentRequest(db: Db, id: number) {
     open_signups: t.open_signups,
     hide_entries: t.hide_entries,
     organizer_phone: t.organizer_phone,
+    smoking_tables: t.smoking_tables,
   };
 }
 
