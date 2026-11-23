@@ -25,7 +25,7 @@ On development, not live yet (DECISIONS 102).
 
 ## 23.11.2026 · Pušački stolovi: više pušača prvo, turnir ima svoje
 
-On development, not live yet (DECISIONS 100, 101).
+Live since 23.11. (e397c64, DECISIONS 100, 101).
 
 ### Admin
 - **Pušački stolovi** u svakom kolu idu mečevima s **najviše pušača za stolom**; ekipa s više pušača ima prednost i pred ekipom koja je propuštala večeri.
