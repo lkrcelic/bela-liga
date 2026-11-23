@@ -2230,6 +2230,14 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
       Nothing is stored: everything is read from the tables, so a match the admin reopens or a Kolo published after
       the end makes the night, tournament or league live again. Tables still open at 08:00 stay unplayed and don't
       count, as unplayed tables never did.
+    - **Checked**: unit (`createRoundDraft`, `leagueArrival` and `tournamentDay`: the night, Tu smo's window and a
+      tournament's day until 08:00; `tournaments.test.ts`: finished at 08:00 the morning after, a 7th Kolo of six;
+      `leagueArrival.test.ts`: `tonightOver` between Kolos, after the last, a Kolo beyond Broj kola, two places;
+      `profiles.test.ts`: #90 at 03:45 and after the last night played out) and db (`db/leagueEnded.test.ts`: a league
+      whose last night is tonight ends after its last Kolo, not between Kolos, a 3rd Kolo of two keeps it, two places
+      need both, an earlier night played out doesn't end it), all red on the code before. The tests that took a date
+      and "today" (directory, profiles, standingsMovement) now take `ended` worked out by the same rule from the same
+      dates, with the same asserts.
 
 105. **Ne, nisu došli ostaje odmah, a zatim Javi organizatoru** (#60; the user's messages of 24.11.: "after the nisu došli
     is selected a new modal needs to pop up for the players 'javi organizatoru'", "not the other way round", "comes only

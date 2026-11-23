@@ -2,6 +2,20 @@
 
 What the commits changed for the people using the app, newest first. The reasons and details are in DECISIONS.md.
 
+## 24.11.2026 · Noć do 08:00; večer, turnir i liga završavaju sa zadnjim kolom
+
+On development, not live yet (DECISIONS 104, #90).
+
+### Igrači
+- **Noć lige traje do 08:00** (dosad 06:00): do tada je to još večerašnja večer, za Večeras, Dnevni poredak, Raspored, Burzu, Tu smo i Odlazimo te dan turnira.
+- **Liga ostaje U tijeku cijelu zadnju večer**, i nakon ponoći. Završeno piše čim je zadnja večer odigrala svoj Broj kola, a najkasnije u 08:00. Dosad je od ponoći pisalo Završeno dok se još igralo.
+- **Medalje u Dnevnom poretku** dolaze kad je odigrano zadnje kolo večeri, ne već između dva kola.
+- **Turnir koji je stao prije zadnjeg kola** završava u 08:00 sljedećeg jutra: nestaje iz Uživo i pokazuje Pobjednike i Vaš rezultat s odigranim kolima.
+
+### Changed
+- Kolo preko Broja kola (npr. 4. od tri) drži večer otvorenom dok se ne odigra, i za Tu smo i Odlazimo.
+- Stol koji je u 08:00 još otvoren ostaje neodigran i ne broji se.
+
 ## 24.11.2026 · Javi organizatoru nakon Ne, nisu došli
 
 On development, not live yet (DECISIONS 105, #60).
