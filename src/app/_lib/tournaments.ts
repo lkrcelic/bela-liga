@@ -93,6 +93,16 @@ export function screenKolo(kolos: {number: number; published: boolean}[]): numbe
   return published.length > 0 ? Math.max(...published) : null;
 }
 
+// Objava novog kola: the Kolo the Kola tab moves to when the last Kolo out (screenKolo) went from `before` to `after`
+// between two reads of the tournament — a Kolo just published, on this screen, from the phone or by Automatska kola.
+// Only a Kolo the admin picked (a click, or ?kolo= in the address) moves: a tab with nothing picked follows by itself
+// (defaultKolo: the draft first, else the Kolo being played), so it is on the new Kolo already and keeps going to the
+// next draft. Nothing moves on the first read (before is null: the address's Kolo stands), for a draft (it isn't
+// out) or when a Kolo is deleted. Null: the tab stays.
+export function koloOnPublish(picked: number | null, before: number | null, after: number | null): number | null {
+  return picked != null && before != null && after != null && after > before ? after : null;
+}
+
 // The tournament's last Kolo is made (a draft or published): there is no next Kolo to join, so Tu smo · Želimo
 // uskočiti isn't offered any more
 export function lastKoloMade(kolos: KoloSummary[], rounds: number): boolean {

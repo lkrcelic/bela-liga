@@ -15,7 +15,8 @@ import HourglassTopRoundedIcon from "@mui/icons-material/HourglassTopRounded";
 import TuneRoundedIcon from "@mui/icons-material/TuneRounded";
 import {Box} from "@mui/material";
 import {useSearchParams} from "next/navigation";
-import React, {useState} from "react";
+import React, {useEffect, useRef, useState} from "react";
+import {koloOnPublish, screenKolo} from "@/app/_lib/tournaments";
 import {StatusChip, statusOf, ViewTabs} from "../TournamentParts";
 import EntriesDesktop from "./EntriesDesktop";
 import DayEntriesDesktop from "./DayEntriesDesktop";
@@ -65,6 +66,19 @@ export default function ManageTournamentDesktop({id}: {id: number}) {
     setScreen(full);
     replaceAddress(`/turniri/${id}/upravljanje?view=${v}${v === "kola" && k ? `&kolo=${k}` : ""}${full ? `&${SCREEN_PARAM}=1` : ""}`);
   };
+
+  // Objava novog kola: a Kolo just out (published here, from the phone or by Automatska kola) takes the Kolo the admin
+  // picked to it, as Kolo preko cijelog ekrana moves on (and stays open); a tab with nothing picked follows by itself
+  // (koloOnPublish). On another tab (Poredak…) the page stays there and only the Kolo moves, for when the admin is back.
+  const lastOut = t ? screenKolo(t.results.kolos) : null;
+  const seenOut = useRef<number | null>(null);
+  useEffect(() => {
+    const to = koloOnPublish(kolo, seenOut.current, lastOut);
+    seenOut.current = lastOut;
+    if (to == null) return;
+    if (shown === "kola") go("kola", to, screen);
+    else setKolo(to);
+  }, [lastOut]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const toggleRegistrations = async () => {
     if (!t) return;

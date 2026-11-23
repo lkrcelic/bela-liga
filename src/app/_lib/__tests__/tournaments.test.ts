@@ -11,6 +11,7 @@ import {
   isComingUp,
   feeLabel,
   formatLabel,
+  koloOnPublish,
   koloSteps,
   koloTimes,
   liveKolo,
@@ -346,6 +347,20 @@ test("the screen at the club shows the last Kolo out: the one being played, betw
   // nothing out yet: nothing to show
   assert.equal(screenKolo([{...played, published: false}]), null);
   assert.equal(screenKolo([]), null);
+});
+
+test("a Kolo published takes a picked Kola tab to it; a tab following by itself, the first read, a draft and a Kolo deleted move nothing", () => {
+  // Kolo 2 published after Kolo 1: the tab picked on Kolo 1 (or on any Kolo) goes to Kolo 2
+  assert.equal(koloOnPublish(1, 1, 2), 2);
+  assert.equal(koloOnPublish(1, 2, 3), 3);
+  // nothing picked: the tab follows by itself (the draft first, then the Kolo out), so it is left to do that
+  assert.equal(koloOnPublish(null, 1, 2), null);
+  // the page's first read: the Kolo in the address stands
+  assert.equal(koloOnPublish(1, null, 2), null);
+  // a draft isn't out (the last Kolo out stays), a refresh with nothing new, a Kolo deleted
+  assert.equal(koloOnPublish(1, 2, 2), null);
+  assert.equal(koloOnPublish(2, 3, 2), null);
+  assert.equal(koloOnPublish(2, 2, null), null);
 });
 
 test("the words of the tournament screens", () => {

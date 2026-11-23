@@ -125,6 +125,7 @@ komentarom `// BUG:`: test opisuje kako bi trebalo biti, a prolazi dok greška p
 | Vrati stol | organizator | `turniri/c7-dan-turnira.spec.ts` › Vrati stol puts the organizer's skipped table back in play… |
 | Kolo preko cijelog ekrana (ekran u klubu, i TV od 960 px) | organizator | `turniri/c7-kolo-ekran.racunalo.spec.ts` › Kolo preko cijelog ekrana stays open when the page narrows to a TV's 960 px… |
 | Kolo preko cijelog ekrana prati turnir: sljedeće kolo čim je objavljeno | organizator | `turniri/c7-kolo-ekran.racunalo.spec.ts` › Kolo preko cijelog ekrana moves on to Kolo 2 by itself once it is out… |
+| Objava novog kola prebacuje odabrani tab Kola na to kolo, i s Poretka (skica ne) | organizator | `turniri/c7-kolo-ekran.racunalo.spec.ts` › a Kolo published takes the Kola tab picked on another Kolo to it, also from Poredak… |
 | Semafor svog stola (Tko igra, Upiši igru) | organizator | `turniri/c7-dan-turnira.spec.ts` › the organizer opens a table of their Kolo 1…; › the scorepad's routes take the organizer's hands… |
 | Tuđi turnir skriven na ekranu | organizator | `turniri/c7-tudi-turnir.spec.ts` › the admin's tournament (open/live) is not in the organizer's Turniri…; › a table of the admin's live tournament shows the organizer no scorepad…; › …tells the organizer it isn't theirs… (bug #86) |
 | Tuđi turnir: 403 na svakoj ruti | organizator | `turniri/c7-tudi-turnir.spec.ts` › on the admin's tournament (open/live) the organizer's … is refused with 403 and changes nothing |
