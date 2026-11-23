@@ -93,6 +93,14 @@ export function screenKolo(kolos: {number: number; published: boolean}[]): numbe
   return published.length > 0 ? Math.max(...published) : null;
 }
 
+// Kolo preko cijelog ekrana's arrows: the Kolo out before (-1) or after (+1) the one on the screen; null at the first
+// and at the last one out, which has no arrow that way. A draft isn't out, so the arrows never reach it.
+export function screenKoloStep(kolos: {number: number; published: boolean}[], current: number, dir: -1 | 1): number | null {
+  const out = kolos.filter((k) => k.published).map((k) => k.number).sort((a, b) => a - b);
+  const i = out.indexOf(current);
+  return i < 0 ? null : (out[i + dir] ?? null);
+}
+
 // Objava novog kola: the Kolo the Kola tab moves to when the last Kolo out (screenKolo) went from `before` to `after`
 // between two reads of the tournament — a Kolo just published, on this screen, from the phone or by Automatska kola.
 // Only a Kolo the admin picked (a click, or ?kolo= in the address) moves: a tab with nothing picked follows by itself
