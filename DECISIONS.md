@@ -2137,11 +2137,14 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
     - **Pušački raspored** has Udio again ("3 / 12": rounds at a smoking table in this league, tonight included / rounds
       at a table) and Propušteno; #32's fair share stays gone, as the rule no longer uses it. Kako se biraju stolovi
       says the rule above and "Pamti se samo ova liga: turniri i druge lige se ne broje."
-    - What it costs (unit test simulation: one smoking table, twelve smoking teams, four with two smokers, 24 nights):
-      a team with one smoker misses 16 to 20 of 24 nights, because the teams with two come first. The league's memory
-      keeps the teams with one smoker within 4 nights of each other; without it the same pairings give 14 to 21.
+    - What the missed nights buy (simulated seasons: 20 teams, three with two smokers and nine with one, three smoking
+      tables, 20 nights): the teams with one smoker went 108 nights without a smoking table over four seasons, against
+      160 when the rule reads only the turns. With one smoking table for twelve smoking teams the teams with two
+      smokers take most rounds, a team with one smoker misses most nights either way (about 18 of 24) and the missed
+      nights change little. That is the cost of more smokers first.
     - **Checked**: unit (`smokingTables`: the user's example, missed nights between equal smokers, missed nights
-      stopping once the team sat tonight, records of a league, a two-place night and a tournament, the season
-      simulation; `smokingUi`: Udio and Propušteno), db (`db/smoking.test.ts` test 1: C, with a missed night in this
-      league, gets the second smoking table before E, whose missed night was in another league; red on #100's code,
-      where E-F got it, and red when the league filter is taken out of the query).
+      stopping once the team sat tonight, records of a league (a bye isn't a missed night), a two-place night and a
+      tournament, and the simulation above, which is red when the missed nights leave the order; `smokingUi`: Udio and
+      Propušteno), db (`db/smoking.test.ts` test 1: C, with a missed night in this league, gets the second smoking
+      table before E, whose missed night was in another league, red on #100's code, where E-F got it, and red when the
+      league filter is taken out of the query; Pušački raspored keeps a team whose smoker left but has a record).
