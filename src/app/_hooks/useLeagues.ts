@@ -2,8 +2,7 @@
 
 import {getLeaguesAPI} from "@/app/_fetchers/league/leagues";
 import {LeagueSummary} from "@/app/_interfaces/league";
-import {leagueNightString} from "@/app/_lib/dates";
-import {homeLeagueId, leagueEnded} from "@/app/_lib/league";
+import {homeLeagueId} from "@/app/_lib/league";
 import {NightLocation} from "@/app/_lib/nights";
 import {count, NOUN} from "@/app/_lib/ui/text";
 import {useEffect, useState} from "react";
@@ -31,13 +30,6 @@ export type LeagueOption = {
   location?: NightLocation | null; // where its nights are played unless a night has its own place
   teamCount?: number;
 };
-
-// Whether a league is over ("Završeno") (DECISIONS 104, #90): the server said so when the list was read (its last night
-// played its Broj kola), or its last night is behind the league night now (08:00 the morning after), which a list read
-// the evening before doesn't know yet: the list is kept for the session
-export function leagueIsOver(l: Pick<LeagueOption, "ended" | "endDate" | "lastNight">, now: Date = new Date()): boolean {
-  return l.ended === true || leagueEnded(l.endDate ?? null, l.lastNight ?? null, leagueNightString(now));
-}
 
 // "na koji dan" for the league meta line: "16 ekipa · utorkom"
 const PLAY_DAY = ["ponedjeljkom", "utorkom", "srijedom", "četvrtkom", "petkom", "subotom", "nedjeljom"];

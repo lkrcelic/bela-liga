@@ -133,7 +133,7 @@ test("Dodaj igrača offers the active players who aren't in the team, found by n
 
 test("Dodaj u ligu offers the other leagues, running ones first, with the season and U tijeku", () => {
   const today = "2026-10-13";
-  // over or not as leagueIsOver reads them on that day
+  // over or not by their dates on that day (leagueEnded, as the server works out ended)
   const leagues = [
     {id: 1, name: "Zimska liga", season: "Zima 2026", endDate: "2026-03-01", lastNight: null},
     {id: 2, name: "Piatnik Bela Liga 2026", season: "2026", endDate: null, lastNight: "2026-12-16"},

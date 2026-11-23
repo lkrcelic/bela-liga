@@ -1,3 +1,4 @@
+import {tonightOver} from "@/app/_lib/leagueArrival";
 import {formatChange} from "./ratings";
 import {displayDate} from "./text";
 
@@ -150,4 +151,22 @@ export const MOVEMENT_HEADER = "Promjena mjesta od prošle večeri lige";
 
 export function movementNote(since: string): string {
   return `+/− pokazuje koliko je mjesta ekipa dobila ili izgubila od prošle večeri lige (${displayDate(since)}).`;
+}
+
+// Dnevni poredak's medals on the phone (DECISIONS 104): an earlier night has them (08:00 makes tonight one); tonight once
+// the place shown has played its Broj kola, in Sve both places (tonightOver), not between two Kolos with every table
+// closed. nights: the league's nights, null while they load or when they didn't: then no medals tonight, rather than
+// medals between two Kolos; a night that has tables but no row of its own ends when every table is closed, as before.
+export function nightMedalsUp(input: {
+  tonight: boolean;
+  tables: Parameters<typeof tonightOver>[0];
+  nights: {date: string; planned_rounds: number; second_rounds_per_night: number | null; second_location: unknown}[] | null;
+  date: string | null;
+  place: number | null;
+}): boolean {
+  if (!input.tonight) return true;
+  if (input.nights == null) return false;
+  const row = input.nights.find((n) => n.date === input.date) ?? null;
+  const night = row && {planned_rounds: row.planned_rounds, second_rounds_per_night: row.second_rounds_per_night, two_places: row.second_location != null};
+  return tonightOver(input.tables, night, input.place);
 }

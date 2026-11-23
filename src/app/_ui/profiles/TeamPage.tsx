@@ -3,7 +3,8 @@
 import useManagePhone from "@/app/_hooks/useManagePhone";
 import useCan from "@/app/_hooks/useCan";
 import useAdminPlayers from "@/app/_hooks/useAdminPlayers";
-import {leagueIsOver, reloadLeagues, useLeagueList} from "@/app/_hooks/useLeagues";
+import {reloadLeagues, useLeagueList} from "@/app/_hooks/useLeagues";
+import {leagueIsOver} from "@/app/_lib/league";
 import useNavStack from "@/app/_hooks/useNavStack";
 import useShortWindow from "@/app/_hooks/useShortWindow";
 import useTeamOverview from "@/app/_hooks/useTeamOverview";

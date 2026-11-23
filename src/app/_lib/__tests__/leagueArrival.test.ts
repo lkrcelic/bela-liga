@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import {test} from "node:test";
 import {arrivalEffect, asksAdmin, isHere, lastRoundOut, leagueArrivalPhase, leagueArrivalWindow, nightPlayedOut, placeKolos, tonightOver} from "@/app/_lib/leagueArrival";
 import {playBanChip, playBanRefusal, playBanText} from "@/app/_lib/bans";
+import {nightMedalsUp} from "@/app/_lib/ui/standings";
 
 // Potvrda dolaska in the league: the window, what each button does, and how a ban that keeps a team from playing reads
 
@@ -154,4 +155,23 @@ test("a night with tables but no night row ends when every table is closed, as b
   assert.equal(tonightOver([table(1, false), table(1, true)], null, null), false);
   // a table read without open counts as open
   assert.equal(tonightOver([{round_number: 1}], null, null), false);
+});
+
+test("Dnevni poredak's medals: an earlier night has them; tonight's come after its last Kolo, and not while the nights load", () => {
+  const between = [table(1, false), table(2, false)];
+  const done = [...between, table(3, false)];
+  const nights = [{date: "2026-11-18", planned_rounds: 3, second_rounds_per_night: null, second_location: null}];
+  const ask = (tables: typeof done, n: typeof nights | null, tonight = true) => nightMedalsUp({tonight, tables, nights: n, date: "2026-11-18", place: null});
+  assert.equal(ask(between, nights, false), true);
+  assert.equal(ask(between, nights), false);
+  assert.equal(ask(done, nights), true);
+  // the nights not loaded (yet, or the request failed): no medals tonight, not "every table closed"
+  assert.equal(ask(between, null), false);
+  assert.equal(ask(done, null), false);
+  // a night with tables but no row of its own: every table closed, as before
+  assert.equal(ask(between, []), true);
+  // Sve on a two-place night: both places
+  const two = [{...nights[0], second_rounds_per_night: 1, second_location: {name: "Lanterna"}}];
+  assert.equal(nightMedalsUp({tonight: true, tables: [table(1, false, 1), table(1, false, 2)], nights: two, date: "2026-11-18", place: null}), false);
+  assert.equal(nightMedalsUp({tonight: true, tables: [table(1, false, 1), table(1, false, 2)], nights: two, date: "2026-11-18", place: 2}), true);
 });

@@ -2,7 +2,8 @@
 
 import {useScrollMemory} from "@/app/_hooks/useBackRestore";
 import useIsDesktop from "@/app/_hooks/useIsDesktop";
-import useLeagues, {leagueIsOver, useLeagueList} from "@/app/_hooks/useLeagues";
+import useLeagues, {useLeagueList} from "@/app/_hooks/useLeagues";
+import {leagueIsOver} from "@/app/_lib/league";
 import useMyTeams from "@/app/_hooks/useMyTeams";
 import useManagePhone from "@/app/_hooks/useManagePhone";
 import useNavStack from "@/app/_hooks/useNavStack";

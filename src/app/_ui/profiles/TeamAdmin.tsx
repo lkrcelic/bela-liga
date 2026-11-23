@@ -3,7 +3,8 @@
 import {addTeamToLeagueAPI} from "@/app/_fetchers/league/leagues";
 import {addTeamPlayerAPI, deleteTeamAPI, removeTeamPlayerAPI, renameTeamAPI} from "@/app/_fetchers/team/manage";
 import {adminPlayersList} from "@/app/_hooks/useAdminPlayers";
-import {leagueIsOver, LeagueOption, reloadLeagues, updateCachedLeague} from "@/app/_hooks/useLeagues";
+import {LeagueOption, reloadLeagues, updateCachedLeague} from "@/app/_hooks/useLeagues";
+import {leagueIsOver} from "@/app/_lib/league";
 import type {Overview} from "@/app/_hooks/useOverview";
 import {teamsList} from "@/app/_hooks/useTeams";
 import type {AdminPlayerRow} from "@/app/_interfaces/player";

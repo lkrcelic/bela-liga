@@ -1,4 +1,5 @@
 import type {MyLeague, MySchedule} from "@/app/_interfaces/burza";
+import {leagueNightString} from "@/app/_lib/dates";
 import {nextNightIndex} from "@/app/_lib/nights";
 
 // The league being played now is the one with the most recent round night, so a new season's league takes over
@@ -23,6 +24,14 @@ export function leagueEnded(end: string | null, lastNight: string | null, night:
   const last = end ?? lastNight;
   if (last == null) return false;
   return last < night || (last === night && lastNightOver);
+}
+
+// A league read from the league list is over ("Završeno") (DECISIONS 104, #90) when the server said so as the list was
+// read (ended: its last night played its Broj kola), or its last night is now behind the league night (08:00 the
+// morning after), which a list read the evening before can't know: the screens keep the list for the session.
+// night: the league night now (leagueNightString).
+export function leagueIsOver(l: {ended?: boolean; endDate?: string | null; lastNight?: string | null}, night: string = leagueNightString()): boolean {
+  return l.ended === true || leagueEnded(l.endDate ?? null, l.lastNight ?? null, night);
 }
 
 export type LeaguePage = "daily-standings" | "standings" | "manage";

@@ -22,7 +22,7 @@ import {
   teamTiles,
   withOwnPhoto,
 } from "../ui/profiles";
-import {leagueEnded} from "../league";
+import {leagueEnded, leagueIsOver} from "../league";
 import {leagueNightString} from "../dates";
 import {ratingSummary} from "../ui/ratings";
 import {RatingRow} from "../../_interfaces/ratings";
@@ -98,6 +98,19 @@ test("a league's last night past midnight still runs, until it has played its Br
   // without an end date its last scheduled night decides the same way
   assert.equal(leagueEnded(null, "2026-11-18", "2026-11-18", true), true);
   assert.equal(leagueEnded(null, "2026-11-18", "2026-11-18"), false);
+});
+
+test("a league from the list is over by the server's word, or once its last night is behind the league night (DECISIONS 104)", () => {
+  // the list was read on the last night before it was played out: the server said not over
+  const read = {ended: false, endDate: "2026-11-18", lastNight: null};
+  assert.equal(leagueIsOver(read, "2026-11-18"), false);
+  // the page stays open past 08:00: the league night has moved on, over without reading the list again
+  assert.equal(leagueIsOver(read, "2026-11-19"), true);
+  // the server saw the last night played out: over on that night
+  assert.equal(leagueIsOver({...read, ended: true}, "2026-11-18"), true);
+  // without the server's word (an older list) the dates alone decide; nothing planned: running
+  assert.equal(leagueIsOver({endDate: null, lastNight: "2026-04-15"}, "2026-10-12"), true);
+  assert.equal(leagueIsOver({endDate: null, lastNight: null}, "2026-10-12"), false);
 });
 
 const standings = (...rows: [team: number, played: number, score: number][]) => rows.map(([team_id, rounds_played, score]) => ({team_id, rounds_played, score}));
