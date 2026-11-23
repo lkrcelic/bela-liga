@@ -9,9 +9,10 @@ import {makeKoloDraft} from "@/app/_lib/service/tournament/kola";
 import {updateTournament} from "@/app/_lib/service/tournament/tournaments";
 import {TournamentRequest} from "@/app/_interfaces/tournament";
 
-// Smoking tables (DECISIONS 100) against a real Postgres: every league night and every tournament starts afresh, and the
-// match with the most smokers gets the smoking table. A tournament has its own Pušački stolovi: its Kolos are seated
-// at them, counting only its own earlier Kolos, and new smoking tables drop the waiting draft. Run with
+// Smoking tables (DECISIONS 100, 101) against a real Postgres: the match with the most smokers gets the smoking table,
+// and of matches with as many, a league remembers its own missed nights, never another league's. A tournament has its
+// own Pušački stolovi: its Kolos are seated at them, counting only its own earlier Kolos, and new smoking tables drop
+// the waiting draft. Run with
 // `npm run test:db` on a throwaway database with the migrations applied (it adds its own league, tournaments, teams
 // and players and removes them afterwards).
 
@@ -19,6 +20,8 @@ const tag = `sm${Date.now()}`;
 const tonight = leagueNight();
 const lastWeek = new Date(tonight.getTime() - 7 * 86_400_000);
 let leagueId = 0;
+// another league the same teams play in
+let otherLeagueId = 0;
 let locationId = 0;
 const tournaments: number[] = [];
 const players: number[] = [];
@@ -30,6 +33,7 @@ const nameOf = (teamId: number) => Object.keys(id).find((k) => id[k] === teamId)
 before(async () => {
   locationId = (await prisma.location.create({data: {name: `${tag} Kartaš`}})).location_id;
   leagueId = (await prisma.league.create({data: {league_name: `${tag} liga`, location_id: locationId}})).league_id;
+  otherLeagueId = (await prisma.league.create({data: {league_name: `${tag} druga liga`, location_id: locationId}})).league_id;
   for (const [name, smokers] of Object.entries(SMOKERS)) {
     const team = await prisma.team.create({data: {team_name: `${tag} ${name}`}});
     id[name] = team.team_id;
@@ -46,12 +50,12 @@ before(async () => {
 });
 
 after(async () => {
-  const where = {OR: [{leagueRounds: {some: {league_id: leagueId}}}, {tournamentRounds: {some: {tournament_id: {in: tournaments}}}}]};
+  const where = {OR: [{leagueRounds: {some: {league_id: {in: [leagueId, otherLeagueId]}}}}, {tournamentRounds: {some: {tournament_id: {in: tournaments}}}}]};
   const ids = (await prisma.round.findMany({where, select: {id: true}})).map((r) => r.id);
   await prisma.match.deleteMany({where: {round_id: {in: ids}}});
   await prisma.round.deleteMany({where: {id: {in: ids}}});
   await prisma.tournament.deleteMany({where: {tournament_id: {in: tournaments}}});
-  await prisma.league.delete({where: {league_id: leagueId}});
+  await prisma.league.deleteMany({where: {league_id: {in: [leagueId, otherLeagueId]}}});
   await prisma.team.deleteMany({where: {team_id: {in: Object.values(id)}}});
   await prisma.player.deleteMany({where: {id: {in: players}}});
   await prisma.location.delete({where: {location_id: locationId}});
@@ -68,44 +72,53 @@ const seatedTable = (a: string, b: string, table: number, smoking: boolean) => (
   team2_smokers: SMOKERS[b],
 });
 
-test("a league night starts afresh, and the match with more smokers gets the smoking table", async () => {
-  const leagueRound = (date: Date, roundNumber: number, table: ReturnType<typeof seatedTable>) =>
-    prisma.round.create({data: {...table, round_number: roundNumber, round_date: date, status: "PUBLISHED", published_at: date, leagueRounds: {create: {league_id: leagueId}}}});
-  // last week C (one smoker) sat at an ordinary table while A had the smoking table: that night doesn't count tonight
-  await leagueRound(lastWeek, 6, seatedTable("A", "B", 1, true));
-  await leagueRound(lastWeek, 6, seatedTable("C", "D", 2, false));
-  // tonight's Kolo 7: A already sat at the smoking table
-  await leagueRound(tonight, 7, seatedTable("A", "D", 1, true));
-  await leagueRound(tonight, 7, seatedTable("C", "B", 2, false));
+test("a league remembers its own missed nights, not another league's; more smokers still come first", async () => {
+  const leagueRound = (league: number, date: Date, roundNumber: number, table: ReturnType<typeof seatedTable>) =>
+    prisma.round.create({data: {...table, round_number: roundNumber, round_date: date, status: "PUBLISHED", published_at: date, leagueRounds: {create: {league_id: league}}}});
+  // last week in this league C (one smoker) sat at an ordinary table while A had the smoking table: C missed that night
+  await leagueRound(leagueId, lastWeek, 6, seatedTable("A", "B", 1, true));
+  await leagueRound(leagueId, lastWeek, 6, seatedTable("C", "D", 2, false));
+  // last week in the other league E (one smoker) missed a night too: that doesn't count here
+  await leagueRound(otherLeagueId, lastWeek, 3, seatedTable("G", "B", 1, true));
+  await leagueRound(otherLeagueId, lastWeek, 3, seatedTable("E", "F", 2, false));
+  // tonight's Kolo 7 here: A already sat at the smoking table
+  await leagueRound(leagueId, tonight, 7, seatedTable("A", "D", 1, true));
+  await leagueRound(leagueId, tonight, 7, seatedTable("C", "B", 2, false));
+  await leagueRound(leagueId, tonight, 7, seatedTable("E", "F", 3, false));
 
   const smokers = new Map(Object.entries(SMOKERS).filter(([, n]) => n > 0).map(([k, n]) => [id[k], n]));
-  const setup = await smokingSetup(leagueId, [1], smokers);
-  // only tonight's turn counts, not last week's
-  assert.deepEqual(setup.turns, new Map([[id.A, 1]]));
+  const setup = await smokingSetup(leagueId, [1, 2], smokers);
+  assert.deepEqual(setup.records.get(id.A), {turns: 2, tonight: 1, missedNights: 0});
+  assert.deepEqual(setup.records.get(id.C), {turns: 0, tonight: 0, missedNights: 1});
+  // E has nothing in this league: the other league's night isn't counted
+  assert.equal(setup.records.get(id.E), undefined);
 
   const team = (k: string): Team => ({id: id[k], name: k, score: 0, point_difference: 0, played_against: []});
   const pairs: TeamPair[] = [
+    {teamOne: team("E"), teamTwo: team("F")},
     {teamOne: team("C"), teamTwo: team("D")},
     {teamOne: team("A"), teamTwo: team("B")},
   ];
   const [seated] = seatRounds([pairs], setup);
-  // two smokers beat one, though A sat at the smoking table earlier tonight and C went last week without one
   assert.deepEqual(
     seated.map((p) => [nameOf(p.teamOne.id), nameOf(p.teamTwo.id), p.table, p.smoking]),
     [
+      // two smokers come first, though A sat at the smoking table earlier tonight
       ["A", "B", 1, true],
-      ["C", "D", 2, false],
+      // C and E have one smoker each: C missed a night of this league, E only one of the other league
+      ["C", "D", 2, true],
+      ["E", "F", 3, false],
     ]
   );
 
-  // Pušački raspored shows tonight only
+  // Pušački raspored: tonight, and the record in this league
   const plan = await smokingPlan(leagueId);
   assert.deepEqual(
-    plan.teams.map((t) => [nameOf(t.id), t.smokers, t.tonight]),
+    plan.teams.map((t) => [nameOf(t.id), t.smokers, t.tonight, t.smokingRounds, t.rounds, t.missedNights]),
     [
-      ["A", 2, [true]],
-      ["C", 1, [false]],
-      ["E", 1, [null]],
+      ["A", 2, [true], 2, 2, 0],
+      ["C", 1, [false], 0, 2, 1],
+      ["E", 1, [false], 0, 1, 0],
     ]
   );
 });

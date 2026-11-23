@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import {test} from "node:test";
-import {formatSmokingTables, parseSmokingTables, planHeading, roundDotLabel, smokersLabel, smokingSummary, tonightShareText, tonightTitle} from "../ui/smoking";
+import {formatSmokingTables, missedTitle, parseSmokingTables, planHeading, roundDotLabel, shareText, shareTitle, smokersLabel, smokingSummary} from "../ui/smoking";
 
 test("Pušački stolovi card line: off, none picked, no smokers, and counts that agree after 'u'", () => {
   assert.equal(smokingSummary(false, [1, 2], 7, 6), "Isključeno · svi stolovi su nepušački");
@@ -34,16 +34,17 @@ test("smokers under a team name", () => {
   assert.equal(smokersLabel(5), "5 pušača");
 });
 
-test("rotation dots and tonight's share (DECISIONS 100: only tonight counts)", () => {
+test("rotation dots, the share in this league and missed nights (DECISIONS 101)", () => {
   assert.equal(roundDotLabel("Kolo 3", true), "Kolo 3: pušački stol");
   assert.equal(roundDotLabel("Kolo 3", false), "Kolo 3: običan stol");
   assert.equal(roundDotLabel("Skica A", null), "Skica A: nije za stolom");
-  // a round without the team's table doesn't count among its rounds
-  assert.equal(tonightShareText([true, null, false, true]), "2 / 3");
-  assert.equal(tonightShareText([null, null]), "0 / 0");
-  assert.equal(tonightTitle([true, false, true]), "Večeras 2 od 3 kola za pušačkim stolom");
-  assert.equal(tonightTitle([false, null]), "Večeras 0 od 1 kola za pušačkim stolom");
-  assert.equal(tonightTitle([]), "Večeras 0 od 0 kola za pušačkim stolom");
+  assert.equal(shareText(3, 12), "3 / 12");
+  assert.equal(shareText(0, 0), "0 / 0");
+  assert.equal(shareTitle(3, 12), "3 od 12 kola za pušačkim stolom u ovoj ligi");
+  assert.equal(shareTitle(0, 1), "0 od 1 kola za pušačkim stolom u ovoj ligi");
+  assert.equal(missedTitle(1), "1 večer s pušačem, bez pušačkog stola");
+  assert.equal(missedTitle(2), "2 večeri s pušačem, bez pušačkog stola");
+  assert.equal(missedTitle(0), "0 večeri s pušačem, bez pušačkog stola");
 });
 
 test("a tournament's Pušački stolovi as typed: numbers and ranges, in any order, once each", () => {

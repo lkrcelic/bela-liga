@@ -3,7 +3,7 @@
 import {getSmokingPlanAPI} from "@/app/_fetchers/league/smoking";
 import {Slot} from "@/app/_lib/locations";
 import {SmokingPlan, SmokingPlanSide, SmokingPlanTeam} from "@/app/_interfaces/smoking";
-import {planHeading, roundDotLabel, smokersLabel, tonightShareText, tonightTitle} from "@/app/_lib/ui/smoking";
+import {missedTitle, planHeading, roundDotLabel, shareText, shareTitle, smokersLabel} from "@/app/_lib/ui/smoking";
 import {color, font, shadow, tint} from "@/app/_styles/tokens";
 import {buttonBase, ellipsis, ErrorNote, IconTile, LoadingRows, SwitchTrack, tabular} from "@/app/_ui/sp";
 import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
@@ -220,7 +220,7 @@ function PlanSide({side}: {side: SmokingPlanSide}) {
 }
 
 // The rule of _lib/matching/smokingTables.ts in the design's words (Desktop.dc "Kako se biraju stolovi"): the most
-// smokers at the table first, then fewer turns tonight, and every night starts afresh (DECISIONS 100)
+// smokers at the table first, then the missed nights in this league, then fewer turns in it (DECISIONS 100, 101)
 function HowChosen() {
   return (
     <Box sx={{display: "flex", flexDirection: "column", gap: "8px", p: "14px 16px", borderRadius: "16px", background: color.paper, fontSize: 13.5, lineHeight: 1.5, color: color.ink}}>
@@ -230,8 +230,12 @@ function HowChosen() {
         2. U svakom kolu pušačke stolove, redom brojeva, dobivaju mečevi s najviše pušača za stolom (obje ekipe zajedno).
         Ekipa s više pušača ima prednost pred ekipom s manje.
       </div>
-      <div>3. Kod jednakog broja pušača prednost ima meč čije su ekipe večeras manje puta sjedile za pušačkim stolom, pa bolje plasirani.</div>
-      <div>4. Svaka večer kreće ispočetka: ranije večeri se ne broje.</div>
+      <div>
+        3. Kod jednakog broja pušača prednost ima meč s više propuštenih večeri u ovoj ligi (Propušteno). Propuštene večeri
+        ekipe broje se dok večeras ne sjedne za pušački stol.
+      </div>
+      <div>4. Zatim meč čije su ekipe u ovoj ligi manje puta sjedile za pušačkim stolom (Udio), pa bolje plasirani.</div>
+      <div>5. Pamti se samo ova liga: turniri i druge lige se ne broje.</div>
     </Box>
   );
 }
@@ -262,10 +266,10 @@ function TonightDots({team, roundNumbers, roundNames}: {team: SmokingPlanTeam; r
 // The other columns fit their headers, so the team names keep the room at 1024 px.
 const DOT = 14;
 const DOT_GAP = 5;
-const rotationColumns = (rounds: number) => `minmax(0,1fr) 56px ${Math.max(76, rounds * DOT + (rounds - 1) * DOT_GAP)}px 56px`;
+const rotationColumns = (rounds: number) => `minmax(0,1fr) 56px ${Math.max(76, rounds * DOT + (rounds - 1) * DOT_GAP)}px 56px 56px`;
 
-// Every smoking team tonight: smokers, tonight's rounds, and how many of them it sat at a smoking table (the design's
-// columns; Udio counts tonight only, DECISIONS 100)
+// Every smoking team in this league: smokers, tonight, rounds at a smoking table and nights without one. The design's
+// columns, plus Propušteno, which the rule uses (DECISIONS #38, 101).
 function PlanRotation({plan}: {plan: SmokingPlan}) {
   const cell = {display: "flex", alignItems: "center"} as const;
   const columns = rotationColumns(plan.roundNumbers.length);
@@ -280,6 +284,10 @@ function PlanRotation({plan}: {plan: SmokingPlan}) {
         <span role="columnheader">Večeras</span>
         <Box component="span" role="columnheader" sx={{textAlign: "right"}}>
           Udio
+        </Box>
+        {/* the soft hyphen breaks it as "Propu-/šteno" in its narrow column */}
+        <Box component="span" role="columnheader" aria-label="Propušteno" sx={{textAlign: "right", lineHeight: 1.15}}>
+          {"Propu­šteno"}
         </Box>
       </Box>
       <Box role="rowgroup" sx={{flex: 1, minHeight: 0, overflowY: "auto"}}>
@@ -302,8 +310,16 @@ function PlanRotation({plan}: {plan: SmokingPlan}) {
             <Box component="span" role="cell" sx={cell}>
               <TonightDots team={t} roundNumbers={plan.roundNumbers} roundNames={plan.roundNames} />
             </Box>
-            <Box component="span" role="cell" title={tonightTitle(t.tonight)} sx={{textAlign: "right", fontSize: 13.5, fontWeight: 600, color: color.ink2, ...tabular}}>
-              {tonightShareText(t.tonight)}
+            <Box component="span" role="cell" title={shareTitle(t.smokingRounds, t.rounds)} sx={{textAlign: "right", fontSize: 13.5, fontWeight: 600, color: color.ink2, ...tabular}}>
+              {shareText(t.smokingRounds, t.rounds)}
+            </Box>
+            <Box
+              component="span"
+              role="cell"
+              title={missedTitle(t.missedNights)}
+              sx={{textAlign: "right", fontSize: 13.5, fontWeight: 700, color: t.missedNights ? color.red : color.muted, ...tabular}}
+            >
+              {t.missedNights}
             </Box>
           </Box>
         ))}
@@ -319,7 +335,7 @@ function RotationHeading() {
         Rotacija · ekipe s pušačima
       </Box>
       <Box component="span" sx={{fontSize: 12.5, color: color.muted}}>
-        Udio = kola za pušačkim stolom večeras, od kola u kojima je ekipa igrala. Svaka večer kreće ispočetka.
+        Udio = kola za pušačkim stolom u ovoj ligi, uključujući večeras. Propušteno = večeri s pušačem, a bez pušačkog stola.
       </Box>
     </Box>
   );
@@ -385,7 +401,7 @@ export function SmokingPlanOverlay({leagueId, onClose, slot = null}: {leagueId: 
         ) : !plan ? (
           <LoadingRows rows={8} height={46} />
         ) : (
-          // below 1200 px the rotation gets half, so its team names stay readable
+          // below 1200 px the rotation gets half, so its team names stay readable next to the extra Propušteno column
           <Box sx={{flex: 1, minHeight: 0, display: "grid", gridTemplateColumns: {xs: "minmax(0,1fr) minmax(0,1fr)", lg: "minmax(0,1.25fr) minmax(0,1fr)"}, overflow: "hidden"}}>
             <Box sx={{minHeight: 0, overflowY: "auto", p: "18px 22px", display: "flex", flexDirection: "column", gap: "16px", borderRight: `1px solid ${tint.navy[10]}`}}>
               <PlanRounds plan={plan} />
