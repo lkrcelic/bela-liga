@@ -17,8 +17,13 @@ data model, every screen and the design canvas
 [Liga na dvije lokacije](https://claude.ai/code/artifact/e6e7ca8b-5c7f-4f55-b669-5f33a271de57) (option A of each board).
 This plan doesn't repeat them. It says what changes for Bela and how the port runs.
 
-**Status (15.11. evening):** commits A and B built and checked (see Checks and DECISIONS #98); commit C ready on the
-local branch `lokacije-stupci`, not on `development`. Left: the push, the two deploys, and the Treseta side.
+**Status (23.11.):** A and B live since the 16.11. deploy (d77d5cd). C is split in two (found 23.11.): the build
+migrates before `next build`, and the live deployment's Prisma client still selects the three columns (Prisma reads
+every field of a model), so dropping them while it serves breaks every league, night and tournament read (P2022) until
+the new deployment is live, and for good if the build fails after migrating. **C1** (the fields leave
+`schema.prisma`, no migration) is on `development` since 23.11. and goes out with the next deploy. **C2** (the
+migration `locations_drop_text`) waits on the local branch `lokacije-stupci` and goes to `development` once C1 is live.
+Left: C2, and the Treseta side.
 
 ## What comes over as Treseta has it
 
@@ -87,9 +92,15 @@ with the session that owns `e2e/`.
    - **A** `Liga na dvije lokacije (iz Trešete, 0d30eb9)`: the feature, migrations 1 and 2, tests, seed.
    - **B** `DECISIONS #98 i CHANGELOG`: #98 replaces #95 ("Liga na dvije lokacije dolazi u Belu", with the Bela
      changes above), and UX bullets go into CHANGELOG (players / admin / changed).
-   - **C** `Lokacije: stari stupci mjesta odlaze (iz Trešete, 7ae6a7a)`: **held on `feat/lokacije`, not merged into
-     `development`** until A is live on production. A deploy takes all of development's tree, and with C in it the
-     old deployment would select dropped columns until the new one is promoted.
+   - **C** `Lokacije: stari stupci mjesta odlaze (iz Trešete, 7ae6a7a)`, in two commits, each going to `development`
+     only once the one before it is live on production. A deploy takes all of development's tree and migrates before
+     `next build`, while the old deployment keeps serving with its own Prisma client:
+     - **C1** (after A is live): the three fields leave `schema.prisma`, no migration. The columns stay in the
+       database, which Prisma doesn't mind; the client just stops selecting them. Until C2, `prisma migrate diff`
+       shows the three columns, and a local `prisma migrate dev` would make its own drop migration under a Prisma
+       name: don't commit that, C2 keeps Treseta's folder name.
+     - **C2** (after C1 is live): the migration `20261115120000_locations_drop_text`, Treseta's, unchanged. Prisma
+       applies it although newer migrations are already applied.
 
 ## Checks
 
@@ -120,13 +131,19 @@ with the session that owns `e2e/`.
 
 1. Commits A and B: migrations `locations` and `locations_daily_standings`, both additive. Take a `pg_dump` first
    (production-database).
-2. Once that is live: commit C goes to `development`, then a second deploy with `locations_drop_text`.
+2. Once that is live: C1 goes to `development` and out with the next deploy (done 23.11.: on `development`).
+3. Once C1 is live: C2 goes to `development`, then a deploy with `locations_drop_text` (`pg_dump` first: the columns'
+   text is gone after it, though A copied every place into Lokacije). Before it, count on production (read only) the
+   rows of League, LeagueNight and Tournament with `location_name IS NOT NULL AND location_id IS NULL`: the code
+   before A could still write the text columns while A deployed, and such a place would be lost. Any found get a
+   Lokacija first. Pushing C2 also drops the columns on the development database (the Neon copy), where only C1's
+   preview and later ones keep working.
 
 ## Treseta side, after Bela has it
 
 - In `BELA_SYNC.md`, *Lokacije* stops being "Treseta's own" and becomes "once Bela has it, take Bela's", like Vrati
   stol and Uredi ishod.
-- Bela's commits A–C are marked as already in Treseta, so the nightly `bela-nightly-sync` skips them instead of
+- Bela's commits A, B, C1 and C2 are marked as already in Treseta, so the nightly `bela-nightly-sync` skips them instead of
   stopping on them. This has to happen **before** A reaches Bela's master.
 - If Treseta changes `feat/locations` before merging it, those follow-ups are ported the same way.
 
