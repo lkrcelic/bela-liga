@@ -34,7 +34,7 @@ async function publish(api: APIRequestContext, id: number, n: number) {
 // a 1080p TV as an Android TV browser gives it to the page (devicePixelRatio 2)
 const TV = {width: 960, height: 540};
 
-test("Kolo preko cijelog ekrana stays open when the page narrows to a TV's 960 px, as a TV browser's full screen does, and after a reload", async ({as, own, healthy}) => {
+test("Kolo preko cijelog ekrana stays open and fills the screen when the page narrows to a TV's 960 px, as a TV browser's full screen does, and after a reload", async ({as, own, healthy}) => {
   const t = await own({teams: 4, kolo1: true});
   const page = await as("organizer");
   await page.goto(`/turniri/${t.id}/upravljanje?view=kola&kolo=1`);
@@ -51,6 +51,12 @@ test("Kolo preko cijelog ekrana stays open when the page narrows to a TV's 960 p
   await page.evaluate(() => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))));
   await expect(tables).toBeVisible();
   await expect(standings).toBeVisible();
+  // shrunk to the TV, the view fills its screen and no more: with four teams the cards still reach down to the view's
+  // bottom padding (24 px of the 1440 px layout, 16 on 960), not only as far as their rows, and don't spill past it
+  const card = await standings.boundingBox();
+  const bottom = card ? Math.round(card.y + card.height) : 0;
+  expect(bottom, "the bottom of Poredak on the TV's 540 px").toBeGreaterThanOrEqual(TV.height - 16 - 1);
+  expect(bottom, "the bottom of Poredak on the TV's 540 px").toBeLessThanOrEqual(TV.height - 16 + 1);
 
   // a TV browser that loads the page again gets the view back, at 960 px too
   await page.reload();

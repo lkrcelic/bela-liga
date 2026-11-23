@@ -127,7 +127,7 @@ komentarom `// BUG:`: test opisuje kako bi trebalo biti, a prolazi dok greška p
 | Isključi ekipu / Vrati | organizator | `turniri/c7-dan-turnira.spec.ts` › once their tournament has started the organizer takes a team out… |
 | Uredi ishod preskočenog stola | organizator | `turniri/c7-dan-turnira.spec.ts` › a table skipped at 10 minutes gets the organizer's Uredi ishod… |
 | Vrati stol | organizator | `turniri/c7-dan-turnira.spec.ts` › Vrati stol puts the organizer's skipped table back in play… |
-| Kolo preko cijelog ekrana (ekran u klubu, i TV od 960 px) | organizator | `turniri/c7-kolo-ekran.racunalo.spec.ts` › Kolo preko cijelog ekrana stays open when the page narrows to a TV's 960 px… |
+| Kolo preko cijelog ekrana (ekran u klubu, i TV od 960 px) | organizator | `turniri/c7-kolo-ekran.racunalo.spec.ts` › Kolo preko cijelog ekrana stays open and fills the screen when the page narrows to a TV's 960 px… |
 | Kolo preko cijelog ekrana prati turnir: sljedeće kolo čim je objavljeno | organizator | `turniri/c7-kolo-ekran.racunalo.spec.ts` › Kolo preko cijelog ekrana moves on to Kolo 2 by itself once it is out… |
 | Objava novog kola prebacuje odabrani tab Kola na to kolo, i s Poretka (skica ne) | organizator | `turniri/c7-kolo-ekran.racunalo.spec.ts` › a Kolo published takes the Kola tab picked on another Kolo to it, also from Poredak… |
 | Strelice u Kolu preko cijelog ekrana (kroz objavljena kola; nova objava i dalje preuzima ekran) | organizator | `turniri/c7-kolo-ekran.racunalo.spec.ts` › the arrows of Kolo preko cijelog ekrana go through the Kolos out… |

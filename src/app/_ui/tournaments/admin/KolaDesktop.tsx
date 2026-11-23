@@ -634,6 +634,9 @@ export function KoloFullscreen({t, onClose}: {t: AdminTournament; onClose: (kolo
         sx={{
           width: `${100 / scale}%`,
           height: `${100 / scale}%`,
+          // the dialog's paper is a flex column: without this the box shrinks to its rows and, scaled, leaves the bottom
+          // of the screen empty
+          flex: "none",
           display: "flex",
           flexDirection: "column",
           ...(scale < 1 && {transform: `scale(${scale})`, transformOrigin: "0 0"}),
