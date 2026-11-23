@@ -161,7 +161,8 @@ export function tonightState(tables: TonightTable[], rounds = 0): TonightState {
   const all = Math.max(rounds, numbers.length);
   const current = numbers.find((n) => tables.some((t) => t.round === n && !t.done));
   if (current == null) return {kind: "finished", rounds: all};
-  const round = tables.filter((t) => t.round === current);
+  // the bye has no table (#54): settled from the start, it would count as one more table done before anyone plays
+  const round = tables.filter((t) => t.round === current && !t.bye);
   return {
     kind: "playing",
     round: current,
@@ -169,7 +170,7 @@ export function tonightState(tables: TonightTable[], rounds = 0): TonightState {
     rounds: all,
     done: round.filter((t) => t.done).length,
     tables: round.length,
-    started: round.some((t) => !t.bye && (t.started || t.done)),
+    started: round.some((t) => t.started || t.done),
   };
 }
 

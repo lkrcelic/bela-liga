@@ -2,6 +2,16 @@
 
 What the commits changed for the people using the app, newest first. The reasons and details are in DECISIONS.md.
 
+## 24.11.2026 · Slobodna runda nije stol
+
+On development, not live yet (#54).
+
+### Admin
+- S neparnim brojem ekipa **Skica kola**, **Dnevni poredak** i **Večer lige** broje samo prave stolove, kao Novo kolo (25 ekipa: **12 stolova**). Slobodna runda u Skici nema broj stola ("–"), kao "Bez stola" u Dnevnom poretku.
+
+### Changed
+- Dosad se slobodna runda brojala kao stol: Skica je pisala "13 stolova" i "Stol 13", a Večer lige "1 / 13 stolova završeno" prije prve igre.
+
 ## 24.11.2026 · Nova slika odmah i u Mojim ekipama
 
 On development, not live yet (#80).

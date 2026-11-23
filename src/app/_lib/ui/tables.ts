@@ -149,6 +149,12 @@ export function splitColumns<T>(rows: T[], n: number): T[][] {
   return Array.from({length: cols}, (_, c) => rows.slice(c * height, (c + 1) * height));
 }
 
+// Number of real tables, for "N stolova": the bye ("Bez stola", settled 2:0) has no table, so 25 teams make 12 stolova,
+// as Novo kolo promises (#54)
+export function tableCount(rows: {bye: boolean}[]): number {
+  return rows.filter((r) => !r.bye).length;
+}
+
 // Number of live tables, for the LIVE pill and the "30 stolova · 6 uživo" summary
 export function liveCount(rows: {live: boolean}[]): number {
   return rows.filter((r) => r.live).length;

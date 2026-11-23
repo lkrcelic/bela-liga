@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import {test} from "node:test";
 import {count, displayDate, initials, loadMoreLabel, matchesQuery, NOUN, plural, weekdayDate} from "../ui/text";
 import {highlightParam, rankTone, splitPodium, standingsTeamHref, statsLine, statsParts, toStandingsRows} from "../ui/standings";
-import {filterTables, liveCount, splitColumns, tableColumns, toTableRows} from "../ui/tables";
+import {draftTableRows, filterTables, liveCount, splitColumns, tableColumns, tableCount, toTableRows} from "../ui/tables";
 import {BYE_TEAM_ID, teamLabel} from "../bye";
 
 test("initials from full names, usernames and empty values", () => {
@@ -262,4 +262,18 @@ test("a place's tone: playing beats mine, mine beats the top three, and Rejting 
   // Rejting: the first places look like the rest, the player's own row is still navy
   assert.equal(rankTone(row(1), {teams: false}), "plain");
   assert.equal(rankTone(row(1, false, true), {teams: false}), "me");
+});
+
+test("the bye is no table: Skica and Dnevni poredak count only the real tables, as Novo kolo does (#54)", () => {
+  // 25 teams: 12 tables and the bye, "12 stolova" everywhere
+  const tables = Array.from({length: 12}, (_, i) => ({id: i + 1, table: i + 1, smoking: false, team1: {id: 2 * i + 1, name: `E${2 * i + 1}`}, team2: {id: 2 * i + 2, name: `E${2 * i + 2}`}}));
+  const bye = {id: 13, table: 13, smoking: false, team1: {id: 25, name: "E25"}, team2: {id: BYE_TEAM_ID, name: "Bye"}};
+  const rows = draftTableRows({roundNumber: 1, letter: "A", status: "DRAFT", publishedAt: null, id: 1, tables: [...tables, bye]});
+  assert.equal(rows.length, 13);
+  assert.equal(tableCount(rows), 12);
+  assert.equal(count(tableCount(rows), NOUN.stol), "12 stolova");
+  // a published round with its bye, as Dnevni poredak reads it
+  const published = toTableRows([...rounds, {id: 14, table_number: 5, team1_id: 9, team2_id: BYE_TEAM_ID, team1: {team_name: "Slavonci"}, team2: {team_name: "Bye"}, team1_wins: 2, team2_wins: 0, active: false, open: false}]);
+  assert.equal(published.length, 5);
+  assert.equal(tableCount(published), 4);
 });

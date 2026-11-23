@@ -6,7 +6,7 @@ import useNightDraft from "@/app/_hooks/useNightDraft";
 import {DraftRound} from "@/app/_interfaces/round";
 import {isByeTeam} from "@/app/_lib/bye";
 import {draftCounts, publishedAtLabel, publishLabel, publishNote, roundName, RoundStatus} from "@/app/_lib/roundStatus";
-import {draftTableRows} from "@/app/_lib/ui/tables";
+import {draftTableRows, tableCount} from "@/app/_lib/ui/tables";
 import {nightMeetings, repeatedTables} from "@/app/_lib/tableSeats";
 import {ConfirmRemove, EditToggle, NewTableButton, PairDialog, RepeatedPairsNote, RowActions, useTableEdits} from "@/app/league/[leagueId]/daily-standings/ui/RoundEditing";
 import {count, NOUN, weekdayDate} from "@/app/_lib/ui/text";
@@ -331,7 +331,7 @@ function RoundCard({
           {look.label}
         </StatusTag>
         <Box component="span" sx={{flex: 1, minWidth: 0, fontSize: 14, color: color.muted, whiteSpace: "nowrap"}}>
-          {count(round.tables.length, NOUN.stol)}
+          {count(tableCount(rows), NOUN.stol)}
         </Box>
         {editable && editing && <NewTableButton onClick={() => edits.setPair({kind: "new", tableNumber: rows.reduce((m, r) => Math.max(m, r.table), 0) + 1})} />}
         {editable && <EditToggle editing={editing} onClick={toggleEdit} />}
@@ -352,7 +352,7 @@ function RoundCard({
       ) : (
         <Box
           component="ul"
-          aria-label={`${name}: ${count(rows.length, NOUN.stol)}`}
+          aria-label={`${name}: ${count(tableCount(rows), NOUN.stol)}`}
           // two columns of tables; under 1280 px wide one, so the teams' names fit
           sx={{listStyle: "none", m: 0, p: 0, flex: 1, minHeight: 0, overflowY: "auto", display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,1fr)", [NARROW_DESKTOP]: {gridTemplateColumns: "minmax(0,1fr)"}, alignContent: "start", columnGap: "1px", background: color.divider}}
         >
@@ -380,9 +380,10 @@ function RoundCard({
               >
                 <Box component="span" sx={{width: 34, height: 34, borderRadius: "10px", background: color.paper, color: color.navy, fontSize: 14, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center", fontVariantNumeric: "tabular-nums"}}>
                   <Box component="span" sx={{position: "absolute", width: "1px", height: "1px", overflow: "hidden", clip: "rect(0,0,0,0)"}}>
-                    Stol{" "}
+                    {t.bye ? "Bez stola" : "Stol "}
                   </Box>
-                  {t.table}
+                  {/* the bye has no table: no number, as Dnevni poredak's "Bez stola" (#54) */}
+                  {t.bye ? "–" : t.table}
                 </Box>
                 <Box component="span" sx={{textAlign: "right", fontSize: 16, fontWeight: 600, ...ellipsis, ...(isByeTeam(t.teamAId) && {color: color.muted})}}>
                   {t.teamA}

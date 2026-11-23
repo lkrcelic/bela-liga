@@ -20,7 +20,7 @@ import useAuthStore from "@/app/_store/authStore";
 import {useDailyData, useRoundDates} from "@/app/_hooks/useStandings";
 import {leagueNightString} from "@/app/_lib/dates";
 import {highlightParam, splitPodium, standingsTeamHref, toStandingsRows} from "@/app/_lib/ui/standings";
-import {filterTables, liveCount, splitColumns, TableFilter, tableColumns, TableRow, toTableRows} from "@/app/_lib/ui/tables";
+import {filterTables, liveCount, splitColumns, TableFilter, tableColumns, tableCount, TableRow, toTableRows} from "@/app/_lib/ui/tables";
 import {count, displayDate, NOUN} from "@/app/_lib/ui/text";
 import {color, font, shadow} from "@/app/_styles/tokens";
 import {
@@ -324,7 +324,7 @@ export default function DailyStandings() {
             ))}
             {!placeSections && (
               <PhoneRoundTables
-                title={`Kolo ${tab}${placeName ? ` · ${placeName}` : ""}${adminPhone ? ` · ${count(roundRows.length, NOUN.stol)}` : ""}`}
+                title={`Kolo ${tab}${placeName ? ` · ${placeName}` : ""}${adminPhone ? ` · ${count(tableCount(roundRows), NOUN.stol)}` : ""}`}
                 rows={roundRows}
                 tableTarget={signedIn ? (t) => phoneTableTarget(t, {leagueId, adminPhone, openTable, startGame: game.start}) : undefined}
                 teamHref={signedIn ? (id) => `/teams/${id}` : undefined}
@@ -555,7 +555,7 @@ function DesktopRound({title, rows, admin}: {title: string; rows: ReturnType<typ
             {title}
           </Box>
           <Box sx={{fontSize: 16, color: color.ink2, fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap"}}>
-            {count(rows.length, NOUN.stol)} · {live} uživo
+            {count(tableCount(rows), NOUN.stol)} · {live} uživo
           </Box>
         </Box>
         <Box sx={{display: "flex", alignItems: "center", gap: "10px"}}>
@@ -679,7 +679,7 @@ function DesktopRoundSections({title, sections, tableHref}: {title: string; sect
           {title}
         </Box>
         <Box sx={{fontSize: 16, color: color.ink2, fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap"}}>
-          {count(all.length, NOUN.stol)} · {liveCount(all)} uživo
+          {count(tableCount(all), NOUN.stol)} · {liveCount(all)} uživo
         </Box>
       </Box>
       <Card sx={{flex: 1, minHeight: 0, overflowY: "auto", scrollbarGutter: "stable", borderRadius: "22px"}}>
@@ -692,7 +692,7 @@ function DesktopRoundSections({title, sections, tableHref}: {title: string; sect
                   {sec.title}
                 </Box>
                 <Box component="span" sx={{fontSize: 13.5, color: color.muted}}>
-                  · {count(sec.rows.length, NOUN.stol)} · {liveCount(sec.rows)} uživo
+                  · {count(tableCount(sec.rows), NOUN.stol)} · {liveCount(sec.rows)} uživo
                 </Box>
               </Box>
               <Box sx={{display: "grid", gridTemplateColumns: `repeat(${cols}, minmax(0,1fr))`, columnGap: "16px"}}>

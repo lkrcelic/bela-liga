@@ -12,7 +12,7 @@ import {DraftPlace} from "@/app/league/[leagueId]/manage/DraftView";
 import {DraftRound} from "@/app/_interfaces/round";
 import {nightLabel} from "@/app/_lib/nights";
 import {draftCounts, publishedTimeLabel, publishLabel, publishNote, roundName, RoundStatus} from "@/app/_lib/roundStatus";
-import {draftTableRows, TableRow} from "@/app/_lib/ui/tables";
+import {draftTableRows, tableCount, TableRow} from "@/app/_lib/ui/tables";
 import {nightMeetings, repeatedTables} from "@/app/_lib/tableSeats";
 import {isByeTeam} from "@/app/_lib/bye";
 import {count, NOUN} from "@/app/_lib/ui/text";
@@ -155,7 +155,7 @@ function DraftPhoneAt({leagueId, date, place, placeSwitch, onChanged}: {leagueId
           <Box sx={{flex: "none", display: "flex", alignItems: "center", gap: "10px", minHeight: 44}}>
             <StatusPill status={round.status} />
             <Box component="span" sx={{flex: 1, minWidth: 0, fontSize: 15, color: color.ink2, whiteSpace: "nowrap"}}>
-              {count(round.tables.length, NOUN.stol)}
+              {count(tableCount(rows), NOUN.stol)}
             </Box>
             {editable && !editing && <ApproveButton approved={round.status === "APPROVED"} onClick={() => d.toggleApproval(round)} name={roundName(round)} />}
           </Box>
@@ -182,7 +182,7 @@ function DraftPhoneAt({leagueId, date, place, placeSwitch, onChanged}: {leagueId
               <>
                 {edits.actionError && <ErrorNote>{edits.actionError}</ErrorNote>}
                 <PhoneRoundTables
-                  title={`${roundName(round)} · ${count(rows.length, NOUN.stol)}`}
+                  title={`${roundName(round)} · ${count(tableCount(rows), NOUN.stol)}`}
                   rows={rows}
                   draft
                   fresh={edits.freshTable}
@@ -300,7 +300,8 @@ export function DraftTableList({rows, label}: {rows: TableRow[]; label: string})
           }}
         >
           <Box component="span" sx={{width: 36, height: 36, borderRadius: "10px", background: color.lineFill, color: color.navy, fontSize: 14, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center", ...tabular}}>
-            {t.table}
+            {/* the bye has no table: no number, as Dnevni poredak's "Bez stola" (#54) */}
+            {t.bye ? "–" : t.table}
           </Box>
           <Box component="span" sx={{fontSize: 15.5, fontWeight: 600, textAlign: "right", ...twoLines, ...(isByeTeam(t.teamAId) && {color: color.muted})}}>
             {t.teamA}
