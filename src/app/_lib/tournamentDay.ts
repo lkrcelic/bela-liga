@@ -26,7 +26,7 @@ export function tournamentTimesErrors(gathering: string | null | undefined, star
   return e;
 }
 
-// The days a tournament can be played on now (as stored, UTC midnight): the calendar day, and until 06:00 also the
+// The days a tournament can be played on now (as stored, UTC midnight): the calendar day, and until 08:00 also the
 // league night before, so a tournament that runs past midnight keeps its clock
 export function tournamentDays(now: Date = new Date()): Date[] {
   return Array.from(new Set([leagueDateString(now), leagueNightString(now)])).map((d) => new Date(`${d}T00:00:00.000Z`));

@@ -80,7 +80,7 @@ export default function RasporedPage() {
   const router = useTransitionRouter();
   const isDesktop = useIsDesktop();
   const params = useSearchParams();
-  // the night being played (until 06:00 still last evening's), so tonight's pill is Večeras and not Odigrano (#19)
+  // the night being played (until 08:00 still last evening's), so tonight's pill is Večeras and not Odigrano (#19)
   const today = leagueNightString();
   const {schedule, error, reload} = useMySchedule();
   const leagues = useLeagues();

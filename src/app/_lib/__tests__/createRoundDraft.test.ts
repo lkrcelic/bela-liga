@@ -14,17 +14,18 @@ const teams = [
   {id: 3, active: false},
 ];
 
-test("the night: Zagreb time, and until 06:00 still the night before", () => {
+test("the night: Zagreb time, and until 08:00 still the night before (DECISIONS #104)", () => {
   // 21:00 in Zagreb (summer time, UTC+2)
   assert.equal(leagueNightString(new Date("2026-10-14T19:00:00Z")), "2026-10-14");
-  // 01:30 and 05:59 the next morning
+  // 01:30, 06:30 and 07:59 the next morning
   assert.equal(leagueNightString(new Date("2026-10-14T23:30:00Z")), "2026-10-14");
-  assert.equal(leagueNightString(new Date("2026-10-15T03:59:00Z")), "2026-10-14");
-  // 06:00
-  assert.equal(leagueNightString(new Date("2026-10-15T04:00:00Z")), "2026-10-15");
-  // winter time (UTC+1): 05:30 is still the night before, 06:30 is the new day
-  assert.equal(leagueNightString(new Date("2026-12-02T04:30:00Z")), "2026-12-01");
-  assert.equal(leagueNightString(new Date("2026-12-02T05:30:00Z")), "2026-12-02");
+  assert.equal(leagueNightString(new Date("2026-10-15T04:30:00Z")), "2026-10-14");
+  assert.equal(leagueNightString(new Date("2026-10-15T05:59:00Z")), "2026-10-14");
+  // 08:00
+  assert.equal(leagueNightString(new Date("2026-10-15T06:00:00Z")), "2026-10-15");
+  // winter time (UTC+1): 07:30 is still the night before, 08:30 is the new day
+  assert.equal(leagueNightString(new Date("2026-12-02T06:30:00Z")), "2026-12-01");
+  assert.equal(leagueNightString(new Date("2026-12-02T07:30:00Z")), "2026-12-02");
   // as a round's round_date is stored
   assert.equal(leagueNight(new Date("2026-10-14T23:30:00Z")).toISOString(), "2026-10-14T00:00:00.000Z");
 });

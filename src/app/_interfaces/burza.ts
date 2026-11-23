@@ -138,7 +138,7 @@ export type MyLeague = {
   // Potvrda dolaska tonight (Tu smo on Početna · Večeras); absent when the league doesn't play tonight with a start time
   arrival?: MyLeagueArrival;
   // the team's evening so far at its place, for Početna's cards (Sljedeći stol, Pauza, Kraj večeri); absent when the
-  // league doesn't play tonight (until 06:00 the evening's night)
+  // league doesn't play tonight (until 08:00 the evening's night)
   tonight?: MyLeagueTonight;
 };
 

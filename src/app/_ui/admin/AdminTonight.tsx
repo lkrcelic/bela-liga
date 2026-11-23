@@ -46,7 +46,7 @@ export default function AdminTonight() {
   const leagueId = useSelectedLeagueId();
   const leagues = useLeagues(leagueId ?? undefined);
   const league = leagues.find((l) => l.id === leagueId);
-  // the night Novo kolo is for: until 06:00 it is still the evening before
+  // the night Novo kolo is for: until 08:00 it is still the evening before
   const tonight = useMemo(() => leagueNightString(), []);
   const {nights} = useLeagueNights(leagueId);
   const daily = useDailyData(leagueId, leagueId != null ? tonight : null);

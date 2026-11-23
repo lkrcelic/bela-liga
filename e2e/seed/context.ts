@@ -27,7 +27,7 @@ export type Catalog = {
 export type Ctx = {
   prisma: typeof prisma;
   rng: Rng;
-  // the moment the world is built for; "tonight" and "today" follow the app's own rules (06:00 for league nights)
+  // the moment the world is built for; "tonight" and "today" follow the app's own rules (08:00 for league nights)
   now: Date;
   tonight: Date; // league night at UTC midnight, as Round.round_date stores it
   tonightString: string;

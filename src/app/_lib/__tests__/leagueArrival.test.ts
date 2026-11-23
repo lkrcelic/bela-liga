@@ -5,17 +5,20 @@ import {playBanChip, playBanRefusal, playBanText} from "@/app/_lib/bans";
 
 // Potvrda dolaska in the league: the window, what each button does, and how a ban that keeps a team from playing reads
 
-test("Tu smo opens half an hour before the night's start and holds until 06:00 the next morning", () => {
+test("Tu smo opens half an hour before the night's start and holds until 08:00 the next morning (DECISIONS #104)", () => {
   const w = leagueArrivalWindow("2026-11-04", "20:00")!;
   assert.equal(w.opens.toISOString(), "2026-11-04T18:30:00.000Z");
   assert.equal(w.start.toISOString(), "2026-11-04T19:00:00.000Z");
-  assert.equal(w.closes.toISOString(), "2026-11-05T05:00:00.000Z");
+  assert.equal(w.closes.toISOString(), "2026-11-05T07:00:00.000Z");
   assert.equal(leagueArrivalPhase(w, new Date("2026-11-04T18:00:00Z")), "before");
   assert.equal(leagueArrivalPhase(w, new Date("2026-11-04T18:30:00Z")), "open");
   assert.equal(leagueArrivalPhase(w, new Date("2026-11-04T19:00:00Z")), "started");
   // past midnight the night is still on
   assert.equal(leagueArrivalPhase(w, new Date("2026-11-05T01:30:00Z")), "started");
-  assert.equal(leagueArrivalPhase(w, new Date("2026-11-05T05:00:00Z")), "over");
+  // 06:30 and 07:59 in Zagreb (winter time, UTC+1) still the night; 08:00 it is over
+  assert.equal(leagueArrivalPhase(w, new Date("2026-11-05T05:30:00Z")), "started");
+  assert.equal(leagueArrivalPhase(w, new Date("2026-11-05T06:59:00Z")), "started");
+  assert.equal(leagueArrivalPhase(w, new Date("2026-11-05T07:00:00Z")), "over");
   // the screens get the times as ISO strings
   assert.equal(leagueArrivalPhase({opens: w.opens.toISOString(), start: w.start.toISOString(), closes: w.closes.toISOString()}, new Date("2026-11-04T18:45:00Z")), "open");
   // summer time: 19:30 in Zagreb is 17:30 UTC

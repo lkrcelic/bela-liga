@@ -12,7 +12,7 @@ export type HomeCard = "table" | "end" | "bye" | "next" | "night" | "none";
 
 // The team's evening so far, at its place; null when its league doesn't play tonight
 export type TonightTeam = {
-  // the night has started (the arrival window's "started"; until 06:00 the next day)
+  // the night has started (the arrival window's "started"; until 08:00 the next day)
   started: boolean;
   // the team confirmed Tu smo and hasn't left
   here: boolean;

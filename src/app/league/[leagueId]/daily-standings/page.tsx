@@ -108,7 +108,7 @@ export default function DailyStandings() {
   const [pickedPlace, setPlace] = useLocationFilter(leagueId);
   const place = nightPlaces ? pickedPlace : null;
   const daily = useDailyData(leagueId, date || null, place);
-  // tonight's night lasts until 06:00, so a night that runs past midnight is still "večeras" with no medals yet
+  // tonight's night lasts until 08:00, so a night that runs past midnight is still "večeras" with no medals yet
   const today = leagueNightString();
   const isToday = date === today;
 

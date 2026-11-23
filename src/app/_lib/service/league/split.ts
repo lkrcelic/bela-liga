@@ -59,7 +59,7 @@ export async function nightSplit(leagueId: number, date: string, db: Db = prisma
 }
 
 // Moves teams on a night's Podjela (slot null: back to Neraspoređene). Only a two-place night that isn't over (tonight
-// until 06:00 counts). Returns the Podjela as saved and a warning for every team that left a place where it is in a
+// until 08:00 counts). Returns the Podjela as saved and a warning for every team that left a place where it is in a
 // Skica; null when the league doesn't have that night.
 export async function setNightSplit(leagueId: number, date: string, moves: SplitMove[]): Promise<SplitResult | null> {
   const night = nightValue(date);

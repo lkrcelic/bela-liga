@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import {test} from "node:test";
 import {leagueClock, leagueMoment} from "@/app/_lib/dates";
-import {admittedFromWaiting, arrivalPhase, arrivalWindow, DayEntry, hasRoom, koloTeams, noShowStep, noShowTimes, startSwitch, tournamentTimesErrors} from "@/app/_lib/tournamentDay";
+import {admittedFromWaiting, arrivalPhase, arrivalWindow, DayEntry, hasRoom, isTournamentDay, koloTeams, noShowStep, noShowTimes, startSwitch, tournamentTimesErrors} from "@/app/_lib/tournamentDay";
 import {addToDay, banActive, banDay, banDaysLeft, banUntil, untilLabel} from "@/app/_lib/bans";
 import {tableState, StateTable} from "@/app/_lib/tableState";
 
@@ -27,6 +27,17 @@ test("league time: a wall clock in Zagreb in winter and in summer", () => {
   // the night the clocks go back (25. 10. 2026): 01:30 is still summer time
   assert.equal(leagueMoment("2026-10-25", "01:30").toISOString(), "2026-10-24T23:30:00.000Z");
   assert.equal(leagueClock(new Date("2026-10-31T08:43:00Z")), "9:43");
+});
+
+test("a tournament played past midnight keeps its day until 08:00 the next morning (DECISIONS #104)", () => {
+  const saturday = new Date("2026-11-21T00:00:00.000Z");
+  // 23:30, 02:00 and 07:59 in Zagreb (winter time, UTC+1)
+  assert.equal(isTournamentDay(saturday, new Date("2026-11-21T22:30:00Z")), true);
+  assert.equal(isTournamentDay(saturday, new Date("2026-11-22T01:00:00Z")), true);
+  assert.equal(isTournamentDay(saturday, new Date("2026-11-22T06:59:00Z")), true);
+  // 08:00: Sunday only
+  assert.equal(isTournamentDay(saturday, new Date("2026-11-22T07:00:00Z")), false);
+  assert.equal(isTournamentDay(new Date("2026-11-22T00:00:00.000Z"), new Date("2026-11-22T07:00:00Z")), true);
 });
 
 test("Tu smo opens at Okupljanje and closes at Početak; without Okupljanje half an hour before", () => {

@@ -270,7 +270,7 @@ export const test = base.extend<Fixtures>({
     await use({
       make: async (spec, by = a) => {
         // a tournament of today opens Potvrda dolaska at 23:58 and starts at 23:59 (request()), and from then until
-        // 06:00 its clock makes every team not marked here inactive: too late to begin a test on one
+        // 08:00 its clock makes every team not marked here inactive: too late to begin a test on one
         const now = new Intl.DateTimeFormat("en-GB", {timeZone: "Europe/Zagreb", hour: "2-digit", minute: "2-digit", hourCycle: "h23"}).format(new Date());
         base.info().skip(spec.date === day() && now >= "23:50", "after 23:50 a tournament of today reaches its start while the test runs");
         const body = request(spec);

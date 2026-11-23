@@ -21,7 +21,7 @@ const LOCATION = {location: LOCATION_SELECT} as const;
 // leagues whose season is over come last.
 export async function mySchedule(viewer: Viewer): Promise<MySchedule> {
   const playerId = viewer.id;
-  // the night being played, not the calendar day: until 06:00 tonight's night is still the next one, so Raspored and
+  // the night being played, not the calendar day: until 08:00 tonight's night is still the next one, so Raspored and
   // Početna say "Večeras" while its rounds are played instead of "Odigrano" and next week's date (#19)
   const today = leagueNightString();
   const teams = await prisma.team.findMany({

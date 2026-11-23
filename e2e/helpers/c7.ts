@@ -2,6 +2,7 @@
 // tournaments.finishedNoDeclarations) are put back by each test; a tournament of today, for the day's flows (arrival,
 // Kolo 1, a skipped table), is made by the test itself through the organizer's own routes (Novi turnir, Dodaj ekipu,
 // Označi dolazak, Prijave, Složi Kolo, Objavi) and removed afterwards, so --repeat-each always starts from the same point.
+import {NIGHT_ENDS_AT_HOUR} from "@/app/_lib/dates";
 import {expect, type APIRequestContext} from "@playwright/test";
 import {CRON_HEADERS, type Db} from "./db";
 import {test as base} from "./fixtures";
@@ -48,7 +49,7 @@ export const test = base.extend<C7>({
     await removeOwnTournaments(db);
     await use((options) => {
       // the tournament is today's and starts at 23:59 (Potvrda dolaska from 23:58, or all day with arrival), and from
-      // then until 06:00 its clock makes every team not marked here inactive: too late to begin a test on one
+      // then until 08:00 its clock makes every team not marked here inactive: too late to begin a test on one
       const now = new Intl.DateTimeFormat("en-GB", {timeZone: "Europe/Zagreb", hour: "2-digit", minute: "2-digit", hourCycle: "h23"}).format(new Date());
       base.info().skip(now >= "23:50", "after 23:50 a tournament of today reaches its start while the test runs");
       return makeOwnTournament(organizer, db, options);
@@ -64,9 +65,9 @@ export function todayInZagreb(now = new Date()): string {
   return new Intl.DateTimeFormat("en-CA", {timeZone: "Europe/Zagreb", year: "numeric", month: "2-digit", day: "2-digit"}).format(now);
 }
 
-// The league night (before 06:00 still the evening before), as a league round's round_date
+// The league night (before 08:00 still the evening before), as a league round's round_date
 function tonightInZagreb(now = new Date()): string {
-  return todayInZagreb(new Date(now.getTime() - 6 * 60 * 60_000));
+  return todayInZagreb(new Date(now.getTime() - NIGHT_ENDS_AT_HOUR * 60 * 60_000));
 }
 
 const day = (iso: string) => new Date(`${iso}T00:00:00.000Z`);

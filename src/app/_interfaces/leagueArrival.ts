@@ -17,7 +17,7 @@ export type LeagueArrivalView = {
   left_by_admin: boolean;
 };
 
-// Tonight's window (ISO): Tu smo from opens, the night's start, and the night's end at 06:00
+// Tonight's window (ISO): Tu smo from opens, the night's start, and the night's end at 08:00
 export type LeagueArrivalTimes = {opens: string; start: string; closes: string};
 
 // The player's team on Početna · Večeras: the window, its arrival (null: it hasn't come) and the ban that keeps it from

@@ -3,7 +3,7 @@
 //   random, the rest Swiss by the tournament standings, a bye for an odd number, and in the bigger one a Kolo 1
 //   no-show with its automatic one-month ban, exactly the rows the app leaves behind.
 // - Today's are made through the app's services: one live (Kolo 1 played, Kolo 2 with a no-show, a skipped table the
-//   admin gave to a team, a finished table and one being played; dated at the league night, so before 06:00 it is
+//   admin gave to a team, a finished table and one being played; dated at the league night, so before 08:00 it is
 //   yesterday's), one in its arrival window, one ready for Kolo 1.
 import type {Team} from "@prisma/client";
 import {BYE_TEAM_ID} from "@/app/_lib/bye";
@@ -253,7 +253,7 @@ export async function seedTodayTournaments(ctx: Ctx, people: People, pool: TeamP
   reserve(adminTeam);
 
   // --- live: started an hour ago, Kolo 1 played, Kolo 2 in every table state
-  // Dated at the league night, like a tournament still played after midnight: until 06:00 that is yesterday. The admin's
+  // Dated at the league night, like a tournament still played after midnight: until 08:00 that is yesterday. The admin's
   // corrections reopen a table only on that night (reopenCheck in hands.ts), and Uživo calls it Jučer. When an hour ago
   // is already past the night's midnight, it started at 23:59, with Okupljanje half an hour before (DECISIONS #99)
   const night = ctx.tonightString;

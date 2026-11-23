@@ -74,7 +74,7 @@ type ViewContext = StatusContext & {
 };
 
 // today and the nights from today on of the substitute ads' leagues: what postStatus needs.
-// "today" is the league night being played (until 06:00 still last evening's), so an ad for tonight stays up while the
+// "today" is the league night being played (until 08:00 still last evening's), so an ad for tonight stays up while the
 // night's rounds are played instead of expiring at midnight (#19).
 async function statusContext(db: Tx, posts: {kind: BurzaKind; league_id: number | null}[]): Promise<StatusContext> {
   const today = leagueNightString();

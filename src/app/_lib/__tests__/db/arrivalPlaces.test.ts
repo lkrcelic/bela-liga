@@ -19,7 +19,7 @@ const viewer = (name: keyof typeof teams) => ({id: players[name], player_role: "
 
 before(async () => {
   for (const name of ["Kartaš", "Lanterna"]) places.push((await prisma.location.create({data: {name: `${tag} ${name}`}})).location_id);
-  // "00:00" on tonight's night: the night has started and Tu smo works until 06:00, whenever the test runs
+  // "00:00" on tonight's night: the night has started and Tu smo works until 08:00, whenever the test runs
   const league = await prisma.league.create({data: {league_name: `${tag} liga`, location_id: places[0], start_time: "00:00", rounds_per_night: 2}});
   leagueId = league.league_id;
   await prisma.leagueNight.create({data: {league_id: leagueId, night: tonight, second_location_id: places[1]}});

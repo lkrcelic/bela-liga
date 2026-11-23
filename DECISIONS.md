@@ -2206,6 +2206,31 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
       clears that, and after Objavi the team is Neaktivna. C7's `publishKolo1` and the Pušački stolovi test mark the
       teams' arrival first; C3's helpers already did.
 
+104. **Noć traje do 08:00; večer, turnir i liga završavaju kad je odigrano zadnje kolo, a najkasnije u 08:00** (the
+    user's messages of 24.11. about #90: "after there is no live matches on the tournament or league night after the
+    last kolo … end the tournament league night … only when the last kolo is played or if the tournament noted 6
+    rounds and we created 7 or more this also works", "fallback up to 8 am not 6", "let's remove the 30 min buffer",
+    "I want to change up all from 06:00 to 08:00", "Treseta too"). #90: a league's last night ran past midnight and the
+    team page and Ukupni poredak said "Završeno" from 00:00, since `leagueEnded` compared the end date with the calendar
+    date.
+    - **The night lasts until 08:00** (was 06:00) everywhere it is the league night: `NIGHT_ENDS_AT_HOUR`
+      (`_lib/dates.ts`), so new rounds after midnight, Večeras, Dnevni poredak, Raspored, Burza's nights and ad expiry,
+      Tu smo and Odlazimo, and a tournament's day and clock. The places that said 06:00 (#19, #73, #94 and the
+      tournaments' day) now read 08:00. Treseta takes it with the nightly sync: its `dates.ts` is shared.
+    - **A league night is over** when every place has played its Broj kola (every table of those Kolos closed; Kolos
+      beyond Broj kola count too), or at 08:00 at the latest: `nightPlayedOut` and the arrival window, as Tu smo
+      already had it, now also for Dnevni poredak's medals (before: whenever every table was closed, so also between
+      Kolos).
+    - **A tournament is finished** when its last Kolo is played (`tournamentPhase`, as before: the last published Kolo
+      at or past its rounds and every table closed, so a 7th Kolo of six works), or at 08:00 the morning after its date
+      once it has started. Before, a tournament stopped after Kolo 4 of 6 stayed "U tijeku" for good.
+    - **A league is over** ("Završeno") when its last night is over by the rule above: the end date's night, or for a
+      league without an end date its last night. The server sends it with the league, so every screen reads the same.
+    - **No buffer**: the user first asked for 30 minutes without a live table after the last Kolo, then dropped it.
+      Nothing is stored: everything is read from the tables, so a match the admin reopens or a Kolo published after
+      the end makes the night, tournament or league live again. Tables still open at 08:00 stay unplayed and don't
+      count, as unplayed tables never did.
+
 105. **Ne, nisu došli ostaje odmah, a zatim Javi organizatoru** (#60; the user's messages of 24.11.: "after the nisu došli
     is selected a new modal needs to pop up for the players 'javi organizatoru'", "not the other way round", "comes only
     with the mobile phone and text"). #60 asked whether one player's Ne, nisu došli should stay final at once, or wait

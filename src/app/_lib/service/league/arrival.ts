@@ -12,7 +12,7 @@ import {NotFoundError} from "@/app/_lib/service/admin/tables";
 import {assertMayPlay, teamPlayBans} from "@/app/_lib/service/bans/bans";
 
 // Potvrda dolaska in the league (DECISIONS #73): Tu smo on a night of the league that has a start time, from half an
-// hour before it until 06:00; Ipak otkazujemo before the start and Odlazimo after it; and the admin's switches in Novo
+// hour before it until 08:00; Ipak otkazujemo before the start and Odlazimo after it; and the admin's switches in Novo
 // kolo, which mark a team here or not. A banned team can't come. On a night played at two places (DECISIONS #98) only a
 // team that Podjela put at one of them can come, and each place counts its own Kola.
 
@@ -124,7 +124,7 @@ function view(r: ArrivalRow): LeagueArrivalView {
 
 // Početna · Večeras for the player's teams whose league plays tonight with Potvrda dolaska (start and gathering: the
 // night's Početak and Okupljanje, "HH:MM"): the window, the team's arrival, the ban that keeps it from playing and, on
-// a two-place night, its place. Keyed "league_id|team_id"; a night that is over (06:00, or the Broj kola of the team's
+// a two-place night, its place. Keyed "league_id|team_id"; a night that is over (08:00, or the Broj kola of the team's
 // place finished) isn't in it.
 export async function myTonight(
   viewerId: number,
@@ -188,7 +188,7 @@ export async function teamArrivalAction(leagueId: number, teamId: number, viewer
     const places = await tonightPlaces([{league_id: leagueId, team_id: teamId}], tonight.night, tx);
     const slot = places.slots.get(teamKey(leagueId, teamId)) ?? null;
     const rounds = (await nightRounds([{league_id: leagueId, slot}], tonight.night, tx)).get(placeKey(leagueId, slot));
-    // a place whose Broj kola are all finished is over, as at 06:00
+    // a place whose Broj kola are all finished is over, as at 08:00
     const phase = rounds?.over ? "over" : leagueArrivalPhase(tonight.window, now);
     const effect = arrivalEffect(phase, action, isHere(row), action === "confirm" && (rounds?.lastRound ?? false), asksAdmin(places.two.has(leagueId), slot));
     if (effect === "no_place") {

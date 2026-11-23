@@ -70,7 +70,7 @@ export function SubstituteForm({
   preset,
   ...props
 }: FormProps & {leagues: MyLeague[]; preset: {league?: number; team?: number; night?: string; with?: number; note?: string}}) {
-  // the night being played (until 06:00 still last evening's), so tonight is still the first choice under Večer (#19)
+  // the night being played (until 08:00 still last evening's), so tonight is still the first choice under Večer (#19)
   const today = leagueNightString();
   // the leagues where the player's team is active and has nights left
   const options = leagues.filter((l) => l.active && nextNightIndex(l.nights, today) >= 0);

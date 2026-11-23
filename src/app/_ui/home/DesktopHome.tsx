@@ -61,7 +61,7 @@ export default function DesktopHome() {
   const {podium, rest} = splitPodium(leagueRows);
 
   const today = leagueDateString();
-  // a night that runs past midnight is still tonight's until 06:00
+  // a night that runs past midnight is still tonight's until 08:00
   const tonight = leagueNightString();
   const dailySub = !lastDate
     ? "Još nema okupljanja"

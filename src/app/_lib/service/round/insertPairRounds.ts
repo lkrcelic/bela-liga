@@ -11,7 +11,7 @@ import {InvalidResultError} from "@/app/_lib/validation/validateResult";
 
 export type CreatedRounds = {
   firstRoundNumber: number;
-  // the night they are on (YYYY-MM-DD): tonight in league time, until 06:00 the night before (leagueNight)
+  // the night they are on (YYYY-MM-DD): tonight in league time, until 08:00 the night before (leagueNight)
   date: string;
 };
 
@@ -73,7 +73,7 @@ export async function insertRoundBatch(roundsPairs: SeatedPair[][], leagueId: nu
     await tx.$executeRaw`SELECT pg_advisory_xact_lock(${leagueId})`;
     if ((await tonightDraftTables(leagueId, tx, slot)) > 0) throw new DraftWaitingError();
 
-    // a round created after midnight is still the evening's (until 06:00), so the night stays one night
+    // a round created after midnight is still the evening's (until 08:00), so the night stays one night
     const roundDate = leagueNight();
     await checkPlace(tx, leagueId, roundDate, slot, roundsPairs.flat().flatMap((p) => [p.teamOne.id, p.teamTwo.id]));
     const date = roundDate.toISOString().slice(0, 10);
