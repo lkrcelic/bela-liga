@@ -6,7 +6,7 @@ import {AdminTournament, KoloView} from "@/app/_interfaces/tournament";
 import {isByeTeam} from "@/app/_lib/bye";
 import {KoloPair} from "@/app/_lib/matching/tournamentPairing";
 import {nightLabel} from "@/app/_lib/nights";
-import {KOLO_MAX, KoloRemoval, koloRemovalOf, koloRemovalWarns, koloSteps, removesResults, screenKolo, tableWasPlayed} from "@/app/_lib/tournaments";
+import {KOLO_MAX, KoloRemoval, koloRemovalOf, koloRemovalWarns, koloSteps, koloOnPublish, removesResults, screenKolo, screenKoloStep, tableWasPlayed} from "@/app/_lib/tournaments";
 import {filterTables, TableFilter, tableColumns, TableRow, toTableRows} from "@/app/_lib/ui/tables";
 import {toStandingsRows} from "@/app/_lib/ui/standings";
 import useElementHeight from "@/app/_hooks/useElementHeight";
@@ -21,6 +21,8 @@ import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
 import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
 import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
 import EditRoundedIcon from "@mui/icons-material/EditRounded";
+import ChevronLeftRoundedIcon from "@mui/icons-material/ChevronLeftRounded";
+import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import EmojiEventsRoundedIcon from "@mui/icons-material/EmojiEventsRounded";
 import FullscreenRoundedIcon from "@mui/icons-material/FullscreenRounded";
@@ -33,7 +35,7 @@ import WarningRoundedIcon from "@mui/icons-material/WarningRounded";
 import {Box, Dialog} from "@mui/material";
 import {TableStates} from "./DayAdmin";
 import {KoloTimerChip, KoloTimerPanel} from "./KoloTimer";
-import React, {useEffect, useId, useState, useSyncExternalStore} from "react";
+import React, {useEffect, useId, useRef, useState, useSyncExternalStore} from "react";
 
 // Upravljanje turnirom · Kola (Claude Design "Turniri admin" C1–C4): one Kolo's tables on the left with the Kolos 1…N
 // above them (✓ played, a red dot live, the pencil a draft); on the right what comes next. Kolo 1 is drawn at random
@@ -581,7 +583,16 @@ function DeleteKoloDialog({removal, busy, error, onClose, onConfirm}: {removal: 
 // (Android TV gives the page 960 px), so the page stays the computer's while this is open (?ekran=1), whatever the width.
 // Closed, it leaves the Kola tab on the Kolo it was showing.
 export function KoloFullscreen({t, onClose}: {t: AdminTournament; onClose: (kolo: number) => void}) {
-  const view = t.results.kolos.find((k) => k.number === screenKolo(t.results.kolos)) ?? null;
+  const latest = screenKolo(t.results.kolos);
+  // the Kolo the arrows went to; null: the screen follows the tournament (the last Kolo out)
+  const [picked, setPicked] = useState<number | null>(null);
+  // Objava novog kola takes the screen off the arrows' Kolo, back to following the tournament
+  const seenLatest = useRef(latest);
+  useEffect(() => {
+    if (koloOnPublish(picked, seenLatest.current, latest) != null) setPicked(null);
+    seenLatest.current = latest;
+  }, [latest]); // eslint-disable-line react-hooks/exhaustive-deps
+  const view = t.results.kolos.find((k) => k.published && k.number === picked) ?? t.results.kolos.find((k) => k.number === latest) ?? null;
   const rows = view ? koloRows(view) : [];
   const live = rows.filter((r) => r.live).length;
   const done = rows.filter((r) => r.done).length;
@@ -607,6 +618,11 @@ export function KoloFullscreen({t, onClose}: {t: AdminTournament; onClose: (kolo
   // no Kolo out (yet): nothing to show
   if (!view) return null;
   const kolo = view.number;
+  const prev = screenKoloStep(t.results.kolos, kolo, -1);
+  const next = screenKoloStep(t.results.kolos, kolo, 1);
+  // back on the last Kolo out, the screen follows the tournament again
+  const show = (n: number | null) => n != null && setPicked(n === latest ? null : n);
+  const arrow = {borderRadius: "12px", boxShadow: "none", background: color.white, "& svg": {fontSize: 30}} as const;
   const close = () => onClose(kolo);
 
   const headCard = {flex: "none", display: "flex", alignItems: "center", gap: "10px", p: "14px 20px"} as const;
@@ -628,8 +644,19 @@ export function KoloFullscreen({t, onClose}: {t: AdminTournament; onClose: (kolo
             <Box component="span" sx={{fontSize: 14, fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", color: color.muted}}>
               {nightLabel(t.date)} · {t.name}
             </Box>
-            <Box component="h2" id={titleId} sx={{m: 0, fontFamily: font.display, fontSize: 38, fontWeight: 800, lineHeight: 1.05}}>
-              Kolo {kolo} od {t.rounds}
+            <Box sx={{display: "flex", alignItems: "center", gap: "14px"}}>
+              <Box component="h2" id={titleId} sx={{m: 0, fontFamily: font.display, fontSize: 38, fontWeight: 800, lineHeight: 1.05}}>
+                Kolo {kolo} od {t.rounds}
+              </Box>
+              {/* through the Kolos out, by a click (the TV's remote too); the next Kolo published still takes over */}
+              <Box sx={{flex: "none", display: "flex", gap: "8px"}}>
+                <IconCircleButton label="Prethodno kolo" size={42} disabled={prev == null} onClick={() => show(prev)} sx={arrow}>
+                  <ChevronLeftRoundedIcon />
+                </IconCircleButton>
+                <IconCircleButton label="Sljedeće kolo" size={42} disabled={next == null} onClick={() => show(next)} sx={arrow}>
+                  <ChevronRightRoundedIcon />
+                </IconCircleButton>
+              </Box>
             </Box>
           </Box>
           {live > 0 && (

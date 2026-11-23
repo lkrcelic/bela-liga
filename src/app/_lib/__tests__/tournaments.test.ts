@@ -20,6 +20,7 @@ import {
   rankTeams,
   rulesLabel,
   screenKolo,
+  screenKoloStep,
   standingsOrderLabel,
   TableResult,
   tournamentPhase,
@@ -347,6 +348,22 @@ test("the screen at the club shows the last Kolo out: the one being played, betw
   // nothing out yet: nothing to show
   assert.equal(screenKolo([{...played, published: false}]), null);
   assert.equal(screenKolo([]), null);
+});
+
+test("the screen's arrows go through the Kolos out, one by one, and stop at the first and the last; a draft isn't one", () => {
+  const kolos = [
+    {number: 3, published: false},
+    {number: 1, published: true},
+    {number: 2, published: true},
+  ];
+  assert.equal(screenKoloStep(kolos, 2, -1), 1);
+  assert.equal(screenKoloStep(kolos, 1, 1), 2);
+  // Kolo 1 has nothing before it; Kolo 2, the last out, nothing after it: Kolo 3 is only a draft
+  assert.equal(screenKoloStep(kolos, 1, -1), null);
+  assert.equal(screenKoloStep(kolos, 2, 1), null);
+  // a Kolo that isn't out (deleted meanwhile, or a draft) has no arrows
+  assert.equal(screenKoloStep(kolos, 3, -1), null);
+  assert.equal(screenKoloStep([], 1, 1), null);
 });
 
 test("a Kolo published takes a picked Kola tab to it; a tab following by itself, the first read, a draft and a Kolo deleted move nothing", () => {
