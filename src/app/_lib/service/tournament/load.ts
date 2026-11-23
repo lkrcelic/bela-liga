@@ -245,7 +245,10 @@ export async function loadSnapshots(ids: number[], viewer: Viewer | null, db: Db
       for (const e of loadedEntries) teams.set(e.team_id, {name: e.team_name, photo_url: e.photo_url});
 
       const kolos = koloSummaries(tables);
-      const phase = tournamentPhase({startedAt: tournament.started_at, cancelledAt: tournament.cancelled_at, rounds: tournament.rounds}, kolos);
+      const phase = tournamentPhase(
+        {startedAt: tournament.started_at, cancelledAt: tournament.cancelled_at, rounds: tournament.rounds, date: tournament.date.toISOString().slice(0, 10)},
+        kolos
+      );
       const published = tables.filter((t) => t.status === "PUBLISHED");
       const results = published.map(toResult);
       // the teams in that play or played (an inactive team that never sat at a table isn't listed), and any team that

@@ -1,17 +1,28 @@
 // Tournaments (Turniri): how far one has got, its standings and the words the screens use for it. Framework free so it
 // can be unit tested.
 import {BYE_TEAM_ID, isByeTeam} from "@/app/_lib/bye";
+import {leagueNightString} from "@/app/_lib/dates";
 import {count, NOUN, plural} from "@/app/_lib/ui/text";
 
-// upcoming: before Kolo 1 is published (sign-ups); active: from then until the last Kolo is played; cancelled: Otkaži
+// upcoming: before Kolo 1 is published (sign-ups); active: from then until the last Kolo is played, or until 08:00 the
+// morning after its day (DECISIONS 104); cancelled: Otkaži
 export type TournamentPhase = "upcoming" | "active" | "finished" | "cancelled";
 
 // One Kolo: its tables (the bye's included), how many are played and how many are being played
 export type KoloSummary = {number: number; published: boolean; tables: number; done: number; live: number};
 
-export function tournamentPhase(t: {startedAt: Date | string | null; cancelledAt: Date | string | null; rounds: number}, kolos: KoloSummary[]): TournamentPhase {
+// A started tournament is finished once its last Kolo is played: the last published Kolo at or past its rounds (a 7th
+// Kolo of six counts) and every table closed. At the latest it is finished when its day is over, at 08:00 the morning
+// after its date (the league night moves on), with the Kolos played so far; a table still open then stays unplayed.
+// Nothing is stored, so a match reopened or a Kolo published on the day makes it active again. date: YYYY-MM-DD.
+export function tournamentPhase(
+  t: {startedAt: Date | string | null; cancelledAt: Date | string | null; rounds: number; date: string},
+  kolos: KoloSummary[],
+  now: Date = new Date(),
+): TournamentPhase {
   if (t.cancelledAt) return "cancelled";
   if (!t.startedAt) return "upcoming";
+  if (leagueNightString(now) > t.date) return "finished";
   const published = kolos.filter((k) => k.published);
   const last = Math.max(0, ...published.map((k) => k.number));
   return last >= t.rounds && published.every(kolosDone) ? "finished" : "active";

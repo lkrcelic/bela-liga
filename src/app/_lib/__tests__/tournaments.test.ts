@@ -308,17 +308,42 @@ test("equal points and difference go by name, in Croatian order", () => {
 });
 
 test("a tournament is upcoming until Kolo 1 is out, active while Kolos are played, finished after the last one", () => {
-  const t = {startedAt: null, cancelledAt: null, rounds: 2};
-  assert.equal(tournamentPhase(t, []), "upcoming");
-  assert.equal(tournamentPhase(t, [{number: 1, published: false, tables: 3, done: 0, live: 0}]), "upcoming");
+  // on its day, 31.10. at 21:00 in Zagreb
+  const day = new Date("2026-10-31T20:00:00Z");
+  const t = {startedAt: null, cancelledAt: null, rounds: 2, date: "2026-10-31"};
+  assert.equal(tournamentPhase(t, [], day), "upcoming");
+  assert.equal(tournamentPhase(t, [{number: 1, published: false, tables: 3, done: 0, live: 0}], day), "upcoming");
   const started = {...t, startedAt: "2026-10-31T09:00:00Z"};
   const one = {number: 1, published: true, tables: 3, done: 3, live: 0};
-  assert.equal(tournamentPhase(started, [one]), "active");
-  assert.equal(tournamentPhase(started, [one, {number: 2, published: true, tables: 3, done: 2, live: 1}]), "active");
-  assert.equal(tournamentPhase(started, [one, {number: 2, published: true, tables: 3, done: 3, live: 0}]), "finished");
+  assert.equal(tournamentPhase(started, [one], day), "active");
+  assert.equal(tournamentPhase(started, [one, {number: 2, published: true, tables: 3, done: 2, live: 1}], day), "active");
+  assert.equal(tournamentPhase(started, [one, {number: 2, published: true, tables: 3, done: 3, live: 0}], day), "finished");
   // the admin lowered Broj kola to the Kolos played: over
-  assert.equal(tournamentPhase({...started, rounds: 1}, [one]), "finished");
-  assert.equal(tournamentPhase({...t, cancelledAt: "2026-10-20T09:00:00Z"}, []), "cancelled");
+  assert.equal(tournamentPhase({...started, rounds: 1}, [one], day), "finished");
+  assert.equal(tournamentPhase({...t, cancelledAt: "2026-10-20T09:00:00Z"}, [], day), "cancelled");
+});
+
+test("a started tournament is finished at 08:00 the morning after its day at the latest (DECISIONS #104)", () => {
+  const t = {startedAt: "2026-10-31T09:00:00Z", cancelledAt: null, rounds: 6, date: "2026-10-31"};
+  // stopped after Kolo 4 of 6, Kolo 4 with a table still open
+  const kolos = [1, 2, 3].map((number) => ({number, published: true, tables: 3, done: 3, live: 0})).concat({number: 4, published: true, tables: 3, done: 2, live: 1});
+  // past midnight and at 07:59 in Zagreb (winter time, UTC+1) it is still being played
+  assert.equal(tournamentPhase(t, kolos, new Date("2026-10-31T23:30:00Z")), "active");
+  assert.equal(tournamentPhase(t, kolos, new Date("2026-11-01T06:59:00Z")), "active");
+  // 08:00: finished with the Kolos played so far
+  assert.equal(tournamentPhase(t, kolos, new Date("2026-11-01T07:00:00Z")), "finished");
+  assert.equal(tournamentPhase(t, kolos, new Date("2026-11-03T12:00:00Z")), "finished");
+  // never started (no Kolo 1): stays upcoming for the admin, cancelled stays cancelled
+  assert.equal(tournamentPhase({...t, startedAt: null}, [], new Date("2026-11-03T12:00:00Z")), "upcoming");
+  assert.equal(tournamentPhase({...t, cancelledAt: "2026-10-30T09:00:00Z"}, [], new Date("2026-11-03T12:00:00Z")), "cancelled");
+});
+
+test("a Kolo beyond the planned rounds keeps the tournament going until it is played", () => {
+  const t = {startedAt: "2026-10-31T09:00:00Z", cancelledAt: null, rounds: 2, date: "2026-10-31"};
+  const day = new Date("2026-10-31T20:00:00Z");
+  const done = (number: number) => ({number, published: true, tables: 2, done: 2, live: 0});
+  assert.equal(tournamentPhase(t, [done(1), done(2), {number: 3, published: true, tables: 2, done: 1, live: 1}], day), "active");
+  assert.equal(tournamentPhase(t, [done(1), done(2), done(3)], day), "finished");
 });
 
 test("the Kolos played, the one being played and every Kolo's step", () => {
