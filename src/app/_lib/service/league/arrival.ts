@@ -2,7 +2,7 @@ import {Prisma} from "@prisma/client";
 import {prisma} from "@/app/_lib/prisma";
 import {leagueClock, leagueNightString} from "@/app/_lib/dates";
 import {effectiveTime, placeRounds} from "@/app/_lib/nights";
-import {arrivalEffect, asksAdmin, isHere, LeagueArrivalAction, lastRoundOut, leagueArrivalPhase, leagueArrivalWindow, LeagueArrivalWindow, nightPlayedOut} from "@/app/_lib/leagueArrival";
+import {arrivalEffect, asksAdmin, isHere, LeagueArrivalAction, lastRoundOut, leagueArrivalPhase, leagueArrivalWindow, LeagueArrivalWindow, nightPlayedOut, placeKolos} from "@/app/_lib/leagueArrival";
 import {isSlot, Slot} from "@/app/_lib/locations";
 import {LeagueArrivals, LeagueArrivalTimes, LeagueArrivalView, MyLeagueArrival} from "@/app/_interfaces/leagueArrival";
 import {displayName} from "@/app/_lib/players/names";
@@ -84,15 +84,10 @@ async function nightRounds(places: {league_id: number; slot: Slot | null}[], nig
   for (const p of places) {
     const league = byLeague.get(p.league_id);
     if (!league || out.has(placeKey(p.league_id, p.slot))) continue;
-    // the place's published round numbers and whether a table of each is still open
-    const byNumber = new Map<number | null, boolean>();
-    for (const t of tables) {
-      if (t.league_id !== p.league_id || (p.slot != null && t.round.location_slot !== p.slot)) continue;
-      byNumber.set(t.round.round_number, (byNumber.get(t.round.round_number) ?? false) || t.round.open);
-    }
+    // the place's Kolos published and finished (the same count Dnevni poredak's tonightOver reads)
+    const {published, finished} = placeKolos(tables.filter((t) => t.league_id === p.league_id).map((t) => t.round), p.slot);
     const planned = placeRounds(league.nights[0], league.rounds_per_night, p.slot);
-    const finished = Array.from(byNumber.values()).filter((open) => !open).length;
-    out.set(placeKey(p.league_id, p.slot), {lastRound: lastRoundOut(byNumber.size, planned), over: nightPlayedOut(finished, planned)});
+    out.set(placeKey(p.league_id, p.slot), {lastRound: lastRoundOut(published, planned), over: nightPlayedOut(finished, planned, published)});
   }
   return out;
 }

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import {test} from "node:test";
-import {arrivalEffect, asksAdmin, isHere, lastRoundOut, leagueArrivalPhase, leagueArrivalWindow, nightPlayedOut} from "@/app/_lib/leagueArrival";
+import {arrivalEffect, asksAdmin, isHere, lastRoundOut, leagueArrivalPhase, leagueArrivalWindow, nightPlayedOut, placeKolos, tonightOver} from "@/app/_lib/leagueArrival";
 import {playBanChip, playBanRefusal, playBanText} from "@/app/_lib/bans";
 
 // Potvrda dolaska in the league: the window, what each button does, and how a ban that keeps a team from playing reads
@@ -111,4 +111,47 @@ test("on a night at two places only a team Podjela placed presses Tu smo; the ot
   // a team that came and was taken out of the Podjela since keeps its way out
   assert.equal(arrivalEffect("started", "leave", true, false, true), "leave");
   assert.equal(arrivalEffect("over", "confirm", false, false, true), "over");
+});
+
+// Tonight's night is over (DECISIONS 104): Dnevni poredak's medals and Potvrda dolaska end when the place has played its
+// Broj kola, not merely when every table is closed between two Kolos
+const table = (round_number: number, open: boolean, location_slot: number | null = null) => ({round_number, open, location_slot});
+const oneplace = {planned_rounds: 3, second_rounds_per_night: null, two_places: false};
+
+test("a night with every table closed after Kolo 2 of 3 isn't over; after Kolo 3 it is", () => {
+  const two = [table(1, false), table(1, false), table(2, false), table(2, false)];
+  assert.deepEqual(placeKolos(two, null), {published: 2, finished: 2});
+  assert.equal(tonightOver(two, oneplace, null), false);
+  assert.equal(tonightOver([...two, table(3, false), table(3, true)], oneplace, null), false);
+  assert.equal(tonightOver([...two, table(3, false), table(3, false)], oneplace, null), true);
+  // no table yet: not over
+  assert.equal(tonightOver([], oneplace, null), false);
+});
+
+test("a Kolo beyond the night's Broj kola keeps it going until it is played", () => {
+  const three = [1, 2, 3].map((n) => table(n, false));
+  assert.equal(tonightOver([...three, table(4, true)], oneplace, null), false);
+  assert.equal(tonightOver([...three, table(4, false)], oneplace, null), true);
+  // Potvrda dolaska reads the same: 3 of 3 finished but a 4th published and open is not the end
+  assert.equal(nightPlayedOut(3, 3, 4), false);
+  assert.equal(nightPlayedOut(4, 3, 4), true);
+});
+
+test("on a two-place night each place ends with its own Broj kola, and Sve once both have", () => {
+  // Kartaš (1) plays 3, Lanterna (2) its own 2
+  const night = {planned_rounds: 3, second_rounds_per_night: 2, two_places: true};
+  const tables = [table(1, false, 1), table(2, false, 1), table(1, false, 2), table(2, false, 2)];
+  assert.equal(tonightOver(tables, night, 2), true);
+  assert.equal(tonightOver(tables, night, 1), false);
+  assert.equal(tonightOver(tables, night, null), false);
+  assert.equal(tonightOver([...tables, table(3, false, 1)], night, null), true);
+  // the second place without its own Broj kola plays the first place's
+  assert.equal(tonightOver(tables, {...night, second_rounds_per_night: null}, 2), false);
+});
+
+test("a night with tables but no night row ends when every table is closed, as before", () => {
+  assert.equal(tonightOver([table(1, false), table(1, false)], null, null), true);
+  assert.equal(tonightOver([table(1, false), table(1, true)], null, null), false);
+  // a table read without open counts as open
+  assert.equal(tonightOver([{round_number: 1}], null, null), false);
 });

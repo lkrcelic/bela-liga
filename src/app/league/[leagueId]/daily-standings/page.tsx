@@ -19,6 +19,7 @@ import LiveRoundSponsors from "@/app/_ui/sponsors/LiveRoundSponsors";
 import useAuthStore from "@/app/_store/authStore";
 import {useDailyData, useRoundDates} from "@/app/_hooks/useStandings";
 import {leagueNightString} from "@/app/_lib/dates";
+import {tonightOver} from "@/app/_lib/leagueArrival";
 import {highlightParam, splitPodium, standingsTeamHref, toStandingsRows} from "@/app/_lib/ui/standings";
 import {filterTables, liveCount, splitColumns, TableFilter, tableColumns, tableCount, TableRow, toTableRows} from "@/app/_lib/ui/tables";
 import {count, displayDate, NOUN} from "@/app/_lib/ui/text";
@@ -259,10 +260,12 @@ export default function DailyStandings() {
     );
   }
 
-  // the medals go up once the night is over: an earlier night, or tonight once every table is closed
+  // the medals go up once the night is over: an earlier night (08:00 makes tonight one), or tonight once the place shown
+  // has played its Broj kola (in Sve both places), not merely between two Kolos with every table closed (DECISIONS 104)
   const {podium, rest} = splitPodium(standings);
   const tables = daily.data?.rounds ?? [];
-  const nightDone = !isToday || (tables.length > 0 && tables.every((r) => r.open === false));
+  const nightRow = leagueNights.nights?.find((x) => x.date === date) ?? null;
+  const nightDone = !isToday || tonightOver(tables, nightRow && {...nightRow, two_places: nightRow.second_location != null}, place);
   const showPodium = nightDone && podium.length > 0;
 
   return (
