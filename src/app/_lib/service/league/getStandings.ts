@@ -1,7 +1,7 @@
 import {prisma} from "@/app/_lib/prisma";
 import {Prisma, TeamScore} from "@prisma/client";
 import {BYE_TEAM_ID} from "@/app/_lib/bye";
-import {leagueDateString} from "@/app/_lib/dates";
+import {leaguesEnded} from "@/app/_lib/service/league/ended";
 import {LEAGUE_DRAW_POINTS, LEAGUE_WIN_POINTS, LeagueRow, LeagueTable, needsHeadToHead, rankLeague} from "@/app/_lib/leagueOrder";
 import {movementShown, rankMovement, TeamTotals} from "@/app/_lib/movement";
 import {getRoundDatesByLeagueId} from "@/app/_lib/service/league/getRoundDatesById";
@@ -104,7 +104,9 @@ export async function getLeagueStandingsWithMovement(league_id: number): Promise
     }),
   ]);
   const rows = rankLeague(unordered, numbersOf, tables);
-  const {show, since} = movementShown(nights, isoDate(league?.end_date), isoDate(league?.nights[0]?.night), leagueDateString());
+  // over once its last night is (DECISIONS 104): then the +/− goes
+  const ended = (await leaguesEnded([{league_id, end_date: isoDate(league?.end_date), last_night: isoDate(league?.nights[0]?.night)}])).get(league_id) ?? false;
+  const {show, since} = movementShown(nights, ended);
   if (!show || since == null) return {standings: rows.map((r) => ({...r, movement: null})), showMovement: false, movementSince: null};
 
   const current: TeamTotals[] = rows.map(numbersOf);

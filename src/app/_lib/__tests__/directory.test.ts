@@ -34,6 +34,7 @@ import {
   updateAdminPlayer,
   updateTeamMember,
 } from "../ui/directory";
+import {leagueEnded} from "../league";
 
 const teams = [
   toDirectoryTeam({
@@ -132,18 +133,19 @@ test("Dodaj igrača offers the active players who aren't in the team, found by n
 
 test("Dodaj u ligu offers the other leagues, running ones first, with the season and U tijeku", () => {
   const today = "2026-10-13";
+  // over or not as leagueIsOver reads them on that day
   const leagues = [
-    {id: 1, name: "Zimska liga", season: "Zima 2026", endDate: "2026-03-01"},
+    {id: 1, name: "Zimska liga", season: "Zima 2026", endDate: "2026-03-01", lastNight: null},
     {id: 2, name: "Piatnik Bela Liga 2026", season: "2026", endDate: null, lastNight: "2026-12-16"},
-    {id: 3, name: "Kup Piatnik", season: null, endDate: null},
-    {id: 4, name: "Stara liga", season: null, endDate: "2020-01-01"},
-  ];
-  assert.equal(leagueOptionSub(leagues[0], today), "Zima 2026");
-  assert.equal(leagueOptionSub(leagues[1], today), "Sezona 2026 · U tijeku");
-  assert.equal(leagueOptionSub(leagues[2], today), "U tijeku");
-  assert.equal(leagueOptionSub(leagues[3], today), undefined);
+    {id: 3, name: "Kup Piatnik", season: null, endDate: null, lastNight: null},
+    {id: 4, name: "Stara liga", season: null, endDate: "2020-01-01", lastNight: null},
+  ].map((l) => ({...l, ended: leagueEnded(l.endDate, l.lastNight, today)}));
+  assert.equal(leagueOptionSub(leagues[0]), "Zima 2026");
+  assert.equal(leagueOptionSub(leagues[1]), "Sezona 2026 · U tijeku");
+  assert.equal(leagueOptionSub(leagues[2]), "U tijeku");
+  assert.equal(leagueOptionSub(leagues[3]), undefined);
   assert.deepEqual(
-    leagueAddOptions(leagues, [2], today).map((o) => o.id),
+    leagueAddOptions(leagues, [2]).map((o) => o.id),
     [3, 4, 1]
   );
 });

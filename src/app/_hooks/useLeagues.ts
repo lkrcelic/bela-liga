@@ -2,7 +2,8 @@
 
 import {getLeaguesAPI} from "@/app/_fetchers/league/leagues";
 import {LeagueSummary} from "@/app/_interfaces/league";
-import {homeLeagueId} from "@/app/_lib/league";
+import {leagueNightString} from "@/app/_lib/dates";
+import {homeLeagueId, leagueEnded} from "@/app/_lib/league";
 import {NightLocation} from "@/app/_lib/nights";
 import {count, NOUN} from "@/app/_lib/ui/text";
 import {useEffect, useState} from "react";
@@ -22,12 +23,21 @@ export type LeagueOption = {
   endDate?: string | null;
   // the last scheduled night (YYYY-MM-DD): with endDate, whether the league is over (leagueEnded)
   lastNight?: string | null;
+  // the server's word when the list was read: the league's last night is over (it played its Broj kola, or 08:00 passed)
+  ended?: boolean;
   playDay?: number | null; // 0 = Monday ... 6 = Sunday
   startTime?: string | null; // "HH:MM", when its nights start (Početak) unless a night has its own
   gatheringTime?: string | null; // "HH:MM", when its nights start gathering (Okupljanje) unless a night has its own
   location?: NightLocation | null; // where its nights are played unless a night has its own place
   teamCount?: number;
 };
+
+// Whether a league is over ("Završeno") (DECISIONS 104, #90): the server said so when the list was read (its last night
+// played its Broj kola), or its last night is behind the league night now (08:00 the morning after), which a list read
+// the evening before doesn't know yet: the list is kept for the session
+export function leagueIsOver(l: Pick<LeagueOption, "ended" | "endDate" | "lastNight">, now: Date = new Date()): boolean {
+  return l.ended === true || leagueEnded(l.endDate ?? null, l.lastNight ?? null, leagueNightString(now));
+}
 
 // "na koji dan" for the league meta line: "16 ekipa · utorkom"
 const PLAY_DAY = ["ponedjeljkom", "utorkom", "srijedom", "četvrtkom", "petkom", "subotom", "nedjeljom"];
@@ -57,6 +67,7 @@ function toOption(l: LeagueSummary): LeagueOption {
     startDate: l.start_date,
     endDate: l.end_date,
     lastNight: l.last_night,
+    ended: l.ended,
     playDay: l.play_day,
     startTime: l.start_time,
     gatheringTime: l.gathering_time,

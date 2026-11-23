@@ -2,7 +2,6 @@
 // the server builds the overviews with the first four, the pages format with the rest.
 import type {PlayerView} from "@/app/_interfaces/player";
 import type {PlayerRatingSummary, TeamNight, TeamOverview, TeamOverviewLeague} from "@/app/_interfaces/profiles";
-import {leagueEnded} from "@/app/_lib/league";
 import {displayName} from "@/app/_lib/players/names";
 import {count, displayDate, NOUN, plural} from "@/app/_lib/ui/text";
 
@@ -53,14 +52,14 @@ export type TeamLeagueFacts = {
   league_id: number;
   league_name: string;
   season: string | null;
-  end_date: string | null; // YYYY-MM-DD
-  last_night: string | null; // the league's last night
+  // the league is over (service/league/ended.ts: its last night is over, DECISIONS 104)
+  ended: boolean;
   standings: {team_id: number; rounds_played: number; score: number}[];
 };
 
 // The team's leagues: its place (the row number in Ukupni poredak, so tied teams get different places, as on the
 // standings page) and points, or none before it has finished a round there; running leagues first, then the newest
-export function teamLeagueRows(leagues: TeamLeagueFacts[], teamId: number, today: string): TeamOverviewLeague[] {
+export function teamLeagueRows(leagues: TeamLeagueFacts[], teamId: number): TeamOverviewLeague[] {
   return leagues
     .map((l) => {
       const index = l.standings.findIndex((s) => s.team_id === teamId);
@@ -70,7 +69,7 @@ export function teamLeagueRows(leagues: TeamLeagueFacts[], teamId: number, today
         league_id: l.league_id,
         league_name: l.league_name,
         season: l.season,
-        live: !leagueEnded(l.end_date, l.last_night, today),
+        live: !l.ended,
         rank: row && played > 0 ? index + 1 : null,
         points: row && played > 0 ? row.score : null,
         played,

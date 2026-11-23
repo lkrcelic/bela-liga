@@ -92,6 +92,19 @@ async function nightRounds(places: {league_id: number; slot: Slot | null}[], nig
   return out;
 }
 
+// The leagues whose night has played its Broj kola at every place (DECISIONS 104): a one-place night counts every table
+// of the league that night, a two-place night needs both places (each with its own Broj kola). A league's season ends
+// with it when that night is its last (service/league/ended.ts).
+export async function nightsPlayedOut(leagueIds: number[], night: string, db: Db = prisma): Promise<Set<number>> {
+  if (leagueIds.length === 0) return new Set();
+  const rows = await db.leagueNight.findMany({where: {league_id: {in: leagueIds}, night: nightValue(night)}, select: {league_id: true, second_location_id: true}});
+  const two = new Set(rows.filter((r) => r.second_location_id != null).map((r) => r.league_id));
+  const placesOf = (id: number): {league_id: number; slot: Slot | null}[] =>
+    two.has(id) ? [{league_id: id, slot: 1}, {league_id: id, slot: 2}] : [{league_id: id, slot: null}];
+  const rounds = await nightRounds(leagueIds.flatMap(placesOf), night, db);
+  return new Set(leagueIds.filter((id) => placesOf(id).every((p) => rounds.get(placeKey(p.league_id, p.slot))?.over === true)));
+}
+
 // Tu smo refused: the night has two places and the team isn't at either yet
 export const NO_PLACE_ERROR = "Večeras se igra na dvije lokacije, a vaša ekipa još nije raspoređena. Javi se adminu.";
 

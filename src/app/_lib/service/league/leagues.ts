@@ -1,7 +1,9 @@
 import {END_DATE_ERROR, endsAfterStart, LEAGUE_NAME_TAKEN, LeagueCreateRequest, LeagueSummary, LeagueTeamDetails, LeagueUpdateRequest} from "@/app/_interfaces/league";
 import {BYE_TEAM_ID} from "@/app/_lib/bye";
 import {anyCase} from "@/app/_lib/helpers/query/anyCase";
-import {pickActiveLeague} from "@/app/_lib/league";
+import {leagueEnded, pickActiveLeague} from "@/app/_lib/league";
+import {leagueNightString} from "@/app/_lib/dates";
+import {leaguesEnded} from "@/app/_lib/service/league/ended";
 import {generateNights, LOCATION_SELECT, locationOf, sortNights} from "@/app/_lib/nights";
 import {locationRefused} from "@/app/_lib/service/location/locations";
 import {nightValue} from "@/app/_lib/service/league/nights";
@@ -53,7 +55,9 @@ export async function listLeagues(): Promise<LeagueSummary[]> {
     last_night: dateString(l.nights[0]?.night ?? null),
   }));
   const activeId = pickActiveLeague(rows);
-  return rows.map((l) => ({...l, active: l.league_id === activeId}));
+  // over or not by its last night (DECISIONS 104, #90); the screens add the time of day (leagueIsOver)
+  const ended = await leaguesEnded(rows);
+  return rows.map((l) => ({...l, active: l.league_id === activeId, ended: ended.get(l.league_id) ?? false}));
 }
 
 // The league being played now, or null when there are no leagues
@@ -120,6 +124,8 @@ export async function createLeague(req: LeagueCreateRequest): Promise<LeagueSumm
     last_played: null,
     last_night: nights.length ? nights[nights.length - 1] : null,
     active: false,
+    // a new league hasn't played: over only if its dates are already behind it
+    ended: leagueEnded(dateString(league.end_date), nights.length ? nights[nights.length - 1] : null, leagueNightString()),
   };
 }
 

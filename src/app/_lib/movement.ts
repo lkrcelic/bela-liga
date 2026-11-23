@@ -1,6 +1,5 @@
 // Ukupni poredak's +/−: how many places a team gained or lost since the league's previous night. The server works it
 // out with the standings (service/league/getStandings.ts). Framework free so it can be unit tested.
-import {leagueEnded} from "@/app/_lib/league";
 import {LeagueRow, LeagueTable, rankLeague} from "@/app/_lib/leagueOrder";
 
 // A team's season numbers, as a TeamScore row holds them
@@ -8,10 +7,10 @@ export type TeamTotals = LeagueRow;
 
 // Whether the +/− is shown, and from which night: the league's nights with (published) rounds, in date order, give the
 // last one played and the one before it. Not on the league's first night (nothing to compare with) nor once the league
-// is over (leagueEnded: its end date, or its last night without one, has passed). Dates are YYYY-MM-DD.
-export function movementShown(nights: string[], end: string | null, lastNight: string | null, today: string): {show: boolean; since: string | null} {
+// is over (ended: service/league/ended.ts, its last night is over, DECISIONS 104). Dates are YYYY-MM-DD.
+export function movementShown(nights: string[], ended: boolean): {show: boolean; since: string | null} {
   const since = nights.length >= 2 ? nights[nights.length - 2] : null;
-  if (since == null || leagueEnded(end, lastNight, today)) return {show: false, since: null};
+  if (since == null || ended) return {show: false, since: null};
   return {show: true, since};
 }
 

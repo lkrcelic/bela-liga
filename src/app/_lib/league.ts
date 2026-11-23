@@ -13,12 +13,16 @@ export function pickActiveLeague<T extends {league_id: number; last_played: stri
   return best?.league_id ?? null;
 }
 
-// Whether a league's season is over ("Završeno"; otherwise "U tijeku"): its end date has passed or, for a league
-// without an end date (the older ones), its last night has. A league with neither is still running. Dates are
-// YYYY-MM-DD; today is the league date (leagueDateString), so the end date itself and tonight still count as running.
-export function leagueEnded(end: string | null, lastNight: string | null, today: string): boolean {
-  if (end != null) return end < today;
-  return lastNight != null && lastNight < today;
+// Whether a league's season is over ("Završeno"; otherwise "U tijeku") (DECISIONS 104, #90): its last night is over.
+// The last night is the end date's, or for a league without an end date (the older ones) its last scheduled night; a
+// league with neither is still running. That night is over once the league night has moved past it (08:00 the morning
+// after), or while it is tonight once it has played its Broj kola at every place (lastNightOver, which only the server
+// can tell: service/league/ended.ts). night: the league night now (leagueNightString), not the calendar day, so a last
+// night past midnight still runs. Dates are YYYY-MM-DD.
+export function leagueEnded(end: string | null, lastNight: string | null, night: string, lastNightOver = false): boolean {
+  const last = end ?? lastNight;
+  if (last == null) return false;
+  return last < night || (last === night && lastNightOver);
 }
 
 export type LeaguePage = "daily-standings" | "standings" | "manage";

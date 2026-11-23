@@ -4,7 +4,6 @@
 import type {AdminPlayerRow} from "@/app/_interfaces/player";
 import type {PlayerOverviewTeam} from "@/app/_interfaces/profiles";
 import {TEAM_NAME_REQUIRED, TEAM_NAME_TAKEN} from "@/app/_interfaces/team";
-import {leagueEnded} from "@/app/_lib/league";
 import {displayName, fullName} from "@/app/_lib/players/names";
 import {seasonLabel, teamSubline} from "@/app/_lib/ui/profiles";
 import {matchesQuery} from "@/app/_lib/ui/text";
@@ -120,23 +119,24 @@ export function teamAddOptions(teams: DirectoryTeam[], joinedIds: Iterable<numbe
   return teams.filter((t) => !joined.has(t.id)).map((t) => ({id: t.id, name: t.name, sub: teamDirectorySub(t)}));
 }
 
-export type LeagueFacts = {id: number; name: string; season?: string | null; endDate?: string | null; lastNight?: string | null};
+// ended: the league is over (leagueIsOver: the server's word, and its last night behind the league night)
+export type LeagueFacts = {id: number; name: string; season?: string | null; ended: boolean};
 
 // A league's hit: "Jesen 2026 · U tijeku", only the season once it has ended, "U tijeku" for a running league without
 // a season (design 13h, P:441)
-export function leagueOptionSub(l: LeagueFacts, today: string): string | undefined {
-  const live = !leagueEnded(l.endDate ?? null, l.lastNight ?? null, today);
+export function leagueOptionSub(l: LeagueFacts): string | undefined {
+  const live = !l.ended;
   return [seasonLabel(l.season), live ? "U tijeku" : null].filter(Boolean).join(" · ") || undefined;
 }
 
 // Dodaj u ligu: the leagues the team isn't in, running ones first, then the newest
-export function leagueAddOptions(leagues: LeagueFacts[], joinedIds: Iterable<number>, today: string): AddOptionData[] {
+export function leagueAddOptions(leagues: LeagueFacts[], joinedIds: Iterable<number>): AddOptionData[] {
   const joined = new Set(joinedIds);
   return leagues
     .filter((l) => !joined.has(l.id))
-    .map((l) => ({l, live: !leagueEnded(l.endDate ?? null, l.lastNight ?? null, today)}))
+    .map((l) => ({l, live: !l.ended}))
     .sort((a, b) => Number(b.live) - Number(a.live) || b.l.id - a.l.id)
-    .map(({l}) => ({id: l.id, name: l.name, sub: leagueOptionSub(l, today)}));
+    .map(({l}) => ({id: l.id, name: l.name, sub: leagueOptionSub(l)}));
 }
 
 // ---------- keeping the lists in step with a change on a Team page ----------

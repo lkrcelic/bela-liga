@@ -3,12 +3,11 @@
 import useManagePhone from "@/app/_hooks/useManagePhone";
 import useCan from "@/app/_hooks/useCan";
 import useAdminPlayers from "@/app/_hooks/useAdminPlayers";
-import {reloadLeagues, useLeagueList} from "@/app/_hooks/useLeagues";
+import {leagueIsOver, reloadLeagues, useLeagueList} from "@/app/_hooks/useLeagues";
 import useNavStack from "@/app/_hooks/useNavStack";
 import useShortWindow from "@/app/_hooks/useShortWindow";
 import useTeamOverview from "@/app/_hooks/useTeamOverview";
 import type {TeamNight, TeamOverview, TeamOverviewLeague, TeamOverviewPlayer} from "@/app/_interfaces/profiles";
-import {leagueDateString} from "@/app/_lib/dates";
 import {leagueAddOptions, playerAddOptions} from "@/app/_lib/ui/directory";
 import {leagueStatusParts, nightParts, rosterSubline, teamInitial, teamTiles} from "@/app/_lib/ui/profiles";
 import {formatChange, shortDate} from "@/app/_lib/ui/ratings";
@@ -636,7 +635,7 @@ function PlayersAddField({team, admin}: {team: TeamOverview; admin: TeamAdmin}) 
 function LeaguesAddField({team, admin}: {team: TeamOverview; admin: TeamAdmin}) {
   const {leagues, error} = useLeagueList();
   const options = useMemo(
-    () => (leagues ? leagueAddOptions(leagues, team.leagues.map((l) => l.league_id), leagueDateString()) : []),
+    () => (leagues ? leagueAddOptions(leagues.map((l) => ({...l, ended: leagueIsOver(l)})), team.leagues.map((l) => l.league_id)) : []),
     [leagues, team.leagues]
   );
   return (

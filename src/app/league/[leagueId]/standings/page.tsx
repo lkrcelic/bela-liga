@@ -2,14 +2,12 @@
 
 import {useScrollMemory} from "@/app/_hooks/useBackRestore";
 import useIsDesktop from "@/app/_hooks/useIsDesktop";
-import useLeagues, {useLeagueList} from "@/app/_hooks/useLeagues";
+import useLeagues, {leagueIsOver, useLeagueList} from "@/app/_hooks/useLeagues";
 import useMyTeams from "@/app/_hooks/useMyTeams";
 import useManagePhone from "@/app/_hooks/useManagePhone";
 import useNavStack from "@/app/_hooks/useNavStack";
 import useShortWindow from "@/app/_hooks/useShortWindow";
 import {useLeagueStandings} from "@/app/_hooks/useStandings";
-import {leagueDateString} from "@/app/_lib/dates";
-import {leagueEnded} from "@/app/_lib/league";
 import {leagueStatusLine} from "@/app/_lib/ui/profiles";
 import {highlightParam, splitPodium, standingsTeamHref, toStandingsRows} from "@/app/_lib/ui/standings";
 import {color} from "@/app/_styles/tokens";
@@ -84,7 +82,7 @@ function LeagueStandings() {
   // opened from a Team page: Back and Home instead of the league picker (13d)
   const fromTeam = highlightTeamId != null && signedIn;
   // "Sezona 2025 · završeno", by the same rule as the Team page's league rows
-  const status = league ? leagueStatusLine(league.season, !leagueEnded(league.endDate ?? null, league.lastNight ?? null, leagueDateString()), {lower: true}) : null;
+  const status = league ? leagueStatusLine(league.season, !leagueIsOver(league), {lower: true}) : null;
   // the list that scrolls (phone card, desktop table)
   const scroller = useScrollMemory("standings");
 

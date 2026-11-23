@@ -23,6 +23,7 @@ import {
   withOwnPhoto,
 } from "../ui/profiles";
 import {leagueEnded} from "../league";
+import {leagueNightString} from "../dates";
 import {ratingSummary} from "../ui/ratings";
 import {RatingRow} from "../../_interfaces/ratings";
 
@@ -83,10 +84,27 @@ test("a league is over after its end date, or without one after its last night; 
   assert.equal(leagueEnded(null, null, "2026-10-12"), false);
 });
 
+test("a league's last night past midnight still runs, until it has played its Broj kola or 08:00 (#90, DECISIONS 104)", () => {
+  // the league ends on 18.11.: at 03:45 on the 19th the league night is still the 18th
+  const at0345 = leagueNightString(new Date("2026-11-19T02:45:00Z"));
+  assert.equal(at0345, "2026-11-18");
+  assert.equal(leagueEnded("2026-11-18", null, at0345), false);
+  // its last night has played its Broj kola at every place: over before 08:00
+  assert.equal(leagueEnded("2026-11-18", null, at0345, true), true);
+  // 08:00: over whatever was played
+  assert.equal(leagueEnded("2026-11-18", null, leagueNightString(new Date("2026-11-19T07:00:00Z"))), true);
+  // a night played out that isn't the last one doesn't end the league
+  assert.equal(leagueEnded("2026-12-16", null, "2026-11-18", true), false);
+  // without an end date its last scheduled night decides the same way
+  assert.equal(leagueEnded(null, "2026-11-18", "2026-11-18", true), true);
+  assert.equal(leagueEnded(null, "2026-11-18", "2026-11-18"), false);
+});
+
 const standings = (...rows: [team: number, played: number, score: number][]) => rows.map(([team_id, rounds_played, score]) => ({team_id, rounds_played, score}));
 
 function league(id: number, rows: TeamLeagueFacts["standings"], end: string | null = null, last: string | null = null): TeamLeagueFacts {
-  return {league_id: id, league_name: `Liga ${id}`, season: `${2024 + id}`, end_date: end, last_night: last, standings: rows};
+  // over or not as the server says on the league night 2026-10-12 (leagueEnded, service/league/ended.ts)
+  return {league_id: id, league_name: `Liga ${id}`, season: `${2024 + id}`, ended: leagueEnded(end, last, "2026-10-12"), standings: rows};
 }
 
 test("a league row has the team's place in Ukupni poredak and its points; none before it has played there", () => {
@@ -95,8 +113,7 @@ test("a league row has the team's place in Ukupni poredak and its points; none b
       league(1, standings([40, 17, 30], [PULENI, 17, 16], [41, 17, 16]), null, "2026-04-15"),
       league(2, standings([40, 2, 4], [41, 0, 0], [PULENI, 0, 0]), "2026-12-31"),
     ],
-    PULENI,
-    "2026-10-12"
+    PULENI
   );
   assert.deepEqual(rows, [
     // running first
@@ -109,8 +126,7 @@ test("a league row has the team's place in Ukupni poredak and its points; none b
 test("league rows: running ones first, then the newest; a team missing from the table hasn't played", () => {
   const rows = teamLeagueRows(
     [league(3, standings([PULENI, 4, 6]), null, "2026-01-01"), league(5, standings([PULENI, 1, 2])), league(4, standings([40, 3, 6]))],
-    PULENI,
-    "2026-10-12"
+    PULENI
   );
   assert.deepEqual(
     rows.map((r) => [r.league_id, r.live, r.rank]),
@@ -129,17 +145,16 @@ test("Najbolje mjesto is the best final place of a league that is over; a tie go
       league(2, standings([PULENI, 6, 12]), null, "2026-02-01"),
       league(3, standings([41, 5, 10], [PULENI, 5, 2]), "2026-03-01"),
     ],
-    PULENI,
-    "2026-10-12"
+    PULENI
   );
   assert.deepEqual(bestRank(rows), {rank: 1, league_id: 2, league_name: "Liga 2"});
-  const tie = teamLeagueRows([league(6, standings([PULENI, 1, 2]), null, "2026-01-01"), league(7, standings([PULENI, 1, 2]), "2026-05-01")], PULENI, "2026-10-12");
+  const tie = teamLeagueRows([league(6, standings([PULENI, 1, 2]), null, "2026-01-01"), league(7, standings([PULENI, 1, 2]), "2026-05-01")], PULENI);
   assert.deepEqual(bestRank(tie), {rank: 1, league_id: 7, league_name: "Liga 7"});
   // a running league doesn't count, however well the team stands there
-  const running = teamLeagueRows([league(8, standings([PULENI, 4, 8])), league(9, standings([40, 6, 12], [PULENI, 6, 4]), null, "2026-01-01")], PULENI, "2026-10-12");
+  const running = teamLeagueRows([league(8, standings([PULENI, 4, 8])), league(9, standings([40, 6, 12], [PULENI, 6, 4]), null, "2026-01-01")], PULENI);
   assert.deepEqual(bestRank(running), {rank: 2, league_id: 9, league_name: "Liga 9"});
-  assert.equal(bestRank(teamLeagueRows([league(10, standings([PULENI, 4, 8]), "2026-12-31")], PULENI, "2026-10-12")), null);
-  assert.equal(bestRank(teamLeagueRows([league(11, standings([PULENI, 0, 0]), null, "2026-01-01")], PULENI, "2026-10-12")), null);
+  assert.equal(bestRank(teamLeagueRows([league(10, standings([PULENI, 4, 8]), "2026-12-31")], PULENI)), null);
+  assert.equal(bestRank(teamLeagueRows([league(11, standings([PULENI, 0, 0]), null, "2026-01-01")], PULENI)), null);
   assert.equal(bestRank([]), null);
 });
 

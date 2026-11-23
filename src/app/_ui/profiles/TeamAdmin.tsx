@@ -3,13 +3,11 @@
 import {addTeamToLeagueAPI} from "@/app/_fetchers/league/leagues";
 import {addTeamPlayerAPI, deleteTeamAPI, removeTeamPlayerAPI, renameTeamAPI} from "@/app/_fetchers/team/manage";
 import {adminPlayersList} from "@/app/_hooks/useAdminPlayers";
-import {LeagueOption, reloadLeagues, updateCachedLeague} from "@/app/_hooks/useLeagues";
+import {leagueIsOver, LeagueOption, reloadLeagues, updateCachedLeague} from "@/app/_hooks/useLeagues";
 import type {Overview} from "@/app/_hooks/useOverview";
 import {teamsList} from "@/app/_hooks/useTeams";
 import type {AdminPlayerRow} from "@/app/_interfaces/player";
 import type {TeamOverview, TeamOverviewLeague, TeamOverviewPlayer} from "@/app/_interfaces/profiles";
-import {leagueDateString} from "@/app/_lib/dates";
-import {leagueEnded} from "@/app/_lib/league";
 import {startNavStack} from "@/app/_lib/navStack";
 import {useTransitionRouter} from "@/app/_lib/viewTransitions";
 import {
@@ -200,7 +198,7 @@ export function useTeamAdmin(overview: Overview<TeamOverview>): TeamAdmin {
   const addLeague = useCallback(
     async (l: LeagueOption) => {
       clearErrors();
-      const live = !leagueEnded(l.endDate ?? null, l.lastNight ?? null, leagueDateString());
+      const live = !leagueIsOver(l);
       const row: TeamOverviewLeague = {league_id: l.id, league_name: l.name, season: l.season ?? null, live, rank: null, points: null, played: 0};
       const change = (t: TeamOverview, by: 1 | -1): TeamOverview => ({
         ...t,

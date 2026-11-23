@@ -203,6 +203,8 @@ export type LeagueSummary = {
   last_played: string | null; // the latest round night, YYYY-MM-DD
   last_night: string | null; // the league's last scheduled night (Datumi), YYYY-MM-DD; with end_date it says whether the league is over (leagueEnded)
   active: boolean; // the league being played now (see pickActiveLeague)
+  // the league is over: its last night is over (service/league/ended.ts, DECISIONS 104), as of the request
+  ended: boolean;
 };
 
 // A team of a league with its players, for Manage League and Create Round

@@ -1,6 +1,6 @@
 import {prisma} from "@/app/_lib/prisma";
 import {isByeTeam} from "@/app/_lib/bye";
-import {leagueDateString} from "@/app/_lib/dates";
+import {leaguesEnded} from "@/app/_lib/service/league/ended";
 import {isDbId} from "@/app/_lib/helpers/query/dbId";
 import {isAdminRole} from "@/app/_lib/players/admin";
 import {displayName} from "@/app/_lib/players/names";
@@ -81,17 +81,17 @@ export async function getTeamOverview(teamId: number, viewer: Viewer): Promise<T
     })
     .sort((a, b) => b.rating - a.rating || a.name.localeCompare(b.name, "hr"));
 
+  // each league over or not by its last night (DECISIONS 104, #90), not by the calendar day
+  const ended = await leaguesEnded(leagues.map((l) => ({league_id: l.league_id, end_date: isoDate(l.end_date), last_night: isoDate(l.nights[0]?.night ?? null)})));
   const leagueRows = teamLeagueRows(
     leagues.map((l, i) => ({
       league_id: l.league_id,
       league_name: l.league_name,
       season: l.season,
-      end_date: isoDate(l.end_date),
-      last_night: isoDate(l.nights[0]?.night ?? null),
+      ended: ended.get(l.league_id) ?? false,
       standings: standings[i],
     })),
-    teamId,
-    leagueDateString()
+    teamId
   );
 
   const mine = players.some((p) => p.me);

@@ -1,23 +1,24 @@
 import assert from "node:assert/strict";
 import {test} from "node:test";
 import {movementShown, rankMovement, TeamTotals} from "../movement";
+import {leagueEnded} from "../league";
 import {movementNote, movementView, NO_MOVEMENT, readLeagueStandings, toStandingsRows} from "../ui/standings";
 
 // Ukupni poredak's +/−: places gained or lost since the league's previous night (design is.league).
 
 test("+/− is shown from the league's second night until the league is over", () => {
   // the first night has nothing to compare with
-  assert.deepEqual(movementShown([], null, null, "2026-10-14"), {show: false, since: null});
-  assert.deepEqual(movementShown(["2026-10-07"], null, "2026-12-16", "2026-10-07"), {show: false, since: null});
+  assert.deepEqual(movementShown([], leagueEnded(null, null, "2026-10-14")), {show: false, since: null});
+  assert.deepEqual(movementShown(["2026-10-07"], leagueEnded(null, "2026-12-16", "2026-10-07")), {show: false, since: null});
   // the second night (being played, or over) compares with the first; later nights with the one before the last
-  assert.deepEqual(movementShown(["2026-10-07", "2026-10-14"], null, "2026-12-16", "2026-10-14"), {show: true, since: "2026-10-07"});
-  assert.deepEqual(movementShown(["2026-10-07", "2026-10-14", "2026-10-21"], "2026-12-16", null, "2026-10-23"), {show: true, since: "2026-10-14"});
+  assert.deepEqual(movementShown(["2026-10-07", "2026-10-14"], leagueEnded(null, "2026-12-16", "2026-10-14")), {show: true, since: "2026-10-07"});
+  assert.deepEqual(movementShown(["2026-10-07", "2026-10-14", "2026-10-21"], leagueEnded("2026-12-16", null, "2026-10-23")), {show: true, since: "2026-10-14"});
   // the end date itself still counts as running; the day after it the league is over
-  assert.deepEqual(movementShown(["2026-12-09", "2026-12-16"], "2026-12-16", null, "2026-12-16"), {show: true, since: "2026-12-09"});
-  assert.deepEqual(movementShown(["2026-12-09", "2026-12-16"], "2026-12-16", null, "2026-12-17"), {show: false, since: null});
+  assert.deepEqual(movementShown(["2026-12-09", "2026-12-16"], leagueEnded("2026-12-16", null, "2026-12-16")), {show: true, since: "2026-12-09"});
+  assert.deepEqual(movementShown(["2026-12-09", "2026-12-16"], leagueEnded("2026-12-16", null, "2026-12-17")), {show: false, since: null});
   // a league without an end date is over once its last night has passed (leagueEnded)
-  assert.deepEqual(movementShown(["2026-04-08", "2026-04-15"], null, "2026-04-15", "2026-10-14"), {show: false, since: null});
-  assert.deepEqual(movementShown(["2026-04-08", "2026-04-15"], null, null, "2026-10-14"), {show: true, since: "2026-04-08"});
+  assert.deepEqual(movementShown(["2026-04-08", "2026-04-15"], leagueEnded(null, "2026-04-15", "2026-10-14")), {show: false, since: null});
+  assert.deepEqual(movementShown(["2026-04-08", "2026-04-15"], leagueEnded(null, null, "2026-10-14")), {show: true, since: "2026-04-08"});
 });
 
 const team = (team_id: number, name: string, score: number, point_difference = 0, rounds_played = 3): TeamTotals => ({
