@@ -75,8 +75,9 @@ const seatedTable = (a: string, b: string, table: number, smoking: boolean) => (
 test("a league remembers its own missed nights, not another league's; more smokers still come first", async () => {
   const leagueRound = (league: number, date: Date, roundNumber: number, table: ReturnType<typeof seatedTable>) =>
     prisma.round.create({data: {...table, round_number: roundNumber, round_date: date, status: "PUBLISHED", published_at: date, leagueRounds: {create: {league_id: league}}}});
-  // last week in this league C (one smoker) sat at an ordinary table while A had the smoking table: C missed that night
-  await leagueRound(leagueId, lastWeek, 6, seatedTable("A", "B", 1, true));
+  // last week in this league C (one smoker) sat at an ordinary table while A had the smoking table: C missed that night.
+  // B had a smoker at that smoking table, who has left the team since: B keeps its turn in the league's record
+  await leagueRound(leagueId, lastWeek, 6, {...seatedTable("A", "B", 1, true), team2_smokers: 1});
   await leagueRound(leagueId, lastWeek, 6, seatedTable("C", "D", 2, false));
   // G had a smoker last week, who has left the team since: it keeps its missed night in the league's record
   await leagueRound(leagueId, lastWeek, 6, {...seatedTable("G", "F", 3, false), team1_smokers: 1});
@@ -113,7 +114,7 @@ test("a league remembers its own missed nights, not another league's; more smoke
     ]
   );
 
-  // Pušački raspored: tonight, and the record in this league; G shows though it has no smoker now
+  // Pušački raspored: tonight, and the record in this league; B and G show though they have no smoker now
   const plan = await smokingPlan(leagueId);
   assert.deepEqual(
     plan.teams.map((t) => [nameOf(t.id), t.smokers, t.tonight, t.smokingRounds, t.rounds, t.missedNights]),
@@ -121,6 +122,7 @@ test("a league remembers its own missed nights, not another league's; more smoke
       ["A", 2, [true], 2, 2, 0],
       ["C", 1, [false], 0, 2, 1],
       ["E", 1, [false], 0, 1, 0],
+      ["B", 0, [false], 1, 2, 0],
       ["G", 0, [null], 0, 1, 1],
     ]
   );
