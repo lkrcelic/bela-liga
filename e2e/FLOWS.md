@@ -123,6 +123,7 @@ komentarom `// BUG:`: test opisuje kako bi trebalo biti, a prolazi dok greška p
 | Dodaj kolo / Obriši kolo na završenom turniru | organizator | `turniri/c7-svoj-turnir.spec.ts` › on their finished tournament the organizer adds a Kolo… |
 | Potvrda dolaska: Označi dolazak, Aktivna | organizator | `turniri/c7-dan-turnira.spec.ts` › on the day the organizer marks the teams that came… |
 | Prijave zatvorene → Složi Kolo 1 → Objavi | organizator | `turniri/c7-dan-turnira.spec.ts` › the organizer closes sign-ups, makes Kolo 1… |
+| Složi Kolo 1 s Pušačkim stolovima: ekipa s najviše pušača za pušačkim stolom, oznaka u Skici i Kolu 1 | organizator | `turniri/c7-dan-turnira.spec.ts` › with Pušački stolovi, Složi Kolo 1 seats the team with the most smokers… |
 | Isključi ekipu / Vrati | organizator | `turniri/c7-dan-turnira.spec.ts` › once their tournament has started the organizer takes a team out… |
 | Uredi ishod preskočenog stola | organizator | `turniri/c7-dan-turnira.spec.ts` › a table skipped at 10 minutes gets the organizer's Uredi ishod… |
 | Vrati stol | organizator | `turniri/c7-dan-turnira.spec.ts` › Vrati stol puts the organizer's skipped table back in play… |
