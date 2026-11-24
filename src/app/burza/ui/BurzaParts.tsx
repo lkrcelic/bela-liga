@@ -380,7 +380,7 @@ export function Callout({icon, tone = "public", children, sx}: {icon: React.Reac
 }
 
 export function PublicNote() {
-  return <Callout icon={<PublicRoundedIcon aria-hidden />}>Oglas vide svi, i bez prijave, zajedno s brojem mobitela.</Callout>;
+  return <Callout icon={<PublicRoundedIcon aria-hidden />}>Oglas vide svi, i bez prijave. Broj mobitela vide samo prijavljeni igrači.</Callout>;
 }
 
 // The phone field: required on an ad, "S profila" when it came from the profile. On an ad (onSave), a new number

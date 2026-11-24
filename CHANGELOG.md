@@ -2,6 +2,13 @@
 
 What the commits changed for the people using the app, newest first. The reasons and details are in DECISIONS.md.
 
+## 24.11.2026 · Burza: napomena o broju mobitela
+
+On development, not live yet (#58).
+
+### Igrači
+- **Obrasci Burze i "Oglas je objavljen"** sad pišu "Oglas vide svi, i bez prijave. Broj mobitela vide samo prijavljeni igrači." Dosad su pisali da se broj vidi i bez prijave, što od DECISIONS #90 nije istina.
+
 ## 24.11.2026 · Slobodna runda je stol
 
 On development, not live yet (DECISIONS 106, umjesto #54, koji nije bio živ).
