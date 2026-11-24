@@ -33,16 +33,21 @@ test("the admin creates tonight's Kolo with Novo kolo, approves and publishes it
   await expect(rounds.getByRole("radio", {name: "1", exact: true})).toBeChecked();
   const who = page.getByRole("region", {name: "Tko igra večeras"});
   await expect(who.getByRole("status")).toHaveText(/^8 \/ 8\s*ekipa igra večeras$/);
-  await who.getByRole("button", {name: "Promijeni"}).click();
   const sheet = page.getByRole("dialog", {name: "Tko igra večeras?"});
-  for (const name of out) {
+  const switchOff = async (name: string) => {
+    await who.getByRole("button", {name: "Promijeni"}).click();
     const team = sheet.getByRole("switch", {name, exact: true});
     await expect(team).toBeChecked();
     await team.click();
     await expect(team).not.toBeChecked();
-  }
-  await sheet.getByRole("button", {name: "Gotovo"}).click();
-  await expect(sheet).toBeHidden();
+    await sheet.getByRole("button", {name: "Gotovo"}).click();
+    await expect(sheet).toBeHidden();
+  };
+  // one team out first: seven play, at three tables and the bye's, which is a table like any other (DECISIONS 106)
+  await switchOff(out[0]);
+  await expect(who.getByRole("status")).toHaveText(/^7 \/ 8\s*ekipa igra večeras$/);
+  await expect(page.getByRole("button", {name: "Kreiraj 1 kolo · 4 stola"})).toBeVisible();
+  await switchOff(out[1]);
   await expect(who.getByRole("status")).toHaveText(/^6 \/ 8\s*ekipa igra večeras$/);
   await expect(who.getByRole("list", {name: "Ekipe koje ne igraju"}).getByRole("listitem")).toHaveText(out.map((n) => new RegExp(`^${escape(n)}`)));
   await page.getByRole("button", {name: "Kreiraj 1 kolo · 3 stola"}).click();

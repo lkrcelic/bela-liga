@@ -237,7 +237,7 @@ function CreateRoundAt({
               <DraftWaitingNote waiting={cr.waiting} />
             ) : (
               <PrimaryButton icon={<AddCircleRoundedIcon />} onClick={cr.create} disabled={cr.playing < 2} loading={cr.creating}>
-                {cr.creating ? "Kreiram kola…" : `Kreiraj ${published ? newRoundsLabel(published.next, cr.rounds) : count(cr.rounds, NOUN.kolo)} · ${count(cr.tableCount, NOUN.stol)}`}
+                {cr.creating ? "Kreiram kola…" : `Kreiraj ${published ? newRoundsLabel(published.next, cr.rounds) : count(cr.rounds, NOUN.kolo)} · ${count(cr.tables, NOUN.stol)}`}
               </PrimaryButton>
             )}
           </Box>

@@ -300,8 +300,7 @@ export function DraftTableList({rows, label}: {rows: TableRow[]; label: string})
           }}
         >
           <Box component="span" sx={{width: 36, height: 36, borderRadius: "10px", background: color.lineFill, color: color.navy, fontSize: 14, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center", ...tabular}}>
-            {/* the bye has no table: no number, as Dnevni poredak's "Bez stola" (#54) */}
-            {t.bye ? "–" : t.table}
+            {t.table}
           </Box>
           <Box component="span" sx={{fontSize: 15.5, fontWeight: 600, textAlign: "right", ...twoLines, ...(isByeTeam(t.teamAId) && {color: color.muted})}}>
             {t.teamA}

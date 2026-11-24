@@ -24,7 +24,7 @@ import {KoloPair} from "@/app/_lib/matching/tournamentPairing";
 import {nightLabel} from "@/app/_lib/nights";
 import {koloRemovalWarns, koloSteps, removesResults, standingsOrderLabel} from "@/app/_lib/tournaments";
 import {standingsTeamHref, toStandingsRows} from "@/app/_lib/ui/standings";
-import {TableRow} from "@/app/_lib/ui/tables";
+import {koloProgress, TableRow} from "@/app/_lib/ui/tables";
 import {count, NOUN} from "@/app/_lib/ui/text";
 import {replaceAddress, useTransitionRouter} from "@/app/_lib/viewTransitions";
 import {color, font, shadow, tint} from "@/app/_styles/tokens";
@@ -107,11 +107,8 @@ const TABS: {key: ManageView; label: string}[] = [
   {key: "podaci", label: "Podaci"},
 ];
 
-// a Kolo's tables but the bye's, and how many of them are done
-function progress(rows: TableRow[]) {
-  const tables = rows.filter((r) => !r.bye);
-  return {tables: tables.length, done: tables.filter((r) => r.done).length};
-}
+// a Kolo's tables, the bye's too (DECISIONS 106), and how many of them are done
+const progress = (rows: TableRow[]) => koloProgress(rows);
 
 export default function ManageTournamentPhone({id}: {id: number}) {
   const params = useSearchParams();
@@ -836,7 +833,6 @@ function KoloPhone({t, kolo, onBack, onChanged, reload}: {t: AdminTournament; ko
         {!draft && <KoloTimerChip kolo={view} />}
         <Box component="span" sx={{flex: 1, minWidth: 0, textAlign: "right", fontSize: 14, color: color.ink2, whiteSpace: "nowrap", ...ellipsis}}>
           {count(p.tables, NOUN.stol)}
-          {rows.some((r) => r.bye) ? " + slobodna" : ""}
         </Box>
       </Box>
 

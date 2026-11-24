@@ -124,7 +124,8 @@ export function PhoneRoundTables({
               <Box sx={{position: "relative", zIndex: 1, pointerEvents: "none", display: "flex", flexDirection: "column"}}>
                 <Box sx={{display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px", height: 28}}>
                   <Box component="span" sx={{display: "flex", alignItems: "center", gap: "6px", fontSize: 13, fontWeight: 600, color: color.muted}}>
-                    {t.bye ? "Bez stola" : `Stol ${t.table}`}
+                    {/* the bye is a table like any other (DECISIONS 106) */}
+                    {`Stol ${t.table}`}
                     {t.smoking && !t.bye && <SmokingMark />}
                   </Box>
                   <Box component="span" aria-hidden sx={{display: "flex", alignItems: "center", gap: "8px"}}>

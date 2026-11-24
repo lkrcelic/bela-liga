@@ -380,10 +380,9 @@ function RoundCard({
               >
                 <Box component="span" sx={{width: 34, height: 34, borderRadius: "10px", background: color.paper, color: color.navy, fontSize: 14, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center", fontVariantNumeric: "tabular-nums"}}>
                   <Box component="span" sx={{position: "absolute", width: "1px", height: "1px", overflow: "hidden", clip: "rect(0,0,0,0)"}}>
-                    {t.bye ? "Bez stola" : "Stol "}
+                    Stol{" "}
                   </Box>
-                  {/* the bye has no table: no number, as Dnevni poredak's "Bez stola" (#54) */}
-                  {t.bye ? "–" : t.table}
+                  {t.table}
                 </Box>
                 <Box component="span" sx={{textAlign: "right", fontSize: 16, fontWeight: 600, ...ellipsis, ...(isByeTeam(t.teamAId) && {color: color.muted})}}>
                   {t.teamA}

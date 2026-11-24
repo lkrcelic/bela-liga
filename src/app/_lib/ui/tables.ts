@@ -149,10 +149,21 @@ export function splitColumns<T>(rows: T[], n: number): T[][] {
   return Array.from({length: cols}, (_, c) => rows.slice(c * height, (c + 1) * height));
 }
 
-// Number of real tables, for "N stolova": the bye ("Bez stola", settled 2:0) has no table, so 25 teams make 12 stolova,
-// as Novo kolo promises (#54)
+// The bye (Slobodna runda, settled from the start) is a table like any other, always and everywhere (DECISIONS 106): it
+// has its number, and every "N stolova" counts it, so 25 teams make 13 stolova on Novo kolo, the Skica, Dnevni poredak,
+// Večer lige and a tournament's Kola alike.
 export function tableCount(rows: {bye: boolean}[]): number {
-  return rows.filter((r) => !r.bye).length;
+  return rows.length;
+}
+
+// Tables a night's Kolo will have before it is made (Novo kolo): one per two teams, and the bye's for an odd one out
+export function tablesFor(teams: number): number {
+  return Math.ceil(teams / 2);
+}
+
+// "x / N stolova gotovo" of a Kolo: the bye's table too, done from the start
+export function koloProgress(rows: {bye: boolean; done: boolean}[]): {tables: number; done: number} {
+  return {tables: tableCount(rows), done: rows.filter((r) => r.done).length};
 }
 
 // Number of live tables, for the LIVE pill and the "30 stolova · 6 uživo" summary

@@ -33,10 +33,11 @@ test("tonight is the first round with an open table, counted with the night's un
   assert.deepEqual(tonightState([t(1, true), t(2, true)]), {kind: "finished", rounds: 2});
 });
 
-// the bye is no table (#54): it is neither counted in "N stolova" nor finished at "x / N stolova završeno"
-test("a round where only the bye is settled hasn't started, and its bye is no table", () => {
+// the bye is a table like any other (DECISIONS 106): counted in "N stolova", and done from the start, so "1 / 2 stola
+// završeno" before anyone plays; the round still hasn't started, as only the bye is settled
+test("a round where only the bye is settled hasn't started, and its bye is a table already done", () => {
   const state = tonightState([t(2, true, true, true), t(2, false), t(1, true)], 2);
-  assert.deepEqual(state, {kind: "playing", round: 2, at: 2, rounds: 2, done: 0, tables: 1, started: false});
+  assert.deepEqual(state, {kind: "playing", round: 2, at: 2, rounds: 2, done: 1, tables: 2, started: false});
   assert.equal(tonightEyebrow(state as Extract<typeof state, {kind: "playing"}>), "Kolo 2 od 2 · nije počelo");
 });
 

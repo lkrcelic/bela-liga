@@ -2271,3 +2271,24 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
     - **Checked**: Playwright `c3-nedolazak` (the sheet's text and the tel: link after the confirm, then Zatvori; the
       #85 test closes it; no sheet for an older tournament without the phone; no sheet for a team declared absent
       first), the first two red on the code before; `c3-popravci` expects `mine: true` with a no-show's answer.
+
+106. **Slobodna runda je stol, uvijek i svugdje** (the user's messages of 24.11. about #54: "i want league and tournament
+    to handle this the same way. I am ok with 1/13 logic", "I want the bye round to always and everywhere show as a
+    table"). #54 (e91dae95) had made the bye no table in the league: "12 stolova" for 25 teams, no number in the Skica
+    ("–"), and Večer lige counting from "0 / 12". A tournament mixed both ("2 stola + slobodna runda", "Gotovo 1 od 3"),
+    and the tournament's Skica took #54's "–" from the shared component. Now one rule, the other way round:
+    - **The bye's table is a table**: it keeps its number everywhere (Skica on the phone and the computer, Dnevni
+      poredak's card "Stol 13" instead of decision 60's "Bez stola", a tournament's Kolo), and every
+      "N stolova" counts it: 25 teams make **13 stolova** on Novo kolo, the Skica, Dnevni poredak, Večer lige and a
+      tournament's Kola alike. `tableCount` (`_lib/ui/tables.ts`) is the one rule; `tablesFor` gives Novo kolo's count
+      before the Skica exists, `koloProgress` a tournament Kolo's "x od N gotovo".
+    - **Done from the start**: the bye is settled 2:0, so a round starts at "1 / 13 stolova završeno". It still reads
+      "nije počelo" until a real table has started.
+    - **What stays**: the bye's table opens no scorepad (nothing to play or unlock), and Pušački stolovi in Novo kolo are
+      still picked among the real tables (one per two teams), since the bye's team plays nobody there.
+    - **#54** closes as not planned: its mismatch (Novo kolo 12, Skica 13) is gone the other way, as both say 13.
+    - **Checked**: unit (`ui.test.ts`: 25 teams make 13 stolova in the Skica and on Novo kolo, a published round with its
+      bye counts it and its table is done; `adminTonight.test.ts`: the bye counted and done, the round not started),
+      both changed from #54's expectations and red on the code before; Playwright `c1-novo-kolo` (seven teams: "Kreiraj
+      1 kolo · 4 stola", red before) and `c3-kolo2` (the bye numbered 3 in Skica Kola 2, red before, and "Stol 3" in
+      Poredak i rezultati, which read "Bez stola"). #54's CHANGELOG entry is gone: it never went live.

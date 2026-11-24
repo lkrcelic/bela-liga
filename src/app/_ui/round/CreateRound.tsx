@@ -15,6 +15,7 @@ import {smokingSummary} from "@/app/_lib/ui/smoking";
 import {withShortTeam} from "@/app/_lib/ui/shortTeam";
 import {newRoundsLabel, publishedLabel, PublishedTonight, tonightRoundsDefault, waitingLabel} from "@/app/_lib/ui/adminTonight";
 import {count, matchesQuery, NOUN, plural} from "@/app/_lib/ui/text";
+import {tablesFor} from "@/app/_lib/ui/tables";
 import {color, font, shadow, tint} from "@/app/_styles/tokens";
 import {buttonBase, Card, EmptyState, ErrorNote, LoadingRows, OutlineButton, PrimaryButton, SearchInput, SectionLabel, SolidButton, Stepper, SwitchRow, SwitchTrack} from "@/app/_ui/sp";
 import EditCalendarRoundedIcon from "@mui/icons-material/EditCalendarRounded";
@@ -267,8 +268,10 @@ export function useCreateRound(
   const allOn = activeVisible.length > 0 && activeVisible.every(isOn);
   const selected = (teams ?? []).filter(isOn);
   const playing = selected.length;
-  // a table per two teams; picks above tonight's number of tables wait for a bigger night
+  // a table per two teams: Pušački stolovi are picked among them, and picks above tonight's number wait for a bigger night
   const tableCount = Math.floor(playing / 2);
+  // the tables Kreiraj promises: those and the bye's, a table like any other (DECISIONS 106)
+  const tables = tablesFor(playing);
   const smokingTables = smokingPicked.filter((t) => t <= tableCount).sort((a, b) => a - b);
   const smokers = selected.reduce((sum, t) => sum + t.smokers, 0);
   const smokingTeams = selected.filter((t) => t.smokers > 0).length;
@@ -425,6 +428,7 @@ export function useCreateRound(
     toggleSmoking,
     smokingTables,
     tableCount,
+    tables,
     toggleSmokingTable,
     smokingText,
     playing,

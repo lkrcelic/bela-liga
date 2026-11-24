@@ -86,6 +86,9 @@ test("Kolo 2 pairs the neighbours of the standings with the bye for the lowest t
     [w1, y, w2, l1, l2].map((e) => new RegExp(escape(e.name))),
   );
   await expect(player.getByRole("tab")).toHaveText(["Poredak", "Kolo 1", "Kolo 2"]);
+  // the bye is a table like any other (DECISIONS 106): Kolo 1's Slobodna runda reads its Stol, not Bez stola
+  await player.getByRole("tab", {name: /^Kolo 1/}).click();
+  await expect(player.getByRole("tabpanel", {name: /^Kolo 1/}).getByRole("listitem").filter({hasText: "Slobodna runda"})).toContainText(`Stol ${bye.table_number}`);
   await healthy(player);
 
   const theirs = await as(l2.phone!);

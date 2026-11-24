@@ -7,7 +7,7 @@ import {isByeTeam} from "@/app/_lib/bye";
 import {KoloPair} from "@/app/_lib/matching/tournamentPairing";
 import {nightLabel} from "@/app/_lib/nights";
 import {KOLO_MAX, KoloRemoval, koloRemovalOf, koloRemovalWarns, koloSteps, koloOnPublish, removesResults, screenKolo, screenKoloStep, tableWasPlayed} from "@/app/_lib/tournaments";
-import {filterTables, TableFilter, tableColumns, TableRow, toTableRows} from "@/app/_lib/ui/tables";
+import {filterTables, TableFilter, tableColumns, tableCount, TableRow, toTableRows} from "@/app/_lib/ui/tables";
 import {toStandingsRows} from "@/app/_lib/ui/standings";
 import useElementHeight from "@/app/_hooks/useElementHeight";
 import {count, NOUN} from "@/app/_lib/ui/text";
@@ -288,8 +288,7 @@ export default function KolaDesktop({t, kolo, onKolo, full, onFull, onChanged, r
             {/* the side card has the big timer (Kolo N traje); a finished tournament's side card hasn't, so it's here */}
             {t.phase === "finished" && <KoloTimerChip kolo={view} height={30} fontSize={13} />}
             <Box component="span" sx={{flex: 1, minWidth: 0, fontSize: 14, color: color.muted, whiteSpace: "nowrap"}}>
-              {count(rows.filter((r) => !r.bye).length, NOUN.stol)}
-              {rows.some((r) => r.bye) ? " + slobodna runda" : ""}
+              {count(tableCount(rows), NOUN.stol)}
             </Box>
             {view.published && !editing && (
               <Segmented<TableFilter>
