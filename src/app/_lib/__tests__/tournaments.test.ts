@@ -23,6 +23,9 @@ import {
   screenKoloStep,
   standingsOrderLabel,
   TableResult,
+  koloSummaries,
+  lastPublishedAt,
+  tournamentLastDay,
   tournamentPhase,
   koloRemovalOf,
   koloRemovalWarns,
@@ -336,6 +339,47 @@ test("a started tournament is finished at 08:00 the morning after its day at the
   // never started (no Kolo 1): stays upcoming for the admin, cancelled stays cancelled
   assert.equal(tournamentPhase({...t, startedAt: null}, [], new Date("2026-11-03T12:00:00Z")), "upcoming");
   assert.equal(tournamentPhase({...t, cancelledAt: "2026-10-30T09:00:00Z"}, [], new Date("2026-11-03T12:00:00Z")), "cancelled");
+});
+
+test("a Kolo published after the tournament's day reopens it until it is played; 08:00 after that night is the last check", () => {
+  // played on 31.10., stopped after Kolo 4 of 6; on 2.11. at 10:00 the admin publishes Kolo 5
+  const t = {startedAt: "2026-10-31T09:00:00Z", cancelledAt: null, rounds: 6, date: "2026-10-31"};
+  const played = [1, 2, 3, 4].map((number) => ({number, published: true, tables: 3, done: 3, live: 0, publishedAt: `2026-10-31T${10 + number}:00:00Z`}));
+  const kolo5 = (done: number) => ({number: 5, published: true, tables: 3, done, live: 3 - done, publishedAt: "2026-11-02T09:00:00Z"});
+  assert.equal(lastPublishedAt([...played, kolo5(0)])?.toISOString(), "2026-11-02T09:00:00.000Z");
+  assert.equal(tournamentLastDay(t.date, lastPublishedAt([...played, kolo5(0)])), "2026-11-02");
+  assert.equal(tournamentPhase(t, [...played, kolo5(0)], new Date("2026-11-02T11:00:00Z")), "active");
+  // past midnight and at 07:59 on 3.11. still being played (winter time, UTC+1)
+  assert.equal(tournamentPhase(t, [...played, kolo5(1)], new Date("2026-11-03T06:59:00Z")), "active");
+  // 08:00 on 3.11.: the last check
+  assert.equal(tournamentPhase(t, [...played, kolo5(1)], new Date("2026-11-03T07:00:00Z")), "finished");
+  // Kolo 5 played and Kolo 6 not published: finished by 08:00 too, not before (Kolo 5 isn't the last Kolo)
+  assert.equal(tournamentPhase(t, [...played, kolo5(3)], new Date("2026-11-02T20:00:00Z")), "active");
+  // the summaries take a Kolo's publish time from its latest table, and mark a Kolo with a draft table unpublished
+  const row = (kolo: number, status: "DRAFT" | "PUBLISHED", published_at: string | null, open = true) =>
+    ({kolo, status, open, active: false, played: 0, ongoing: null, published_at: published_at ? new Date(published_at) : null});
+  const summaries = koloSummaries([
+    row(4, "PUBLISHED", "2026-10-31T14:00:00Z", false),
+    row(5, "PUBLISHED", "2026-11-02T08:55:00Z"),
+    row(5, "PUBLISHED", "2026-11-02T09:00:00Z"),
+    row(6, "DRAFT", null),
+  ]);
+  assert.deepEqual(summaries.map((k) => [k.number, k.published, k.done, new Date(k.publishedAt ?? 0).toISOString()]), [
+    [4, true, 1, "2026-10-31T14:00:00.000Z"],
+    [5, true, 0, "2026-11-02T09:00:00.000Z"],
+    [6, false, 0, "1970-01-01T00:00:00.000Z"],
+  ]);
+  assert.equal(tournamentPhase(t, summaries, new Date("2026-11-03T06:59:00Z")), "active");
+  // a draft of Kolo 6 made later doesn't move the last day: only a published Kolo does
+  const draft6 = {number: 6, published: false, tables: 3, done: 0, live: 0, publishedAt: "2026-11-05T09:00:00Z"};
+  assert.equal(lastPublishedAt([...played, kolo5(3), draft6])?.toISOString(), "2026-11-02T09:00:00.000Z");
+  assert.equal(tournamentPhase(t, [...played, kolo5(3), draft6], new Date("2026-11-03T07:00:00Z")), "finished");
+  // a Kolo published before the day (Kolo 1 the evening before) leaves the tournament's date as its last day
+  assert.equal(tournamentLastDay("2026-10-31", "2026-10-30T20:00:00Z"), "2026-10-31");
+  assert.equal(tournamentLastDay("2026-10-31", null), "2026-10-31");
+  // the night, not the calendar day: a Kolo published at 01:30 on 1.11. is still the night of 31.10., at 08:00 it is 1.11.
+  assert.equal(tournamentLastDay("2026-10-31", "2026-11-01T00:30:00Z"), "2026-10-31");
+  assert.equal(tournamentLastDay("2026-10-31", "2026-11-01T07:00:00Z"), "2026-11-01");
 });
 
 test("a Kolo beyond the planned rounds keeps the tournament going until it is played", () => {

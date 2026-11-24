@@ -9,7 +9,7 @@ import {can} from "@/app/_lib/auth/permissions";
 import {canManageTournament} from "@/app/_lib/auth/ownership";
 import {displayName} from "@/app/_lib/players/names";
 import {playerPhotoUrls, teamPhotoUrls} from "@/app/_lib/service/players/photos";
-import {completedKolos, KoloSummary, liveKolo, rankTeams, TableResult, TeamTotals, tournamentPhase, TournamentPhase, tournamentTotals} from "@/app/_lib/tournaments";
+import {completedKolos, KoloSummary, koloSummaries, liveKolo, rankTeams, TableResult, tableStarted, TeamTotals, tournamentPhase, TournamentPhase, tournamentTotals} from "@/app/_lib/tournaments";
 
 // Everything the tournament screens are built from, read in a few queries: the tournament, its entries with their
 // players, and the tables of its Kolos. A player and a visitor see only the published Kolos; an admin sees the draft too.
@@ -101,8 +101,8 @@ const playerSelect = {
   photo_visibility: true,
 } as const;
 
-// A table counts as being played once a match is running at it or was played
-export const tableStarted = (t: Pick<LoadedTable, "active" | "played" | "ongoing" | "open">) => !t.open || t.active || t.played > 0 || t.ongoing != null;
+// A table counts as being played once a match is running at it or was played (_lib/tournaments.ts, with koloSummaries)
+export {tableStarted};
 
 // the latest of these moments (null: none)
 const latest = (moments: (Date | null)[]): Date | null => moments.reduce<Date | null>((a, m) => (m != null && (a == null || m > a) ? m : a), null);
@@ -297,15 +297,5 @@ export function toResult(t: LoadedTable): TableResult {
   };
 }
 
-// Every Kolo with its tables: a Kolo's tables share its status (a draft until it is published)
-export function koloSummaries(tables: LoadedTable[]): KoloSummary[] {
-  const byKolo = new Map<number, LoadedTable[]>();
-  for (const t of tables) byKolo.set(t.kolo, [...(byKolo.get(t.kolo) ?? []), t]);
-  return Array.from(byKolo, ([number, list]) => ({
-    number,
-    published: list.every((t) => t.status === "PUBLISHED"),
-    tables: list.length,
-    done: list.filter((t) => !t.open).length,
-    live: list.filter((t) => t.open && tableStarted(t)).length,
-  })).sort((a, b) => a.number - b.number);
-}
+// Every Kolo with its tables (_lib/tournaments.ts, unit tested there)
+export {koloSummaries};

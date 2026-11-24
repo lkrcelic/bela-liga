@@ -15,6 +15,7 @@ On development, not live yet (DECISIONS 104, #90).
 ### Changed
 - Kolo preko Broja kola (npr. 4. od tri) drži večer otvorenom dok se ne odigra, i za Tu smo i Odlazimo.
 - Stol koji je u 08:00 još otvoren ostaje neodigran i ne broji se.
+- Kolo koje admin objavi i nakon dana turnira uvijek vraća turnir u igru; tada je zadnja provjera 08:00 jutro nakon večeri tog kola.
 
 ## 24.11.2026 · Javi organizatoru nakon Ne, nisu došli
 

@@ -2222,16 +2222,21 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
       already had it, now also for Dnevni poredak's medals (before: whenever every table was closed, so also between
       Kolos).
     - **A tournament is finished** when its last Kolo is played (`tournamentPhase`, as before: the last published Kolo
-      at or past its rounds and every table closed, so a 7th Kolo of six works), or at 08:00 the morning after its date
-      once it has started. Before, a tournament stopped after Kolo 4 of 6 stayed "U tijeku" for good.
+      at or past its rounds and every table closed, so a 7th Kolo of six works), or once it has started at 08:00 the
+      morning after its last day (`tournamentLastDay`: its date, or the night its latest Kolo was published on, below).
+      Before, a tournament stopped after Kolo 4 of 6 stayed "U tijeku" for good.
     - **A league is over** ("Završeno") when its last night is over by the rule above: the end date's night, or for a
       league without an end date its last night. The server sends it with the league, so every screen reads the same.
     - **No buffer**: the user first asked for 30 minutes without a live table after the last Kolo, then dropped it.
-      Nothing is stored: everything is read from the tables, so a match the admin reopens or a Kolo published after
-      the end makes the night, tournament or league live again. A tournament only on its day: from 08:00 the morning
-      after it stays finished, also with a Kolo the admin publishes then, though #77 says a new Kolo reopens a
-      finished tournament (asked the user 24.11.). Tables still open at 08:00 stay unplayed and don't count, as
-      unplayed tables never did.
+      Nothing is stored: everything is read from the tables, so until the last 08:00 check a match the admin reopens
+      or a Kolo published after the end makes the night, tournament or league live again; after it only a new Kolo,
+      and only for a tournament (a night after its 08:00 and a league after its last night stay over). **Publishing a Kolo always reopens a tournament**, also after its day (the user, 24.11.: "opening a kolo
+      always reopens a tournament but the 8:00 stay as the last line of check"), as #77 had it: its last day is its
+      date or the league night its latest published Kolo was published on, whichever is later (`tournamentLastDay`,
+      `lastPublishedAt`; a draft doesn't count), and 08:00 after that is the last check. A Kolo after the tournament's
+      day has no Jesu li … za stolom? and no skip at 10 minutes (they read the tournament's own day); Vrijeme partije,
+      the next Kolo's draft and Automatska kola work as on the day, and an Automatska kola Kolo moves the last day
+      again. Tables still open at 08:00 stay unplayed and don't count, as unplayed tables never did.
     - **Checked**: unit (`createRoundDraft`, `leagueArrival` and `tournamentDay`: the night, Tu smo's window and a
       tournament's day until 08:00; `tournaments.test.ts`: finished at 08:00 the morning after, a 7th Kolo of six;
       `leagueArrival.test.ts`: `tonightOver` between Kolos, after the last, a Kolo beyond Broj kola, two places;
@@ -2240,7 +2245,9 @@ Decisions made while implementing the Scorepad redesign without anyone to ask. F
       need both, an earlier night played out doesn't end it, on a fixed night and clock: 03:45 after the last night,
       the #90 moment, whenever the test runs), red on the code before; the db test also red with `leaguesEnded` reading
       the calendar day instead of the league night. `leagueIsOver` (a list read the evening before, past 08:00) and
-      `nightMedalsUp` (no medals tonight while the nights load) are unit tested. The 7th-Kolo test of six pins what
+      `nightMedalsUp` (no medals tonight while the nights load) are unit tested. A Kolo published after the day
+      (`tournaments.test.ts`: active until 08:00 after its night, a later draft doesn't count, the night rule of the
+      last day at 01:30 and 08:00) is red on the code with the date only. The 7th-Kolo test of six pins what
       `tournamentPhase` already did (green before). The tests that took a date and "today" (directory, profiles,
       standingsMovement) now take `ended` worked out by the same rule from the same dates, with the same asserts.
 

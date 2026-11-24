@@ -8,13 +8,55 @@ import {count, NOUN, plural} from "@/app/_lib/ui/text";
 // morning after its day (DECISIONS 104); cancelled: Otkaži
 export type TournamentPhase = "upcoming" | "active" | "finished" | "cancelled";
 
-// One Kolo: its tables (the bye's included), how many are played and how many are being played
-export type KoloSummary = {number: number; published: boolean; tables: number; done: number; live: number};
+// One Kolo: its tables (the bye's included), how many are played and how many are being played; publishedAt: when it
+// was published (its latest table's published_at; null for a draft or a row without it)
+export type KoloSummary = {number: number; published: boolean; tables: number; done: number; live: number; publishedAt?: Date | string | null};
+
+// The last day of a started tournament, which it is over at 08:00 after at the latest: its date, or the league night
+// its latest Kolo was published on when that is later. Publishing a Kolo always reopens a tournament (DECISIONS 77),
+// also after its day, and 08:00 after that night stays the last check (DECISIONS 104). Dates are YYYY-MM-DD.
+export function tournamentLastDay(date: string, lastPublishedAt: Date | string | null | undefined): string {
+  const published = lastPublishedAt ? leagueNightString(new Date(lastPublishedAt)) : null;
+  return published != null && published > date ? published : date;
+}
+
+// A tournament's table as the Kolo summaries read it (service/tournament/load.ts LoadedTable)
+export type KoloTableFacts = {kolo: number; status: "DRAFT" | "APPROVED" | "PUBLISHED"; open: boolean; active: boolean; played: number; ongoing: unknown; published_at: Date | null};
+
+// A table counts as being played once a match is running at it or was played
+export const tableStarted = (t: Pick<KoloTableFacts, "active" | "played" | "ongoing" | "open">) => !t.open || t.active || t.played > 0 || t.ongoing != null;
+
+// Every Kolo with its tables: a Kolo's tables share its status (a draft until it is published), and its publish time is
+// its latest table's (a Kolo published after the tournament's day reopens it: DECISIONS 77, 104)
+export function koloSummaries(tables: KoloTableFacts[]): KoloSummary[] {
+  const byKolo = new Map<number, KoloTableFacts[]>();
+  for (const t of tables) byKolo.set(t.kolo, [...(byKolo.get(t.kolo) ?? []), t]);
+  return Array.from(byKolo, ([number, list]) => ({
+    number,
+    published: list.every((t) => t.status === "PUBLISHED"),
+    tables: list.length,
+    done: list.filter((t) => !t.open).length,
+    live: list.filter((t) => t.open && tableStarted(t)).length,
+    publishedAt: list.reduce<Date | null>((latest, t) => (t.published_at && (!latest || t.published_at > latest) ? t.published_at : latest), null),
+  })).sort((a, b) => a.number - b.number);
+}
+
+// When the latest published Kolo was published (a draft doesn't count), null before any
+export function lastPublishedAt(kolos: KoloSummary[]): Date | null {
+  let latest: Date | null = null;
+  for (const k of kolos) {
+    if (!k.published || k.publishedAt == null) continue;
+    const at = new Date(k.publishedAt);
+    if (!latest || at > latest) latest = at;
+  }
+  return latest;
+}
 
 // A started tournament is finished once its last Kolo is played: the last published Kolo at or past its rounds (a 7th
-// Kolo of six counts) and every table closed. At the latest it is finished when its day is over, at 08:00 the morning
-// after its date (the league night moves on), with the Kolos played so far; a table still open then stays unplayed.
-// Nothing is stored, so a match reopened or a Kolo published on the day makes it active again. date: YYYY-MM-DD.
+// Kolo of six counts) and every table closed. At the latest it is finished at 08:00 the morning after its last day
+// (tournamentLastDay: its date, or the night its latest Kolo was published on), with the Kolos played so far; a table
+// still open then stays unplayed. Nothing is stored: until that 08:00 a match reopened makes it active again, and a
+// Kolo published, even later, always does (it moves the last day). date: YYYY-MM-DD.
 export function tournamentPhase(
   t: {startedAt: Date | string | null; cancelledAt: Date | string | null; rounds: number; date: string},
   kolos: KoloSummary[],
@@ -22,7 +64,7 @@ export function tournamentPhase(
 ): TournamentPhase {
   if (t.cancelledAt) return "cancelled";
   if (!t.startedAt) return "upcoming";
-  if (leagueNightString(now) > t.date) return "finished";
+  if (leagueNightString(now) > tournamentLastDay(t.date, lastPublishedAt(kolos))) return "finished";
   const published = kolos.filter((k) => k.published);
   const last = Math.max(0, ...published.map((k) => k.number));
   return last >= t.rounds && published.every(kolosDone) ? "finished" : "active";
