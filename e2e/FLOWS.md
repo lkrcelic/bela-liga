@@ -46,6 +46,7 @@ komentarom `// BUG:`: test opisuje kako bi trebalo biti, a prolazi dok greška p
 | Zaključavanje nakon 5 pokušaja (po adresi) | igrač | `prijava/c6-zakljucavanje.spec.ts` › five wrong passwords lock the account on that phone… |
 | Zaključavanje računa (20 u 15 min) | igrač | `prijava/c6-zakljucavanje.spec.ts` › after 20 failed logins in 15 minutes… |
 | Registracija: provjere polja, zauzeto ime i email | gost | `prijava/c6-registracija.spec.ts` › Registracija checks every field in Croatian… |
+| Registracija: odbijen Registriraj se pokaže i fokusira prvo krivo polje (#62) | gost | `prijava/c6-registracija.spec.ts` › a refused Registriraj se brings the first wrong field into view… (#62) |
 | Registracija: novi račun s dugim hrvatskim imenima | gost | `prijava/c6-registracija.spec.ts` › a new account with long Croatian names… |
 | Onboarding: Datum rođenja i Pušiš li? | igrač | `prijava/c6-registracija.spec.ts` › novi.igrac logs in to Datum rođenja and then Pušiš li?… |
 | Onboarding: Kasnije i Preskoči (DECISIONS #38) | igrač | `prijava/c6-registracija.spec.ts` › Kasnije puts Datum rođenja off… |

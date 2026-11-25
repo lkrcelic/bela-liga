@@ -1,11 +1,11 @@
 "use client";
 
 import {signUp} from "@/app/_fetchers/authentication/signup";
-import {SignupErrors, SignupValues, validateSignup, validateSignupField} from "@/app/_lib/ui/signupValidation";
+import {firstErrorField, SignupErrors, SignupValues, validateSignup, validateSignupField} from "@/app/_lib/ui/signupValidation";
 import {ErrorNote, PasswordField, PrimaryButton, TextField} from "@/app/_ui/sp";
 import {SmokerChoice} from "@/app/_ui/smoking/SmokingParts";
 import {Box} from "@mui/material";
-import React, {useState} from "react";
+import React, {useRef, useState} from "react";
 
 const EMPTY: SignupValues = {username: "", password: "", confirm: "", email: "", first_name: "", last_name: "", birth_date: ""};
 
@@ -21,6 +21,21 @@ export default function SignUpForm({onSuccess, twoColumn = false, autoFocus = fa
   const [touched, setTouched] = useState<Partial<Record<keyof SignupValues, boolean>>>({});
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const formRef = useRef<HTMLFormElement>(null);
+
+  // A refused submit: the player is at Registriraj se, so the first wrong field may be above the screen. Bring it to
+  // the middle of the screen with its message under it, and focus it (#62).
+  const showFirstError = (found: SignupErrors) => {
+    const name = firstErrorField(found);
+    if (!name) return;
+    // after React has drawn the messages
+    requestAnimationFrame(() => {
+      const input = formRef.current?.querySelector<HTMLInputElement>(`[name="${name}"]`);
+      if (!input) return;
+      input.focus({preventScroll: true});
+      input.scrollIntoView({block: "center"});
+    });
+  };
 
   const set = (field: keyof SignupValues) => (e: React.ChangeEvent<HTMLInputElement>) => {
     const next = {...values, [field]: e.target.value};
@@ -45,7 +60,10 @@ export default function SignUpForm({onSuccess, twoColumn = false, autoFocus = fa
     const all = validateSignup(values);
     setErrors(all);
     setTouched(Object.fromEntries(Object.keys(values).map((k) => [k, true])));
-    if (Object.keys(all).length) return;
+    if (Object.keys(all).length) {
+      showFirstError(all);
+      return;
+    }
 
     setSubmitting(true);
     setFormError(null);
@@ -68,6 +86,7 @@ export default function SignUpForm({onSuccess, twoColumn = false, autoFocus = fa
         if (res.errors?.[k]) serverErrors[k] = res.errors[k];
       });
       setErrors(serverErrors);
+      showFirstError(serverErrors);
       const message = res.errors?.error;
       if (!Object.keys(serverErrors).length) setFormError(typeof message === "string" ? message : "Registracija nije uspjela.");
     } catch {
@@ -87,7 +106,7 @@ export default function SignUpForm({onSuccess, twoColumn = false, autoFocus = fa
   const pair = {display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,1fr)", gap: "12px"};
 
   return (
-    <Box component="form" onSubmit={handleSubmit} noValidate sx={{display: "flex", flexDirection: "column", gap: "14px"}}>
+    <Box component="form" ref={formRef} onSubmit={handleSubmit} noValidate sx={{display: "flex", flexDirection: "column", gap: "14px"}}>
       <TextField
         label="Korisničko ime"
         placeholder="mmarkovic"

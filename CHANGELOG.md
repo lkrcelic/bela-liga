@@ -2,6 +2,13 @@
 
 What the commits changed for the people using the app, newest first. The reasons and details are in DECISIONS.md.
 
+## 26.11.2026 · Registracija: greška se vidi
+
+On development, not live yet (#62).
+
+### Igrači
+- **Registriraj se** s krivim ili zauzetim korisničkim imenom (ili bilo kojim krivim poljem) sad pomakne stranicu do prvog krivog polja, s porukom ispod njega, i stavi kursor u njega. Dosad je na manjim mobitelima poruka ostajala iznad ekrana, pa je izgledalo da gumb ne radi.
+
 ## 24.11.2026 · Burza: napomena o broju mobitela
 
 On development, not live yet (#58).

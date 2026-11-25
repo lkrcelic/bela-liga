@@ -54,3 +54,12 @@ export function validateSignup(v: SignupValues): SignupErrors {
   });
   return errors;
 }
+
+// The fields in the order the form shows them
+const FORM_ORDER: (keyof SignupValues)[] = ["username", "password", "confirm", "email", "first_name", "last_name", "birth_date"];
+
+// The wrong field highest in the form: after a refused Registriraj se it is brought into view and focused, since the
+// player taps from the bottom of the form and Korisničko ime is the first field (#62)
+export function firstErrorField(errors: SignupErrors): keyof SignupValues | undefined {
+  return FORM_ORDER.find((k) => errors[k]);
+}

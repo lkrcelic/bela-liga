@@ -96,6 +96,47 @@ test("Registracija checks every field in Croatian before sending, and the server
   await healthy(page);
 });
 
+test("a refused Registriraj se brings the first wrong field into view with its message and focuses it, on a small phone (#62)", async ({
+  as,
+  db,
+  world,
+  healthy,
+}) => {
+  const page = await as("guest");
+  // iPhone SE: Korisničko ime is far above Registriraj se once the form is filled in
+  await page.setViewportSize({width: 375, height: 667});
+  await openSignupForm(page);
+  const submit = page.getByRole("button", {name: "Registriraj se", exact: true});
+  const username = field(page, "Korisničko ime");
+
+  // the server's refusal: player's username is taken (the email is new, so only the username is wrong)
+  const taken = await db.player.findUniqueOrThrow({where: {id: world.accounts.player.id}});
+  await fillSignup(page, {
+    username: taken.username,
+    password: PASSWORD,
+    confirm: PASSWORD,
+    email: `${uniqueUsername()}@e2e.test`,
+    first: "Marko",
+    last: "Horvat",
+    birth: "1980-05-05",
+  });
+  const answer = page.waitForResponse((r) => new URL(r.url()).pathname === "/api/signup");
+  await submit.click();
+  expect((await answer).status()).toBe(400);
+  await expect(username).toHaveAccessibleDescription("To korisničko ime je zauzeto.");
+  await expect(username).toBeFocused();
+  await expect(page.getByText("To korisničko ime je zauzeto.", {exact: true})).toBeInViewport();
+
+  // the form's own refusal: a full name typed as the username, tapped from the bottom of the form again
+  await username.fill("Marko Horvat");
+  await submit.click();
+  const message = "Samo slova a–z, brojevi, točka i podvlaka.";
+  await expect(username).toHaveAccessibleDescription(message);
+  await expect(username).toBeFocused();
+  await expect(page.getByText(message, {exact: true})).toBeInViewport();
+  await healthy(page);
+});
+
 test("a new account with long Croatian names: Registracija, then Prijava, Početna with nothing to ask, and the whole name on Moj profil", async ({
   as,
   db,
