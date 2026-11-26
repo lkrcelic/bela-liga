@@ -1,6 +1,7 @@
 // The admin's Večer lige on the phone (admin-mobile 01): how the night is going and which night's rounds wait to be
 // published. Framework free so it can be unit tested.
 
+import {nightsLeftLabel} from "../nights";
 import {count, NOUN, plural} from "./text";
 
 // A league's round (all its tables) as the admin's Kola list gives it (LeagueRoundSummary); slot: its place on a
@@ -66,6 +67,13 @@ export function nightRounds(
 export function publishedLabel({published, live}: PublishedTonight): string {
   const verb = plural(published, "je već objavljeno", "su već objavljena", "je već objavljeno");
   return `Večeras ${verb} ${count(published, NOUN.kolo)}${live > 0 ? ` (${live} u tijeku)` : ""}`;
+}
+
+// Večer lige with no night to come: a league with no nights yet (total 0) says so and points to Datumi, one whose nights
+// are all past has ended its season (#65). While the nights load (null) it reads as before.
+export function noNextNight(total: number | null): {sub: string; card: string} {
+  if (total === 0) return {sub: "Dodaj večeri u Upravljanju ligom · Datumi", card: nightsLeftLabel(0, 0)};
+  return {sub: nightsLeftLabel(0), card: "Nema više večeri"};
 }
 
 // The new rounds on the create button: "Kolo 4" or "Kolo 4–6"

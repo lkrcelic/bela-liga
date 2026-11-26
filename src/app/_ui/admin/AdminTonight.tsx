@@ -6,8 +6,8 @@ import useLeagueRounds from "@/app/_hooks/useLeagueRounds";
 import useLeagues, {useSelectedLeagueId} from "@/app/_hooks/useLeagues";
 import {useDailyData} from "@/app/_hooks/useStandings";
 import {leagueNightString} from "@/app/_lib/dates";
-import {nightLabel, nightLabelLong, nightsLeftLabel} from "@/app/_lib/nights";
-import {draftNight, PlaceTonight, placesTonight, tonightEyebrow, tonightState, TonightState, waitingLabel} from "@/app/_lib/ui/adminTonight";
+import {nightLabel, nightLabelLong} from "@/app/_lib/nights";
+import {draftNight, noNextNight, PlaceTonight, placesTonight, tonightEyebrow, tonightState, TonightState, waitingLabel} from "@/app/_lib/ui/adminTonight";
 import useNightSplit from "@/app/_hooks/useNightSplit";
 import useLocationFilter from "@/app/_hooks/useLocationFilter";
 import {getLeagueArrivalsAPI} from "@/app/_fetchers/league/arrival";
@@ -114,7 +114,7 @@ export default function AdminTonight() {
     : state.kind === "none"
       ? nextNight
         ? [nightLabelLong(nextNight.date), nextNight.time, league?.teamCount != null ? count(league.teamCount, NOUN.ekipa) : null]
-        : [nightsLeftLabel(0)]
+        : [noNextNight(nights?.length ?? null).sub]
       : [nightLabelLong(tonight), state.kind === "playing" ? count(playingTeams, NOUN.ekipa) : null, state.kind === "playing" ? count(state.tables, NOUN.stol) : null];
   // the tables still playing: of the round being played, or at two places of each place's round
   const stillPlaying = places
@@ -202,6 +202,7 @@ export default function AdminTonight() {
           time={time}
           tonight={nextNight?.date === tonight}
           nextNight={nextNight?.date ?? null}
+          noNight={noNextNight(nights?.length ?? null).card}
           draftTonight={waiting?.date === tonight ? waitingLabel(waiting.waiting, waiting.approved) : null}
           onDaily={() => router.push(`${base}/daily-standings`)}
           onCreate={() => router.push(`${base}/manage?view=create`)}
@@ -350,6 +351,7 @@ function NightCard({
   time,
   tonight,
   nextNight,
+  noNight,
   draftTonight,
   onDaily,
   onCreate,
@@ -360,6 +362,8 @@ function NightCard({
   // tonight is one of the league's nights
   tonight: boolean;
   nextNight: string | null;
+  // the big line with no night to come: "Nema više večeri", or "Još nema večeri" for a league without nights
+  noNight: string;
   // tonight's rounds wait to be published: how many ("3 kola nisu objavljena · 1 odobreno")
   draftTonight: string | null;
   onDaily: () => void;
@@ -398,7 +402,7 @@ function NightCard({
     ) : (
       <Box sx={{display: "flex", flexDirection: "column", gap: "6px"}}>
         <Box component="span" sx={{fontFamily: font.display, fontSize: 28, fontWeight: 800, lineHeight: 1.05, letterSpacing: "-.01em"}}>
-          {draftTonight ? "Kola čekaju objavu" : tonight ? "Kola još nisu kreirana" : nextNight ? nightLabel(nextNight) : "Nema više večeri"}
+          {draftTonight ? "Kola čekaju objavu" : tonight ? "Kola još nisu kreirana" : nextNight ? nightLabel(nextNight) : noNight}
         </Box>
         {draftTonight && (
           <Box component="span" sx={{fontSize: 15, color: color.cream}}>

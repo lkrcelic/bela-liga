@@ -230,8 +230,10 @@ export function nightsSummaryLabel(played: number, toGo: number): string {
   return toGo > 0 ? `${playedLabel} · još ${toGo}` : playedLabel;
 }
 
-// "još 10 večeri do kraja sezone"
-export function nightsLeftLabel(left: number): string {
+// "još 10 večeri do kraja sezone"; a league with no nights at all (total 0, a new league without Dan igranja) hasn't
+// started its season (#65)
+export function nightsLeftLabel(left: number, total?: number): string {
+  if (total === 0) return "Još nema večeri";
   if (left === 0) return "Sezona je završila";
   return `još ${count(left, NOUN.večer)} do kraja sezone`;
 }

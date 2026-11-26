@@ -497,7 +497,7 @@ function DatesTab({leagueId, defaults}: {leagueId: number; defaults: GatheringDe
             )}
           </Box>
           <Box component="span" sx={{fontSize: 14, color: color.cream}}>
-            {nightsLeftLabel(ld.toGo)}
+            {nightsLeftLabel(ld.toGo, ld.nights ? ld.list.length : undefined)}
           </Box>
         </Box>
         <EventRepeatRoundedIcon aria-hidden sx={{fontSize: 36, color: color.cream}} />

@@ -2,6 +2,13 @@
 
 What the commits changed for the people using the app, newest first. The reasons and details are in DECISIONS.md.
 
+## 26.11.2026 · Nova liga bez večeri
+
+On development, not live yet (#65).
+
+### Admin
+- **Liga koja još nema večeri** (nova liga bez Dana igranja) na Večeri lige i u Datumima piše **Još nema večeri**, a ispod naslova Večeri lige "Dodaj večeri u Upravljanju ligom · Datumi". Dosad je pisala "Sezona je završila" i "Nema više večeri", što sad vrijedi samo za ligu kojoj su sve večeri prošle.
+
 ## 26.11.2026 · Registracija: greška se vidi
 
 On development, not live yet (#62).
