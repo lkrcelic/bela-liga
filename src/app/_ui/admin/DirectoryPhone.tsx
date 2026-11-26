@@ -51,12 +51,19 @@ function DirectoryPhone({
   empty: (searching: boolean) => string;
   action: React.ReactNode;
   notice?: React.ReactNode;
-  // under the search (the Igrači order); a change starts again from the first page
+  // under the search (the Igrači order); a change starts again from the first page, at the top
   controls?: (resetPages: () => void) => React.ReactNode;
 }) {
   const [query, setQuery] = useRestoredState(`${memory}-query`, "");
   const [pages, setPages] = useRestoredState(`${memory}-pages`, 1);
   const scroller = useScrollMemory(memory);
+  // a new search or order shows its rows from the top, not from where the old list was scrolled to (#67); Back to the
+  // page still puts the list where it was left
+  const startAgain = () => {
+    setPages(1);
+    const el = scroller.element();
+    if (el) el.scrollTop = 0;
+  };
   const all = rows(query);
   const shown = all ? all.slice(0, pages * DIRECTORY_PAGE) : null;
   const left = all && shown ? all.length - shown.length : 0;
@@ -80,14 +87,14 @@ function DirectoryPhone({
         value={query}
         onChange={(e) => {
           setQuery(e.target.value);
-          setPages(1);
+          startAgain();
         }}
         onClear={() => {
           setQuery("");
-          setPages(1);
+          startAgain();
         }}
       />
-      {controls?.(() => setPages(1))}
+      {controls?.(startAgain)}
       {notice}
       <Box ref={shown ? scroller.ref : undefined} sx={{flex: 1, minHeight: 0, overflowY: "auto", overscrollBehavior: "contain", mx: "-20px", px: "20px", pb: "4px"}}>
         {error && !all ? (

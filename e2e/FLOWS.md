@@ -183,6 +183,7 @@ komentarom `// BUG:`: test opisuje kako bi trebalo biti, a prolazi dok greška p
 | Odjava s profila | igrač | `profil/c9-podaci.spec.ts` › Odjava: the phone is logged out… |
 | Admin: Makni sliku igrača | admin | `profil/c9-admin-slika.spec.ts` › Makni sliku: asked first… |
 | Admin: Zabrani novu sliku | admin, igrač | `profil/c9-admin-slika.spec.ts` › Zabrani novu sliku: the photo stays… |
+| Admin (mobitel): Igrači i Ekipe, nova pretraga i novi poredak od vrha popisa (#67); Back s igrača vraća popis gdje je bio | admin | `profil/c9-imenik.spec.ts` › Igrači: a new search, a cleared search and a new order…; › Ekipe: a new search…; › Igrači: Back from a player's page… |
 | Admin: Makni sliku sa Zabrani i novu sliku | admin, igrač | `profil/c9-admin-slika.spec.ts` › Makni sliku with Zabrani i novu sliku… |
 
 ## Nema testa

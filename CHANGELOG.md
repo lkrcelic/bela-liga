@@ -2,6 +2,13 @@
 
 What the commits changed for the people using the app, newest first. The reasons and details are in DECISIONS.md.
 
+## 27.11.2026 · Igrači i Ekipe: pretraga od vrha
+
+On development, not live yet (#67).
+
+### Admin
+- **Igrači i Ekipe na mobitelu**: nova pretraga, brisanje pretrage i promjena poretka (A–Ž / Najnoviji) pokazuju rezultate od vrha popisa. Dosad je popis ostajao spušten gdje je bio, pa su prvi pogoci bili skriveni iznad. Back sa stranice igrača ili ekipe i dalje vraća popis gdje je bio.
+
 ## 26.11.2026 · Nova liga bez večeri
 
 On development, not live yet (#65).
